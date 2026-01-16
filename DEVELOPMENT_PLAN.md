@@ -8,7 +8,7 @@
 - Frontend: Next.js 14 + TypeScript + Tailwind CSS + Framer Motion
 - Backend: NestJS + Prisma + PostgreSQL
 - Maps: Naver Maps API
-- Deployment: Vercel (Frontend) + AWS ECS (Backend)
+- Deployment: AWS EC2 + Nginx + PM2
 
 ---
 
@@ -156,9 +156,9 @@ git checkout -b feature/phase-0-setup
 
 - [ ] Phase 9: 배포 준비
   - [ ] Step 9-1: 환경변수 정리
-  - [ ] Step 9-2: Docker 설정
-  - [ ] Step 9-3: Backend 배포 (AWS ECS)
-  - [ ] Step 9-4: Frontend 배포 (Vercel)
+  - [ ] Step 9-2: EC2 서버 초기 설정
+  - [ ] Step 9-3: Nginx 리버스 프록시 설정
+  - [ ] Step 9-4: PM2로 애플리케이션 배포
 
 - [ ] Phase 10: 테스트 & 최적화
   - [ ] Step 10-1: API 테스트
