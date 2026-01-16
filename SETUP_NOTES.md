@@ -5,6 +5,42 @@
 
 ---
 
+## 🚀 진행 상황 요약
+
+| Phase | 상태 | 코드 생성 | 로컬 작업 필요 |
+|-------|------|----------|---------------|
+| Phase 0: 프로젝트 초기 설정 | ✅ 완료 | ✅ | - |
+| Phase 1: 데이터베이스 설계 | ✅ 완료 | ✅ | migration, seed 실행 |
+| Phase 2: Backend API 개발 | ✅ 완료 | ✅ | 패키지 설치 |
+| Phase 3~10 | ⏳ 대기 | - | - |
+
+### 로컬에서 한 번에 실행할 명령어
+```bash
+# 1. backend 폴더로 이동
+cd backend
+
+# 2. 패키지 설치 (Phase 1 + Phase 2)
+npm install bcrypt class-validator class-transformer axios @nestjs/axios @nestjs/mapped-types
+npm install -D @types/bcrypt
+
+# 3. Prisma 설정
+npx prisma generate
+
+# 4. PostgreSQL 실행 (Docker)
+docker-compose up -d
+
+# 5. DB 마이그레이션
+npx prisma migrate dev --name init
+
+# 6. Seed 데이터 삽입
+npx prisma db seed
+
+# 7. 서버 실행 테스트
+npm run start:dev
+```
+
+---
+
 ## 1. Prisma 엔진 설정 (완료 여부: ✅)
 
 **문제**: 클라우드에서 Prisma 바이너리 다운로드 403 에러
