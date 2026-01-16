@@ -109,7 +109,42 @@ npx prisma studio
 
 ---
 
-## 5. 자주 쓰는 명령어
+## 5. Phase 2: Backend API 패키지 설치
+
+> **실행 시점**: Phase 1 완료 후, Backend 개발 시작 전
+> **위치**: backend 폴더에서 실행
+
+```bash
+cd backend
+
+# Validation 관련
+npm install class-validator class-transformer
+
+# HTTP 요청 (Naver Maps API용)
+npm install axios @nestjs/axios
+
+# 이미 설치된 경우 스킵
+npm install @nestjs/mapped-types
+```
+
+### API 엔드포인트 목록
+```
+GET    /mechanics           # 모든 정비사 조회
+GET    /mechanics/:id       # 특정 정비사 조회
+POST   /mechanics           # 정비사 생성
+PATCH  /mechanics/:id       # 정비사 수정
+DELETE /mechanics/:id       # 정비사 삭제 (soft delete)
+POST   /mechanics/:id/click # 클릭수 증가
+
+GET    /maps/geocode?address=...  # 주소 → 좌표
+GET    /maps/reverse?lat=...&lng=... # 좌표 → 주소
+
+GET    /click-logs/stats/:mechanicId # 클릭 통계
+```
+
+---
+
+## 6. 자주 쓰는 명령어
 
 ### 개발 서버 실행
 ```bash
