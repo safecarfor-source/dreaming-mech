@@ -98,23 +98,23 @@ git checkout -b feature/phase-0-setup
 ## ✅ 전체 진행 체크리스트
 
 ```markdown
-- [ ] Phase 0: 프로젝트 초기 설정
-  - [ ] Step 0-1: 프로젝트 구조 생성
-  - [ ] Step 0-2: Frontend 초기화
-  - [ ] Step 0-3: Backend 초기화
+- [x] Phase 0: 프로젝트 초기 설정 ✅
+  - [x] Step 0-1: 프로젝트 구조 생성
+  - [x] Step 0-2: Frontend 초기화
+  - [x] Step 0-3: Backend 초기화
 
-- [ ] Phase 1: 데이터베이스 설계
-  - [ ] Step 1-1: Prisma Schema 작성
-  - [ ] Step 1-2: Migration 실행
-  - [ ] Step 1-3: Seed 데이터 작성
+- [x] Phase 1: 데이터베이스 설계 ✅ (로컬에서 migration/seed 실행 필요)
+  - [x] Step 1-1: Prisma Schema 작성
+  - [ ] Step 1-2: Migration 실행 ⚠️ 로컬 실행 필요
+  - [ ] Step 1-3: Seed 데이터 실행 ⚠️ 로컬 실행 필요
 
-- [ ] Phase 2: Backend API 개발
-  - [ ] Step 2-1: Prisma Service 생성
-  - [ ] Step 2-2: Mechanic CRUD API
-  - [ ] Step 2-3: DTO 및 Validation
-  - [ ] Step 2-4: Naver Maps API 프록시
-  - [ ] Step 2-5: 클릭 로그 API
-  - [ ] Step 2-6: CORS 설정
+- [x] Phase 2: Backend API 개발 ✅ (로컬에서 패키지 설치 필요)
+  - [x] Step 2-1: Prisma Service 생성
+  - [x] Step 2-2: Mechanic CRUD API
+  - [x] Step 2-3: DTO 및 Validation
+  - [x] Step 2-4: Naver Maps API 프록시
+  - [x] Step 2-5: 클릭 로그 API
+  - [x] Step 2-6: CORS 설정
 
 - [ ] Phase 3: Frontend 기본 구조
   - [ ] Step 3-1: 타입 정의
