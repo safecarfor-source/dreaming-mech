@@ -1,5 +1,4 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
+// Prisma Schema
 
 generator client {
   provider = "prisma-client-js"
@@ -8,4 +7,64 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+}
+
+// 정비사 모델
+model Mechanic {
+  id          Int      @id @default(autoincrement())
+  name        String   // 정비소 이름
+  location    String   // 지역명 (예: 강남구, 서초구)
+  phone       String   // 전화번호
+  description String?  @db.Text // 설명
+  address     String   // 상세 주소
+
+  // 지도 좌표 (Decimal 타입으로 정확도 유지)
+  mapLat      Decimal  @db.Decimal(10, 8) // 위도
+  mapLng      Decimal  @db.Decimal(11, 8) // 경도
+
+  // 이미지
+  mainImageUrl    String?  // 대표 이미지 URL
+  galleryImages   Json?    // 갤러리 이미지 배열 ["url1", "url2", ...]
+
+  // 유튜브
+  youtubeUrl      String?  // 유튜브 쇼츠 URL
+
+  // 통계
+  clickCount      Int      @default(0) // 클릭 수
+
+  // 상태
+  isActive        Boolean  @default(true) // 활성화 여부
+
+  // 타임스탬프
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // 관계
+  clickLogs       ClickLog[]
+
+  // 인덱스
+  @@index([location]) // 지역별 검색 최적화
+  @@index([isActive])
+}
+
+// 관리자 모델
+model Admin {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String   // bcrypt 해시
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// 클릭 로그 모델
+model ClickLog {
+  id         Int      @id @default(autoincrement())
+  mechanicId Int
+  mechanic   Mechanic @relation(fields: [mechanicId], references: [id], onDelete: Cascade)
+  ipAddress  String?  // 클릭한 IP
+  clickedAt  DateTime @default(now())
+
+  @@index([mechanicId])
+  @@index([clickedAt])
 }
