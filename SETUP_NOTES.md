@@ -19,11 +19,11 @@
 # 1. backend 폴더로 이동
 cd backend
 
-# 2. 패키지 설치 (Phase 1 + Phase 2)
-npm install bcrypt class-validator class-transformer axios @nestjs/axios @nestjs/mapped-types
-npm install -D @types/bcrypt
+# 2. 패키지 재설치 (Prisma 6.x 다운그레이드 포함)
+rm -rf node_modules package-lock.json
+npm install
 
-# 3. Prisma 설정
+# 3. Prisma Client 생성
 npx prisma generate
 
 # 4. PostgreSQL 실행 (Docker)
@@ -38,6 +38,8 @@ npx prisma db seed
 # 7. 서버 실행 테스트
 npm run start:dev
 ```
+
+> **참고**: Prisma 7.x에서 설정 방식이 변경되어 6.x로 다운그레이드했습니다.
 
 ---
 
