@@ -116,33 +116,33 @@ git checkout -b feature/phase-0-setup
   - [x] Step 2-5: 클릭 로그 API
   - [x] Step 2-6: CORS 설정
 
-- [ ] Phase 3: Frontend 기본 구조
-  - [ ] Step 3-1: 타입 정의
-  - [ ] Step 3-2: API 클라이언트 설정
-  - [ ] Step 3-3: Naver Maps 유틸리티
-  - [ ] Step 3-4: Tailwind 커스텀 설정
+- [x] Phase 3: Frontend 기본 구조 ✅
+  - [x] Step 3-1: 타입 정의
+  - [x] Step 3-2: API 클라이언트 설정
+  - [x] Step 3-3: Naver Maps 유틸리티
+  - [x] Step 3-4: Tailwind 커스텀 설정
 
-- [ ] Phase 4: 메인 페이지 개발
-  - [ ] Step 4-1: 레이아웃 컴포넌트
-  - [ ] Step 4-2: 히어로 섹션
-  - [ ] Step 4-3: 정비사 카드 그리드
-  - [ ] Step 4-4: 메인 페이지 통합
+- [x] Phase 4: 메인 페이지 개발 ✅ (이상한마케팅 스타일 + 보라색 테마)
+  - [x] Step 4-1: 레이아웃 컴포넌트
+  - [x] Step 4-2: 히어로 섹션 (풀스크린, 수치 강조)
+  - [x] Step 4-3: 정비사 카드 그리드 (흰색 배경)
+  - [x] Step 4-4: 메인 페이지 통합
 
-- [ ] Phase 5: 정비사 상세 모달
-  - [ ] Step 5-1: 모달 컴포넌트 베이스
-  - [ ] Step 5-2: 상세 정보 레이아웃
-  - [ ] Step 5-3: Naver Maps 표시
-  - [ ] Step 5-4: 유튜브 쇼츠 임베디드
-  - [ ] Step 5-5: 클릭 카운트 증가
+- [x] Phase 5: 정비사 상세 모달 ✅
+  - [x] Step 5-1: Zustand 스토어 (모달 상태 관리)
+  - [x] Step 5-2: MechanicModal 컴포넌트 (슬라이드업)
+  - [x] Step 5-3: NaverMapView 컴포넌트
+  - [x] Step 5-4: YouTubeEmbed 컴포넌트
+  - [x] Step 5-5: 클릭 카운트 증가
 
-- [ ] Phase 6: 관리자 페이지
-  - [ ] Step 6-1: 인증 시스템
-  - [ ] Step 6-2: 로그인 페이지
-  - [ ] Step 6-3: 대시보드 레이아웃
-  - [ ] Step 6-4: 정비사 관리 테이블
-  - [ ] Step 6-5: 정비사 추가/수정 폼 (지도 편집)
-  - [ ] Step 6-6: EditableMap 컴포넌트
-  - [ ] Step 6-7: 통계 대시보드
+- [x] Phase 6: 관리자 페이지 ✅
+  - [x] Step 6-1: JWT 인증 시스템 (Backend)
+  - [x] Step 6-2: 로그인 페이지
+  - [x] Step 6-3: AdminLayout 대시보드 레이아웃
+  - [x] Step 6-4: 정비사 관리 테이블
+  - [x] Step 6-5: 정비사 추가/수정 폼 (MechanicForm)
+  - [x] Step 6-6: EditableMap 컴포넌트 (드래그 가능 마커)
+  - [x] Step 6-7: 통계 대시보드
 
 - [ ] Phase 7: 이미지 업로드
   - [ ] Step 7-1: Cloudinary 설정
