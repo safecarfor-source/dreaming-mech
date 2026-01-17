@@ -53,7 +53,7 @@ async function main() {
       galleryImages: [
         'https://via.placeholder.com/400x300/6B7280/FFFFFF?text=Image+1',
       ],
-      youtubeUrl: null,
+      youtubeUrl: undefined,
       clickCount: 0,
     },
     {
@@ -66,7 +66,7 @@ async function main() {
       mapLng: 126.9652,
       mainImageUrl:
         'https://via.placeholder.com/800x600/9CA3AF/FFFFFF?text=용산+카센터',
-      galleryImages: null,
+      galleryImages: [],
       youtubeUrl: 'https://www.youtube.com/shorts/example2',
       clickCount: 5,
     },
@@ -85,7 +85,7 @@ async function main() {
         'https://via.placeholder.com/400x300/D1D5DB/000000?text=Image+2',
         'https://via.placeholder.com/400x300/D1D5DB/000000?text=Image+3',
       ],
-      youtubeUrl: null,
+      youtubeUrl: undefined,
       clickCount: 12,
     },
     {
@@ -98,7 +98,7 @@ async function main() {
       mapLng: 126.9089,
       mainImageUrl:
         'https://via.placeholder.com/800x600/E5E7EB/000000?text=마포+자동차정비',
-      galleryImages: null,
+      galleryImages: [],
       youtubeUrl: 'https://www.youtube.com/shorts/example3',
       clickCount: 3,
     },
