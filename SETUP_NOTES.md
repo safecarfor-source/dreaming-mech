@@ -12,7 +12,58 @@
 | Phase 0: 프로젝트 초기 설정 | ✅ 완료 | ✅ | - |
 | Phase 1: 데이터베이스 설계 | ✅ 완료 | ✅ | migration, seed 실행 |
 | Phase 2: Backend API 개발 | ✅ 완료 | ✅ | 패키지 설치 |
-| Phase 3~10 | ⏳ 대기 | - | - |
+| Phase 3: Frontend 기본 구조 | ✅ 완료 | ✅ | - |
+| Phase 4: 메인 페이지 개발 | ✅ 완료 | ✅ | - |
+| Phase 5: 정비사 상세 모달 | ✅ 완료 | ✅ | 네이버맵 API 키 설정 |
+| Phase 6: 관리자 페이지 | ✅ 완료 | ✅ | JWT 패키지 설치 필요 |
+| Phase 7~10 | ⏳ 대기 | - | - |
+
+---
+
+## 🎨 디자인 시스템 (이상한마케팅 스타일)
+
+### 사이트 정보
+- **사이트명**: 꿈꾸는정비사
+- **컨셉**: 이상한마케팅 스타일 (풀스크린 히어로, 수치 강조, 권위/신뢰 표현)
+- **테마**: 보라색 (#8B5CF6) + 다크/라이트 섹션 전환
+
+### 컬러 팔레트
+```css
+/* 다크 섹션 (히어로) */
+--background: #0a0a0a;
+--surface: #111111;
+--accent: #8B5CF6;      /* 보라색 메인 */
+--accent-light: #A78BFA;
+--accent-dark: #7C3AED;
+--text-muted: #888888;
+
+/* 라이트 섹션 (목록) */
+--light-bg: #ffffff;
+--light-surface: #f8f8f8;
+--light-text: #111111;
+--light-muted: #666666;
+```
+
+### 폰트
+- **Pretendard** (CDN): 한국어 최적화 산세리프
+- layout.tsx의 `<head>`에서 로드
+
+### 핵심 디자인 패턴
+1. **히어로 섹션**: 풀스크린, 다크 배경, 큰 수치 강조 (5+, 20+, 98.5%)
+2. **목록 섹션**: 흰색 배경, 카드 그리드
+3. **애니메이션**: Framer Motion (fade-in, slide-up, hover scale)
+4. **네비게이션**: 고정 헤더, 블러 배경
+
+### 컴포넌트 구조
+```
+frontend/components/
+├── Layout.tsx        # 전체 레이아웃 (네비게이션 + 푸터)
+├── HeroSection.tsx   # 풀스크린 히어로 (다크)
+├── MechanicCard.tsx  # 정비사 카드
+├── MechanicModal.tsx # 상세 모달 (슬라이드업)
+├── NaverMapView.tsx  # 네이버 지도
+└── YouTubeEmbed.tsx  # 유튜브 임베디드
+```
 
 ### 로컬에서 한 번에 실행할 명령어
 ```bash
