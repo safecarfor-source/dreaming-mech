@@ -12,45 +12,53 @@ interface Props {
 export default function MechanicCard({ mechanic, onClick }: Props) {
   return (
     <motion.div
-      whileHover={{ scale: 1.03 }}
+      whileHover={{ scale: 1.02, y: -4 }}
       whileTap={{ scale: 0.98 }}
       onClick={onClick}
-      className="bg-white rounded-lg shadow-lg overflow-hidden cursor-pointer"
+      className="bg-white border border-gray-200 rounded-2xl overflow-hidden cursor-pointer group transition-all hover:border-[#8B5CF6] hover:shadow-xl hover:shadow-purple-500/10"
     >
       {/* 이미지 */}
-      <div className="h-48 bg-gray-200">
+      <div className="h-52 bg-gray-100 relative overflow-hidden">
         {mechanic.mainImageUrl ? (
           <img
             src={mechanic.mainImageUrl}
             alt={mechanic.name}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-gray-400">
             이미지 없음
           </div>
         )}
+        {/* 조회수 뱃지 */}
+        <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-sm">
+          <Eye size={14} className="text-[#8B5CF6]" />
+          <span className="text-sm font-medium text-gray-700">{mechanic.clickCount}</span>
+        </div>
       </div>
 
       {/* 정보 */}
       <div className="p-6">
-        <h3 className="text-2xl font-bold mb-2">{mechanic.name}</h3>
+        <h3 className="text-xl font-bold text-gray-900 mb-4 group-hover:text-[#8B5CF6] transition-colors">
+          {mechanic.name}
+        </h3>
 
-        <div className="space-y-2 text-gray-600">
+        <div className="space-y-2 text-gray-500">
           <div className="flex items-center gap-2">
-            <MapPin size={16} />
+            <MapPin size={16} className="text-[#8B5CF6]" />
             <span>{mechanic.location}</span>
           </div>
           <div className="flex items-center gap-2">
-            <Phone size={16} />
+            <Phone size={16} className="text-[#8B5CF6]" />
             <span>{mechanic.phone}</span>
           </div>
-          <div className="flex items-center gap-2">
-            <Eye size={16} />
-            <span className="font-semibold text-blue-600">
-              조회수 {mechanic.clickCount}
-            </span>
-          </div>
+        </div>
+
+        {/* 자세히 보기 */}
+        <div className="mt-6 pt-4 border-t border-gray-100">
+          <span className="text-[#8B5CF6] text-sm font-medium group-hover:underline">
+            자세히 보기 →
+          </span>
         </div>
       </div>
     </motion.div>
