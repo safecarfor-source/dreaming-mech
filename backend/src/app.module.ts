@@ -5,6 +5,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { MechanicModule } from './mechanic/mechanic.module';
 import { MapsModule } from './maps/maps.module';
 import { ClickLogModule } from './click-log/click-log.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -12,6 +13,7 @@ import { ClickLogModule } from './click-log/click-log.module';
     MechanicModule,
     MapsModule,
     ClickLogModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],
