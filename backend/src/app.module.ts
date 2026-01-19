@@ -6,6 +6,7 @@ import { MechanicModule } from './mechanic/mechanic.module';
 import { MapsModule } from './maps/maps.module';
 import { ClickLogModule } from './click-log/click-log.module';
 import { AuthModule } from './auth/auth.module';
+import { UploadModule } from './upload/upload.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { AuthModule } from './auth/auth.module';
     MapsModule,
     ClickLogModule,
     AuthModule,
+    UploadModule,
   ],
   controllers: [AppController],
   providers: [AppService],

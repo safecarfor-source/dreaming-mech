@@ -3,7 +3,8 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import EditableMap from './EditableMap';
-import { Search, MapPin } from 'lucide-react';
+import ImageUpload from './ImageUpload';
+import { Search, MapPin, Image } from 'lucide-react';
 import type { Mechanic } from '@/types';
 
 interface MechanicFormProps {
@@ -270,20 +271,24 @@ export default function MechanicForm({ mechanic, mode }: MechanicFormProps) {
 
       {/* 추가 정보 */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 space-y-6">
-        <h2 className="text-xl font-bold text-gray-900">추가 정보</h2>
+        <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+          <Image className="text-[#8B5CF6]" />
+          추가 정보
+        </h2>
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            대표 이미지 URL
+            대표 이미지
           </label>
-          <input
-            type="url"
-            name="mainImageUrl"
-            value={formData.mainImageUrl}
-            onChange={handleChange}
-            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:border-[#8B5CF6]"
-            placeholder="https://example.com/image.jpg"
+          <ImageUpload
+            currentImage={formData.mainImageUrl}
+            onUpload={(url) => setFormData((prev) => ({ ...prev, mainImageUrl: url }))}
           />
+          {formData.mainImageUrl && (
+            <p className="text-xs text-gray-500 mt-2">
+              {formData.mainImageUrl}
+            </p>
+          )}
         </div>
 
         <div>
