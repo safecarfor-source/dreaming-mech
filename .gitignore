@@ -40,3 +40,6 @@ backend/prisma/migrations/
 
 # Misc
 *.pem
+
+# figma
+/figma-plugin-ui
