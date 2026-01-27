@@ -54,11 +54,11 @@ export default function Home() {
         <div className="container mx-auto px-6">
           {/* 섹션 헤더 */}
           <div className="text-center mb-16">
-            <p className="text-[#8B5CF6] text-sm font-medium tracking-widest mb-4">
+            <p className="text-[#bf00ff] text-sm font-medium tracking-widest mb-4">
               MECHANICS
             </p>
             <h2 className="text-4xl md:text-5xl font-black text-[#111111] mb-4">
-              검증된 <span className="text-[#8B5CF6]">정비사</span> 목록
+              전국 <span className="text-[#bf00ff]">팔도</span> 정비소
             </h2>
             <p className="text-[#666666] text-lg">
               실력과 신뢰를 갖춘 전문가들을 만나보세요

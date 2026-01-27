@@ -75,7 +75,7 @@ export default function ImageUpload({ onUpload, currentImage }: Props) {
           {...getRootProps()}
           className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors ${
             isDragActive
-              ? 'border-[#8B5CF6] bg-purple-50'
+              ? 'border-[#8B5CF6] bg-[#8B5CF6]/5'
               : 'border-gray-300 hover:border-gray-400'
           }`}
         >

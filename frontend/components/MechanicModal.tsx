@@ -91,8 +91,8 @@ export default function MechanicModal() {
                 <div className="grid md:grid-cols-2 gap-6">
                   <div className="space-y-4">
                     <div className="flex items-start gap-3">
-                      <div className="p-2 bg-purple-100 rounded-lg">
-                        <MapPin size={20} className="text-[#8B5CF6]" />
+                      <div className="p-2 bg-gray-100 rounded-lg">
+                        <MapPin size={20} className="text-[#6B7280]" />
                       </div>
                       <div>
                         <p className="text-sm text-gray-500">주소</p>
@@ -101,14 +101,14 @@ export default function MechanicModal() {
                     </div>
 
                     <div className="flex items-start gap-3">
-                      <div className="p-2 bg-purple-100 rounded-lg">
-                        <Phone size={20} className="text-[#8B5CF6]" />
+                      <div className="p-2 bg-gray-100 rounded-lg">
+                        <Phone size={20} className="text-[#6B7280]" />
                       </div>
                       <div>
                         <p className="text-sm text-gray-500">전화번호</p>
                         <a
                           href={`tel:${mechanic.phone}`}
-                          className="text-[#8B5CF6] font-medium hover:underline"
+                          className="text-[#6B7280] font-medium hover:underline"
                         >
                           {mechanic.phone}
                         </a>
@@ -116,8 +116,8 @@ export default function MechanicModal() {
                     </div>
 
                     <div className="flex items-start gap-3">
-                      <div className="p-2 bg-purple-100 rounded-lg">
-                        <Eye size={20} className="text-[#8B5CF6]" />
+                      <div className="p-2 bg-gray-100 rounded-lg">
+                        <Eye size={20} className="text-[#6B7280]" />
                       </div>
                       <div>
                         <p className="text-sm text-gray-500">조회수</p>
@@ -157,7 +157,7 @@ export default function MechanicModal() {
                 <div className="flex gap-4">
                   <a
                     href={`tel:${mechanic.phone}`}
-                    className="flex-1 bg-[#8B5CF6] hover:bg-[#7C3AED] text-white py-4 rounded-xl font-bold text-center transition-colors"
+                    className="flex-1 bg-[#bf00ff] hover:bg-[#a600e0] text-white py-4 rounded-xl font-bold text-center transition-colors"
                   >
                     전화 문의하기
                   </a>
@@ -166,7 +166,7 @@ export default function MechanicModal() {
                       const url = `https://map.naver.com/v5/search/${encodeURIComponent(mechanic.address)}`;
                       window.open(url, '_blank');
                     }}
-                    className="flex items-center justify-center gap-2 px-6 py-4 border-2 border-gray-200 rounded-xl font-bold text-gray-700 hover:border-[#8B5CF6] hover:text-[#8B5CF6] transition-colors"
+                    className="flex items-center justify-center gap-2 px-6 py-4 border-2 border-gray-200 rounded-xl font-bold text-gray-700 hover:border-[#bf00ff] hover:text-[#8B5CF6] transition-colors"
                   >
                     <ExternalLink size={20} />
                     길찾기

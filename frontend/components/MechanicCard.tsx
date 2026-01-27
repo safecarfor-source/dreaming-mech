@@ -15,7 +15,7 @@ export default function MechanicCard({ mechanic, onClick }: Props) {
       whileHover={{ scale: 1.02, y: -4 }}
       whileTap={{ scale: 0.98 }}
       onClick={onClick}
-      className="bg-white border border-gray-200 rounded-2xl overflow-hidden cursor-pointer group transition-all hover:border-[#8B5CF6] hover:shadow-xl hover:shadow-purple-500/10"
+      className="bg-white border border-gray-200 rounded-2xl overflow-hidden cursor-pointer group transition-all hover:border-[#bf00ff] hover:shadow-xl hover:shadow-[#bf00ff]/10"
     >
       {/* 이미지 */}
       <div className="h-52 bg-gray-100 relative overflow-hidden">
@@ -32,7 +32,7 @@ export default function MechanicCard({ mechanic, onClick }: Props) {
         )}
         {/* 조회수 뱃지 */}
         <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-sm">
-          <Eye size={14} className="text-[#8B5CF6]" />
+          <Eye size={14} className="text-[#6B7280]" />
           <span className="text-sm font-medium text-gray-700">{mechanic.clickCount}</span>
         </div>
       </div>
@@ -45,18 +45,18 @@ export default function MechanicCard({ mechanic, onClick }: Props) {
 
         <div className="space-y-2 text-gray-500">
           <div className="flex items-center gap-2">
-            <MapPin size={16} className="text-[#8B5CF6]" />
+            <MapPin size={16} className="text-[#6B7280]" />
             <span>{mechanic.location}</span>
           </div>
           <div className="flex items-center gap-2">
-            <Phone size={16} className="text-[#8B5CF6]" />
+            <Phone size={16} className="text-[#6B7280]" />
             <span>{mechanic.phone}</span>
           </div>
         </div>
 
         {/* 자세히 보기 */}
         <div className="mt-6 pt-4 border-t border-gray-100">
-          <span className="text-[#8B5CF6] text-sm font-medium group-hover:underline">
+          <span className="text-[#6B7280] text-sm font-medium group-hover:underline">
             자세히 보기 →
           </span>
         </div>

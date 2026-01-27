@@ -32,7 +32,7 @@ export default function AdminDashboard() {
       label: '전체 정비사',
       value: mechanics.length,
       icon: Users,
-      color: 'bg-purple-500',
+      color: 'bg-[#8B5CF6]',
     },
     {
       label: '활성 정비사',

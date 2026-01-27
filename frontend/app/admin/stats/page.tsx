@@ -52,7 +52,7 @@ export default function StatsPage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
             <div className="flex items-center gap-4">
-              <div className="p-3 bg-purple-100 rounded-xl">
+              <div className="p-3 bg-[#8B5CF6]/10 rounded-xl">
                 <Eye size={24} className="text-[#8B5CF6]" />
               </div>
               <div>
