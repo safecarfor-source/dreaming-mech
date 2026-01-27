@@ -5,7 +5,10 @@
   --foreground: #ffffff;
   --surface: #111111;
 
-  /* 보라색 강조 */
+  /* 브랜드 메인 컬러 (공용 페이지) */
+  --brand-primary: #bf00ff;
+
+  /* 보라색 강조 (관리자 페이지) */
   --accent: #8B5CF6;
   --accent-light: #A78BFA;
   --accent-dark: #7C3AED;

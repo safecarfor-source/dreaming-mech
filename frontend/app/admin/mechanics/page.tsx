@@ -166,7 +166,7 @@ export default function MechanicsPage() {
                         <div className="flex items-center justify-end gap-2">
                           <Link
                             href={`/admin/mechanics/${mechanic.id}/edit`}
-                            className="p-2 text-gray-400 hover:text-[#8B5CF6] hover:bg-purple-50 rounded-lg transition-colors"
+                            className="p-2 text-gray-400 hover:text-[#8B5CF6] hover:bg-[#8B5CF6]/5 rounded-lg transition-colors"
                           >
                             <Edit size={18} />
                           </Link>

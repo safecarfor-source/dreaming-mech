@@ -11,16 +11,16 @@ export default function HeroSection({ totalMechanics, totalClicks }: Props) {
   return (
     <section className="min-h-screen flex items-center justify-center relative overflow-hidden bg-[#0a0a0a]">
       {/* 배경 그라디언트 */}
-      <div className="absolute inset-0 bg-gradient-to-br from-purple-900/20 via-transparent to-violet-900/10" />
+      <div className="absolute inset-0 bg-gradient-to-br from-[#bf00ff]/20 via-transparent to-[#bf00ff]/10" />
 
       <div className="container mx-auto px-6 text-center relative z-10">
         {/* 서브 타이틀 */}
         <motion.p
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-[#8B5CF6] text-lg font-medium tracking-widest mb-6"
+          className="text-[#bf00ff] text-lg font-medium tracking-widest mb-6"
         >
-          검증된 정비사만 소개합니다
+          전국의 정비소를 소개합니다.
         </motion.p>
 
         {/* 메인 헤드라인 */}
@@ -30,85 +30,47 @@ export default function HeroSection({ totalMechanics, totalClicks }: Props) {
           transition={{ delay: 0.1 }}
           className="text-5xl md:text-7xl lg:text-8xl font-black leading-tight mb-8"
         >
-          당신의 차를 위한
+          차를 리프팅합니다
           <br />
-          <span className="text-[#8B5CF6]">진짜 전문가</span>
+          <span className="text-[#bf00ff]">신뢰를 리프팅 합니다</span>
         </motion.h1>
 
         {/* 설명 */}
         <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="text-xl text-[#888888] max-w-2xl mx-auto mb-16"
+          className="text-xl text-[#888888] max-w-2xl mx-auto mb-2"
         >
-          실력과 신뢰를 갖춘 정비사들을 한 곳에서 만나보세요
+          정비사는 정비를 판매하지 않습니다
         </motion.p>
 
-        {/* 수치 강조 - 이상한마케팅 스타일 */}
-        <motion.div
-          initial={{ opacity: 0, y: 40 }}
+        {/* 설명2 (바로 밑에 위치) */}
+        <motion.p
+          initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="flex flex-col md:flex-row justify-center items-center gap-8 md:gap-20"
+          transition={{ delay: 0.25 }}
+          className="text-xl text-[#888888] max-w-2xl mx-auto"
         >
-          <div className="text-center">
-            <div className="text-6xl md:text-8xl font-black text-white">
-              {totalMechanics}
-              <span className="text-[#8B5CF6]">+</span>
-            </div>
-            <div className="text-[#888888] mt-2 text-lg">검증된 정비사</div>
-          </div>
+          대신 차량을 관리해 드립니다
+        </motion.p>
 
-          <div className="hidden md:block w-px h-20 bg-white/10" />
-
-          <div className="text-center">
-            <div className="text-6xl md:text-8xl font-black text-white">
-              {totalClicks.toLocaleString()}
-              <span className="text-[#8B5CF6]">+</span>
-            </div>
-            <div className="text-[#888888] mt-2 text-lg">누적 조회수</div>
-          </div>
-
-          <div className="hidden md:block w-px h-20 bg-white/10" />
-
-          <div className="text-center">
-            <div className="text-6xl md:text-8xl font-black text-white">
-              98.5
-              <span className="text-[#8B5CF6]">%</span>
-            </div>
-            <div className="text-[#888888] mt-2 text-lg">고객 만족도</div>
-          </div>
-        </motion.div>
-
-        {/* CTA 버튼 */}
+        {/* 스크롤 인디케이터 */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 0.5 }}
-          className="mt-16"
+          transition={{ delay: 0.8 }}
+          className="mt-30 flex justify-center"
         >
-          <button className="bg-[#8B5CF6] hover:bg-[#7C3AED] text-white px-10 py-4 text-lg font-bold rounded-full transition-all hover:scale-105">
-            정비사 찾아보기 →
-          </button>
+          <div className="w-10 h-20 border-4 border-white/50 rounded-full flex justify-center pt-3">
+            <motion.div
+              animate={{ y: [0, 16, 0] }}
+              transition={{ repeat: Infinity, duration: 1.5 }}
+              className="w-2 h-2 bg-[#bf00ff] rounded-full"
+            />
+          </div>
         </motion.div>
       </div>
-
-      {/* 스크롤 인디케이터 */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.8 }}
-        className="absolute bottom-10 left-1/2 -translate-x-1/2"
-      >
-        <div className="w-6 h-10 border-2 border-white/20 rounded-full flex justify-center pt-2">
-          <motion.div
-            animate={{ y: [0, 12, 0] }}
-            transition={{ repeat: Infinity, duration: 1.5 }}
-            className="w-1.5 h-1.5 bg-[#8B5CF6] rounded-full"
-          />
-        </div>
-      </motion.div>
     </section>
   );
 }
