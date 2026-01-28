@@ -43,3 +43,6 @@ backend/prisma/migrations/
 
 # figma
 /figma-plugin-ui
+
+# md
+*.md
