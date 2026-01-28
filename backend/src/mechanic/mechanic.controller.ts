@@ -10,10 +10,15 @@ import {
   HttpCode,
   HttpStatus,
   Ip,
+  Req,
+  UseGuards,
 } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
+import type { Request } from 'express';
 import { MechanicService } from './mechanic.service';
 import { CreateMechanicDto } from './dto/create-mechanic.dto';
 import { UpdateMechanicDto } from './dto/update-mechanic.dto';
+import { BotDetectionGuard } from '../common/guards/bot-detection.guard';
 
 @Controller('mechanics')
 export class MechanicController {
@@ -55,7 +60,15 @@ export class MechanicController {
 
   // POST /mechanics/:id/click
   @Post(':id/click')
-  incrementClick(@Param('id', ParseIntPipe) id: number, @Ip() ip: string) {
-    return this.mechanicService.incrementClick(id, ip);
+  @Throttle({ default: { limit: 3, ttl: 60000 } }) // 60초에 최대 3번
+  @UseGuards(BotDetectionGuard)
+  incrementClick(
+    @Param('id', ParseIntPipe) id: number,
+    @Ip() ip: string,
+    @Req() req: Request,
+  ) {
+    const userAgent = req['userAgent'] as string;
+    const isBot = req['isBot'] as boolean;
+    return this.mechanicService.incrementClick(id, ip, userAgent, isBot);
   }
 }

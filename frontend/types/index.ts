@@ -32,3 +32,13 @@ export interface GeocodingResult {
   lat: number;
   lng: number;
 }
+
+export type PeriodType = 'realtime' | 'daily' | 'monthly';
+
+export interface TopMechanic {
+  id: number;
+  name: string;
+  phoneNumber: string;
+  address: string;
+  clickCount: number;
+}

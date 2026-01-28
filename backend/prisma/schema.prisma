@@ -63,8 +63,24 @@ model ClickLog {
   mechanicId Int
   mechanic   Mechanic @relation(fields: [mechanicId], references: [id], onDelete: Cascade)
   ipAddress  String?  // 클릭한 IP
+  userAgent  String?  @db.Text // User-Agent 헤더
+  isBot      Boolean  @default(false) // 봇 여부
   clickedAt  DateTime @default(now())
 
-  @@index([mechanicId])
-  @@index([clickedAt])
+  @@index([mechanicId, clickedAt])
+  @@index([ipAddress])
+}
+
+// 페이지뷰 로그 모델
+model PageView {
+  id         Int      @id @default(autoincrement())
+  path       String   // 페이지 경로
+  ipAddress  String?  // 방문자 IP
+  userAgent  String?  @db.Text // User-Agent 헤더
+  isBot      Boolean  @default(false) // 봇 여부
+  referer    String?  // 리퍼러 URL
+  viewedAt   DateTime @default(now())
+
+  @@index([path, viewedAt])
+  @@index([isBot])
 }
