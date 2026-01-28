@@ -9,9 +9,18 @@ interface Props {
 
 export default function HeroSection({ totalMechanics, totalClicks }: Props) {
   return (
-    <section className="min-h-screen flex items-center justify-center relative overflow-hidden bg-[#0a0a0a]">
-      {/* 배경 그라디언트 */}
-      <div className="absolute inset-0 bg-gradient-to-br from-[#bf00ff]/20 via-transparent to-[#bf00ff]/10" />
+    <section className="min-h-screen flex items-center justify-center relative overflow-hidden">
+      {/* Background GIF */}
+      <div className="absolute inset-0 z-0">
+        <img
+          src="/title.gif"
+          alt="Background animation"
+          className="w-full h-full object-cover"
+        />
+      </div>
+
+      {/* Dark overlay for text readability */}
+      <div className="absolute inset-0 bg-black/60 z-0" />
 
       <div className="container mx-auto px-6 text-center relative z-10">
         {/* 서브 타이틀 */}
