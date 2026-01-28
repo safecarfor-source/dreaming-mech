@@ -7,37 +7,35 @@ import Layout from '@/components/Layout';
 import HeroSection from '@/components/HeroSection';
 import MechanicCard from '@/components/MechanicCard';
 import MechanicModal from '@/components/MechanicModal';
+import CardSkeleton from '@/components/ui/CardSkeleton';
+import ErrorMessage from '@/components/ui/ErrorMessage';
 import type { Mechanic } from '@/types';
 
 export default function Home() {
   const [mechanics, setMechanics] = useState<Mechanic[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const openModal = useModalStore((state) => state.open);
 
-  useEffect(() => {
-    const fetchMechanics = async () => {
-      try {
-        const { data } = await mechanicsApi.getAll();
-        setMechanics(data);
-      } catch (error) {
-        console.error(error);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchMechanics = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const { data } = await mechanicsApi.getAll();
+      setMechanics(data);
+    } catch (error) {
+      console.error(error);
+      setError('정비사 목록을 불러오는데 실패했습니다.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchMechanics();
   }, []);
 
   const totalClicks = mechanics.reduce((sum, m) => sum + m.clickCount, 0);
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[#0a0a0a]">
-        <div className="text-[#8B5CF6] text-xl">로딩 중...</div>
-      </div>
-    );
-  }
 
   return (
     <Layout>
@@ -66,15 +64,25 @@ export default function Home() {
           </div>
 
           {/* 카드 그리드 */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {mechanics.map((mechanic) => (
-              <MechanicCard
-                key={mechanic.id}
-                mechanic={mechanic}
-                onClick={() => openModal(mechanic)}
-              />
-            ))}
-          </div>
+          {loading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {[...Array(6)].map((_, i) => (
+                <CardSkeleton key={i} />
+              ))}
+            </div>
+          ) : error ? (
+            <ErrorMessage message={error} onRetry={fetchMechanics} />
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {mechanics.map((mechanic) => (
+                <MechanicCard
+                  key={mechanic.id}
+                  mechanic={mechanic}
+                  onClick={() => openModal(mechanic)}
+                />
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
