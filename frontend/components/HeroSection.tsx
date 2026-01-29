@@ -75,7 +75,7 @@ export default function HeroSection({ totalMechanics, totalClicks }: Props) {
             <motion.div
               animate={{ y: [0, 16, 0] }}
               transition={{ repeat: Infinity, duration: 1.5 }}
-              className="w-2 h-2 bg-[#bf00ff] rounded-full"
+              className="w-2 h-2 bg-[#888888] rounded-full"
             />
           </div>
         </motion.div>
