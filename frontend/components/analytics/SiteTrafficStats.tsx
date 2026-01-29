@@ -254,7 +254,7 @@ export default function SiteTrafficStats({ token }: Props) {
               <p className="text-xs text-gray-500 mt-2">순 방문자 수</p>
             </div>
           </div>
-        </div>
+        </motion.div>
 
         {/* 평균 조회/일 */}
         <motion.div
@@ -341,6 +341,6 @@ export default function SiteTrafficStats({ token }: Props) {
           </ResponsiveContainer>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }

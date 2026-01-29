@@ -45,7 +45,7 @@ export default function Home() {
       />
 
       {/* 다크 → 흰색 그라데이션 전환 */}
-      <div className="h-32 bg-gradient-to-b from-[#0a0a0a] to-white" />
+      <div className="h-40 bg-gradient-to-b from-black/60 via-black/30 via-30% to-white" />
 
       {/* 정비사 목록 섹션 - 흰색 배경 */}
       <section className="bg-white pb-24">
