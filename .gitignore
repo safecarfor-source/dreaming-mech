@@ -46,3 +46,7 @@ backend/prisma/migrations/
 
 # md
 *.md
+
+
+# docs
+/docs

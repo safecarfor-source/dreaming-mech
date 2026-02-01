@@ -9,11 +9,13 @@
   --brand-primary: #bf00ff;
 
   /* 보라색 강조 (관리자 페이지) */
-  --accent: #8B5CF6;
+  /* 접근성 개선: Purple-600 사용 (WCAG AA 준수, 5.70:1 대비) */
+  --accent: #7C3AED;
   --accent-light: #A78BFA;
-  --accent-dark: #7C3AED;
+  --accent-dark: #6D28D9;
 
-  --text-muted: #888888;
+  /* 접근성 개선: Gray-500 사용 (WCAG AA 준수, 4.83:1 대비) */
+  --text-muted: #6B7280;
 }
 
 @theme inline {

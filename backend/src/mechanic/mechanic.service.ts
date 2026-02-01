@@ -17,10 +17,17 @@ export class MechanicService {
 
   // 모든 정비사 조회
   async findAll() {
-    return await this.prisma.mechanic.findMany({
+    const mechanics = await this.prisma.mechanic.findMany({
       where: { isActive: true },
       orderBy: { createdAt: 'desc' },
     });
+
+    // Decimal 타입을 숫자로 변환
+    return mechanics.map((mechanic) => ({
+      ...mechanic,
+      mapLat: Number(mechanic.mapLat),
+      mapLng: Number(mechanic.mapLng),
+    }));
   }
 
   // 특정 정비사 조회
@@ -39,27 +46,46 @@ export class MechanicService {
       throw new NotFoundException(`Mechanic with ID ${id} not found`);
     }
 
-    return mechanic;
+    // Decimal 타입을 숫자로 변환
+    return {
+      ...mechanic,
+      mapLat: Number(mechanic.mapLat),
+      mapLng: Number(mechanic.mapLng),
+    };
   }
 
   // 정비사 생성
   async create(createMechanicDto: CreateMechanicDto) {
-    return await this.prisma.mechanic.create({
+    const mechanic = await this.prisma.mechanic.create({
       data: {
         ...createMechanicDto,
         galleryImages: createMechanicDto.galleryImages || [],
       },
     });
+
+    // Decimal 타입을 숫자로 변환
+    return {
+      ...mechanic,
+      mapLat: Number(mechanic.mapLat),
+      mapLng: Number(mechanic.mapLng),
+    };
   }
 
   // 정비사 수정
   async update(id: number, updateMechanicDto: UpdateMechanicDto) {
     await this.findOne(id);
 
-    return await this.prisma.mechanic.update({
+    const mechanic = await this.prisma.mechanic.update({
       where: { id },
       data: updateMechanicDto,
     });
+
+    // Decimal 타입을 숫자로 변환
+    return {
+      ...mechanic,
+      mapLat: Number(mechanic.mapLat),
+      mapLng: Number(mechanic.mapLng),
+    };
   }
 
   // 정비사 삭제 (소프트 삭제)
@@ -121,7 +147,16 @@ export class MechanicService {
         where: { id },
       });
 
-      return mechanic;
+      if (!mechanic) {
+        throw new NotFoundException(`Mechanic with ID ${id} not found`);
+      }
+
+      // Decimal 타입을 숫자로 변환
+      return {
+        ...mechanic,
+        mapLat: Number(mechanic.mapLat),
+        mapLng: Number(mechanic.mapLng),
+      };
     });
   }
 }

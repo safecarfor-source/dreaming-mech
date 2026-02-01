@@ -27,6 +27,7 @@ export default function LoginPage() {
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
+          credentials: 'include', // Enable sending/receiving cookies
           body: JSON.stringify({ email, password }),
         }
       );
@@ -37,7 +38,8 @@ export default function LoginPage() {
       }
 
       const data = await response.json();
-      login(data.access_token, data.admin);
+      // Token is now stored in HttpOnly cookie, only store admin info
+      login(data.admin);
       router.push('/admin');
     } catch (err: any) {
       setError(err.message);
@@ -56,7 +58,7 @@ export default function LoginPage() {
         {/* 로고 */}
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-white">
-            <span className="text-[#8B5CF6]">꿈꾸는</span>정비사
+            <span className="text-purple-600">꿈꾸는</span>정비사
           </h1>
           <p className="text-gray-500 mt-2">관리자 로그인</p>
         </div>
@@ -86,7 +88,7 @@ export default function LoginPage() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full bg-[#1a1a1a] border border-white/10 rounded-xl py-3 pl-12 pr-4 text-white placeholder-gray-500 focus:outline-none focus:border-[#8B5CF6] transition-colors"
+                className="w-full bg-[#1a1a1a] border border-white/10 rounded-xl py-3 pl-12 pr-4 text-white placeholder-gray-500 focus:outline-none focus:border-purple-600 transition-colors"
                 placeholder="admin@test.com"
                 required
               />
@@ -107,7 +109,7 @@ export default function LoginPage() {
                 type={showPassword ? 'text' : 'password'}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full bg-[#1a1a1a] border border-white/10 rounded-xl py-3 pl-12 pr-12 text-white placeholder-gray-500 focus:outline-none focus:border-[#8B5CF6] transition-colors"
+                className="w-full bg-[#1a1a1a] border border-white/10 rounded-xl py-3 pl-12 pr-12 text-white placeholder-gray-500 focus:outline-none focus:border-purple-600 transition-colors"
                 placeholder="••••••••"
                 required
               />
@@ -125,7 +127,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-[#8B5CF6] hover:bg-[#7C3AED] disabled:bg-gray-600 text-white font-bold py-3 rounded-xl transition-colors"
+            className="w-full bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 text-white font-bold py-3 rounded-xl transition-colors"
           >
             {loading ? '로그인 중...' : '로그인'}
           </button>

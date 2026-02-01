@@ -15,8 +15,8 @@ export default function EditableMap({
   onMarkerDragEnd,
 }: EditableMapProps) {
   const mapRef = useRef<HTMLDivElement>(null);
+  const markerRef = useRef<any>(null);
   const [map, setMap] = useState<any>(null);
-  const [markerInstance, setMarkerInstance] = useState<any>(null);
   const [isLoaded, setIsLoaded] = useState(false);
 
   const handleLoad = () => {
@@ -25,9 +25,14 @@ export default function EditableMap({
 
   // 지도 초기화
   useEffect(() => {
-    if (!isLoaded || !mapRef.current || map) return;
-
+    // 스크립트가 이미 로드되어 있는지 확인
     const naver = (window as any).naver;
+    if (naver && naver.maps && !isLoaded) {
+      setIsLoaded(true);
+      return;
+    }
+
+    if (!isLoaded || !mapRef.current || map) return;
     if (!naver || !naver.maps) return;
 
     const mapInstance = new naver.maps.Map(mapRef.current, {
@@ -40,7 +45,7 @@ export default function EditableMap({
     });
 
     setMap(mapInstance);
-  }, [isLoaded, center]);
+  }, [isLoaded, map]);
 
   // 마커 생성 및 업데이트
   useEffect(() => {
@@ -49,8 +54,8 @@ export default function EditableMap({
     const naver = (window as any).naver;
     const position = new naver.maps.LatLng(marker.lat, marker.lng);
 
-    if (markerInstance) {
-      markerInstance.setPosition(position);
+    if (markerRef.current) {
+      markerRef.current.setPosition(position);
       map.setCenter(position);
     } else {
       const newMarker = new naver.maps.Marker({
@@ -65,9 +70,9 @@ export default function EditableMap({
         onMarkerDragEnd(newLat, newLng);
       });
 
-      setMarkerInstance(newMarker);
+      markerRef.current = newMarker;
     }
-  }, [map, marker, markerInstance, onMarkerDragEnd]);
+  }, [map, marker, onMarkerDragEnd]);
 
   const clientId = process.env.NEXT_PUBLIC_NAVER_MAP_CLIENT_ID;
 

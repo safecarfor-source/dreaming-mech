@@ -102,7 +102,7 @@ export default function HeroSection({ totalMechanics, totalClicks }: Props) {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 2.5 }}
-          className="text-xl text-[#888888] max-w-2xl mx-auto mb-2 min-h-[32px]"
+          className="text-xl text-gray-500 max-w-2xl mx-auto mb-2 min-h-[32px]"
         >
           {description1.displayedText}
           {!description1.isComplete && <span className="animate-pulse">|</span>}
@@ -113,7 +113,7 @@ export default function HeroSection({ totalMechanics, totalClicks }: Props) {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 3.5 }}
-          className="text-xl text-[#888888] max-w-2xl mx-auto min-h-[32px]"
+          className="text-xl text-gray-500 max-w-2xl mx-auto min-h-[32px]"
         >
           {description2.displayedText}
           {!description2.isComplete && <span className="animate-pulse">|</span>}
@@ -130,7 +130,7 @@ export default function HeroSection({ totalMechanics, totalClicks }: Props) {
             <motion.div
               animate={{ y: [0, 16, 0] }}
               transition={{ repeat: Infinity, duration: 1.5 }}
-              className="w-2 h-2 bg-[#888888] rounded-full"
+              className="w-2 h-2 bg-gray-500 rounded-full"
             />
           </div>
         </motion.div>
