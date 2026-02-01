@@ -24,10 +24,6 @@ interface SiteStats {
   topPages: Array<{ path: string; views: number }>;
 }
 
-interface Props {
-  token: string;
-}
-
 // 커스텀 툴팁 컴포넌트
 interface TooltipPayload {
   value: number;
@@ -54,23 +50,17 @@ const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
   return null;
 };
 
-export default function SiteTrafficStats({ token }: Props) {
+export default function SiteTrafficStats() {
   const [stats, setStats] = useState<SiteStats | null>(null);
   const [period, setPeriod] = useState<number | undefined>(7);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const fetchStats = useCallback(async () => {
-    if (!token) {
-      setError('인증 토큰이 없습니다. 다시 로그인해주세요.');
-      setLoading(false);
-      return;
-    }
-
     try {
       setLoading(true);
       setError(null);
-      const response = await analyticsApi.getSiteStats(period, token);
+      const response = await analyticsApi.getSiteStats(period);
       setStats(response.data);
     } catch (error: any) {
       console.error('Failed to fetch site stats:', error);
@@ -81,7 +71,7 @@ export default function SiteTrafficStats({ token }: Props) {
     } finally {
       setLoading(false);
     }
-  }, [period, token]);
+  }, [period]);
 
   useEffect(() => {
     fetchStats();

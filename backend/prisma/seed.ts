@@ -7,7 +7,19 @@ async function main() {
   console.log('🌱 Seeding database...');
 
   // 관리자 생성
-  const hashedPassword = await bcrypt.hash('admin123', 10);
+  const adminPassword = process.env.ADMIN_PASSWORD;
+  if (!adminPassword) {
+    console.error('❌ ADMIN_PASSWORD environment variable is required for seeding');
+    console.error('   Set ADMIN_PASSWORD in your .env file');
+    process.exit(1);
+  }
+
+  if (adminPassword.length < 8) {
+    console.error('❌ ADMIN_PASSWORD must be at least 8 characters long');
+    process.exit(1);
+  }
+
+  const hashedPassword = await bcrypt.hash(adminPassword, 10);
 
   const admin = await prisma.admin.upsert({
     where: { email: 'admin@test.com' },

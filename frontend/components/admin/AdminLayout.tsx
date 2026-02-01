@@ -36,9 +36,20 @@ export default function AdminLayout({ children }: Props) {
     }
   }, [isAuthenticated, router]);
 
-  const handleLogout = () => {
-    logout();
-    router.push('/admin/login');
+  const handleLogout = async () => {
+    try {
+      // Call logout endpoint to clear the HttpOnly cookie
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/logout`, {
+        method: 'POST',
+        credentials: 'include',
+      });
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      // Clear local auth state regardless of API call result
+      logout();
+      router.push('/admin/login');
+    }
   };
 
   if (!isAuthenticated) {
@@ -69,7 +80,7 @@ export default function AdminLayout({ children }: Props) {
           {/* 로고 */}
           <div className="flex items-center justify-between mb-8">
             <h1 className="text-xl font-bold text-white">
-              <span className="text-[#8B5CF6]">꿈꾸는</span>정비사
+              <span className="text-purple-600">꿈꾸는</span>정비사
             </h1>
             <button
               onClick={() => setSidebarOpen(false)}
@@ -90,7 +101,7 @@ export default function AdminLayout({ children }: Props) {
                   onClick={() => setSidebarOpen(false)}
                   className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${
                     isActive
-                      ? 'bg-[#8B5CF6] text-white'
+                      ? 'bg-purple-600 text-white'
                       : 'text-gray-400 hover:bg-white/5 hover:text-white'
                   }`}
                 >

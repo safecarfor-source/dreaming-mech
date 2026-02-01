@@ -9,7 +9,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           <h1 className="text-xl font-bold">
             <span>전국 <span className="text-[#bf00ff]">팔도</span> 정비사</span>
           </h1>
-          <nav className="hidden md:flex items-center gap-8 text-sm text-[#888888]">
+          <nav className="hidden md:flex items-center gap-8 text-sm text-gray-500">
             <a href="#" className="hover:text-white transition-colors">서비스</a>
             <a href="#" className="hover:text-white transition-colors">정비사 목록</a>
             <a href="#" className="hover:text-white transition-colors">문의하기</a>
@@ -22,7 +22,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       {/* 푸터 */}
       <footer className="bg-[#111111] border-t border-white/5 py-12">
         <div className="container mx-auto px-6 text-center">
-          <p className="text-[#888888] text-sm">
+          <p className="text-gray-500 text-sm">
             © 2025 전국팔도정비소. All rights reserved.
           </p>
         </div>

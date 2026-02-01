@@ -12,13 +12,20 @@ import {
   Ip,
   Req,
   UseGuards,
+  UsePipes,
 } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import type { Request } from 'express';
 import { MechanicService } from './mechanic.service';
-import { CreateMechanicDto } from './dto/create-mechanic.dto';
-import { UpdateMechanicDto } from './dto/update-mechanic.dto';
 import { BotDetectionGuard } from '../common/guards/bot-detection.guard';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
+import {
+  CreateMechanicSchema,
+  UpdateMechanicSchema,
+  type CreateMechanicDto,
+  type UpdateMechanicDto,
+} from './schemas/mechanic.schema';
 
 @Controller('mechanics')
 export class MechanicController {
@@ -38,12 +45,16 @@ export class MechanicController {
 
   // POST /mechanics
   @Post()
+  @UseGuards(JwtAuthGuard)
+  @UsePipes(new ZodValidationPipe(CreateMechanicSchema))
   create(@Body() createMechanicDto: CreateMechanicDto) {
     return this.mechanicService.create(createMechanicDto);
   }
 
   // PATCH /mechanics/:id
   @Patch(':id')
+  @UseGuards(JwtAuthGuard)
+  @UsePipes(new ZodValidationPipe(UpdateMechanicSchema))
   update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateMechanicDto: UpdateMechanicDto,
@@ -53,6 +64,7 @@ export class MechanicController {
 
   // DELETE /mechanics/:id
   @Delete(':id')
+  @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.NO_CONTENT)
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.mechanicService.remove(id);

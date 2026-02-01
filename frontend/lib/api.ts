@@ -6,6 +6,7 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  withCredentials: true, // Enable sending cookies with requests
 });
 
 // Mechanic API
@@ -28,40 +29,23 @@ export const mapsApi = {
 };
 
 // Analytics API
+// Note: Authentication is now handled automatically via HttpOnly cookies
 export const analyticsApi = {
   trackPageView: (path: string, referer?: string) =>
     api.post('/analytics/pageview', { path, referer }),
-  getSiteStats: (days?: number, token?: string) => {
+  getSiteStats: (days?: number) => {
     const config: any = { params: {} };
     if (days !== undefined) {
       config.params.days = days;
     }
-    if (token) {
-      config.headers = {
-        ...api.defaults.headers.common,
-        Authorization: `Bearer ${token}`,
-      };
-    }
     return api.get('/analytics/site-stats', config);
   },
-  getMechanicMonthlyClicks: (id: number, months: number = 6, token?: string) => {
+  getMechanicMonthlyClicks: (id: number, months: number = 6) => {
     const config: any = { params: { months } };
-    if (token) {
-      config.headers = {
-        ...api.defaults.headers.common,
-        Authorization: `Bearer ${token}`,
-      };
-    }
     return api.get(`/analytics/mechanic/${id}/monthly`, config);
   },
-  getAllMechanicsMonthlyClicks: (months: number = 6, token?: string) => {
+  getAllMechanicsMonthlyClicks: (months: number = 6) => {
     const config: any = { params: { months } };
-    if (token) {
-      config.headers = {
-        ...api.defaults.headers.common,
-        Authorization: `Bearer ${token}`,
-      };
-    }
     return api.get('/analytics/all-mechanics-monthly', config);
   },
   getTopMechanics: (
@@ -70,7 +54,6 @@ export const analyticsApi = {
       limit?: number;
       days?: number;
       months?: number;
-      token?: string;
     },
   ) => {
     const config: any = {
@@ -81,13 +64,6 @@ export const analyticsApi = {
         ...(options?.months && { months: options.months }),
       },
     };
-
-    if (options?.token) {
-      config.headers = {
-        ...api.defaults.headers.common,
-        Authorization: `Bearer ${options.token}`,
-      };
-    }
 
     return api.get('/analytics/top-mechanics', config);
   },
