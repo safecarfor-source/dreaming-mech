@@ -16,8 +16,8 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 export class UploadController {
   constructor(private readonly uploadService: UploadService) {}
 
-  // Maximum file size: 5MB
-  private readonly MAX_FILE_SIZE = 5 * 1024 * 1024;
+  // Maximum file size: 10MB
+  private readonly MAX_FILE_SIZE = 10 * 1024 * 1024;
 
   // Allowed MIME types for images
   private readonly ALLOWED_MIME_TYPES = [
@@ -37,7 +37,7 @@ export class UploadController {
           fileType: /(jpg|jpeg|png|webp)$/,
         })
         .addMaxSizeValidator({
-          maxSize: 5 * 1024 * 1024, // 5MB
+          maxSize: 10 * 1024 * 1024, // 10MB
         })
         .build({
           errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
@@ -55,7 +55,7 @@ export class UploadController {
     // Additional file size check (defense in depth)
     if (file.size > this.MAX_FILE_SIZE) {
       throw new BadRequestException(
-        `File size exceeds maximum limit of 5MB. Received: ${(file.size / 1024 / 1024).toFixed(2)}MB`,
+        `File size exceeds maximum limit of 10MB. Received: ${(file.size / 1024 / 1024).toFixed(2)}MB`,
       );
     }
 

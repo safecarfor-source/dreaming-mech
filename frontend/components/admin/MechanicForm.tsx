@@ -136,6 +136,7 @@ export default function MechanicForm({ mechanic, mode }: MechanicFormProps) {
       const response = await fetch(url, {
         method: mode === 'create' ? 'POST' : 'PATCH',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include', // Include HttpOnly cookie with JWT token
         body: JSON.stringify(sanitizedData),
       });
 
@@ -324,14 +325,14 @@ export default function MechanicForm({ mechanic, mode }: MechanicFormProps) {
         <button
           type="button"
           onClick={() => router.back()}
-          className="px-8 py-3 border border-gray-200 rounded-xl font-medium hover:bg-gray-50 transition-colors"
+          className="px-8 py-3 border-2 border-gray-400 bg-white text-gray-800 rounded-xl font-medium hover:bg-gray-50 hover:border-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 transition-all shadow-sm"
         >
           취소
         </button>
         <button
           type="submit"
           disabled={isSaving}
-          className="px-8 py-3 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 text-white rounded-xl font-medium transition-colors"
+          className="px-8 py-3 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 text-white rounded-xl font-medium focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 transition-all shadow-sm"
         >
           {isSaving ? '저장 중...' : mode === 'create' ? '추가하기' : '수정하기'}
         </button>

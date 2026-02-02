@@ -1,98 +1,237 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Dreaming Mech - Backend
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+NestJS 기반의 정비사 관리 시스템 백엔드 API
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## 🚀 기술 스택
 
-## Description
+- **Framework**: NestJS
+- **Database**: PostgreSQL + Prisma ORM
+- **Authentication**: JWT (HttpOnly Cookies)
+- **File Storage**: AWS S3
+- **Maps API**: Naver Maps API
+- **Rate Limiting**: @nestjs/throttler
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## 📦 주요 기능
 
-## Project setup
+### 1. 정비사 관리 (Mechanic CRUD)
+- 정비사 목록 조회
+- 정비사 상세 조회
+- 정비사 등록/수정/삭제 (관리자)
+- 클릭 카운트 증가
 
-```bash
-$ npm install
+### 2. 지도 API (Naver Maps Proxy)
+- 주소 → 좌표 변환 (Geocoding)
+- 좌표 → 주소 변환 (Reverse Geocoding)
+
+### 3. 인증 시스템
+- JWT 기반 인증
+- HttpOnly 쿠키로 토큰 관리 (XSS 방지)
+- 관리자 로그인/로그아웃
+
+### 4. 이미지 업로드
+- AWS S3 통합
+- 파일 크기 제한: 10MB
+- 지원 포맷: JPEG, PNG, WebP
+- JWT 인증 필수
+
+### 5. 통계 및 분석
+- 페이지 뷰 추적
+- 정비사별 클릭 통계
+- 월별 클릭 추이
+- 실시간 TOP 정비사
+
+## 🛠️ 환경 설정
+
+### `.env` 파일
+```env
+# Database
+DATABASE_URL="postgresql://user:password@localhost:5432/mechanic_db?schema=public"
+
+# JWT
+JWT_SECRET="your-secret-key"
+
+# Naver Maps API
+NAVER_MAP_CLIENT_ID="your_client_id"
+NAVER_MAP_CLIENT_SECRET="your_client_secret"
+
+# AWS S3 (Image Storage)
+AWS_S3_BUCKET="your-bucket-name"
+AWS_REGION="ap-northeast-2"
+AWS_ACCESS_KEY_ID="your_access_key"
+AWS_SECRET_ACCESS_KEY="your_secret_key"
+
+# AWS CloudFront (Optional)
+# AWS_CLOUDFRONT_URL="https://d123456.cloudfront.net"
+
+# CORS
+ALLOWED_ORIGINS="http://localhost:3000"
+
+# Admin
+ADMIN_PASSWORD="your-admin-password"
 ```
 
-## Compile and run the project
+## 📥 설치 및 실행
 
+### 설치
 ```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+npm install
 ```
 
-## Run tests
-
+### 데이터베이스 마이그레이션
 ```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+npx prisma migrate dev
 ```
 
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
-
+### 시드 데이터 생성
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+npx prisma db seed
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+### 개발 모드 실행
+```bash
+npm run start:dev
+```
 
-## Resources
+### 프로덕션 빌드
+```bash
+npm run build
+npm run start:prod
+```
 
-Check out a few resources that may come in handy when working with NestJS:
+## 🧪 테스트
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+### 단위 테스트
+```bash
+npm run test
+```
 
-## Support
+### E2E 테스트
+```bash
+npm run test:e2e
+```
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+### 테스트 커버리지
+```bash
+npm run test:cov
+```
 
-## Stay in touch
+## 📡 API 엔드포인트
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+### Public APIs
 
-## License
+#### Mechanics
+- `GET /mechanics` - 정비사 목록 조회
+- `GET /mechanics/:id` - 정비사 상세 조회
+- `POST /mechanics/:id/click` - 클릭 카운트 증가
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+#### Maps
+- `GET /maps/geocode?address={address}` - 주소 → 좌표
+- `GET /maps/reverse?lat={lat}&lng={lng}` - 좌표 → 주소
+
+#### Analytics
+- `POST /analytics/pageview` - 페이지 뷰 추적
+
+### Protected APIs (JWT 인증 필요)
+
+#### Auth
+- `POST /auth/login` - 관리자 로그인
+- `GET /auth/profile` - 프로필 조회
+- `POST /auth/logout` - 로그아웃
+
+#### Mechanics (Admin)
+- `POST /mechanics` - 정비사 등록
+- `PATCH /mechanics/:id` - 정비사 수정
+- `DELETE /mechanics/:id` - 정비사 삭제
+
+#### Upload
+- `POST /upload/image` - 이미지 업로드 (S3)
+
+#### Analytics (Admin)
+- `GET /analytics/site-stats?days={days}` - 사이트 통계
+- `GET /analytics/mechanic/:id/monthly?months={months}` - 정비사별 월별 통계
+- `GET /analytics/all-mechanics-monthly?months={months}` - 전체 정비사 월별 통계
+- `GET /analytics/top-mechanics?period={period}&limit={limit}` - TOP 정비사
+
+## 🔒 보안
+
+### XSS 방지
+- JWT 토큰을 HttpOnly 쿠키로 저장
+- localStorage 사용 안함
+
+### CORS 설정
+- 허용된 오리진만 접근 가능
+- Credentials 포함 요청 지원
+
+### Rate Limiting
+- 60초당 최대 100회 요청 제한
+
+### 파일 업로드 보안
+- JWT 인증 필수
+- 파일 크기 제한 (10MB)
+- MIME 타입 검증
+- 파일 확장자 검증
+
+## 📂 프로젝트 구조
+
+```
+backend/
+├── src/
+│   ├── analytics/          # 통계 및 분석
+│   ├── auth/              # JWT 인증
+│   ├── click-log/         # 클릭 로그
+│   ├── common/            # 공통 모듈
+│   ├── maps/              # Naver Maps API
+│   ├── mechanic/          # 정비사 CRUD
+│   ├── prisma/            # Prisma 서비스
+│   ├── upload/            # 이미지 업로드 (S3)
+│   ├── app.module.ts
+│   └── main.ts
+├── prisma/
+│   ├── schema.prisma      # 데이터베이스 스키마
+│   └── seed.ts           # 시드 데이터
+└── test/                  # E2E 테스트
+```
+
+## 🗄️ 데이터베이스 스키마
+
+### Mechanic (정비사)
+- id, name, location, phone, description
+- address, mapLat, mapLng
+- mainImageUrl, youtubeUrl
+- clickCount, isActive
+- createdAt, updatedAt
+
+### ClickLog (클릭 로그)
+- id, mechanicId, clickedAt
+
+### PageView (페이지 뷰)
+- id, path, referer, timestamp
+
+### Admin (관리자)
+- id, email, password, name
+- createdAt, updatedAt
+
+## 🚀 배포
+
+### PM2 사용
+```bash
+npm install -g pm2
+pm2 start npm --name "mechanic-backend" -- run start:prod
+```
+
+### 환경변수 확인
+```bash
+npm run start:prod
+# 로그에서 ✅ 표시 확인
+# - Environment validation passed
+# - AWS S3 configured successfully
+# - Database connected
+```
+
+## 📝 라이센스
+
+MIT License
+
+---
+
+**Powered by NestJS** 🚀

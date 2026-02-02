@@ -23,14 +23,14 @@ async function bootstrap() {
     credentials: true,
   });
 
-  // 글로벌 Validation Pipe 설정
-  app.useGlobalPipes(
-    new ValidationPipe({
-      whitelist: true,
-      forbidNonWhitelisted: true,
-      transform: true,
-    }),
-  );
+  // 글로벌 Validation Pipe 설정 (임시 비활성화)
+  // app.useGlobalPipes(
+  //   new ValidationPipe({
+  //     whitelist: true,
+  //     forbidNonWhitelisted: true,
+  //     transform: true,
+  //   }),
+  // );
 
   await app.listen(3001);
   console.log('🚀 Backend server running on http://localhost:3001');

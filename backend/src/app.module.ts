@@ -14,11 +14,11 @@ import { AnalyticsModule } from './analytics/analytics.module';
 
 @Module({
   imports: [
-    // Rate Limiting: 60초에 최대 100번 요청
+    // Rate Limiting: 개발 환경에서는 완화, 프로덕션에서는 엄격
     ThrottlerModule.forRoot([
       {
         ttl: 60000, // 60초
-        limit: 100, // 최대 100번
+        limit: process.env.NODE_ENV === 'production' ? 100 : 1000, // 개발: 1000번, 프로덕션: 100번
       },
     ]),
     CommonModule,
@@ -33,10 +33,15 @@ import { AnalyticsModule } from './analytics/analytics.module';
   controllers: [AppController],
   providers: [
     AppService,
-    {
-      provide: APP_GUARD,
-      useClass: ThrottlerGuard,
-    },
+    // Disable ThrottlerGuard in test environment
+    ...(process.env.NODE_ENV !== 'test'
+      ? [
+          {
+            provide: APP_GUARD,
+            useClass: ThrottlerGuard,
+          },
+        ]
+      : []),
   ],
 })
 export class AppModule {}

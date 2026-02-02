@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -11,6 +12,8 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const naverMapClientId = process.env.NEXT_PUBLIC_NAVER_MAP_CLIENT_ID;
+
   return (
     <html lang="ko">
       <head>
@@ -20,6 +23,13 @@ export default function RootLayout({
         />
       </head>
       <body className="antialiased">
+        {/* Naver Maps API - 전역 로드 */}
+        {naverMapClientId && (
+          <Script
+            src={`https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=${naverMapClientId}`}
+            strategy="beforeInteractive"
+          />
+        )}
         {children}
       </body>
     </html>

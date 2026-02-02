@@ -15,7 +15,12 @@ export default function MechanicModal() {
   // 클릭수 증가
   useEffect(() => {
     if (isOpen && mechanic) {
-      mechanicsApi.incrementClick(mechanic.id).catch(console.error);
+      mechanicsApi.incrementClick(mechanic.id).catch((error) => {
+        // 중복 클릭(400)은 정상 동작이므로 무시
+        if (error?.response?.status !== 400) {
+          console.error('Failed to increment click:', error);
+        }
+      });
     }
   }, [isOpen, mechanic]);
 

@@ -12,7 +12,6 @@ import {
   Ip,
   Req,
   UseGuards,
-  UsePipes,
 } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import type { Request } from 'express';
@@ -46,18 +45,16 @@ export class MechanicController {
   // POST /mechanics
   @Post()
   @UseGuards(JwtAuthGuard)
-  @UsePipes(new ZodValidationPipe(CreateMechanicSchema))
-  create(@Body() createMechanicDto: CreateMechanicDto) {
+  create(@Body(new ZodValidationPipe(CreateMechanicSchema)) createMechanicDto: CreateMechanicDto) {
     return this.mechanicService.create(createMechanicDto);
   }
 
   // PATCH /mechanics/:id
   @Patch(':id')
   @UseGuards(JwtAuthGuard)
-  @UsePipes(new ZodValidationPipe(UpdateMechanicSchema))
   update(
     @Param('id', ParseIntPipe) id: number,
-    @Body() updateMechanicDto: UpdateMechanicDto,
+    @Body(new ZodValidationPipe(UpdateMechanicSchema)) updateMechanicDto: UpdateMechanicDto,
   ) {
     return this.mechanicService.update(id, updateMechanicDto);
   }
