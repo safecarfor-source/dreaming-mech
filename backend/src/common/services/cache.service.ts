@@ -1,44 +1,26 @@
 import { Injectable } from '@nestjs/common';
-
-interface CacheItem<T> {
-  value: T;
-  expiry: number;
-}
+import { LRUCache } from 'lru-cache';
 
 @Injectable()
 export class CacheService {
-  private cache = new Map<string, CacheItem<any>>();
+  private readonly cache: LRUCache<string, any>;
   private readonly defaultTTL = 10 * 1000; // 10초
-  private readonly maxItems = 1000;
+
+  constructor() {
+    this.cache = new LRUCache({
+      max: 1000, // 최대 1000개 항목
+      ttl: this.defaultTTL, // 기본 TTL 10초
+      updateAgeOnGet: true, // 조회 시 age 갱신
+      allowStale: false, // 만료된 항목 반환하지 않음
+    });
+  }
 
   async get<T>(key: string): Promise<T | undefined> {
-    const item = this.cache.get(key);
-
-    if (!item) {
-      return undefined;
-    }
-
-    // 만료 확인
-    if (Date.now() > item.expiry) {
-      this.cache.delete(key);
-      return undefined;
-    }
-
-    return item.value;
+    return this.cache.get(key) || undefined;
   }
 
   async set<T>(key: string, value: T, ttl?: number): Promise<void> {
-    // 캐시 크기 제한
-    if (this.cache.size >= this.maxItems) {
-      // 가장 오래된 항목 삭제
-      const firstKey = this.cache.keys().next().value;
-      if (firstKey) {
-        this.cache.delete(firstKey);
-      }
-    }
-
-    const expiry = Date.now() + (ttl || this.defaultTTL);
-    this.cache.set(key, { value, expiry });
+    this.cache.set(key, value, { ttl });
   }
 
   async del(key: string): Promise<void> {

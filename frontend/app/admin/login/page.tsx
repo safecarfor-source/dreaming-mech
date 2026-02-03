@@ -132,10 +132,13 @@ export default function LoginPage() {
             {loading ? '로그인 중...' : '로그인'}
           </button>
 
-          {/* 테스트 계정 안내 */}
-          <p className="text-center text-gray-500 text-sm mt-6">
-            테스트 계정: admin@test.com / admin123
-          </p>
+          {/* 테스트 계정 안내 - 개발 모드에서만 표시 */}
+          {process.env.NODE_ENV === 'development' && (
+            <div className="text-center text-gray-500 text-sm mt-6 p-3 bg-yellow-50/5 rounded-lg border border-yellow-500/20">
+              <p className="font-semibold text-yellow-500 mb-1">🔧 개발 모드</p>
+              <p>테스트 계정: admin@test.com / admin123</p>
+            </div>
+          )}
         </form>
       </motion.div>
     </div>

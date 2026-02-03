@@ -69,11 +69,11 @@ export default function MechanicModal() {
             className="fixed inset-x-0 bottom-0 top-16 bg-white rounded-t-3xl z-50 overflow-hidden flex flex-col"
           >
             {/* 헤더 */}
-            <div className="flex items-center justify-between p-6 border-b border-gray-100">
-              <h2 className="text-2xl font-bold text-gray-900">{sanitizeText(mechanic.name)}</h2>
+            <div className="flex items-center justify-between gap-4 p-6 border-b border-gray-100">
+              <h2 className="text-2xl font-bold text-gray-900 break-words min-w-0 flex-1">{sanitizeText(mechanic.name)}</h2>
               <button
                 onClick={close}
-                className="p-2 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors"
+                className="p-2 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors flex-shrink-0"
               >
                 <X size={24} className="text-gray-600" />
               </button>
@@ -97,24 +97,24 @@ export default function MechanicModal() {
                 <div className="grid md:grid-cols-2 gap-6">
                   <div className="space-y-4">
                     <div className="flex items-start gap-3">
-                      <div className="p-2 bg-gray-100 rounded-lg">
+                      <div className="p-2 bg-gray-100 rounded-lg flex-shrink-0">
                         <MapPin size={20} className="text-gray-500" />
                       </div>
-                      <div>
+                      <div className="min-w-0 flex-1">
                         <p className="text-sm text-gray-500">주소</p>
-                        <p className="text-gray-900 font-medium">{sanitizeText(mechanic.address)}</p>
+                        <p className="text-gray-900 font-medium break-words">{sanitizeText(mechanic.address)}</p>
                       </div>
                     </div>
 
                     <div className="flex items-start gap-3">
-                      <div className="p-2 bg-gray-100 rounded-lg">
+                      <div className="p-2 bg-gray-100 rounded-lg flex-shrink-0">
                         <Phone size={20} className="text-gray-500" />
                       </div>
-                      <div>
+                      <div className="min-w-0 flex-1">
                         <p className="text-sm text-gray-500">전화번호</p>
                         <a
                           href={`tel:${sanitizePhone(mechanic.phone)}`}
-                          className="text-gray-500 font-medium hover:underline"
+                          className="text-gray-500 font-medium hover:underline break-all"
                         >
                           {sanitizePhone(mechanic.phone)}
                         </a>
@@ -122,10 +122,10 @@ export default function MechanicModal() {
                     </div>
 
                     <div className="flex items-start gap-3">
-                      <div className="p-2 bg-gray-100 rounded-lg">
+                      <div className="p-2 bg-gray-100 rounded-lg flex-shrink-0">
                         <Eye size={20} className="text-gray-500" />
                       </div>
-                      <div>
+                      <div className="min-w-0 flex-1">
                         <p className="text-sm text-gray-500">조회수</p>
                         <p className="text-gray-900 font-medium">{mechanic.clickCount + 1}회</p>
                       </div>
@@ -136,7 +136,7 @@ export default function MechanicModal() {
                   {mechanic.description && (
                     <div className="p-6 bg-gray-50 rounded-2xl">
                       <h3 className="text-lg font-bold text-gray-900 mb-3">소개</h3>
-                      <p className="text-gray-600 leading-relaxed">{sanitizeBasicHTML(mechanic.description)}</p>
+                      <p className="text-gray-600 leading-relaxed break-words whitespace-pre-wrap">{sanitizeBasicHTML(mechanic.description)}</p>
                     </div>
                   )}
                 </div>

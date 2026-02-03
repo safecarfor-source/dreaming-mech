@@ -7,6 +7,10 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CacheService } from '../common/services/cache.service';
 import { CreateMechanicDto } from './dto/create-mechanic.dto';
 import { UpdateMechanicDto } from './dto/update-mechanic.dto';
+import {
+  PaginationDto,
+  PaginatedResult,
+} from '../common/dto/pagination.dto';
 
 @Injectable()
 export class MechanicService {
@@ -15,19 +19,37 @@ export class MechanicService {
     private cacheService: CacheService,
   ) {}
 
-  // 모든 정비사 조회
-  async findAll() {
-    const mechanics = await this.prisma.mechanic.findMany({
-      where: { isActive: true },
-      orderBy: { createdAt: 'desc' },
-    });
+  // 모든 정비사 조회 (페이지네이션 지원)
+  async findAll(paginationDto?: PaginationDto): Promise<PaginatedResult<any>> {
+    const { page = 1, limit = 20 } = paginationDto || {};
+    const skip = (page - 1) * limit;
+
+    const [data, total] = await Promise.all([
+      this.prisma.mechanic.findMany({
+        where: { isActive: true },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
+      }),
+      this.prisma.mechanic.count({ where: { isActive: true } }),
+    ]);
 
     // Decimal 타입을 숫자로 변환
-    return mechanics.map((mechanic) => ({
+    const mechanics = data.map((mechanic) => ({
       ...mechanic,
       mapLat: Number(mechanic.mapLat),
       mapLng: Number(mechanic.mapLng),
     }));
+
+    return {
+      data: mechanics,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
   }
 
   // 특정 정비사 조회
@@ -107,18 +129,21 @@ export class MechanicService {
   ) {
     await this.findOne(id);
 
-    // 중복 클릭 체크 (10초 이내)
-    const isDuplicate = await this.cacheService.checkDuplicateClick(
-      id,
-      ipAddress,
-    );
-    if (isDuplicate) {
-      throw new BadRequestException(
-        'Duplicate click detected. Please wait 10 seconds.',
-      );
-    }
-
     return await this.prisma.$transaction(async (tx) => {
+      // 트랜잭션 내부에서 중복 체크 (Race Condition 방지)
+      const isDuplicate = await this.cacheService.checkDuplicateClick(
+        id,
+        ipAddress,
+      );
+      if (isDuplicate) {
+        throw new BadRequestException(
+          'Duplicate click detected. Please wait 10 seconds.',
+        );
+      }
+
+      // 캐시에 클릭 기록 (중복 방지용) - 체크 직후 즉시 기록
+      await this.cacheService.recordClick(id, ipAddress);
+
       // 봇이 아닌 경우에만 clickCount 증가
       if (!isBot) {
         await tx.mechanic.update({
@@ -138,9 +163,6 @@ export class MechanicService {
           isBot,
         },
       });
-
-      // 캐시에 클릭 기록 (중복 방지용)
-      await this.cacheService.recordClick(id, ipAddress);
 
       // 업데이트된 정비사 정보 반환
       const mechanic = await tx.mechanic.findUnique({

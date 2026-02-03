@@ -7,6 +7,8 @@ import { BarChart3, TrendingUp, Eye, MapPin, Globe, Users, Activity } from 'luci
 import { mechanicsApi, analyticsApi } from '@/lib/api';
 import type { Mechanic, PeriodType, TopMechanic } from '@/types';
 import SiteTrafficStats from '@/components/analytics/SiteTrafficStats';
+import CountUp from '@/components/animations/CountUp';
+import AnimatedSection from '@/components/animations/AnimatedSection';
 
 type TabType = 'mechanics' | 'traffic';
 
@@ -24,8 +26,8 @@ export default function StatsPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const { data } = await mechanicsApi.getAll();
-        setMechanics(data);
+        const response = await mechanicsApi.getAll();
+        setMechanics(response.data.data || []);
       } catch (error) {
         console.error(error);
       } finally {
@@ -162,7 +164,7 @@ export default function StatsPage() {
                       {loading ? (
                         <span className="inline-block w-24 h-10 bg-gray-200 rounded animate-pulse"></span>
                       ) : (
-                        totalClicks.toLocaleString()
+                        <CountUp end={totalClicks} duration={2000} />
                       )}
                     </p>
                   </div>
@@ -195,7 +197,7 @@ export default function StatsPage() {
                       {loading ? (
                         <span className="inline-block w-24 h-10 bg-gray-200 rounded animate-pulse"></span>
                       ) : (
-                        avgClicks.toLocaleString()
+                        <CountUp end={avgClicks} duration={2000} delay={100} />
                       )}
                     </p>
                   </div>
@@ -228,7 +230,7 @@ export default function StatsPage() {
                       {loading ? (
                         <span className="inline-block w-24 h-10 bg-gray-200 rounded animate-pulse"></span>
                       ) : (
-                        totalMechanics.toLocaleString()
+                        <CountUp end={totalMechanics} duration={1800} delay={200} />
                       )}
                     </p>
                   </div>
@@ -262,7 +264,7 @@ export default function StatsPage() {
                         <span className="inline-block w-24 h-10 bg-gray-200 rounded animate-pulse"></span>
                       ) : (
                         <>
-                          {Object.keys(locationStats).length}
+                          <CountUp end={Object.keys(locationStats).length} duration={1500} delay={300} />
                           <span className="text-2xl text-gray-500 ml-1">개</span>
                         </>
                       )}
@@ -354,55 +356,44 @@ export default function StatsPage() {
                       <p className="text-gray-500">데이터가 없습니다</p>
                     </div>
                   ) : (
-                    <motion.div
-                      initial="hidden"
-                      animate="visible"
-                      variants={{
-                        visible: {
-                          transition: {
-                            staggerChildren: 0.1,
-                          },
-                        },
-                      }}
-                      className="space-y-3 sm:space-y-4"
-                    >
+                    <div className="space-y-3 sm:space-y-4">
                       {topMechanicsData.map((mechanic, index) => (
-                        <motion.div
+                        <AnimatedSection
                           key={mechanic.id}
-                          variants={{
-                            hidden: { opacity: 0, x: -20 },
-                            visible: { opacity: 1, x: 0 },
-                          }}
-                          className="flex items-center justify-between p-3 sm:p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors"
+                          animation="slideLeft"
+                          delay={index * 0.08}
+                          duration={0.4}
                         >
-                          <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
-                            <div
-                              className={`flex-shrink-0 flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-full font-bold text-white text-sm sm:text-base ${
-                                index === 0
-                                  ? 'bg-yellow-500'
-                                  : index === 1
-                                  ? 'bg-gray-400'
-                                  : index === 2
-                                  ? 'bg-orange-600'
-                                  : 'bg-purple-600'
-                              }`}
-                            >
-                              {index + 1}
+                          <div className="flex items-center justify-between p-3 sm:p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
+                            <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
+                              <div
+                                className={`flex-shrink-0 flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-full font-bold text-white text-sm sm:text-base ${
+                                  index === 0
+                                    ? 'bg-yellow-500'
+                                    : index === 1
+                                    ? 'bg-gray-400'
+                                    : index === 2
+                                    ? 'bg-orange-600'
+                                    : 'bg-purple-600'
+                                }`}
+                              >
+                                {index + 1}
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <h4 className="font-semibold text-gray-900 text-sm sm:text-base break-words">{mechanic.name}</h4>
+                                <p className="text-xs sm:text-sm text-gray-500 break-words">{mechanic.address}</p>
+                              </div>
                             </div>
-                            <div className="min-w-0 flex-1">
-                              <h4 className="font-semibold text-gray-900 text-sm sm:text-base truncate">{mechanic.name}</h4>
-                              <p className="text-xs sm:text-sm text-gray-500 truncate">{mechanic.address}</p>
+                            <div className="text-right ml-3 sm:ml-4 flex-shrink-0">
+                              <p className="text-lg sm:text-2xl font-bold text-purple-600 tabular-nums">
+                                <CountUp end={mechanic.clickCount} duration={1500} delay={index * 100} />
+                              </p>
+                              <p className="text-xs text-gray-500">클릭</p>
                             </div>
                           </div>
-                          <div className="text-right ml-3 sm:ml-4 flex-shrink-0">
-                            <p className="text-lg sm:text-2xl font-bold text-purple-600 tabular-nums">
-                              {mechanic.clickCount.toLocaleString()}
-                            </p>
-                            <p className="text-xs text-gray-500">클릭</p>
-                          </div>
-                        </motion.div>
+                        </AnimatedSection>
                       ))}
-                    </motion.div>
+                    </div>
                   )}
                 </div>
               </div>

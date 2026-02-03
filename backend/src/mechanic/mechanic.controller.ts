@@ -6,6 +6,7 @@ import {
   Patch,
   Param,
   Delete,
+  Query,
   ParseIntPipe,
   HttpCode,
   HttpStatus,
@@ -25,15 +26,16 @@ import {
   type CreateMechanicDto,
   type UpdateMechanicDto,
 } from './schemas/mechanic.schema';
+import { PaginationDto } from '../common/dto/pagination.dto';
 
 @Controller('mechanics')
 export class MechanicController {
   constructor(private readonly mechanicService: MechanicService) {}
 
-  // GET /mechanics
+  // GET /mechanics?page=1&limit=20
   @Get()
-  findAll() {
-    return this.mechanicService.findAll();
+  findAll(@Query() paginationDto: PaginationDto) {
+    return this.mechanicService.findAll(paginationDto);
   }
 
   // GET /mechanics/:id

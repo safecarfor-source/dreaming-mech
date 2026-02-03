@@ -132,41 +132,40 @@ export class AnalyticsService {
     const startDate = new Date();
     startDate.setMonth(startDate.getMonth() - months);
 
-    const monthlyData = await this.prisma.$queryRaw<
-      Array<{ mechanicId: number; month: string; clicks: bigint }>
+    // SQL JOIN으로 한 번에 조회하여 N+1 문제 해결
+    const result = await this.prisma.$queryRaw<
+      Array<{
+        id: number;
+        name: string;
+        monthlyClicks: Array<{ month: string; count: number }>;
+      }>
     >`
+      WITH monthly_stats AS (
+        SELECT
+          cl."mechanicId",
+          TO_CHAR(cl."clickedAt", 'YYYY-MM') as month,
+          COUNT(*) as count
+        FROM "ClickLog" cl
+        WHERE cl."isBot" = false
+          AND cl."clickedAt" >= ${startDate}
+        GROUP BY cl."mechanicId", TO_CHAR(cl."clickedAt", 'YYYY-MM')
+      )
       SELECT
-        "mechanicId",
-        TO_CHAR("clickedAt", 'YYYY-MM') as month,
-        COUNT(*)::bigint as clicks
-      FROM "ClickLog"
-      WHERE "isBot" = false
-        AND "clickedAt" >= ${startDate}
-      GROUP BY "mechanicId", TO_CHAR("clickedAt", 'YYYY-MM')
-      ORDER BY "mechanicId", month ASC
+        m.id,
+        m.name,
+        COALESCE(
+          json_agg(
+            json_build_object('month', ms.month, 'count', ms.count)
+            ORDER BY ms.month
+          ) FILTER (WHERE ms.month IS NOT NULL),
+          '[]'
+        ) as "monthlyClicks"
+      FROM "Mechanic" m
+      LEFT JOIN monthly_stats ms ON m.id = ms."mechanicId"
+      WHERE m."isActive" = true
+      GROUP BY m.id, m.name
+      ORDER BY m.id
     `;
-
-    // 정비사 정보 가져오기
-    const mechanics = await this.prisma.mechanic.findMany({
-      where: { isActive: true },
-      select: { id: true, name: true },
-    });
-
-    // 데이터 구조화
-    const result = mechanics.map((mechanic) => {
-      const mechanicData = monthlyData.filter(
-        (data) => data.mechanicId === mechanic.id,
-      );
-
-      return {
-        mechanicId: mechanic.id,
-        mechanicName: mechanic.name,
-        monthlyClicks: mechanicData.map((data) => ({
-          month: data.month,
-          clicks: Number(data.clicks),
-        })),
-      };
-    });
 
     return result;
   }

@@ -13,8 +13,8 @@ export default function AdminDashboard() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const { data } = await mechanicsApi.getAll();
-        setMechanics(data);
+        const response = await mechanicsApi.getAll();
+        setMechanics(response.data.data || []);
       } catch (error) {
         console.error(error);
       } finally {
@@ -117,9 +117,9 @@ export default function AdminDashboard() {
                         </div>
                       )}
                     </div>
-                    <div>
-                      <p className="font-medium text-gray-900">{mechanic.name}</p>
-                      <p className="text-sm text-gray-500">{mechanic.location}</p>
+                    <div className="min-w-0 flex-1">
+                      <p className="font-medium text-gray-900 break-words">{mechanic.name}</p>
+                      <p className="text-sm text-gray-500 break-words">{mechanic.location}</p>
                     </div>
                   </div>
                   <div className="text-right">

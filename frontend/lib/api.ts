@@ -1,5 +1,5 @@
-import axios from 'axios';
-import { Mechanic } from '@/types';
+import axios, { AxiosRequestConfig } from 'axios';
+import { Mechanic, ApiResponse } from '@/types';
 
 const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL,
@@ -9,9 +9,36 @@ const api = axios.create({
   withCredentials: true, // Enable sending cookies with requests
 });
 
+// ✅ Axios 인터셉터로 자동 인증 에러 처리
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      // 401 에러 시 로그인 페이지로 리다이렉트
+      if (typeof window !== 'undefined' && !window.location.pathname.includes('/admin/login')) {
+        window.location.href = '/admin/login';
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+
+// ✅ 타입 안전한 config 빌더 함수
+interface RequestConfig {
+  params?: Record<string, any>;
+}
+
+function buildConfig({ params }: RequestConfig = {}): AxiosRequestConfig {
+  const config: AxiosRequestConfig = {};
+  if (params) {
+    config.params = params;
+  }
+  return config;
+}
+
 // Mechanic API
 export const mechanicsApi = {
-  getAll: () => api.get<Mechanic[]>('/mechanics'),
+  getAll: () => api.get<ApiResponse<Mechanic[]>>('/mechanics'),
   getOne: (id: number) => api.get<Mechanic>(`/mechanics/${id}`),
   create: (data: Partial<Mechanic>) => api.post<Mechanic>('/mechanics', data),
   update: (id: number, data: Partial<Mechanic>) =>
@@ -33,21 +60,18 @@ export const mapsApi = {
 export const analyticsApi = {
   trackPageView: (path: string, referer?: string) =>
     api.post('/analytics/pageview', { path, referer }),
-  getSiteStats: (days?: number) => {
-    const config: any = { params: {} };
-    if (days !== undefined) {
-      config.params.days = days;
-    }
-    return api.get('/analytics/site-stats', config);
-  },
-  getMechanicMonthlyClicks: (id: number, months: number = 6) => {
-    const config: any = { params: { months } };
-    return api.get(`/analytics/mechanic/${id}/monthly`, config);
-  },
-  getAllMechanicsMonthlyClicks: (months: number = 6) => {
-    const config: any = { params: { months } };
-    return api.get('/analytics/all-mechanics-monthly', config);
-  },
+  getSiteStats: (days?: number) =>
+    api.get('/analytics/site-stats', buildConfig({
+      params: days !== undefined ? { days } : {}
+    })),
+  getMechanicMonthlyClicks: (id: number, months: number = 6) =>
+    api.get(`/analytics/mechanic/${id}/monthly`, buildConfig({
+      params: { months }
+    })),
+  getAllMechanicsMonthlyClicks: (months: number = 6) =>
+    api.get('/analytics/all-mechanics-monthly', buildConfig({
+      params: { months }
+    })),
   getTopMechanics: (
     period: 'realtime' | 'daily' | 'monthly' = 'realtime',
     options?: {
@@ -55,18 +79,15 @@ export const analyticsApi = {
       days?: number;
       months?: number;
     },
-  ) => {
-    const config: any = {
+  ) =>
+    api.get('/analytics/top-mechanics', buildConfig({
       params: {
         period,
         ...(options?.limit && { limit: options.limit }),
         ...(options?.days && { days: options.days }),
         ...(options?.months && { months: options.months }),
       },
-    };
-
-    return api.get('/analytics/top-mechanics', config);
-  },
+    })),
 };
 
 export default api;
