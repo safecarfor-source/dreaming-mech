@@ -59,11 +59,14 @@ export default function HeroSection({ totalMechanics, totalClicks }: Props) {
 
   return (
     <section className="min-h-screen flex items-center justify-center relative overflow-hidden">
-      {/* Background GIF */}
+      {/* Background Video */}
       <div className="absolute inset-0 z-0">
-        <img
+        <video
           src="/title.gif"
-          alt="Background animation"
+          autoPlay
+          loop
+          muted
+          playsInline
           className="w-full h-full object-cover"
         />
       </div>
@@ -86,7 +89,7 @@ export default function HeroSection({ totalMechanics, totalClicks }: Props) {
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="text-5xl md:text-7xl lg:text-8xl font-black leading-tight mb-8 min-h-[200px] md:min-h-[280px] lg:min-h-[320px]"
+          className="text-5xl md:text-7xl lg:text-8xl font-black leading-tight mb-8 min-h-[200px] md:min-h-[280px] lg:min-h-[320px] break-keep"
         >
           {headline.displayedText.split('\n').map((line, index) => (
             <span key={index}>
@@ -102,7 +105,7 @@ export default function HeroSection({ totalMechanics, totalClicks }: Props) {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 2.5 }}
-          className="text-xl text-gray-500 max-w-2xl mx-auto mb-2 min-h-[32px]"
+          className="text-xl text-gray-500 max-w-2xl mx-auto mb-2 min-h-[32px] break-keep"
         >
           {description1.displayedText}
           {!description1.isComplete && <span className="animate-pulse">|</span>}
@@ -113,7 +116,7 @@ export default function HeroSection({ totalMechanics, totalClicks }: Props) {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 3.5 }}
-          className="text-xl text-gray-500 max-w-2xl mx-auto min-h-[32px]"
+          className="text-xl text-gray-500 max-w-2xl mx-auto min-h-[32px] break-keep"
         >
           {description2.displayedText}
           {!description2.isComplete && <span className="animate-pulse">|</span>}

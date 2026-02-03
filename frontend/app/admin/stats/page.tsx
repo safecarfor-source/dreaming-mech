@@ -380,8 +380,8 @@ export default function StatsPage() {
                                 {index + 1}
                               </div>
                               <div className="min-w-0 flex-1">
-                                <h4 className="font-semibold text-gray-900 text-sm sm:text-base truncate">{mechanic.name}</h4>
-                                <p className="text-xs sm:text-sm text-gray-500 truncate">{mechanic.address}</p>
+                                <h4 className="font-semibold text-gray-900 text-sm sm:text-base break-words">{mechanic.name}</h4>
+                                <p className="text-xs sm:text-sm text-gray-500 break-words">{mechanic.address}</p>
                               </div>
                             </div>
                             <div className="text-right ml-3 sm:ml-4 flex-shrink-0">

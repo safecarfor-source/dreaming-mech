@@ -83,8 +83,15 @@ export default function MechanicsPage() {
 
         {/* 테이블 */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+          {/* 모바일 스크롤 안내 */}
+          <div className="lg:hidden bg-purple-50 px-4 py-3 border-b border-purple-100">
+            <p className="text-sm text-purple-800 text-center">
+              ↔️ 테이블이 넓습니다. 좌우로 스크롤하세요
+            </p>
+          </div>
+
           <div className="overflow-x-auto">
-            <table className="w-full">
+            <table className="w-full min-w-[640px]">
               <thead className="bg-gray-50 border-b border-gray-100">
                 <tr>
                   <th className="px-6 py-4 text-left text-sm font-medium text-gray-500">
@@ -123,8 +130,8 @@ export default function MechanicsPage() {
                 ) : (
                   filteredMechanics.map((mechanic) => (
                     <tr key={mechanic.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-3">
+                      <td className="px-6 py-4 max-w-[250px]">
+                        <div className="flex items-center gap-3 min-w-0">
                           <div className="w-10 h-10 rounded-lg bg-gray-200 overflow-hidden flex-shrink-0">
                             {mechanic.mainImageUrl ? (
                               <img
@@ -138,13 +145,13 @@ export default function MechanicsPage() {
                               </div>
                             )}
                           </div>
-                          <span className="font-medium text-gray-900">
+                          <span className="font-medium text-gray-900 break-words min-w-0">
                             {mechanic.name}
                           </span>
                         </div>
                       </td>
-                      <td className="px-6 py-4 text-gray-600">{mechanic.location}</td>
-                      <td className="px-6 py-4 text-gray-600">{mechanic.phone}</td>
+                      <td className="px-6 py-4 text-gray-600 max-w-[150px] break-words">{mechanic.location}</td>
+                      <td className="px-6 py-4 text-gray-600 break-all">{mechanic.phone}</td>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-1 text-purple-600">
                           <Eye size={16} />

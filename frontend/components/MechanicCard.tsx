@@ -40,18 +40,18 @@ export default function MechanicCard({ mechanic, onClick }: Props) {
 
       {/* 정보 */}
       <div className="p-6">
-        <h3 className="text-xl font-bold text-gray-900 mb-4 group-hover:text-purple-600 transition-colors">
+        <h3 className="text-xl font-bold text-gray-900 mb-4 group-hover:text-purple-600 transition-colors break-words">
           {sanitizeText(mechanic.name)}
         </h3>
 
-        <div className="space-y-2 text-gray-500">
-          <div className="flex items-center gap-2">
-            <MapPin size={16} className="text-gray-500" />
-            <span>{sanitizeText(mechanic.location)}</span>
+        <div className="space-y-2 text-gray-500 text-sm">
+          <div className="flex items-center gap-2 min-w-0">
+            <MapPin size={16} className="text-gray-500 flex-shrink-0" />
+            <span className="break-words">{sanitizeText(mechanic.location)}</span>
           </div>
-          <div className="flex items-center gap-2">
-            <Phone size={16} className="text-gray-500" />
-            <span>{sanitizePhone(mechanic.phone)}</span>
+          <div className="flex items-center gap-2 min-w-0">
+            <Phone size={16} className="text-gray-500 flex-shrink-0" />
+            <span className="break-all">{sanitizePhone(mechanic.phone)}</span>
           </div>
         </div>
 
