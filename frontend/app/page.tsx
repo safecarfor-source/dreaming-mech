@@ -56,7 +56,7 @@ export default function Home() {
               MECHANICS
             </p>
             <h2 className="text-4xl md:text-5xl font-black text-[#111111] mb-4">
-              꿈꾸는 <span className="text-[#bf00ff]">정비사</span>
+              전국 <span className="text-[#bf00ff]">팔도</span> 정비사
             </h2>
             <p className="text-[#666666] text-lg">
               실력과 신뢰를 갖춘 전문가들을 만나보세요

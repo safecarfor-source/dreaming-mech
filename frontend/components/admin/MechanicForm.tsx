@@ -50,15 +50,23 @@ export default function MechanicForm({ mechanic, mode }: MechanicFormProps) {
 
     setIsSearching(true);
     try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/maps/geocode?address=${encodeURIComponent(
-          formData.address
-        )}`
-      );
+      const url = `${process.env.NEXT_PUBLIC_API_URL}/maps/geocode?address=${encodeURIComponent(
+        formData.address
+      )}`;
+      console.log('🔍 API 호출 URL:', url);
+      console.log('🔍 검색 주소:', formData.address);
 
-      if (!response.ok) throw new Error('주소 검색 실패');
+      const response = await fetch(url);
+      console.log('📡 API 응답 상태:', response.status);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('❌ API 에러 응답:', errorText);
+        throw new Error('주소 검색 실패');
+      }
 
       const data = await response.json();
+      console.log('✅ API 응답 데이터:', data);
 
       setFormData((prev) => ({
         ...prev,
@@ -69,7 +77,7 @@ export default function MechanicForm({ mechanic, mode }: MechanicFormProps) {
 
       alert('지도에서 마커를 드래그하여 위치를 조정할 수 있습니다.');
     } catch (error) {
-      console.error(error);
+      console.error('❌ 주소 검색 에러:', error);
       alert('주소 검색에 실패했습니다.');
     } finally {
       setIsSearching(false);
@@ -250,8 +258,14 @@ export default function MechanicForm({ mechanic, mode }: MechanicFormProps) {
               name="address"
               value={formData.address}
               onChange={handleChange}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  handleAddressSearch();
+                }
+              }}
               className="flex-1 px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:border-purple-600 text-gray-900"
-              placeholder="예: 서울시 강남구 테헤란로 123"
+              placeholder="도로명 주소를 입력하세요 (예: 서울시 강남구 테헤란로 123)"
               required
             />
             <button
@@ -265,7 +279,7 @@ export default function MechanicForm({ mechanic, mode }: MechanicFormProps) {
             </button>
           </div>
           <p className="text-sm text-gray-500 mt-2">
-            주소를 입력하고 "지도에서 찾기"를 클릭하세요.
+            도로명 주소를 입력하고 "지도에서 찾기"를 클릭하세요.
           </p>
         </div>
 
