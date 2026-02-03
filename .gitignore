@@ -50,3 +50,6 @@ backend/prisma/migrations/
 
 # docs
 /docs
+
+# agent
+backend/src/agents/
