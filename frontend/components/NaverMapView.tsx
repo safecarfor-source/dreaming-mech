@@ -8,6 +8,8 @@ interface Props {
   name: string;
 }
 
+// Naver Maps 타입 (외부 스크립트로 로드되므로 any 사용)
+
 export default function NaverMapView({ lat, lng, name }: Props) {
   const mapRef = useRef<HTMLDivElement>(null);
   const [error, setError] = useState<string | null>(null);
@@ -31,8 +33,7 @@ export default function NaverMapView({ lat, lng, name }: Props) {
 
     // 스크립트가 로드될 때까지 대기
     const checkAndInitMap = () => {
-      const naver = (window as any).naver;
-      if (!naver || !naver.maps) {
+      if (!window.naver || !window.naver.maps) {
         // 아직 로드되지 않았으면 100ms 후 재시도
         setTimeout(checkAndInitMap, 100);
         return;
@@ -41,17 +42,17 @@ export default function NaverMapView({ lat, lng, name }: Props) {
       try {
         setIsLoading(false);
 
-        const map = new naver.maps.Map(mapRef.current, {
-          center: new naver.maps.LatLng(lat, lng),
+        const map = new window.naver.maps.Map(mapRef.current!, {
+          center: new window.naver.maps.LatLng(lat, lng),
           zoom: 17,
           zoomControl: true,
           zoomControlOptions: {
-            position: naver.maps.Position.TOP_RIGHT,
+            position: (window.naver.maps as any).Position.TOP_RIGHT,
           },
         });
 
-        new naver.maps.Marker({
-          position: new naver.maps.LatLng(lat, lng),
+        new window.naver.maps.Marker({
+          position: new window.naver.maps.LatLng(lat, lng),
           map,
           title: name,
         });

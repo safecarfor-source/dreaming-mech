@@ -119,7 +119,7 @@ export function sanitizeObject<T extends Record<string, any>>(
   obj: T,
   sanitizer: (str: string) => string = sanitizeText
 ): T {
-  const sanitized = { ...obj };
+  const sanitized = { ...obj } as Record<string, any>;
 
   for (const [key, value] of Object.entries(sanitized)) {
     if (typeof value === 'string') {
@@ -135,7 +135,7 @@ export function sanitizeObject<T extends Record<string, any>>(
     }
   }
 
-  return sanitized;
+  return sanitized as T;
 }
 
 /**

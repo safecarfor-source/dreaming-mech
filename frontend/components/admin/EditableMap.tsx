@@ -8,14 +8,18 @@ interface EditableMapProps {
   onMarkerDragEnd: (lat: number, lng: number) => void;
 }
 
+// Naver Maps 타입 (외부 스크립트로 로드되므로 any 사용)
+type NaverMap = any;
+type NaverMarker = any;
+
 export default function EditableMap({
   center,
   marker,
   onMarkerDragEnd,
 }: EditableMapProps) {
   const mapRef = useRef<HTMLDivElement>(null);
-  const markerRef = useRef<any>(null);
-  const [map, setMap] = useState<any>(null);
+  const markerRef = useRef<NaverMarker>(null);
+  const [map, setMap] = useState<NaverMap>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [authError, setAuthError] = useState(false);
 
@@ -37,20 +41,19 @@ export default function EditableMap({
     if (!mapRef.current || map) return;
 
     const checkAndInitMap = () => {
-      const naver = (window as any).naver;
-      if (!naver || !naver.maps) {
+      if (!window.naver || !window.naver.maps) {
         // 아직 로드되지 않았으면 100ms 후 재시도
         setTimeout(checkAndInitMap, 100);
         return;
       }
 
       try {
-        const mapInstance = new naver.maps.Map(mapRef.current, {
-          center: new naver.maps.LatLng(center.lat, center.lng),
+        const mapInstance = new window.naver.maps.Map(mapRef.current!, {
+          center: new window.naver.maps.LatLng(center.lat, center.lng),
           zoom: 16,
           zoomControl: true,
           zoomControlOptions: {
-            position: naver.maps.Position.TOP_RIGHT,
+            position: (window.naver.maps as any).Position.TOP_RIGHT,
           },
         });
 
@@ -67,24 +70,21 @@ export default function EditableMap({
 
   // 마커 생성 및 업데이트
   useEffect(() => {
-    if (!map || !marker) return;
+    if (!map || !marker || !window.naver?.maps) return;
 
-    const naver = (window as any).naver;
-    if (!naver || !naver.maps) return;
-
-    const position = new naver.maps.LatLng(marker.lat, marker.lng);
+    const position = new window.naver.maps.LatLng(marker.lat, marker.lng);
 
     if (markerRef.current) {
       markerRef.current.setPosition(position);
       map.setCenter(position);
     } else {
-      const newMarker = new naver.maps.Marker({
+      const newMarker = new window.naver.maps.Marker({
         position,
         map,
         draggable: true,
       });
 
-      naver.maps.Event.addListener(newMarker, 'dragend', (e: any) => {
+      window.naver.maps.Event.addListener(newMarker, 'dragend', (e: any) => {
         const newLat = e.coord.lat();
         const newLng = e.coord.lng();
         onMarkerDragEnd(newLat, newLng);

@@ -21,8 +21,9 @@ export default function Home() {
     try {
       setLoading(true);
       setError(null);
-      const { data } = await mechanicsApi.getAll();
-      setMechanics(data);
+      const response = await mechanicsApi.getAll();
+      // API 응답: { data: { data: [], meta: {} } }
+      setMechanics(response.data.data || []);
     } catch (error) {
       console.error(error);
       setError('정비사 목록을 불러오는데 실패했습니다.');

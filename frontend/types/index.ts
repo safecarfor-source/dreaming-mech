@@ -42,3 +42,14 @@ export interface TopMechanic {
   address: string;
   clickCount: number;
 }
+
+// API 응답 타입
+export interface ApiResponse<T> {
+  data: T;
+  meta?: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
+}

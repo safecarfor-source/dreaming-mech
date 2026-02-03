@@ -24,8 +24,8 @@ export default function StatsPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const { data } = await mechanicsApi.getAll();
-        setMechanics(data);
+        const response = await mechanicsApi.getAll();
+        setMechanics(response.data.data || []);
       } catch (error) {
         console.error(error);
       } finally {
