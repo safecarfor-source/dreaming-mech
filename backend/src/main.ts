@@ -2,6 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
 import { validateEnvironment } from './config/env.validation';
+import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 import cookieParser from 'cookie-parser';
 
 async function bootstrap() {
@@ -23,14 +24,17 @@ async function bootstrap() {
     credentials: true,
   });
 
-  // 글로벌 Validation Pipe 설정 (임시 비활성화)
-  // app.useGlobalPipes(
-  //   new ValidationPipe({
-  //     whitelist: true,
-  //     forbidNonWhitelisted: true,
-  //     transform: true,
-  //   }),
-  // );
+  // 글로벌 예외 필터 설정
+  app.useGlobalFilters(new AllExceptionsFilter());
+
+  // 글로벌 Validation Pipe 설정
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
+    }),
+  );
 
   await app.listen(3001);
   console.log('🚀 Backend server running on http://localhost:3001');
