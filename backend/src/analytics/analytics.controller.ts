@@ -12,11 +12,13 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import type { Request } from 'express';
+import { SkipThrottle } from '@nestjs/throttler';
 import { AnalyticsService } from './analytics.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { BotDetectionGuard } from '../common/guards/bot-detection.guard';
 
 @Controller('analytics')
+@SkipThrottle() // 통계 API는 Rate Limit 제외
 export class AnalyticsController {
   constructor(private readonly analyticsService: AnalyticsService) {}
 

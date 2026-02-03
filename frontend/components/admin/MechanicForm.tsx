@@ -1,11 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import EditableMap from './EditableMap';
 import ImageUpload from './ImageUpload';
 import { Search, MapPin, Image } from 'lucide-react';
 import type { Mechanic } from '@/types';
+import { isValidYouTubeUrl, sanitizeYouTubeUrl } from '@/lib/youtube';
 
 interface MechanicFormProps {
   mechanic?: Mechanic;
@@ -21,8 +22,8 @@ export default function MechanicForm({ mechanic, mode }: MechanicFormProps) {
     phone: mechanic?.phone || '',
     description: mechanic?.description || '',
     address: mechanic?.address || '',
-    mapLat: mechanic?.mapLat || 37.5665,
-    mapLng: mechanic?.mapLng || 126.978,
+    mapLat: mechanic?.mapLat ? Number(mechanic.mapLat) : 37.5665,
+    mapLng: mechanic?.mapLng ? Number(mechanic.mapLng) : 126.978,
     mainImageUrl: mechanic?.mainImageUrl || '',
     youtubeUrl: mechanic?.youtubeUrl || '',
     isActive: mechanic?.isActive ?? true,
@@ -49,33 +50,41 @@ export default function MechanicForm({ mechanic, mode }: MechanicFormProps) {
 
     setIsSearching(true);
     try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/maps/geocode?address=${encodeURIComponent(
-          formData.address
-        )}`
-      );
+      const url = `${process.env.NEXT_PUBLIC_API_URL}/maps/geocode?address=${encodeURIComponent(
+        formData.address
+      )}`;
+      console.log('🔍 API 호출 URL:', url);
+      console.log('🔍 검색 주소:', formData.address);
 
-      if (!response.ok) throw new Error('주소 검색 실패');
+      const response = await fetch(url);
+      console.log('📡 API 응답 상태:', response.status);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('❌ API 에러 응답:', errorText);
+        throw new Error('주소 검색 실패');
+      }
 
       const data = await response.json();
+      console.log('✅ API 응답 데이터:', data);
 
       setFormData((prev) => ({
         ...prev,
-        mapLat: data.lat,
-        mapLng: data.lng,
+        mapLat: Number(data.lat),
+        mapLng: Number(data.lng),
         address: data.address,
       }));
 
       alert('지도에서 마커를 드래그하여 위치를 조정할 수 있습니다.');
     } catch (error) {
-      console.error(error);
+      console.error('❌ 주소 검색 에러:', error);
       alert('주소 검색에 실패했습니다.');
     } finally {
       setIsSearching(false);
     }
   };
 
-  const handleMarkerDragEnd = async (lat: number, lng: number) => {
+  const handleMarkerDragEnd = useCallback(async (lat: number, lng: number) => {
     try {
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/maps/reverse?lat=${lat}&lng=${lng}`
@@ -103,7 +112,7 @@ export default function MechanicForm({ mechanic, mode }: MechanicFormProps) {
         mapLng: lng,
       }));
     }
-  };
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -112,6 +121,18 @@ export default function MechanicForm({ mechanic, mode }: MechanicFormProps) {
       alert('필수 항목을 모두 입력해주세요');
       return;
     }
+
+    // Validate YouTube URL if provided
+    if (formData.youtubeUrl && !isValidYouTubeUrl(formData.youtubeUrl)) {
+      alert('올바른 YouTube URL을 입력해주세요.\n예: https://www.youtube.com/watch?v=VIDEO_ID');
+      return;
+    }
+
+    // Sanitize YouTube URL
+    const sanitizedData = {
+      ...formData,
+      youtubeUrl: formData.youtubeUrl ? sanitizeYouTubeUrl(formData.youtubeUrl) || '' : '',
+    };
 
     setIsSaving(true);
     try {
@@ -123,7 +144,8 @@ export default function MechanicForm({ mechanic, mode }: MechanicFormProps) {
       const response = await fetch(url, {
         method: mode === 'create' ? 'POST' : 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        credentials: 'include', // Include HttpOnly cookie with JWT token
+        body: JSON.stringify(sanitizedData),
       });
 
       if (!response.ok) throw new Error('저장 실패');
@@ -153,7 +175,7 @@ export default function MechanicForm({ mechanic, mode }: MechanicFormProps) {
             name="name"
             value={formData.name}
             onChange={handleChange}
-            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:border-[#8B5CF6]"
+            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:border-purple-600 text-gray-900"
             placeholder="예: 강남 오토센터"
             required
           />
@@ -169,7 +191,7 @@ export default function MechanicForm({ mechanic, mode }: MechanicFormProps) {
               name="location"
               value={formData.location}
               onChange={handleChange}
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:border-[#8B5CF6]"
+              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:border-purple-600 text-gray-900"
               placeholder="예: 강남구"
               required
             />
@@ -184,7 +206,7 @@ export default function MechanicForm({ mechanic, mode }: MechanicFormProps) {
               name="phone"
               value={formData.phone}
               onChange={handleChange}
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:border-[#8B5CF6]"
+              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:border-purple-600 text-gray-900"
               placeholder="예: 02-1234-5678"
               required
             />
@@ -197,7 +219,7 @@ export default function MechanicForm({ mechanic, mode }: MechanicFormProps) {
             name="description"
             value={formData.description}
             onChange={handleChange}
-            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:border-[#8B5CF6]"
+            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:border-purple-600 text-gray-900"
             rows={4}
             placeholder="정비소 소개를 입력하세요"
           />
@@ -211,7 +233,7 @@ export default function MechanicForm({ mechanic, mode }: MechanicFormProps) {
             onChange={(e) =>
               setFormData((prev) => ({ ...prev, isActive: e.target.value === 'true' }))
             }
-            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:border-[#8B5CF6]"
+            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:border-purple-600 text-gray-900"
           >
             <option value="true">활성</option>
             <option value="false">비활성</option>
@@ -222,7 +244,7 @@ export default function MechanicForm({ mechanic, mode }: MechanicFormProps) {
       {/* 위치 정보 */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 space-y-6">
         <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-          <MapPin className="text-[#8B5CF6]" />
+          <MapPin className="text-purple-600" />
           위치 정보
         </h2>
 
@@ -236,22 +258,28 @@ export default function MechanicForm({ mechanic, mode }: MechanicFormProps) {
               name="address"
               value={formData.address}
               onChange={handleChange}
-              className="flex-1 px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:border-[#8B5CF6]"
-              placeholder="예: 서울시 강남구 테헤란로 123"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  handleAddressSearch();
+                }
+              }}
+              className="flex-1 px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:border-purple-600 text-gray-900"
+              placeholder="도로명 주소를 입력하세요 (예: 서울시 강남구 테헤란로 123)"
               required
             />
             <button
               type="button"
               onClick={handleAddressSearch}
               disabled={isSearching}
-              className="px-6 py-3 bg-[#8B5CF6] hover:bg-[#7C3AED] disabled:bg-gray-400 text-white rounded-xl font-medium flex items-center gap-2 transition-colors"
+              className="px-6 py-3 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 text-white rounded-xl font-medium flex items-center gap-2 transition-colors"
             >
               <Search size={20} />
               {isSearching ? '검색 중...' : '지도에서 찾기'}
             </button>
           </div>
           <p className="text-sm text-gray-500 mt-2">
-            주소를 입력하고 "지도에서 찾기"를 클릭하세요.
+            도로명 주소를 입력하고 "지도에서 찾기"를 클릭하세요.
           </p>
         </div>
 
@@ -264,7 +292,7 @@ export default function MechanicForm({ mechanic, mode }: MechanicFormProps) {
         <div className="bg-gray-50 p-4 rounded-xl">
           <p className="text-sm text-gray-600">
             <span className="font-medium">선택된 좌표:</span> 위도{' '}
-            {formData.mapLat.toFixed(6)}, 경도 {formData.mapLng.toFixed(6)}
+            {Number(formData.mapLat).toFixed(6)}, 경도 {Number(formData.mapLng).toFixed(6)}
           </p>
         </div>
       </div>
@@ -272,7 +300,7 @@ export default function MechanicForm({ mechanic, mode }: MechanicFormProps) {
       {/* 추가 정보 */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 space-y-6">
         <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-          <Image className="text-[#8B5CF6]" />
+          <Image className="text-purple-600" />
           추가 정보
         </h2>
 
@@ -300,7 +328,7 @@ export default function MechanicForm({ mechanic, mode }: MechanicFormProps) {
             name="youtubeUrl"
             value={formData.youtubeUrl}
             onChange={handleChange}
-            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:border-[#8B5CF6]"
+            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:border-purple-600 text-gray-900"
             placeholder="https://www.youtube.com/shorts/xxxxxxx"
           />
         </div>
@@ -311,14 +339,14 @@ export default function MechanicForm({ mechanic, mode }: MechanicFormProps) {
         <button
           type="button"
           onClick={() => router.back()}
-          className="px-8 py-3 border border-gray-200 rounded-xl font-medium hover:bg-gray-50 transition-colors"
+          className="px-8 py-3 border-2 border-gray-400 bg-white text-gray-800 rounded-xl font-medium hover:bg-gray-50 hover:border-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 transition-all shadow-sm"
         >
           취소
         </button>
         <button
           type="submit"
           disabled={isSaving}
-          className="px-8 py-3 bg-[#8B5CF6] hover:bg-[#7C3AED] disabled:bg-gray-400 text-white rounded-xl font-medium transition-colors"
+          className="px-8 py-3 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 text-white rounded-xl font-medium focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 transition-all shadow-sm"
         >
           {isSaving ? '저장 중...' : mode === 'create' ? '추가하기' : '수정하기'}
         </button>

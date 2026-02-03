@@ -1,27 +1,41 @@
 import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { HttpService } from '@nestjs/axios';
-import { firstValueFrom } from 'rxjs';
+import { firstValueFrom, timeout } from 'rxjs';
 
 @Injectable()
 export class MapsService {
   private readonly GEOCODE_URL =
-    'https://naveropenapi.apigw.ntruss.com/map-geocode/v2/geocode';
+    'https://maps.apigw.ntruss.com/map-geocode/v2/geocode';
   private readonly REVERSE_URL =
-    'https://naveropenapi.apigw.ntruss.com/map-reversegeocode/v2/gc';
+    'https://maps.apigw.ntruss.com/map-reversegeocode/v2/gc';
+  private readonly TIMEOUT = 5000; // 5초 타임아웃
 
-  constructor(private readonly httpService: HttpService) {}
+  constructor(
+    private readonly httpService: HttpService,
+    private readonly configService: ConfigService,
+  ) {}
 
   // 주소 → 좌표 (Geocoding)
   async geocode(address: string) {
+    console.log('[Geocode] Starting geocode for address:', address);
     try {
+      console.log('[Geocode] Calling Naver API...');
       const response = await firstValueFrom(
-        this.httpService.get(this.GEOCODE_URL, {
-          params: { query: address },
-          headers: {
-            'X-NCP-APIGW-API-KEY-ID': process.env.NAVER_MAP_CLIENT_ID,
-            'X-NCP-APIGW-API-KEY': process.env.NAVER_MAP_CLIENT_SECRET,
-          },
-        }),
+        this.httpService
+          .get(this.GEOCODE_URL, {
+            params: { query: address },
+            headers: {
+              'x-ncp-apigw-api-key-id': this.configService.get<string>(
+                'NAVER_MAP_CLIENT_ID',
+              ),
+              'x-ncp-apigw-api-key': this.configService.get<string>(
+                'NAVER_MAP_CLIENT_SECRET',
+              ),
+              Accept: 'application/json',
+            },
+          })
+          .pipe(timeout(this.TIMEOUT)),
       );
 
       const addresses = response.data.addresses;
@@ -50,17 +64,24 @@ export class MapsService {
     try {
       const coords = `${lng},${lat}`;
       const response = await firstValueFrom(
-        this.httpService.get(this.REVERSE_URL, {
-          params: {
-            coords,
-            output: 'json',
-            orders: 'roadaddr,addr',
-          },
-          headers: {
-            'X-NCP-APIGW-API-KEY-ID': process.env.NAVER_MAP_CLIENT_ID,
-            'X-NCP-APIGW-API-KEY': process.env.NAVER_MAP_CLIENT_SECRET,
-          },
-        }),
+        this.httpService
+          .get(this.REVERSE_URL, {
+            params: {
+              coords,
+              output: 'json',
+              orders: 'roadaddr,addr',
+            },
+            headers: {
+              'x-ncp-apigw-api-key-id': this.configService.get<string>(
+                'NAVER_MAP_CLIENT_ID',
+              ),
+              'x-ncp-apigw-api-key': this.configService.get<string>(
+                'NAVER_MAP_CLIENT_SECRET',
+              ),
+              Accept: 'application/json',
+            },
+          })
+          .pipe(timeout(this.TIMEOUT)),
       );
 
       const results = response.data.results;

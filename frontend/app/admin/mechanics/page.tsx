@@ -59,7 +59,7 @@ export default function MechanicsPage() {
           </div>
           <Link
             href="/admin/mechanics/new"
-            className="flex items-center gap-2 bg-[#8B5CF6] hover:bg-[#7C3AED] text-white px-6 py-3 rounded-xl font-medium transition-colors"
+            className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-xl font-medium transition-colors"
           >
             <Plus size={20} />
             정비사 추가
@@ -77,7 +77,7 @@ export default function MechanicsPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="이름 또는 지역으로 검색..."
-            className="w-full pl-12 pr-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:border-[#8B5CF6]"
+            className="w-full pl-12 pr-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:border-purple-600"
           />
         </div>
 
@@ -146,7 +146,7 @@ export default function MechanicsPage() {
                       <td className="px-6 py-4 text-gray-600">{mechanic.location}</td>
                       <td className="px-6 py-4 text-gray-600">{mechanic.phone}</td>
                       <td className="px-6 py-4">
-                        <div className="flex items-center gap-1 text-[#8B5CF6]">
+                        <div className="flex items-center gap-1 text-purple-600">
                           <Eye size={16} />
                           <span>{mechanic.clickCount}</span>
                         </div>
@@ -166,7 +166,7 @@ export default function MechanicsPage() {
                         <div className="flex items-center justify-end gap-2">
                           <Link
                             href={`/admin/mechanics/${mechanic.id}/edit`}
-                            className="p-2 text-gray-400 hover:text-[#8B5CF6] hover:bg-[#8B5CF6]/5 rounded-lg transition-colors"
+                            className="p-2 text-gray-400 hover:text-purple-600 hover:bg-purple-600/5 rounded-lg transition-colors"
                           >
                             <Edit size={18} />
                           </Link>

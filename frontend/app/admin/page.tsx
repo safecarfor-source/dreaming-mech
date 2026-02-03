@@ -32,7 +32,7 @@ export default function AdminDashboard() {
       label: '전체 정비사',
       value: mechanics.length,
       icon: Users,
-      color: 'bg-[#8B5CF6]',
+      color: 'bg-purple-600',
     },
     {
       label: '활성 정비사',
@@ -123,7 +123,7 @@ export default function AdminDashboard() {
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="font-medium text-[#8B5CF6]">
+                    <p className="font-medium text-purple-600">
                       조회수 {mechanic.clickCount}
                     </p>
                     <p className="text-sm text-gray-500">

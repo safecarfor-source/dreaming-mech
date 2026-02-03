@@ -20,6 +20,7 @@
 - 📡 API 문서 (전체 엔드포인트)
 - 🎨 디자인 시스템
 - ☁️ AWS S3 설정 가이드
+- 🔒 보안 개선 사항
 - 🔧 개선 사항 (우선순위별)
 - 🚢 배포 가이드
 - 🆘 문제 해결
@@ -96,8 +97,18 @@ dreaming-mech/
 ## 📊 현재 상태
 
 - ✅ Phase 0-7 완료
+- ✅ **보안 Phase 1 완료** (6/9 작업) - 2026-01-30
+  - HttpOnly 쿠키 인증
+  - 입력값 Sanitization (DOMPurify)
+  - YouTube URL 검증
+  - JWT Secret 강화
+  - 환경 변수 검증
 - ⏳ Phase 8-10 대기 (반응형, 배포, 테스트)
-- 🔄 최근 작업: Cloudinary → AWS S3 마이그레이션 (2026-01-28)
+- ⏳ 보안 Phase 1 남은 작업 (Zod 검증, 파일 업로드 검증)
+- 🔄 최근 작업:
+  - 메인 타이틀 변경 ("전국 팔도 정비사") (2026-02-03)
+  - 주소 검색 UI/UX 개선 (Enter 키 지원, 디버깅 강화)
+  - 문서 정리 (중복 AWS 문서 4개 삭제)
 
 ## 📝 주요 기능
 
@@ -118,8 +129,21 @@ dreaming-mech/
 
 ## 🔗 관련 문서
 
+### 필수 문서
 - **통합 문서**: [DOCUMENTATION.md](./DOCUMENTATION.md) - **메인 문서**
+- **보안 개선 요약**: [SECURITY_IMPROVEMENTS_SUMMARY.md](./SECURITY_IMPROVEMENTS_SUMMARY.md) - **보안 작업 완료 내역**
+
+### 보안 관련
+- **보안 설정 가이드**: [SECURITY_SETUP_GUIDE.md](./SECURITY_SETUP_GUIDE.md) - 수동 보안 작업
+- **쿠키 마이그레이션**: [COOKIE_MIGRATION_GUIDE.md](./COOKIE_MIGRATION_GUIDE.md) - HttpOnly 쿠키 상세 가이드
+- **코드 리뷰**: [docs/code-review-summary.md](./docs/code-review-summary.md) - 전체 보안 감사
+
+### AWS 및 인프라
 - **AWS S3 설정**: [backend/AWS_SETUP.md](./backend/AWS_SETUP.md)
+- **AWS 체크리스트**: [AWS_SETUP_CHECKLIST.md](./AWS_SETUP_CHECKLIST.md)
+- **AWS 구현 요약**: [AWS_IMPLEMENTATION_SUMMARY.md](./AWS_IMPLEMENTATION_SUMMARY.md)
+
+### 기타
 - **디자인 시스템**: [frontend/DESIGN_SYSTEM.md](./frontend/DESIGN_SYSTEM.md)
 - **아카이브**: [archive/](./archive/) - 이전 개발 문서들
 
@@ -130,4 +154,4 @@ dreaming-mech/
 
 ---
 
-**최종 업데이트**: 2026-01-28 | **버전**: Phase 7 완료
+**최종 업데이트**: 2026-02-03 | **버전**: Phase 7 완료 + 보안 개선 Phase 1 (67% 완료)

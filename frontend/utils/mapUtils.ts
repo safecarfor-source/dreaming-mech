@@ -1,10 +1,12 @@
-// 유튜브 쇼츠 URL을 임베디드 URL로 변환
+/**
+ * @deprecated Use validateAndGetYouTubeEmbedUrl from @/lib/youtube instead
+ * Keeping for backward compatibility
+ */
 export function convertShortsUrl(url: string): string {
-  const shortsMatch = url.match(/shorts\/([a-zA-Z0-9_-]+)/);
-  if (shortsMatch) {
-    return `https://www.youtube.com/embed/${shortsMatch[1]}`;
-  }
-  return url;
+  // Import the secure version
+  // This is a legacy wrapper maintained for compatibility
+  const { validateAndGetYouTubeEmbedUrl } = require('@/lib/youtube');
+  return validateAndGetYouTubeEmbedUrl(url) || url;
 }
 
 // 좌표 유효성 검증

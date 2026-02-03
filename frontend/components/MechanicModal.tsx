@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, MapPin, Phone, Eye, ExternalLink } from 'lucide-react';
 import { useModalStore } from '@/lib/store';
 import { mechanicsApi } from '@/lib/api';
+import { sanitizeText, sanitizeBasicHTML, sanitizePhone } from '@/lib/sanitize';
 import NaverMapView from './NaverMapView';
 import YouTubeEmbed from './YouTubeEmbed';
 
@@ -14,7 +15,12 @@ export default function MechanicModal() {
   // 클릭수 증가
   useEffect(() => {
     if (isOpen && mechanic) {
-      mechanicsApi.incrementClick(mechanic.id).catch(console.error);
+      mechanicsApi.incrementClick(mechanic.id).catch((error) => {
+        // 중복 클릭(400)은 정상 동작이므로 무시
+        if (error?.response?.status !== 400) {
+          console.error('Failed to increment click:', error);
+        }
+      });
     }
   }, [isOpen, mechanic]);
 
@@ -64,7 +70,7 @@ export default function MechanicModal() {
           >
             {/* 헤더 */}
             <div className="flex items-center justify-between p-6 border-b border-gray-100">
-              <h2 className="text-2xl font-bold text-gray-900">{mechanic.name}</h2>
+              <h2 className="text-2xl font-bold text-gray-900">{sanitizeText(mechanic.name)}</h2>
               <button
                 onClick={close}
                 className="p-2 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors"
@@ -81,7 +87,7 @@ export default function MechanicModal() {
                   <div className="rounded-2xl overflow-hidden">
                     <img
                       src={mechanic.mainImageUrl}
-                      alt={mechanic.name}
+                      alt={sanitizeText(mechanic.name)}
                       className="w-full h-64 md:h-80 object-cover"
                     />
                   </div>
@@ -92,32 +98,32 @@ export default function MechanicModal() {
                   <div className="space-y-4">
                     <div className="flex items-start gap-3">
                       <div className="p-2 bg-gray-100 rounded-lg">
-                        <MapPin size={20} className="text-[#6B7280]" />
+                        <MapPin size={20} className="text-gray-500" />
                       </div>
                       <div>
                         <p className="text-sm text-gray-500">주소</p>
-                        <p className="text-gray-900 font-medium">{mechanic.address}</p>
+                        <p className="text-gray-900 font-medium">{sanitizeText(mechanic.address)}</p>
                       </div>
                     </div>
 
                     <div className="flex items-start gap-3">
                       <div className="p-2 bg-gray-100 rounded-lg">
-                        <Phone size={20} className="text-[#6B7280]" />
+                        <Phone size={20} className="text-gray-500" />
                       </div>
                       <div>
                         <p className="text-sm text-gray-500">전화번호</p>
                         <a
-                          href={`tel:${mechanic.phone}`}
-                          className="text-[#6B7280] font-medium hover:underline"
+                          href={`tel:${sanitizePhone(mechanic.phone)}`}
+                          className="text-gray-500 font-medium hover:underline"
                         >
-                          {mechanic.phone}
+                          {sanitizePhone(mechanic.phone)}
                         </a>
                       </div>
                     </div>
 
                     <div className="flex items-start gap-3">
                       <div className="p-2 bg-gray-100 rounded-lg">
-                        <Eye size={20} className="text-[#6B7280]" />
+                        <Eye size={20} className="text-gray-500" />
                       </div>
                       <div>
                         <p className="text-sm text-gray-500">조회수</p>
@@ -130,7 +136,7 @@ export default function MechanicModal() {
                   {mechanic.description && (
                     <div className="p-6 bg-gray-50 rounded-2xl">
                       <h3 className="text-lg font-bold text-gray-900 mb-3">소개</h3>
-                      <p className="text-gray-600 leading-relaxed">{mechanic.description}</p>
+                      <p className="text-gray-600 leading-relaxed">{sanitizeBasicHTML(mechanic.description)}</p>
                     </div>
                   )}
                 </div>
@@ -141,7 +147,7 @@ export default function MechanicModal() {
                   <NaverMapView
                     lat={mechanic.mapLat}
                     lng={mechanic.mapLng}
-                    name={mechanic.name}
+                    name={sanitizeText(mechanic.name)}
                   />
                 </div>
 
@@ -166,7 +172,7 @@ export default function MechanicModal() {
                       const url = `https://map.naver.com/v5/search/${encodeURIComponent(mechanic.address)}`;
                       window.open(url, '_blank');
                     }}
-                    className="flex items-center justify-center gap-2 px-6 py-4 border-2 border-gray-200 rounded-xl font-bold text-gray-700 hover:border-[#bf00ff] hover:text-[#8B5CF6] transition-colors"
+                    className="flex items-center justify-center gap-2 px-6 py-4 border-2 border-gray-200 rounded-xl font-bold text-gray-700 hover:border-[#bf00ff] hover:text-purple-600 transition-colors"
                   >
                     <ExternalLink size={20} />
                     길찾기

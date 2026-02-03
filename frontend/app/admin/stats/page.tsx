@@ -5,7 +5,6 @@ import { motion } from 'framer-motion';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { BarChart3, TrendingUp, Eye, MapPin, Globe, Users, Activity } from 'lucide-react';
 import { mechanicsApi, analyticsApi } from '@/lib/api';
-import { useAuthStore } from '@/lib/auth';
 import type { Mechanic, PeriodType, TopMechanic } from '@/types';
 import SiteTrafficStats from '@/components/analytics/SiteTrafficStats';
 
@@ -15,7 +14,6 @@ export default function StatsPage() {
   const [activeTab, setActiveTab] = useState<TabType>('mechanics');
   const [mechanics, setMechanics] = useState<Mechanic[]>([]);
   const [loading, setLoading] = useState(true);
-  const token = useAuthStore((state) => state.token);
 
   // 기간별 TOP 5 상태
   const [topMechanicsPeriod, setTopMechanicsPeriod] = useState<PeriodType>('realtime');
@@ -39,8 +37,6 @@ export default function StatsPage() {
 
   // 기간별 TOP 5 데이터 페칭
   const fetchTopMechanics = async () => {
-    if (!token) return;
-
     setTopMechanicsLoading(true);
     setTopMechanicsError(null);
 
@@ -49,7 +45,6 @@ export default function StatsPage() {
         limit: 5,
         days: 7,
         months: 6,
-        token,
       });
       setTopMechanicsData(response.data);
     } catch (error) {
@@ -61,10 +56,10 @@ export default function StatsPage() {
   };
 
   useEffect(() => {
-    if (activeTab === 'mechanics' && token) {
+    if (activeTab === 'mechanics') {
       fetchTopMechanics();
     }
-  }, [topMechanicsPeriod, activeTab, token]);
+  }, [topMechanicsPeriod, activeTab]);
 
   // 통계 계산
   const totalClicks = mechanics.reduce((sum, m) => sum + m.clickCount, 0);
@@ -419,7 +414,7 @@ export default function StatsPage() {
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5 }}
           >
-            <SiteTrafficStats token={token || ''} />
+            <SiteTrafficStats />
           </motion.div>
         )}
       </div>

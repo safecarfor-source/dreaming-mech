@@ -3,6 +3,7 @@
 import { useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { Upload, X } from 'lucide-react';
+import api from '@/lib/api';
 
 interface Props {
   onUpload: (url: string) => void;
@@ -23,15 +24,13 @@ export default function ImageUpload({ onUpload, currentImage }: Props) {
       formData.append('file', file);
 
       try {
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/upload/image`,
-          {
-            method: 'POST',
-            body: formData,
-          }
-        );
+        const response = await api.post('/upload/image', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
 
-        const { url } = await response.json();
+        const { url } = response.data;
         setPreview(url);
         onUpload(url);
       } catch (error) {
@@ -75,7 +74,7 @@ export default function ImageUpload({ onUpload, currentImage }: Props) {
           {...getRootProps()}
           className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors ${
             isDragActive
-              ? 'border-[#8B5CF6] bg-[#8B5CF6]/5'
+              ? 'border-purple-600 bg-purple-600/5'
               : 'border-gray-300 hover:border-gray-400'
           }`}
         >
