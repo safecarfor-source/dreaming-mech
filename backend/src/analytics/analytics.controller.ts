@@ -6,16 +6,18 @@ import {
   Param,
   Query,
   ParseIntPipe,
+  DefaultValuePipe,
   Ip,
   Req,
   UseGuards,
-  BadRequestException,
 } from '@nestjs/common';
 import type { Request } from 'express';
 import { SkipThrottle } from '@nestjs/throttler';
 import { AnalyticsService } from './analytics.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { BotDetectionGuard } from '../common/guards/bot-detection.guard';
+import { RangeValidationPipe } from '../common/pipes/range-validation.pipe';
+import { ANALYTICS_DEFAULTS } from '../common/constants/analytics.constants';
 
 @Controller('analytics')
 @SkipThrottle() // 통계 API는 Rate Limit 제외
@@ -46,9 +48,53 @@ export class AnalyticsController {
   // GET /analytics/site-stats - 사이트 전체 통계 (JWT 필수)
   @Get('site-stats')
   @UseGuards(JwtAuthGuard)
-  getSiteStats(@Query('days') days?: string) {
-    const daysNum = days ? parseInt(days, 10) : undefined;
-    return this.analyticsService.getSiteStats(daysNum);
+  getSiteStats(
+    @Query(
+      'days',
+      new DefaultValuePipe(ANALYTICS_DEFAULTS.DAYS_DEFAULT),
+      new ParseIntPipe({ optional: true }),
+      new RangeValidationPipe(1, 365),
+    )
+    days?: number,
+  ) {
+    return this.analyticsService.getSiteStats(days);
+  }
+
+  // GET /analytics/site-stats-by-month - 특정 월의 일별 통계 (JWT 필수)
+  @Get('site-stats-by-month')
+  @UseGuards(JwtAuthGuard)
+  getSiteStatsByMonth(
+    @Query(
+      'year',
+      new DefaultValuePipe(new Date().getFullYear()),
+      new ParseIntPipe({ optional: true }),
+      new RangeValidationPipe(2020, 2100),
+    )
+    year?: number,
+    @Query(
+      'month',
+      new DefaultValuePipe(new Date().getMonth() + 1),
+      new ParseIntPipe({ optional: true }),
+      new RangeValidationPipe(1, 12),
+    )
+    month?: number,
+  ) {
+    return this.analyticsService.getSiteStatsByMonth(year, month);
+  }
+
+  // GET /analytics/site-stats-monthly - 사이트 월별 통계 (JWT 필수)
+  @Get('site-stats-monthly')
+  @UseGuards(JwtAuthGuard)
+  getSiteMonthlyStats(
+    @Query(
+      'months',
+      new DefaultValuePipe(ANALYTICS_DEFAULTS.MONTHS_DEFAULT),
+      new ParseIntPipe({ optional: true }),
+      new RangeValidationPipe(1, 60),
+    )
+    months?: number,
+  ) {
+    return this.analyticsService.getSiteMonthlyStats(months);
   }
 
   // GET /analytics/mechanic/:id/monthly - 정비사별 월별 클릭 (JWT 필수)
@@ -56,18 +102,59 @@ export class AnalyticsController {
   @UseGuards(JwtAuthGuard)
   getMechanicMonthlyClicks(
     @Param('id', ParseIntPipe) id: number,
-    @Query('months') months?: string,
+    @Query(
+      'months',
+      new DefaultValuePipe(6),
+      new ParseIntPipe({ optional: true }),
+      new RangeValidationPipe(1, 60),
+    )
+    months?: number,
   ) {
-    const monthsNum = months ? parseInt(months, 10) : 6;
-    return this.analyticsService.getMechanicMonthlyClicks(id, monthsNum);
+    return this.analyticsService.getMechanicMonthlyClicks(id, months);
   }
 
   // GET /analytics/all-mechanics-monthly - 전체 정비사 월별 클릭 (JWT 필수)
   @Get('all-mechanics-monthly')
   @UseGuards(JwtAuthGuard)
-  getAllMechanicsMonthlyClicks(@Query('months') months?: string) {
-    const monthsNum = months ? parseInt(months, 10) : 6;
-    return this.analyticsService.getAllMechanicsMonthlyClicks(monthsNum);
+  getAllMechanicsMonthlyClicks(
+    @Query(
+      'months',
+      new DefaultValuePipe(6),
+      new ParseIntPipe({ optional: true }),
+      new RangeValidationPipe(1, 60),
+    )
+    months?: number,
+  ) {
+    return this.analyticsService.getAllMechanicsMonthlyClicks(months);
+  }
+
+  // GET /analytics/top-mechanics-by-month - 특정 월의 인기 정비사 TOP N (JWT 필수)
+  @Get('top-mechanics-by-month')
+  @UseGuards(JwtAuthGuard)
+  getTopMechanicsByMonth(
+    @Query(
+      'year',
+      new DefaultValuePipe(new Date().getFullYear()),
+      new ParseIntPipe({ optional: true }),
+      new RangeValidationPipe(2020, 2100),
+    )
+    year?: number,
+    @Query(
+      'month',
+      new DefaultValuePipe(new Date().getMonth() + 1),
+      new ParseIntPipe({ optional: true }),
+      new RangeValidationPipe(1, 12),
+    )
+    month?: number,
+    @Query(
+      'limit',
+      new DefaultValuePipe(ANALYTICS_DEFAULTS.LIMIT_DEFAULT),
+      new ParseIntPipe({ optional: true }),
+      new RangeValidationPipe(ANALYTICS_DEFAULTS.LIMIT_MIN, ANALYTICS_DEFAULTS.LIMIT_MAX),
+    )
+    limit?: number,
+  ) {
+    return this.analyticsService.getTopMechanicsByMonth(year, month, limit);
   }
 
   // GET /analytics/top-mechanics - 기간별 인기 정비사 TOP N (JWT 필수)
@@ -75,25 +162,28 @@ export class AnalyticsController {
   @UseGuards(JwtAuthGuard)
   getTopMechanics(
     @Query('period') period: 'realtime' | 'daily' | 'monthly' = 'realtime',
-    @Query('limit') limit?: string,
-    @Query('days') days?: string,
-    @Query('months') months?: string,
+    @Query(
+      'limit',
+      new DefaultValuePipe(ANALYTICS_DEFAULTS.LIMIT_DEFAULT),
+      new ParseIntPipe({ optional: true }),
+      new RangeValidationPipe(ANALYTICS_DEFAULTS.LIMIT_MIN, ANALYTICS_DEFAULTS.LIMIT_MAX),
+    )
+    limit?: number,
+    @Query(
+      'days',
+      new DefaultValuePipe(ANALYTICS_DEFAULTS.DAYS_DEFAULT),
+      new ParseIntPipe({ optional: true }),
+      new RangeValidationPipe(1, 365),
+    )
+    days?: number,
+    @Query(
+      'months',
+      new DefaultValuePipe(6),
+      new ParseIntPipe({ optional: true }),
+      new RangeValidationPipe(1, 60),
+    )
+    months?: number,
   ) {
-    // parseInt 및 범위 검증
-    const limitNum = Math.min(Math.max(1, limit ? parseInt(limit, 10) : 5), 100);
-    const daysNum = Math.min(Math.max(1, days ? parseInt(days, 10) : 7), 365);
-    const monthsNum = Math.min(Math.max(1, months ? parseInt(months, 10) : 6), 60);
-
-    // NaN 체크
-    if (isNaN(limitNum) || isNaN(daysNum) || isNaN(monthsNum)) {
-      throw new BadRequestException('Invalid query parameters');
-    }
-
-    return this.analyticsService.getTopMechanics(
-      period,
-      limitNum,
-      daysNum,
-      monthsNum,
-    );
+    return this.analyticsService.getTopMechanics(period, limit, days, months);
   }
 }

@@ -14,9 +14,15 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // 401 에러 시 로그인 페이지로 리다이렉트
-      if (typeof window !== 'undefined' && !window.location.pathname.includes('/admin/login')) {
-        window.location.href = '/admin/login';
+      // 401 에러 시 토큰 및 세션 정보 정리
+      if (typeof window !== 'undefined') {
+        localStorage.clear();
+        sessionStorage.clear();
+
+        // 로그인 페이지가 아닌 경우에만 리다이렉트
+        if (!window.location.pathname.includes('/admin/login')) {
+          window.location.href = '/admin/login';
+        }
       }
     }
     return Promise.reject(error);
@@ -25,7 +31,7 @@ api.interceptors.response.use(
 
 // ✅ 타입 안전한 config 빌더 함수
 interface RequestConfig {
-  params?: Record<string, any>;
+  params?: Record<string, string | number | boolean>;
 }
 
 function buildConfig({ params }: RequestConfig = {}): AxiosRequestConfig {
@@ -64,6 +70,14 @@ export const analyticsApi = {
     api.get('/analytics/site-stats', buildConfig({
       params: days !== undefined ? { days } : {}
     })),
+  getSiteStatsByMonth: (year: number, month: number) =>
+    api.get('/analytics/site-stats-by-month', buildConfig({
+      params: { year, month }
+    })),
+  getSiteMonthlyStats: (months: number = 12) =>
+    api.get('/analytics/site-stats-monthly', buildConfig({
+      params: { months }
+    })),
   getMechanicMonthlyClicks: (id: number, months: number = 6) =>
     api.get(`/analytics/mechanic/${id}/monthly`, buildConfig({
       params: { months }
@@ -71,6 +85,10 @@ export const analyticsApi = {
   getAllMechanicsMonthlyClicks: (months: number = 6) =>
     api.get('/analytics/all-mechanics-monthly', buildConfig({
       params: { months }
+    })),
+  getTopMechanicsByMonth: (year: number, month: number, limit: number = 5) =>
+    api.get('/analytics/top-mechanics-by-month', buildConfig({
+      params: { year, month, limit }
     })),
   getTopMechanics: (
     period: 'realtime' | 'daily' | 'monthly' = 'realtime',

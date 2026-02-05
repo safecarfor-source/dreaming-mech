@@ -102,6 +102,159 @@ export class AnalyticsService {
     };
   }
 
+  // 특정 월의 일별 통계
+  async getSiteStatsByMonth(year: number, month: number) {
+    const startDate = new Date(year, month - 1, 1);
+    const endDate = new Date(year, month, 0, 23, 59, 59);
+
+    // 총 페이지뷰 (봇 제외)
+    const totalPageViews = await this.prisma.pageView.count({
+      where: {
+        isBot: false,
+        viewedAt: { gte: startDate, lte: endDate },
+      },
+    });
+
+    // 고유 방문자 수 (봇 제외)
+    const uniqueVisitors = await this.prisma.pageView.groupBy({
+      by: ['ipAddress'],
+      where: {
+        isBot: false,
+        viewedAt: { gte: startDate, lte: endDate },
+      },
+      _count: true,
+    });
+
+    // 일별 통계
+    const dailyStats = await this.prisma.$queryRaw<
+      Array<{ date: string; views: bigint }>
+    >`
+      SELECT
+        DATE("viewedAt") as date,
+        COUNT(*)::bigint as views
+      FROM "PageView"
+      WHERE "isBot" = false
+        AND "viewedAt" >= ${startDate}
+        AND "viewedAt" <= ${endDate}
+      GROUP BY DATE("viewedAt")
+      ORDER BY date ASC
+    `;
+
+    // 인기 페이지 TOP 5
+    const topPages = await this.prisma.pageView.groupBy({
+      by: ['path'],
+      where: {
+        isBot: false,
+        viewedAt: { gte: startDate, lte: endDate },
+      },
+      _count: {
+        path: true,
+      },
+      orderBy: {
+        _count: {
+          path: 'desc',
+        },
+      },
+      take: 5,
+    });
+
+    // 평균 조회수/일
+    const daysInMonth = dailyStats.length;
+    const avgViewsPerDay =
+      daysInMonth > 0 ? Math.round(totalPageViews / daysInMonth) : totalPageViews;
+
+    return {
+      totalPageViews,
+      uniqueVisitors: uniqueVisitors.length,
+      avgViewsPerDay,
+      dailyStats: dailyStats.map((stat) => ({
+        date: stat.date,
+        views: Number(stat.views),
+      })),
+      topPages: topPages.map((page) => ({
+        path: page.path,
+        views: page._count.path,
+      })),
+    };
+  }
+
+  // 사이트 전체 월별 통계
+  async getSiteMonthlyStats(months: number = 12) {
+    const startDate = new Date();
+    startDate.setMonth(startDate.getMonth() - months);
+
+    // 월별 페이지뷰 통계
+    const monthlyStats = await this.prisma.$queryRaw<
+      Array<{ month: string; views: bigint; visitors: bigint }>
+    >`
+      SELECT
+        TO_CHAR("viewedAt", 'YYYY-MM') as month,
+        COUNT(*)::bigint as views,
+        COUNT(DISTINCT "ipAddress")::bigint as visitors
+      FROM "PageView"
+      WHERE "isBot" = false
+        AND "viewedAt" >= ${startDate}
+      GROUP BY TO_CHAR("viewedAt", 'YYYY-MM')
+      ORDER BY month ASC
+    `;
+
+    // 전체 기간 통계
+    const totalPageViews = await this.prisma.pageView.count({
+      where: {
+        isBot: false,
+        viewedAt: { gte: startDate },
+      },
+    });
+
+    const uniqueVisitors = await this.prisma.pageView.groupBy({
+      by: ['ipAddress'],
+      where: {
+        isBot: false,
+        viewedAt: { gte: startDate },
+      },
+      _count: true,
+    });
+
+    // 인기 페이지 TOP 5
+    const topPages = await this.prisma.pageView.groupBy({
+      by: ['path'],
+      where: {
+        isBot: false,
+        viewedAt: { gte: startDate },
+      },
+      _count: {
+        path: true,
+      },
+      orderBy: {
+        _count: {
+          path: 'desc',
+        },
+      },
+      take: 5,
+    });
+
+    // 평균 조회수/월
+    const avgViewsPerMonth =
+      monthlyStats.length > 0
+        ? Math.round(totalPageViews / monthlyStats.length)
+        : totalPageViews;
+
+    return {
+      totalPageViews,
+      uniqueVisitors: uniqueVisitors.length,
+      avgViewsPerMonth,
+      monthlyStats: monthlyStats.map((stat) => ({
+        month: stat.month,
+        views: Number(stat.views),
+        visitors: Number(stat.visitors),
+      })),
+      topPages: topPages.map((page) => ({
+        path: page.path,
+        views: page._count.path,
+      })),
+    };
+  }
+
   // 정비사별 월별 클릭 통계
   async getMechanicMonthlyClicks(mechanicId: number, months: number = 6) {
     const startDate = new Date();
@@ -168,6 +321,68 @@ export class AnalyticsService {
     `;
 
     return result;
+  }
+
+  // 특정 월의 인기 정비사 TOP N
+  async getTopMechanicsByMonth(
+    year: number,
+    month: number,
+    limit: number = 5,
+  ) {
+    const startDate = new Date(year, month - 1, 1);
+    const endDate = new Date(year, month, 0, 23, 59, 59);
+
+    const clickData = await this.prisma.$queryRaw<
+      Array<{ mechanicId: number; clickCount: bigint }>
+    >`
+      SELECT
+        "mechanicId",
+        COUNT(*)::bigint as "clickCount"
+      FROM "ClickLog"
+      WHERE "isBot" = false
+        AND "clickedAt" >= ${startDate}
+        AND "clickedAt" <= ${endDate}
+      GROUP BY "mechanicId"
+      ORDER BY "clickCount" DESC
+      LIMIT ${limit}
+    `;
+
+    // 정비사 상세 정보 조회
+    const mechanicIds = clickData.map((d) => d.mechanicId);
+    if (mechanicIds.length === 0) {
+      return [];
+    }
+
+    const mechanics = await this.prisma.mechanic.findMany({
+      where: { id: { in: mechanicIds }, isActive: true },
+      select: {
+        id: true,
+        name: true,
+        phone: true,
+        address: true,
+        clickCount: true,
+      },
+    });
+
+    // clickCount를 기간별 데이터로 병합 (순서 유지)
+    return mechanicIds
+      .map((id) => {
+        const mechanic = mechanics.find((m) => m.id === id);
+        const clicks = clickData.find((d) => d.mechanicId === id);
+
+        if (!mechanic || !clicks) {
+          return null;
+        }
+
+        return {
+          id: mechanic.id,
+          name: mechanic.name,
+          phone: mechanic.phone,
+          address: mechanic.address,
+          clickCount: Number(clicks.clickCount),
+        };
+      })
+      .filter((m) => m !== null);
   }
 
   // 기간별 인기 정비사 TOP N

@@ -2,7 +2,9 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
+import axios from 'axios';
 import { analyticsApi } from '@/lib/api';
+import { MONTHS } from '@/lib/constants';
 import {
   BarChart,
   Bar,
@@ -21,6 +23,14 @@ interface SiteStats {
   uniqueVisitors: number;
   avgViewsPerDay: number;
   dailyStats: Array<{ date: string; views: number }>;
+  topPages: Array<{ path: string; views: number }>;
+}
+
+interface SiteMonthlyStats {
+  totalPageViews: number;
+  uniqueVisitors: number;
+  avgViewsPerMonth: number;
+  monthlyStats: Array<{ month: string; views: number; visitors: number }>;
   topPages: Array<{ path: string; views: number }>;
 }
 
@@ -52,7 +62,10 @@ const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
 
 export default function SiteTrafficStats() {
   const [stats, setStats] = useState<SiteStats | null>(null);
-  const [period, setPeriod] = useState<number | undefined>(7);
+  const [monthlyStats, setMonthlyStats] = useState<SiteMonthlyStats | null>(null);
+  const [period, setPeriod] = useState<number | 'monthly'>(1);
+  const [selectedMonth, setSelectedMonth] = useState<number>(new Date().getMonth() + 1);
+  const [selectedYear] = useState<number>(new Date().getFullYear());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -60,18 +73,36 @@ export default function SiteTrafficStats() {
     try {
       setLoading(true);
       setError(null);
-      const response = await analyticsApi.getSiteStats(period);
-      setStats(response.data);
-    } catch (error: any) {
+
+      if (period === 'monthly') {
+        const response = await analyticsApi.getSiteStatsByMonth(selectedYear, selectedMonth);
+        setStats(response.data);
+        setMonthlyStats(null);
+      } else {
+        const response = await analyticsApi.getSiteStats(period);
+        setStats(response.data);
+        setMonthlyStats(null);
+      }
+    } catch (error) {
       console.error('Failed to fetch site stats:', error);
-      setError(
-        error.response?.data?.message ||
-        '통계 데이터를 불러오는데 실패했습니다.'
-      );
+
+      // Axios 에러 타입 안전성 개선
+      if (axios.isAxiosError(error)) {
+        const message = error.response?.data?.message || error.message || 'API 요청이 실패했습니다';
+        setError(message);
+
+        if (error.response?.status === 500) {
+          console.error('Server error:', error.response.data);
+        }
+      } else if (error instanceof Error) {
+        setError(error.message);
+      } else {
+        setError('통계 데이터를 불러오는데 실패했습니다.');
+      }
     } finally {
       setLoading(false);
     }
-  }, [period]);
+  }, [period, selectedMonth, selectedYear]);
 
   useEffect(() => {
     fetchStats();
@@ -111,6 +142,8 @@ export default function SiteTrafficStats() {
     );
   }
 
+  const isMonthly = period === 'monthly';
+
   if (!stats) {
     return (
       <div className="text-center py-12">
@@ -130,46 +163,74 @@ export default function SiteTrafficStats() {
       className="space-y-6 sm:space-y-8"
     >
       {/* 기간 선택 - 모던한 버튼 그룹 */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-0">
-        <div>
-          <h3 className="text-base sm:text-lg font-bold text-gray-900">기간 선택</h3>
-          <p className="text-xs sm:text-sm text-gray-500 mt-0.5">데이터 조회 기간을 선택하세요</p>
+      <div className="flex flex-col gap-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-0">
+          <div>
+            <h3 className="text-base sm:text-lg font-bold text-gray-900">기간 선택</h3>
+            <p className="text-xs sm:text-sm text-gray-500 mt-0.5">데이터 조회 기간을 선택하세요</p>
+          </div>
+          <div className="bg-white rounded-xl p-1.5 shadow-sm border border-gray-200 flex gap-1 w-full sm:w-auto">
+            <button
+              type="button"
+              onClick={() => setPeriod(1)}
+              className={`flex-1 sm:flex-none px-4 sm:px-5 py-2 sm:py-2.5 rounded-lg font-semibold text-xs sm:text-sm transition-all duration-200 ${
+                period === 1
+                  ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md'
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+              }`}
+            >
+              1일
+            </button>
+            <button
+              type="button"
+              onClick={() => setPeriod(7)}
+              className={`flex-1 sm:flex-none px-4 sm:px-5 py-2 sm:py-2.5 rounded-lg font-semibold text-xs sm:text-sm transition-all duration-200 ${
+                period === 7
+                  ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md'
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+              }`}
+            >
+              7일
+            </button>
+            <button
+              type="button"
+              onClick={() => setPeriod('monthly')}
+              className={`flex-1 sm:flex-none px-4 sm:px-5 py-2 sm:py-2.5 rounded-lg font-semibold text-xs sm:text-sm transition-all duration-200 ${
+                period === 'monthly'
+                  ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md'
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+              }`}
+            >
+              월별
+            </button>
+          </div>
         </div>
-        <div className="bg-white rounded-xl p-1.5 shadow-sm border border-gray-200 flex gap-1 w-full sm:w-auto">
-          <button
-            type="button"
-            onClick={() => setPeriod(7)}
-            className={`flex-1 sm:flex-none px-4 sm:px-5 py-2 sm:py-2.5 rounded-lg font-semibold text-xs sm:text-sm transition-all duration-200 ${
-              period === 7
-                ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md'
-                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-            }`}
-          >
-            7일
-          </button>
-          <button
-            type="button"
-            onClick={() => setPeriod(30)}
-            className={`flex-1 sm:flex-none px-4 sm:px-5 py-2 sm:py-2.5 rounded-lg font-semibold text-xs sm:text-sm transition-all duration-200 ${
-              period === 30
-                ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md'
-                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-            }`}
-          >
-            30일
-          </button>
-          <button
-            type="button"
-            onClick={() => setPeriod(undefined)}
-            className={`flex-1 sm:flex-none px-4 sm:px-5 py-2 sm:py-2.5 rounded-lg font-semibold text-xs sm:text-sm transition-all duration-200 ${
-              period === undefined
-                ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md'
-                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-            }`}
-          >
-            전체
-          </button>
-        </div>
+
+        {/* 월별 선택 시 월 선택 */}
+        {period === 'monthly' && (
+          <div className="flex flex-col gap-2">
+            <div>
+              <p className="text-sm font-medium text-gray-700">월 선택</p>
+              <p className="text-xs text-gray-500 mt-0.5">조회할 월을 선택하세요 ({selectedYear}년)</p>
+            </div>
+            <div className="grid grid-cols-3 sm:grid-cols-6 lg:grid-cols-12 gap-2">
+              {MONTHS.map((month) => (
+                <button
+                  key={month.value}
+                  type="button"
+                  onClick={() => setSelectedMonth(month.value)}
+                  className={`px-3 py-2 rounded-lg font-semibold text-xs sm:text-sm transition-all duration-200 ${
+                    selectedMonth === month.value
+                      ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-md'
+                      : 'bg-white text-gray-600 hover:text-gray-900 hover:bg-gray-50 border border-gray-200'
+                  }`}
+                >
+                  {month.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* 통계 카드 - 개선된 메트릭 카드 */}
@@ -209,9 +270,11 @@ export default function SiteTrafficStats() {
                 총 페이지뷰
               </p>
               <p className="text-4xl font-bold text-gray-900 tabular-nums">
-                {stats.totalPageViews.toLocaleString()}
+                {stats?.totalPageViews.toLocaleString()}
               </p>
-              <p className="text-xs text-gray-500 mt-2">전체 방문 페이지 수</p>
+              <p className="text-xs text-gray-500 mt-2">
+                {isMonthly ? `${selectedMonth}월 방문 페이지 수` : '전체 방문 페이지 수'}
+              </p>
             </div>
           </div>
         </motion.div>
@@ -239,9 +302,11 @@ export default function SiteTrafficStats() {
                 고유 방문자
               </p>
               <p className="text-4xl font-bold text-gray-900 tabular-nums">
-                {stats.uniqueVisitors.toLocaleString()}
+                {stats?.uniqueVisitors.toLocaleString()}
               </p>
-              <p className="text-xs text-gray-500 mt-2">순 방문자 수</p>
+              <p className="text-xs text-gray-500 mt-2">
+                {isMonthly ? `${selectedMonth}월 순 방문자` : '순 방문자 수'}
+              </p>
             </div>
           </div>
         </motion.div>
@@ -269,9 +334,11 @@ export default function SiteTrafficStats() {
                 평균 조회/일
               </p>
               <p className="text-4xl font-bold text-gray-900 tabular-nums">
-                {stats.avgViewsPerDay.toLocaleString()}
+                {stats?.avgViewsPerDay.toLocaleString()}
               </p>
-              <p className="text-xs text-gray-500 mt-2">일평균 페이지뷰</p>
+              <p className="text-xs text-gray-500 mt-2">
+                {isMonthly ? `${selectedMonth}월 일평균` : '일평균 페이지뷰'}
+              </p>
             </div>
           </div>
         </motion.div>
@@ -284,19 +351,23 @@ export default function SiteTrafficStats() {
             <div>
               <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
                 <Activity className="text-purple-600" size={24} />
-                일별 페이지뷰 추이
+                {isMonthly ? `${selectedMonth}월 일별 페이지뷰` : '일별 페이지뷰 추이'}
               </h3>
-              <p className="text-sm text-gray-500 mt-1">시간대별 트래픽 분석</p>
+              <p className="text-sm text-gray-500 mt-1">
+                {isMonthly ? `${selectedYear}년 ${selectedMonth}월 트래픽 분석` : '시간대별 트래픽 분석'}
+              </p>
             </div>
             <div className="text-right">
               <p className="text-sm text-gray-500">총 데이터 포인트</p>
-              <p className="text-xl font-bold text-purple-600">{stats.dailyStats.length}개</p>
+              <p className="text-xl font-bold text-purple-600">
+                {stats?.dailyStats.length}개
+              </p>
             </div>
           </div>
         </div>
         <div className="p-6">
           <ResponsiveContainer width="100%" height={350}>
-            <AreaChart data={stats.dailyStats}>
+            <AreaChart data={stats?.dailyStats || []}>
               <defs>
                 <linearGradient id="colorViews" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="#8B5CF6" stopOpacity={0.3}/>
@@ -309,6 +380,17 @@ export default function SiteTrafficStats() {
                 stroke="#9CA3AF"
                 style={{ fontSize: '12px', fill: '#6B7280' }}
                 tickLine={false}
+                tickFormatter={(value) => {
+                  if (!value) return '';
+                  const date = new Date(value);
+                  if (isMonthly) {
+                    // 월별 선택 시: "월/일" 형식
+                    return `${date.getMonth() + 1}/${date.getDate()}`;
+                  } else {
+                    // 일별 선택 시: "월/일" 형식
+                    return `${date.getMonth() + 1}/${date.getDate()}`;
+                  }
+                }}
               />
               <YAxis
                 stroke="#9CA3AF"

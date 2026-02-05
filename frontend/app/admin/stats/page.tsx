@@ -5,7 +5,8 @@ import { motion } from 'framer-motion';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { BarChart3, TrendingUp, Eye, MapPin, Globe, Users, Activity } from 'lucide-react';
 import { mechanicsApi, analyticsApi } from '@/lib/api';
-import type { Mechanic, PeriodType, TopMechanic } from '@/types';
+import { MONTHS } from '@/lib/constants';
+import type { Mechanic, TopMechanic } from '@/types';
 import SiteTrafficStats from '@/components/analytics/SiteTrafficStats';
 import CountUp from '@/components/animations/CountUp';
 import AnimatedSection from '@/components/animations/AnimatedSection';
@@ -18,7 +19,9 @@ export default function StatsPage() {
   const [loading, setLoading] = useState(true);
 
   // 기간별 TOP 5 상태
-  const [topMechanicsPeriod, setTopMechanicsPeriod] = useState<PeriodType>('realtime');
+  const [topMechanicsPeriod, setTopMechanicsPeriod] = useState<number | 'monthly'>(1);
+  const [selectedMonth, setSelectedMonth] = useState<number>(new Date().getMonth() + 1);
+  const [selectedYear] = useState<number>(new Date().getFullYear());
   const [topMechanicsData, setTopMechanicsData] = useState<TopMechanic[]>([]);
   const [topMechanicsLoading, setTopMechanicsLoading] = useState(false);
   const [topMechanicsError, setTopMechanicsError] = useState<string | null>(null);
@@ -43,11 +46,17 @@ export default function StatsPage() {
     setTopMechanicsError(null);
 
     try {
-      const response = await analyticsApi.getTopMechanics(topMechanicsPeriod, {
-        limit: 5,
-        days: 7,
-        months: 6,
-      });
+      let response;
+      if (topMechanicsPeriod === 'monthly') {
+        // monthly인 경우 월별 API 사용
+        response = await analyticsApi.getTopMechanicsByMonth(selectedYear, selectedMonth, 5);
+      } else {
+        // 숫자인 경우 일별 API 사용
+        response = await analyticsApi.getTopMechanics('daily', {
+          limit: 5,
+          days: topMechanicsPeriod as number, // Type-safe: 이미 'monthly'가 아님을 확인
+        });
+      }
       setTopMechanicsData(response.data);
     } catch (error) {
       console.error('인기 정비사 조회 실패:', error);
@@ -61,7 +70,7 @@ export default function StatsPage() {
     if (activeTab === 'mechanics') {
       fetchTopMechanics();
     }
-  }, [topMechanicsPeriod, activeTab]);
+  }, [topMechanicsPeriod, selectedMonth, activeTab]);
 
   // 통계 계산
   const totalClicks = mechanics.reduce((sum, m) => sum + m.clickCount, 0);
@@ -289,32 +298,36 @@ export default function StatsPage() {
                         <BarChart3 className="text-purple-600" size={20} />
                         <span>인기 정비사 TOP 5</span>
                       </h2>
-                      <p className="text-xs sm:text-sm text-gray-500 mt-1">클릭 수 기준 상위 정비사</p>
+                      <p className="text-xs sm:text-sm text-gray-500 mt-1">
+                        {topMechanicsPeriod === 'monthly'
+                          ? `${selectedMonth}월 클릭 수 기준`
+                          : `최근 ${topMechanicsPeriod}일 클릭 수 기준`}
+                      </p>
                     </div>
 
                     {/* 기간 선택 세그먼트 컨트롤 */}
                     <div className="flex items-center bg-gray-100 rounded-lg p-1 w-full sm:w-auto">
                       <button
                         type="button"
-                        onClick={() => setTopMechanicsPeriod('realtime')}
+                        onClick={() => setTopMechanicsPeriod(1)}
                         className={`flex-1 sm:flex-none px-3 sm:px-4 py-1.5 sm:py-2 rounded-md text-xs sm:text-sm font-medium transition-all ${
-                          topMechanicsPeriod === 'realtime'
+                          topMechanicsPeriod === 1
                             ? 'bg-white text-purple-600 shadow-sm'
                             : 'text-gray-600 hover:text-gray-900'
                         }`}
                       >
-                        실시간
+                        1일
                       </button>
                       <button
                         type="button"
-                        onClick={() => setTopMechanicsPeriod('daily')}
+                        onClick={() => setTopMechanicsPeriod(7)}
                         className={`flex-1 sm:flex-none px-3 sm:px-4 py-1.5 sm:py-2 rounded-md text-xs sm:text-sm font-medium transition-all ${
-                          topMechanicsPeriod === 'daily'
+                          topMechanicsPeriod === 7
                             ? 'bg-white text-purple-600 shadow-sm'
                             : 'text-gray-600 hover:text-gray-900'
                         }`}
                       >
-                        일별
+                        7일
                       </button>
                       <button
                         type="button"
@@ -329,6 +342,34 @@ export default function StatsPage() {
                       </button>
                     </div>
                   </div>
+
+                  {/* 월별 선택 시 월 선택 */}
+                  {topMechanicsPeriod === 'monthly' && (
+                    <div className="mt-4 px-4 sm:px-6">
+                      <div className="flex flex-col gap-2">
+                        <div>
+                          <p className="text-sm font-medium text-gray-700">월 선택</p>
+                          <p className="text-xs text-gray-500 mt-0.5">조회할 월을 선택하세요 ({selectedYear}년)</p>
+                        </div>
+                        <div className="grid grid-cols-3 sm:grid-cols-6 lg:grid-cols-12 gap-2">
+                          {MONTHS.map((month) => (
+                            <button
+                              key={month.value}
+                              type="button"
+                              onClick={() => setSelectedMonth(month.value)}
+                              className={`px-3 py-2 rounded-lg font-semibold text-xs sm:text-sm transition-all duration-200 ${
+                                selectedMonth === month.value
+                                  ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-md'
+                                  : 'bg-white text-gray-600 hover:text-gray-900 hover:bg-gray-50 border border-gray-200'
+                              }`}
+                            >
+                              {month.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* 로딩/에러/데이터 표시 */}
