@@ -79,7 +79,7 @@ export class AnalyticsController {
     )
     month?: number,
   ) {
-    return this.analyticsService.getSiteStatsByMonth(year, month);
+    return this.analyticsService.getSiteStatsByMonth(year!, month!);
   }
 
   // GET /analytics/site-stats-monthly - 사이트 월별 통계 (JWT 필수)
@@ -154,7 +154,7 @@ export class AnalyticsController {
     )
     limit?: number,
   ) {
-    return this.analyticsService.getTopMechanicsByMonth(year, month, limit);
+    return this.analyticsService.getTopMechanicsByMonth(year!, month!, limit);
   }
 
   // GET /analytics/top-mechanics - 기간별 인기 정비사 TOP N (JWT 필수)
