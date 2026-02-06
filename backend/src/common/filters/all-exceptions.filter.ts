@@ -30,16 +30,28 @@ export class AllExceptionsFilter implements ExceptionFilter {
     }
 
     // 에러 로깅 (민감 정보 제외)
-    this.logger.error({
+    const errorLog: any = {
       timestamp: new Date().toISOString(),
       path: request.url,
       method: request.method,
       status,
       message: exception instanceof Error ? exception.message : message,
-      // 스택 트레이스는 개발 환경에서만
-      ...(process.env.NODE_ENV !== 'production' &&
-        exception instanceof Error && { stack: exception.stack }),
-    });
+    };
+
+    // Validation 에러의 경우 상세 내용 로깅
+    if (exception instanceof HttpException) {
+      const exceptionResponse = exception.getResponse();
+      if (typeof exceptionResponse === 'object' && (exceptionResponse as any).errors) {
+        errorLog.validationErrors = (exceptionResponse as any).errors;
+      }
+    }
+
+    // 스택 트레이스는 개발 환경에서만
+    if (process.env.NODE_ENV !== 'production' && exception instanceof Error) {
+      errorLog.stack = exception.stack;
+    }
+
+    this.logger.error(errorLog);
 
     response.status(status).json({
       statusCode: status,
