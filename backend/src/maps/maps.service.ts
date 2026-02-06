@@ -51,7 +51,7 @@ export class MapsService {
       };
     } catch (error) {
       if (error instanceof HttpException) throw error;
-      console.error('Geocoding error:', error);
+      console.error('[Geocode] ERROR:', error.response?.data || error.message || error);
       throw new HttpException(
         'Geocoding 실패',
         HttpStatus.INTERNAL_SERVER_ERROR,

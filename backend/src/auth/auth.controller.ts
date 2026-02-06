@@ -21,8 +21,9 @@ export class AuthController {
     res.cookie('access_token', result.access_token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production', // Only HTTPS in production
-      sameSite: 'strict',
+      sameSite: 'lax', // Changed from 'strict' to 'lax' for cross-port access
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
+      path: '/',
     });
 
     // Return admin info without token (token is in cookie)
@@ -40,7 +41,7 @@ export class AuthController {
   @Post('logout')
   async logout(@Response({ passthrough: true }) res: ExpressResponse) {
     // Clear the cookie
-    res.clearCookie('access_token');
+    res.clearCookie('access_token', { path: '/' });
     return { message: 'Logged out successfully' };
   }
 }

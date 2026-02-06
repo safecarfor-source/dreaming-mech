@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { useAuthStore } from '@/lib/auth';
@@ -12,7 +12,6 @@ import {
   Menu,
   X,
 } from 'lucide-react';
-import { useState } from 'react';
 
 interface Props {
   children: React.ReactNode;
@@ -29,12 +28,19 @@ export default function AdminLayout({ children }: Props) {
   const pathname = usePathname();
   const { isAuthenticated, admin, logout } = useAuthStore();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isHydrated, setIsHydrated] = useState(false);
+
+  // Wait for Zustand store to hydrate from localStorage
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    // Only check authentication after hydration
+    if (isHydrated && !isAuthenticated) {
       router.push('/admin/login');
     }
-  }, [isAuthenticated, router]);
+  }, [isHydrated, isAuthenticated, router]);
 
   const handleLogout = async () => {
     try {
@@ -52,7 +58,8 @@ export default function AdminLayout({ children }: Props) {
     }
   };
 
-  if (!isAuthenticated) {
+  // Show loading while hydrating or if not authenticated
+  if (!isHydrated || !isAuthenticated) {
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
         <div className="text-gray-500">로딩 중...</div>
