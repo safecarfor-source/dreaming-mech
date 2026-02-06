@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Script from "next/script";
+import PageViewTracker from "@/components/analytics/PageViewTracker";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -30,6 +31,7 @@ export default function RootLayout({
             strategy="beforeInteractive"
           />
         )}
+        <PageViewTracker />
         {children}
       </body>
     </html>
