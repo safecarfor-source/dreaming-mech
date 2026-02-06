@@ -18,13 +18,13 @@ export const CreateMechanicSchema = z.object({
   phone: z
     .string()
     .regex(
-      /^0\d{1,2}-?\d{3,4}-?\d{4}$/,
-      'Phone must be a valid Korean phone number (e.g., 02-1234-5678, 010-1234-5678)',
+      /^0\d{1,3}-?\d{3,4}-?\d{3,4}$/,
+      'Phone must be a valid Korean phone number (e.g., 02-1234-5678, 010-1234-5678, 0000-000-000)',
     )
     .or(
       z.string().regex(
-        /^0\d{9,10}$/,
-        'Phone must be a valid Korean phone number without hyphens (e.g., 0212345678, 01012345678)',
+        /^0\d{9,11}$/,
+        'Phone must be a valid Korean phone number without hyphens',
       ),
     ),
 
