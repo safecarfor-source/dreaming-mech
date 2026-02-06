@@ -130,10 +130,16 @@ export function useMechanicForm({ mechanic, mode }: UseMechanicFormProps) {
       return;
     }
 
-    // Sanitize YouTube URL
+    // Sanitize and prepare data
     const sanitizedData = {
       ...formData,
-      youtubeUrl: formData.youtubeUrl ? sanitizeYouTubeUrl(formData.youtubeUrl) || '' : '',
+      // Convert empty strings to undefined for optional URL fields
+      mainImageUrl: formData.mainImageUrl.trim() || undefined,
+      youtubeUrl: formData.youtubeUrl
+        ? (sanitizeYouTubeUrl(formData.youtubeUrl) || undefined)
+        : undefined,
+      // Add galleryImages field (empty array for now)
+      galleryImages: [],
     };
 
     setIsSaving(true);
