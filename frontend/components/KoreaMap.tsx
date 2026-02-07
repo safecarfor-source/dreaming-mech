@@ -62,7 +62,7 @@ export default function KoreaMap({
     >
       <div className="w-full max-w-full sm:max-w-lg md:max-w-2xl">
         <svg
-          viewBox="145 148 110 110"
+          viewBox="168 155 75 100"
           className="w-full h-auto"
           role="img"
           aria-label="대한민국 지도 - 지역을 클릭하여 정비소를 찾으세요"
