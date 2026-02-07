@@ -26,26 +26,19 @@ export default function KoreaMap({
   const getRegionFill = (regionId: string) => {
     if (selectedRegion === regionId) return '#bf00ff';
     if (hoveredRegion === regionId) return '#f3e8ff';
-    if (regionCounts[regionId] > 0) return '#faf5ff';
-    return '#f5f5f4';
+    return '#ffffff';
   };
 
   const getRegionStroke = (regionId: string) => {
     if (selectedRegion === regionId) return '#7c3aed';
     if (hoveredRegion === regionId) return '#bf00ff';
-    if (regionCounts[regionId] > 0) return '#c084fc';
-    return '#78716c';
+    return '#333333';
   };
 
   const getTextColor = (regionId: string) => {
     if (selectedRegion === regionId) return '#ffffff';
-    if (regionCounts[regionId] > 0) return '#6d28d9';
+    if (hoveredRegion === regionId) return '#7c3aed';
     return '#1c1917';
-  };
-
-  const getRegionOpacity = (regionId: string) => {
-    if (regionCounts[regionId] === 0 && selectedRegion !== regionId) return 0.55;
-    return 1;
   };
 
   const regionName = (regionId: string) => {
@@ -67,14 +60,6 @@ export default function KoreaMap({
           role="img"
           aria-label="대한민국 지도 - 지역을 클릭하여 정비소를 찾으세요"
         >
-          {/* 붓 터치 느낌 필터 */}
-          <defs>
-            <filter id="brush" x="-2%" y="-2%" width="104%" height="104%">
-              <feTurbulence type="turbulence" baseFrequency="0.03" numOctaves="2" result="turbulence" />
-              <feDisplacementMap in="SourceGraphic" in2="turbulence" scale="0.4" />
-            </filter>
-          </defs>
-
           {/* 지역 path 렌더링 */}
           {Object.entries(REGION_PATHS).map(([regionId, { d, labelX, labelY }]) => {
             const hitArea = HIT_AREAS[regionId];
@@ -86,7 +71,6 @@ export default function KoreaMap({
                 onMouseLeave={() => setHoveredRegion(null)}
                 style={{
                   cursor: 'pointer',
-                  opacity: getRegionOpacity(regionId),
                 }}
                 role="button"
                 tabIndex={0}
@@ -116,12 +100,11 @@ export default function KoreaMap({
                   stroke={getRegionStroke(regionId)}
                   strokeWidth={
                     selectedRegion === regionId || hoveredRegion === regionId
-                      ? 1.1
-                      : 0.55
+                      ? 0.8
+                      : 0.4
                   }
                   strokeLinejoin="round"
                   strokeLinecap="round"
-                  filter="url(#brush)"
                   style={{
                     transition:
                       'fill 0.2s ease, stroke 0.2s ease, stroke-width 0.2s ease',
