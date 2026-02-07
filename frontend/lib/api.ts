@@ -44,7 +44,8 @@ function buildConfig({ params }: RequestConfig = {}): AxiosRequestConfig {
 
 // Mechanic API
 export const mechanicsApi = {
-  getAll: () => api.get<ApiResponse<Mechanic[]>>('/mechanics'),
+  getAll: (params?: { page?: number; limit?: number }) =>
+    api.get<ApiResponse<Mechanic[]>>('/mechanics', { params }),
   getOne: (id: number) => api.get<Mechanic>(`/mechanics/${id}`),
   create: (data: Partial<Mechanic>) => api.post<Mechanic>('/mechanics', data),
   update: (id: number, data: Partial<Mechanic>) =>
