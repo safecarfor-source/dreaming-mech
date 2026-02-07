@@ -114,21 +114,27 @@ export default function Home() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.3 }}
-                className="flex items-center justify-between mb-8 px-2"
+                className="bg-gradient-to-r from-[#bf00ff]/10 to-purple-50 rounded-2xl p-4 md:p-6 mb-6 md:mb-8 flex items-center justify-between"
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-1 h-8 bg-[#bf00ff] rounded-full" />
-                  <h3 className="text-xl md:text-2xl font-bold text-[#111111]">
-                    {selectedRegionInfo.fullName}
-                    <span className="text-[#bf00ff] ml-2">
-                      {filteredMechanics.length}곳
+                  <div className="w-10 h-10 md:w-12 md:h-12 bg-[#bf00ff] rounded-xl flex items-center justify-center">
+                    <span className="text-white text-lg md:text-xl font-black">
+                      {filteredMechanics.length}
                     </span>
-                  </h3>
+                  </div>
+                  <div>
+                    <h3 className="text-lg md:text-2xl font-black text-[#111111]">
+                      {selectedRegionInfo.fullName}
+                    </h3>
+                    <p className="text-xs md:text-sm text-gray-500">
+                      등록된 정비소
+                    </p>
+                  </div>
                 </div>
                 <button
                   onClick={() => setSelectedRegion(null)}
-                  className="text-sm text-[#666666] hover:text-[#bf00ff] transition-colors
-                    border border-gray-200 hover:border-[#bf00ff] rounded-full px-4 py-2"
+                  className="text-sm font-semibold text-[#bf00ff] hover:bg-[#bf00ff] hover:text-white transition-all
+                    border-2 border-[#bf00ff] rounded-full px-4 py-2"
                 >
                   전체 보기
                 </button>
@@ -138,7 +144,7 @@ export default function Home() {
 
           {/* 카드 그리드 */}
           {loading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-8">
               {[...Array(6)].map((_, i) => (
                 <CardSkeleton key={i} />
               ))}
@@ -166,7 +172,7 @@ export default function Home() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.3 }}
-                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+                className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-8"
               >
                 {filteredMechanics.map((mechanic, index) => (
                   <AnimatedSection

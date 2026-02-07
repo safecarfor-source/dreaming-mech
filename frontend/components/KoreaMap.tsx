@@ -21,23 +21,25 @@ export default function KoreaMap({
   const getRegionFill = (regionId: string) => {
     if (selectedRegion === regionId) return '#bf00ff';
     if (hoveredRegion === regionId) return '#f3e8ff';
-    if (regionCounts[regionId] === 0) return '#f9fafb';
-    return '#f3f4f6';
+    if (regionCounts[regionId] > 0) return '#faf5ff';
+    return '#f9fafb';
   };
 
   const getRegionStroke = (regionId: string) => {
     if (selectedRegion === regionId) return '#9600cc';
     if (hoveredRegion === regionId) return '#bf00ff';
-    return '#d1d5db';
+    if (regionCounts[regionId] > 0) return '#c084fc';
+    return '#9ca3af';
   };
 
   const getTextColor = (regionId: string) => {
     if (selectedRegion === regionId) return '#ffffff';
+    if (regionCounts[regionId] > 0) return '#7c3aed';
     return '#374151';
   };
 
   const getRegionOpacity = (regionId: string) => {
-    if (regionCounts[regionId] === 0 && selectedRegion !== regionId) return 0.5;
+    if (regionCounts[regionId] === 0 && selectedRegion !== regionId) return 0.6;
     return 1;
   };
 
@@ -51,9 +53,9 @@ export default function KoreaMap({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6 }}
-      className="flex justify-center mb-12"
+      className="flex justify-center mb-8"
     >
-      <div className="w-full max-w-sm md:max-w-md">
+      <div className="w-full max-w-xs sm:max-w-sm md:max-w-md">
         <svg
           viewBox="145 148 110 110"
           className="w-full h-auto"
@@ -88,8 +90,8 @@ export default function KoreaMap({
                 stroke={getRegionStroke(regionId)}
                 strokeWidth={
                   selectedRegion === regionId || hoveredRegion === regionId
-                    ? 0.8
-                    : 0.3
+                    ? 1
+                    : 0.5
                 }
                 style={{
                   transition:
@@ -103,8 +105,8 @@ export default function KoreaMap({
                 y={labelY}
                 textAnchor="middle"
                 fill={getTextColor(regionId)}
-                fontSize="3.5"
-                fontWeight="700"
+                fontSize="4.5"
+                fontWeight="800"
                 style={{
                   pointerEvents: 'none',
                   transition: 'fill 0.2s ease',
@@ -118,11 +120,11 @@ export default function KoreaMap({
               {regionCounts[regionId] > 0 && (
                 <text
                   x={labelX}
-                  y={labelY + 4}
+                  y={labelY + 5}
                   textAnchor="middle"
-                  fill={selectedRegion === regionId ? '#e9d5ff' : '#9ca3af'}
-                  fontSize="2.5"
-                  fontWeight="600"
+                  fill={selectedRegion === regionId ? '#e9d5ff' : '#bf00ff'}
+                  fontSize="3.5"
+                  fontWeight="700"
                   style={{
                     pointerEvents: 'none',
                     transition: 'fill 0.2s ease',
@@ -137,7 +139,7 @@ export default function KoreaMap({
         </svg>
 
         {/* 안내 문구 */}
-        <p className="text-center text-sm text-gray-400 mt-4">
+        <p className="text-center text-sm text-gray-400 mt-3">
           지역을 클릭하여 정비소를 찾아보세요
         </p>
       </div>
