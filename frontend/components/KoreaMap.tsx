@@ -26,9 +26,9 @@ const LABEL_OFFSETS: Record<string, { dx: number; dy: number }> = {
   chungbuk: { dx: -2, dy: 0 },
 };
 
-// 서울 확대 설정 (중심점 기준 1.5배)
+// 서울 확대 설정 (중심점 기준 2.25배)
 const SEOUL_CENTER = { x: 192.3, y: 172.3 };
-const SEOUL_SCALE = 1.5;
+const SEOUL_SCALE = 2.25;
 
 export default function KoreaMap({
   regionCounts,
@@ -178,6 +178,7 @@ export default function KoreaMap({
                   fill={getTextColor(regionId)}
                   fontSize="4.5"
                   fontWeight="900"
+                  fontFamily="Pretendard, -apple-system, sans-serif"
                   style={{
                     pointerEvents: 'none',
                     transition: 'fill 0.2s ease',
@@ -196,6 +197,7 @@ export default function KoreaMap({
                     fill={selectedRegion === regionId ? '#e9d5ff' : '#bf00ff'}
                     fontSize="3.5"
                     fontWeight="700"
+                    fontFamily="Pretendard, -apple-system, sans-serif"
                     style={{
                       pointerEvents: 'none',
                       transition: 'fill 0.2s ease',
