@@ -21,15 +21,22 @@ const LABEL_OFFSETS: Record<string, { dx: number; dy: number }> = {
   seoul: { dx: 0, dy: -8 },
   gyeonggi: { dx: 0, dy: 6 },
   incheon: { dx: -5, dy: 0 },
-  daegu: { dx: 0, dy: -2 },
-  busan: { dx: 3, dy: 0 },
-  ulsan: { dx: 4, dy: -1 },
+  gangwon: { dx: -5, dy: 5 },
   chungbuk: { dx: -2, dy: 0 },
+  jeonbuk: { dx: 3, dy: 0 },
+  jeonnam: { dx: 3, dy: -3 },
+  gyeongbuk: { dx: -5, dy: 5 },
+  daegu: { dx: 0, dy: -2 },
+  ulsan: { dx: -8, dy: 0 },
+  busan: { dx: 0, dy: 6 },
 };
 
-// 서울 확대 설정 (중심점 기준 4.5배)
-const SEOUL_CENTER = { x: 192.3, y: 172.3 };
-const SEOUL_SCALE = 4.5;
+// 지역 확대 설정
+const REGION_SCALES: Record<string, { cx: number; cy: number; scale: number }> = {
+  seoul: { cx: 192.3, cy: 172.3, scale: 4.5 },
+  ulsan: { cx: 228, cy: 209, scale: 2.5 },
+  busan: { cx: 224, cy: 214, scale: 1.5 },
+};
 
 export default function KoreaMap({
   regionCounts,
@@ -80,7 +87,7 @@ export default function KoreaMap({
           {/* 1단계: 지역 영역(path) 먼저 모두 렌더링 */}
           {entries.map(([regionId, { d }]) => {
             const hitArea = HIT_AREAS[regionId];
-            const isSeoul = regionId === 'seoul';
+            const scaleInfo = REGION_SCALES[regionId];
 
             return (
               <g
@@ -121,8 +128,8 @@ export default function KoreaMap({
                   strokeLinejoin="round"
                   strokeLinecap="round"
                   transform={
-                    isSeoul
-                      ? `translate(${SEOUL_CENTER.x * (1 - SEOUL_SCALE)}, ${SEOUL_CENTER.y * (1 - SEOUL_SCALE)}) scale(${SEOUL_SCALE})`
+                    scaleInfo
+                      ? `translate(${scaleInfo.cx * (1 - scaleInfo.scale)}, ${scaleInfo.cy * (1 - scaleInfo.scale)}) scale(${scaleInfo.scale})`
                       : undefined
                   }
                   style={{
@@ -137,14 +144,14 @@ export default function KoreaMap({
           {/* 2단계: 글자(라벨)를 맨 위에 렌더링 — 절대 가려지지 않음 */}
           {entries.map(([regionId, { labelX, labelY }]) => {
             const offset = LABEL_OFFSETS[regionId] || { dx: 0, dy: 0 };
-            const isSeoul = regionId === 'seoul';
+            const scaleInfo = REGION_SCALES[regionId];
 
-            // 서울은 확대된 위치 기준으로 라벨 배치
-            const lx = isSeoul
-              ? SEOUL_CENTER.x + offset.dx
+            // 확대된 지역은 중심점 기준으로 라벨 배치
+            const lx = scaleInfo
+              ? scaleInfo.cx + offset.dx
               : labelX + offset.dx;
-            const ly = isSeoul
-              ? SEOUL_CENTER.y + offset.dy - 1
+            const ly = scaleInfo
+              ? scaleInfo.cy + offset.dy
               : labelY + offset.dy;
 
             const name = regionName(regionId);
