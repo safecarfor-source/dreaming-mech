@@ -30,7 +30,7 @@ export default function Home() {
     try {
       setLoading(true);
       setError(null);
-      const response = await mechanicsApi.getAll({ limit: 200 });
+      const response = await mechanicsApi.getAll();
       // API 응답: { data: { data: [], meta: {} } }
       setMechanics(response.data.data || []);
     } catch (error) {
