@@ -18,12 +18,17 @@ const HIT_AREAS: Record<string, { x: number; y: number; w: number; h: number }> 
 
 // 라벨 위치 보정 (영역이 작아 글자가 겹치는 지역)
 const LABEL_OFFSETS: Record<string, { dx: number; dy: number }> = {
-  seoul: { dx: 3, dy: -3 },     // 서울: 오른쪽 위로
-  incheon: { dx: -5, dy: 0 },   // 인천: 왼쪽으로
-  daegu: { dx: 0, dy: -2 },     // 대구: 위로
-  busan: { dx: 3, dy: 0 },      // 부산: 오른쪽으로
-  ulsan: { dx: 4, dy: -1 },     // 울산: 오른쪽으로
+  seoul: { dx: 0, dy: -2 },
+  incheon: { dx: -5, dy: 0 },
+  daegu: { dx: 0, dy: -2 },
+  busan: { dx: 3, dy: 0 },
+  ulsan: { dx: 4, dy: -1 },
+  chungbuk: { dx: -2, dy: 0 },
 };
+
+// 서울 확대 설정 (중심점 기준 1.5배)
+const SEOUL_CENTER = { x: 192.3, y: 172.3 };
+const SEOUL_SCALE = 1.5;
 
 export default function KoreaMap({
   regionCounts,
@@ -55,6 +60,8 @@ export default function KoreaMap({
     return region?.name || '';
   };
 
+  const entries = Object.entries(REGION_PATHS);
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -69,28 +76,21 @@ export default function KoreaMap({
           role="img"
           aria-label="대한민국 지도 - 지역을 클릭하여 정비소를 찾으세요"
         >
-          {/* 지역 path 렌더링 */}
-          {Object.entries(REGION_PATHS).map(([regionId, { d, labelX, labelY }]) => {
+          {/* 1단계: 지역 영역(path) 먼저 모두 렌더링 */}
+          {entries.map(([regionId, { d }]) => {
             const hitArea = HIT_AREAS[regionId];
-            const offset = LABEL_OFFSETS[regionId] || { dx: 0, dy: 0 };
-            const lx = labelX + offset.dx;
-            const ly = labelY + offset.dy;
-            const name = regionName(regionId);
-            const count = regionCounts[regionId] || 0;
-            const hasCount = count > 0;
+            const isSeoul = regionId === 'seoul';
 
             return (
               <g
-                key={regionId}
+                key={`path-${regionId}`}
                 onClick={() => onRegionClick(regionId)}
                 onMouseEnter={() => setHoveredRegion(regionId)}
                 onMouseLeave={() => setHoveredRegion(null)}
-                style={{
-                  cursor: 'pointer',
-                }}
+                style={{ cursor: 'pointer' }}
                 role="button"
                 tabIndex={0}
-                aria-label={`${name} - 정비소 ${count}곳`}
+                aria-label={`${regionName(regionId)} - 정비소 ${regionCounts[regionId] || 0}곳`}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' || e.key === ' ') {
                     e.preventDefault();
@@ -98,7 +98,6 @@ export default function KoreaMap({
                   }
                 }}
               >
-                {/* 히트 영역 (섬 지역용 - 투명 사각형) */}
                 {hitArea && (
                   <rect
                     x={hitArea.x}
@@ -109,7 +108,6 @@ export default function KoreaMap({
                   />
                 )}
 
-                {/* 지역 영역 */}
                 <path
                   d={d}
                   fill={getRegionFill(regionId)}
@@ -121,12 +119,45 @@ export default function KoreaMap({
                   }
                   strokeLinejoin="round"
                   strokeLinecap="round"
+                  transform={
+                    isSeoul
+                      ? `translate(${SEOUL_CENTER.x * (1 - SEOUL_SCALE)}, ${SEOUL_CENTER.y * (1 - SEOUL_SCALE)}) scale(${SEOUL_SCALE})`
+                      : undefined
+                  }
                   style={{
                     transition:
                       'fill 0.2s ease, stroke 0.2s ease, stroke-width 0.2s ease',
                   }}
                 />
+              </g>
+            );
+          })}
 
+          {/* 2단계: 글자(라벨)를 맨 위에 렌더링 — 절대 가려지지 않음 */}
+          {entries.map(([regionId, { labelX, labelY }]) => {
+            const offset = LABEL_OFFSETS[regionId] || { dx: 0, dy: 0 };
+            const isSeoul = regionId === 'seoul';
+
+            // 서울은 확대된 위치 기준으로 라벨 배치
+            const lx = isSeoul
+              ? SEOUL_CENTER.x + offset.dx
+              : labelX + offset.dx;
+            const ly = isSeoul
+              ? SEOUL_CENTER.y + offset.dy - 1
+              : labelY + offset.dy;
+
+            const name = regionName(regionId);
+            const count = regionCounts[regionId] || 0;
+            const hasCount = count > 0;
+
+            return (
+              <g
+                key={`label-${regionId}`}
+                onClick={() => onRegionClick(regionId)}
+                onMouseEnter={() => setHoveredRegion(regionId)}
+                onMouseLeave={() => setHoveredRegion(null)}
+                style={{ cursor: 'pointer' }}
+              >
                 {/* 글자 배경 (가독성 향상) */}
                 <rect
                   x={lx - (name.length * 2.5)}
