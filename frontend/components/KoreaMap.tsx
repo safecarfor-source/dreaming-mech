@@ -16,6 +16,15 @@ const HIT_AREAS: Record<string, { x: number; y: number; w: number; h: number }> 
   incheon: { x: 176, y: 166, w: 14, h: 16 },
 };
 
+// 라벨 위치 보정 (영역이 작아 글자가 겹치는 지역)
+const LABEL_OFFSETS: Record<string, { dx: number; dy: number }> = {
+  seoul: { dx: 3, dy: -3 },     // 서울: 오른쪽 위로
+  incheon: { dx: -5, dy: 0 },   // 인천: 왼쪽으로
+  daegu: { dx: 0, dy: -2 },     // 대구: 위로
+  busan: { dx: 3, dy: 0 },      // 부산: 오른쪽으로
+  ulsan: { dx: 4, dy: -1 },     // 울산: 오른쪽으로
+};
+
 export default function KoreaMap({
   regionCounts,
   selectedRegion,
@@ -63,6 +72,13 @@ export default function KoreaMap({
           {/* 지역 path 렌더링 */}
           {Object.entries(REGION_PATHS).map(([regionId, { d, labelX, labelY }]) => {
             const hitArea = HIT_AREAS[regionId];
+            const offset = LABEL_OFFSETS[regionId] || { dx: 0, dy: 0 };
+            const lx = labelX + offset.dx;
+            const ly = labelY + offset.dy;
+            const name = regionName(regionId);
+            const count = regionCounts[regionId] || 0;
+            const hasCount = count > 0;
+
             return (
               <g
                 key={regionId}
@@ -74,7 +90,7 @@ export default function KoreaMap({
                 }}
                 role="button"
                 tabIndex={0}
-                aria-label={`${regionName(regionId)} - 정비소 ${regionCounts[regionId] || 0}곳`}
+                aria-label={`${name} - 정비소 ${count}곳`}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' || e.key === ' ') {
                     e.preventDefault();
@@ -100,8 +116,8 @@ export default function KoreaMap({
                   stroke={getRegionStroke(regionId)}
                   strokeWidth={
                     selectedRegion === regionId || hoveredRegion === regionId
-                      ? 0.8
-                      : 0.4
+                      ? 0.6
+                      : 0.3
                   }
                   strokeLinejoin="round"
                   strokeLinecap="round"
@@ -111,10 +127,22 @@ export default function KoreaMap({
                   }}
                 />
 
+                {/* 글자 배경 (가독성 향상) */}
+                <rect
+                  x={lx - (name.length * 2.5)}
+                  y={ly - 4}
+                  width={name.length * 5}
+                  height={hasCount ? 10.5 : 5.5}
+                  rx="1.5"
+                  ry="1.5"
+                  fill={selectedRegion === regionId ? 'transparent' : 'rgba(255,255,255,0.85)'}
+                  style={{ pointerEvents: 'none' }}
+                />
+
                 {/* 지역 이름 */}
                 <text
-                  x={labelX}
-                  y={labelY}
+                  x={lx}
+                  y={ly}
                   textAnchor="middle"
                   fill={getTextColor(regionId)}
                   fontSize="4.5"
@@ -125,14 +153,14 @@ export default function KoreaMap({
                     userSelect: 'none',
                   }}
                 >
-                  {regionName(regionId)}
+                  {name}
                 </text>
 
                 {/* 정비소 수 */}
-                {regionCounts[regionId] > 0 && (
+                {hasCount && (
                   <text
-                    x={labelX}
-                    y={labelY + 5}
+                    x={lx}
+                    y={ly + 5}
                     textAnchor="middle"
                     fill={selectedRegion === regionId ? '#e9d5ff' : '#bf00ff'}
                     fontSize="3.5"
@@ -143,7 +171,7 @@ export default function KoreaMap({
                       userSelect: 'none',
                     }}
                   >
-                    {regionCounts[regionId]}곳
+                    {count}곳
                   </text>
                 )}
               </g>

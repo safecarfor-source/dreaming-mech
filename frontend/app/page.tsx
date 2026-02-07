@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { mechanicsApi } from '@/lib/api';
 import { useModalStore } from '@/lib/store';
@@ -25,6 +25,7 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
   const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
   const openModal = useModalStore((state) => state.open);
+  const mechanicListRef = useRef<HTMLDivElement>(null);
 
   const fetchMechanics = async () => {
     try {
@@ -65,7 +66,18 @@ export default function Home() {
     : null;
 
   const handleRegionClick = (regionId: string) => {
-    setSelectedRegion(regionId === selectedRegion ? null : regionId);
+    const newRegion = regionId === selectedRegion ? null : regionId;
+    setSelectedRegion(newRegion);
+
+    // 지역 선택 시 정비소 목록으로 자동 스크롤
+    if (newRegion && mechanicListRef.current) {
+      setTimeout(() => {
+        mechanicListRef.current?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start',
+        });
+      }, 100);
+    }
   };
 
   return (
@@ -106,6 +118,7 @@ export default function Home() {
           </AnimatedSection>
 
           {/* 선택된 지역 표시 + 전체 보기 버튼 */}
+          <div ref={mechanicListRef} />
           <AnimatePresence mode="wait">
             {selectedRegionInfo && (
               <motion.div
