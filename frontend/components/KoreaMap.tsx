@@ -18,7 +18,7 @@ const HIT_AREAS: Record<string, { x: number; y: number; w: number; h: number }> 
 
 // 라벨 위치 보정 (영역이 작아 글자가 겹치는 지역)
 const LABEL_OFFSETS: Record<string, { dx: number; dy: number }> = {
-  seoul: { dx: 0, dy: -10 },
+  seoul: { dx: 0, dy: -4 },
   gyeonggi: { dx: 0, dy: 3 },
   incheon: { dx: -5, dy: 0 },
   gangwon: { dx: -5, dy: 5 },
@@ -171,7 +171,6 @@ export default function KoreaMap({
                   rx="1.5"
                   ry="1.5"
                   fill={selectedRegion === regionId ? 'transparent' : 'rgba(255,255,255,0.85)'}
-                  style={{ pointerEvents: 'none' }}
                 />
 
                 {/* 지역 이름 */}
@@ -184,7 +183,6 @@ export default function KoreaMap({
                   fontWeight="900"
                   fontFamily="Pretendard, -apple-system, sans-serif"
                   style={{
-                    pointerEvents: 'none',
                     transition: 'fill 0.2s ease',
                     userSelect: 'none',
                   }}
@@ -203,7 +201,6 @@ export default function KoreaMap({
                     fontWeight="700"
                     fontFamily="Pretendard, -apple-system, sans-serif"
                     style={{
-                      pointerEvents: 'none',
                       transition: 'fill 0.2s ease',
                       userSelect: 'none',
                     }}
