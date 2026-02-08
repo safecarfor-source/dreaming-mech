@@ -55,8 +55,14 @@ export default function KoreaMap({
 
   const getTextColor = (regionId: string) => {
     if (selectedRegion === regionId) return '#ffffff';
-    if (hoveredRegion === regionId) return '#7c3aed';
-    return '#1c1917';
+    if (hoveredRegion === regionId) return '#5b21b6';
+    return '#4c1d95';
+  };
+
+  const getCountColor = (regionId: string) => {
+    if (selectedRegion === regionId) return '#e9d5ff';
+    if (hoveredRegion === regionId) return '#a78bfa';
+    return '#a855f7';
   };
 
   const regionName = (regionId: string) => {
@@ -196,7 +202,7 @@ export default function KoreaMap({
                     x={lx}
                     y={ly + 5}
                     textAnchor="middle"
-                    fill={selectedRegion === regionId ? '#e9d5ff' : '#bf00ff'}
+                    fill={getCountColor(regionId)}
                     fontSize="3.5"
                     fontWeight="700"
                     fontFamily="Pretendard, -apple-system, sans-serif"
