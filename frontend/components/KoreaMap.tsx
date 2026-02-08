@@ -26,7 +26,7 @@ const LABEL_OFFSETS: Record<string, { dx: number; dy: number }> = {
   chungnam: { dx: 5, dy: 0 },
   jeonbuk: { dx: 3, dy: 0 },
   jeonnam: { dx: 3, dy: -3 },
-  gyeongbuk: { dx: -5, dy: 5 },
+  gyeongbuk: { dx: -4, dy: -3 },
 };
 
 // 지역 확대 설정
