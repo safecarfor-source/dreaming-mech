@@ -26,16 +26,11 @@ const LABEL_OFFSETS: Record<string, { dx: number; dy: number }> = {
   jeonbuk: { dx: 3, dy: 0 },
   jeonnam: { dx: 3, dy: -3 },
   gyeongbuk: { dx: -5, dy: 5 },
-  daegu: { dx: 0, dy: -2 },
-  ulsan: { dx: -8, dy: 0 },
-  busan: { dx: 0, dy: 6 },
 };
 
 // 지역 확대 설정
 const REGION_SCALES: Record<string, { cx: number; cy: number; scale: number }> = {
-  seoul: { cx: 192.3, cy: 172.3, scale: 4.5 },
-  ulsan: { cx: 228, cy: 209, scale: 2.5 },
-  busan: { cx: 224, cy: 214, scale: 1.5 },
+  seoul: { cx: 192.3, cy: 172.3, scale: 3 },
 };
 
 export default function KoreaMap({

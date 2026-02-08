@@ -9,18 +9,15 @@ export interface Region {
 
 export const REGIONS: Region[] = [
   { id: 'seoul', name: '서울', fullName: '서울특별시', locationPrefixes: ['서울'] },
-  { id: 'busan', name: '부산', fullName: '부산광역시', locationPrefixes: ['부산'] },
-  { id: 'daegu', name: '대구', fullName: '대구광역시', locationPrefixes: ['대구'] },
   { id: 'incheon', name: '인천', fullName: '인천광역시', locationPrefixes: ['인천'] },
-  { id: 'ulsan', name: '울산', fullName: '울산광역시', locationPrefixes: ['울산'] },
   { id: 'gyeonggi', name: '경기', fullName: '경기도', locationPrefixes: ['경기'] },
   { id: 'gangwon', name: '강원', fullName: '강원특별자치도', locationPrefixes: ['강원'] },
   { id: 'chungbuk', name: '충북', fullName: '충청북도', locationPrefixes: ['충북'] },
   { id: 'chungnam', name: '충남', fullName: '충청남도', locationPrefixes: ['충남', '대전', '세종'] },
   { id: 'jeonbuk', name: '전북', fullName: '전북특별자치도', locationPrefixes: ['전북'] },
   { id: 'jeonnam', name: '전남', fullName: '전라남도', locationPrefixes: ['전남', '광주'] },
-  { id: 'gyeongbuk', name: '경북', fullName: '경상북도', locationPrefixes: ['경북'] },
-  { id: 'gyeongnam', name: '경남', fullName: '경상남도', locationPrefixes: ['경남'] },
+  { id: 'gyeongbuk', name: '경북', fullName: '경상북도', locationPrefixes: ['경북', '대구'] },
+  { id: 'gyeongnam', name: '경남', fullName: '경상남도', locationPrefixes: ['경남', '부산', '울산'] },
   { id: 'jeju', name: '제주', fullName: '제주특별자치도', locationPrefixes: ['제주'] },
 ];
 
