@@ -50,19 +50,13 @@ export default function KoreaMap({
   const getRegionStroke = (regionId: string) => {
     if (selectedRegion === regionId) return '#7c3aed';
     if (hoveredRegion === regionId) return '#bf00ff';
-    return '#333333';
+    return '#a78bfa';
   };
 
-  const getTextColor = (regionId: string) => {
-    if (selectedRegion === regionId) return '#ffffff';
-    if (hoveredRegion === regionId) return '#5b21b6';
+  const getBadgeFill = (regionId: string) => {
+    if (selectedRegion === regionId) return '#7c3aed';
+    if (hoveredRegion === regionId) return '#6d28d9';
     return '#4c1d95';
-  };
-
-  const getCountColor = (regionId: string) => {
-    if (selectedRegion === regionId) return '#e9d5ff';
-    if (hoveredRegion === regionId) return '#a78bfa';
-    return '#a855f7';
   };
 
   const regionName = (regionId: string) => {
@@ -86,8 +80,11 @@ export default function KoreaMap({
           role="img"
           aria-label="대한민국 지도 - 지역을 클릭하여 정비소를 찾으세요"
         >
-          {/* 1단계: 지역 영역(path) 먼저 모두 렌더링 */}
-          {entries.map(([regionId, { d }]) => {
+          {/* 배경 */}
+          <rect x="168" y="155" width="75" height="100" rx="4" fill="#374151" />
+
+          {/* 1단계: 지역 영역(path) 먼저 모두 렌더링 — 서브패스를 개별 path로 */}
+          {entries.map(([regionId, { paths: regionPaths }]) => {
             const hitArea = HIT_AREAS[regionId];
             const scaleInfo = REGION_SCALES[regionId];
 
@@ -118,27 +115,30 @@ export default function KoreaMap({
                   />
                 )}
 
-                <path
-                  d={d}
-                  fill={getRegionFill(regionId)}
-                  stroke={getRegionStroke(regionId)}
-                  strokeWidth={
-                    selectedRegion === regionId || hoveredRegion === regionId
-                      ? 0.6
-                      : 0.3
-                  }
-                  strokeLinejoin="round"
-                  strokeLinecap="round"
-                  transform={
-                    scaleInfo
-                      ? `translate(${scaleInfo.cx * (1 - scaleInfo.scale)}, ${scaleInfo.cy * (1 - scaleInfo.scale)}) scale(${scaleInfo.scale})`
-                      : undefined
-                  }
-                  style={{
-                    transition:
-                      'fill 0.2s ease, stroke 0.2s ease, stroke-width 0.2s ease',
-                  }}
-                />
+                {regionPaths.map((pathD, idx) => (
+                  <path
+                    key={idx}
+                    d={pathD}
+                    fill={getRegionFill(regionId)}
+                    stroke={getRegionStroke(regionId)}
+                    strokeWidth={
+                      selectedRegion === regionId || hoveredRegion === regionId
+                        ? 0.6
+                        : 0.4
+                    }
+                    strokeLinejoin="round"
+                    strokeLinecap="round"
+                    transform={
+                      scaleInfo
+                        ? `translate(${scaleInfo.cx * (1 - scaleInfo.scale)}, ${scaleInfo.cy * (1 - scaleInfo.scale)}) scale(${scaleInfo.scale})`
+                        : undefined
+                    }
+                    style={{
+                      transition:
+                        'fill 0.2s ease, stroke 0.2s ease, stroke-width 0.2s ease',
+                    }}
+                  />
+                ))}
               </g>
             );
           })}
@@ -168,15 +168,17 @@ export default function KoreaMap({
                 onMouseLeave={() => setHoveredRegion(null)}
                 style={{ cursor: 'pointer' }}
               >
-                {/* 글자 배경 (가독성 향상) */}
+                {/* 뱃지 배경 */}
                 <rect
-                  x={lx - (name.length * 2.5)}
+                  x={lx - (name.length * 2.5) - 1}
                   y={ly - 4}
-                  width={name.length * 5}
-                  height={hasCount ? 10.5 : 5.5}
+                  width={name.length * 5 + 2}
+                  height={hasCount ? 11 : 6}
                   rx="1.5"
                   ry="1.5"
-                  fill={selectedRegion === regionId ? 'transparent' : 'rgba(255,255,255,0.85)'}
+                  fill={getBadgeFill(regionId)}
+                  opacity="0.85"
+                  style={{ transition: 'fill 0.2s ease' }}
                 />
 
                 {/* 지역 이름 */}
@@ -184,12 +186,11 @@ export default function KoreaMap({
                   x={lx}
                   y={ly}
                   textAnchor="middle"
-                  fill={getTextColor(regionId)}
+                  fill="#ffffff"
                   fontSize="4.5"
                   fontWeight="900"
                   fontFamily="Pretendard, -apple-system, sans-serif"
                   style={{
-                    transition: 'fill 0.2s ease',
                     userSelect: 'none',
                   }}
                 >
@@ -202,12 +203,11 @@ export default function KoreaMap({
                     x={lx}
                     y={ly + 5}
                     textAnchor="middle"
-                    fill={getCountColor(regionId)}
+                    fill="#c4b5fd"
                     fontSize="3.5"
                     fontWeight="700"
                     fontFamily="Pretendard, -apple-system, sans-serif"
                     style={{
-                      transition: 'fill 0.2s ease',
                       userSelect: 'none',
                     }}
                   >
