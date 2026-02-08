@@ -18,11 +18,12 @@ const HIT_AREAS: Record<string, { x: number; y: number; w: number; h: number }> 
 
 // 라벨 위치 보정 (영역이 작아 글자가 겹치는 지역)
 const LABEL_OFFSETS: Record<string, { dx: number; dy: number }> = {
-  seoul: { dx: 0, dy: -8 },
-  gyeonggi: { dx: 0, dy: 6 },
+  seoul: { dx: 0, dy: -10 },
+  gyeonggi: { dx: 0, dy: 3 },
   incheon: { dx: -5, dy: 0 },
   gangwon: { dx: -5, dy: 5 },
   chungbuk: { dx: -2, dy: 0 },
+  chungnam: { dx: 5, dy: 0 },
   jeonbuk: { dx: 3, dy: 0 },
   jeonnam: { dx: 3, dy: -3 },
   gyeongbuk: { dx: -5, dy: 5 },
@@ -30,7 +31,7 @@ const LABEL_OFFSETS: Record<string, { dx: number; dy: number }> = {
 
 // 지역 확대 설정
 const REGION_SCALES: Record<string, { cx: number; cy: number; scale: number }> = {
-  seoul: { cx: 192.3, cy: 172.3, scale: 3 },
+  seoul: { cx: 192.3, cy: 172.3, scale: 3.9 },
 };
 
 export default function KoreaMap({
