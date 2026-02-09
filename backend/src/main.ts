@@ -11,6 +11,10 @@ async function bootstrap() {
 
   const app = await NestFactory.create(AppModule);
 
+  // Nginx/Docker 환경에서 실제 방문자 IP를 가져오기 위한 설정
+  const expressApp = app.getHttpAdapter().getInstance();
+  expressApp.set('trust proxy', true);
+
   // Enable cookie parser for HttpOnly cookies
   app.use(cookieParser());
 
