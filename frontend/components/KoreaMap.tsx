@@ -73,7 +73,7 @@ export default function KoreaMap({
       transition={{ duration: 0.6 }}
       className="flex justify-center mb-6"
     >
-      <div className="w-full max-w-full sm:max-w-lg md:max-w-2xl">
+      <div className="w-full max-w-full sm:max-w-sm md:max-w-lg">
         <svg
           viewBox="168 155 75 100"
           className="w-full h-auto"
