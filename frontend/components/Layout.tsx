@@ -29,7 +29,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             >
               <span className={`text-sm md:text-lg font-bold transition-colors ${
                 isForMechanics ? 'text-[#bf00ff]' : 'text-gray-400 group-hover:text-[#bf00ff]'
-              }`}>정비사 전용</span>
+              }`}>타이어 사장만 들어오세요!!</span>
               <span className={`w-7 h-4 md:w-10 md:h-6 rounded-full relative transition-colors ${
                 isForMechanics ? 'bg-[#bf00ff]' : 'bg-gray-600 group-hover:bg-[#bf00ff]'
               }`}>
