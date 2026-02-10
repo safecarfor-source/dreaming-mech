@@ -18,7 +18,7 @@ export default function RootLayout({
   return (
     <html lang="ko">
       <head>
-        {/* Google Analytics */}
+        {/* Google Analytics - admin/owner 페이지 제외, 수동 페이지뷰 관리 */}
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=G-PPK8Y8EZ43"
           strategy="afterInteractive"
@@ -28,7 +28,10 @@ export default function RootLayout({
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}
             gtag('js', new Date());
-            gtag('config', 'G-PPK8Y8EZ43');
+            gtag('config', 'G-PPK8Y8EZ43', { send_page_view: false });
+            if (!window.location.pathname.startsWith('/admin') && !window.location.pathname.startsWith('/owner')) {
+              gtag('event', 'page_view', { page_path: window.location.pathname });
+            }
           `}
         </Script>
         <link
