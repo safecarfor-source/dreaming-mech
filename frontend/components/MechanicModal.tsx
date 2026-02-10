@@ -84,11 +84,11 @@ export default function MechanicModal() {
               <div className="p-6 space-y-8">
                 {/* 대표 이미지 */}
                 {mechanic.mainImageUrl && (
-                  <div className="rounded-2xl overflow-hidden">
+                  <div className="rounded-2xl overflow-hidden bg-gray-100">
                     <img
                       src={mechanic.mainImageUrl}
                       alt={sanitizeText(mechanic.name)}
-                      className="w-full h-64 md:h-80 object-cover"
+                      className="w-full object-contain"
                     />
                   </div>
                 )}
