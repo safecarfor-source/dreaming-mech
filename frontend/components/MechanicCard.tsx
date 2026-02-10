@@ -18,8 +18,8 @@ export default function MechanicCard({ mechanic, onClick }: Props) {
       onClick={onClick}
       className="bg-white border border-gray-200 rounded-xl md:rounded-2xl overflow-hidden cursor-pointer group transition-all hover:border-[#bf00ff] hover:shadow-xl hover:shadow-[#bf00ff]/10"
     >
-      {/* 이미지 */}
-      <div className="h-28 md:h-52 bg-gray-100 relative overflow-hidden">
+      {/* 이미지 - 정사각형 (1:1) */}
+      <div className="aspect-square bg-gray-100 relative overflow-hidden">
         {mechanic.mainImageUrl ? (
           <img
             src={mechanic.mainImageUrl}
