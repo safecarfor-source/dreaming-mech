@@ -20,16 +20,23 @@ export default function CountUp({
   const [count, setCount] = useState(0);
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, amount: 0.5 });
-  const [hasAnimated, setHasAnimated] = useState(false);
+  const prevEndRef = useRef<number | null>(null);
+  const countRef = useRef(0); // 현재 count를 ref로 추적
 
   useEffect(() => {
-    if (!isInView || hasAnimated) return;
+    countRef.current = count;
+  }, [count]);
 
-    setHasAnimated(true);
+  useEffect(() => {
+    if (!isInView) return;
+
+    // 첫 애니메이션이거나 end 값이 변경된 경우에만 실행
+    if (prevEndRef.current === end) return;
+    prevEndRef.current = end;
 
     const startTimeout = setTimeout(() => {
       let startTime: number | null = null;
-      const startValue = 0;
+      const startValue = countRef.current; // ref에서 현재 값 읽기
       const endValue = end;
 
       const animate = (currentTime: number) => {
@@ -41,11 +48,13 @@ export default function CountUp({
         const currentCount = startValue + (endValue - startValue) * easedProgress;
 
         setCount(currentCount);
+        countRef.current = currentCount;
 
         if (progress < 1) {
           requestAnimationFrame(animate);
         } else {
           setCount(endValue);
+          countRef.current = endValue;
         }
       };
 
@@ -53,7 +62,7 @@ export default function CountUp({
     }, delay);
 
     return () => clearTimeout(startTimeout);
-  }, [isInView, end, duration, delay, hasAnimated]);
+  }, [isInView, end, duration, delay]);
 
   const displayValue = decimals > 0
     ? count.toFixed(decimals)
