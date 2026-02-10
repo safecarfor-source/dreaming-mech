@@ -39,7 +39,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               </span>
             </Link>
           </div>
-          <nav className="hidden md:flex items-center gap-8 text-sm text-gray-500">
+          <nav className="hidden md:flex items-center gap-10 text-lg text-gray-500">
             <a href="#" className="hover:text-white transition-colors">서비스</a>
             <a href="#" className="hover:text-white transition-colors">정비사 목록</a>
             <a href="#" className="hover:text-white transition-colors">문의하기</a>
