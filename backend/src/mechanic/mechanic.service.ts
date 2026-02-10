@@ -137,7 +137,7 @@ export class MechanicService {
       );
       if (isDuplicate) {
         throw new BadRequestException(
-          'Duplicate click detected. Please wait 10 seconds.',
+          'Duplicate click detected. Please wait 60 seconds.',
         );
       }
 

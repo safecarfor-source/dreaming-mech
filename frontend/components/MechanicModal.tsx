@@ -127,7 +127,7 @@ export default function MechanicModal() {
                       </div>
                       <div className="min-w-0 flex-1">
                         <p className="text-sm text-gray-500">조회수</p>
-                        <p className="text-gray-900 font-medium">{mechanic.clickCount + 1}회</p>
+                        <p className="text-gray-900 font-medium">{mechanic.clickCount}회</p>
                       </div>
                     </div>
                   </div>
