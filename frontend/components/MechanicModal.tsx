@@ -82,19 +82,20 @@ export default function MechanicModal() {
             {/* 컨텐츠 */}
             <div className="flex-1 overflow-auto">
               <div className="p-6 space-y-8">
-                {/* 대표 이미지 */}
-                {mechanic.mainImageUrl && (
-                  <div className="rounded-2xl overflow-hidden bg-gray-100">
-                    <img
-                      src={mechanic.mainImageUrl}
-                      alt={sanitizeText(mechanic.name)}
-                      className="w-full object-contain"
-                    />
-                  </div>
-                )}
+                {/* 사진 + 주소 + 소개 나란히 */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {/* 대표 이미지 (정사각형) */}
+                  {mechanic.mainImageUrl && (
+                    <div className="rounded-2xl overflow-hidden bg-gray-100 aspect-square">
+                      <img
+                        src={mechanic.mainImageUrl}
+                        alt={sanitizeText(mechanic.name)}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  )}
 
-                {/* 기본 정보 */}
-                <div className="grid md:grid-cols-2 gap-6">
+                  {/* 주소/전화/조회수 */}
                   <div className="space-y-4">
                     <div className="flex items-start gap-3">
                       <div className="p-2 bg-gray-100 rounded-lg flex-shrink-0">
@@ -132,7 +133,7 @@ export default function MechanicModal() {
                     </div>
                   </div>
 
-                  {/* 설명 */}
+                  {/* 소개 */}
                   {mechanic.description && (
                     <div className="p-6 bg-gray-50 rounded-2xl">
                       <h3 className="text-lg font-bold text-gray-900 mb-3">소개</h3>
