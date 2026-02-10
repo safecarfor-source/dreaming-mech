@@ -21,20 +21,20 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             {/* 정비사 전용 탭 (크몽 Biz 스타일) - 토글 기능 */}
             <Link
               href={isForMechanics ? '/' : '/for-mechanics'}
-              className={`flex items-center gap-2 md:gap-3 ml-1 md:ml-3 px-4 py-2 md:px-6 md:py-3 rounded-full border-2 transition-all group ${
+              className={`flex items-center gap-3 md:gap-4 ml-1 md:ml-3 px-6 py-3 md:px-9 md:py-4 rounded-full border-2 transition-all group ${
                 isForMechanics
                   ? 'border-[#bf00ff] bg-[#bf00ff]/15'
                   : 'border-white/20 hover:border-[#bf00ff]/50 hover:bg-[#bf00ff]/10'
               }`}
             >
-              <span className={`text-sm md:text-lg font-bold transition-colors ${
+              <span className={`text-lg md:text-2xl font-bold transition-colors ${
                 isForMechanics ? 'text-[#bf00ff]' : 'text-gray-400 group-hover:text-[#bf00ff]'
-              }`}>타이어 사장만 들어오세요!!</span>
-              <span className={`w-7 h-4 md:w-10 md:h-6 rounded-full relative transition-colors ${
+              }`}>정비사 전용</span>
+              <span className={`w-10 h-6 md:w-14 md:h-8 rounded-full relative transition-colors ${
                 isForMechanics ? 'bg-[#bf00ff]' : 'bg-gray-600 group-hover:bg-[#bf00ff]'
               }`}>
-                <span className={`absolute top-0.5 w-3 h-3 md:w-5 md:h-5 bg-white rounded-full transition-all ${
-                  isForMechanics ? 'right-0.5' : 'left-0.5'
+                <span className={`absolute top-1 w-4 h-4 md:w-6 md:h-6 bg-white rounded-full transition-all ${
+                  isForMechanics ? 'right-1' : 'left-1'
                 }`} />
               </span>
             </Link>
