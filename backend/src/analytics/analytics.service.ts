@@ -24,11 +24,30 @@ export class AnalyticsService {
     });
   }
 
+  // KST 기준 날짜의 시작(00:00)을 UTC로 변환하는 유틸
+  private getKstStartDate(daysAgo: number): Date {
+    const now = new Date();
+    const kstNow = new Date(now.getTime() + 9 * 60 * 60 * 1000);
+    const kstToday = new Date(kstNow.getFullYear(), kstNow.getMonth(), kstNow.getDate());
+    const kstStart = new Date(kstToday.getTime() - daysAgo * 24 * 60 * 60 * 1000);
+    return new Date(kstStart.getTime() - 9 * 60 * 60 * 1000); // UTC로 변환
+  }
+
+  // KST 기준 특정 월의 시작/끝을 UTC로 변환
+  private getKstMonthRange(year: number, month: number): { startDate: Date; endDate: Date } {
+    const kstStart = new Date(year, month - 1, 1, 0, 0, 0);
+    const startDate = new Date(kstStart.getTime() - 9 * 60 * 60 * 1000);
+    const kstEnd = new Date(year, month, 0, 23, 59, 59);
+    const endDate = new Date(kstEnd.getTime() - 9 * 60 * 60 * 1000);
+    return { startDate, endDate };
+  }
+
   // 사이트 전체 통계 (기간별)
   async getSiteStats(days?: number) {
+    // KST 기준 오늘 포함 days일 (예: 1일=오늘만, 7일=6일전~오늘)
     const startDate = days
-      ? new Date(Date.now() - days * 24 * 60 * 60 * 1000)
-      : new Date(0); // 전체 기간
+      ? this.getKstStartDate(days - 1)
+      : new Date(0);
 
     // 총 페이지뷰 (봇 제외)
     const totalPageViews = await this.prisma.pageView.count({
@@ -48,18 +67,18 @@ export class AnalyticsService {
       _count: true,
     });
 
-    // 일별 통계
+    // 일별 통계 (KST 기준 날짜로 그룹핑, 오래된 날짜→최신 날짜 순서)
     const dailyStats = await this.prisma.$queryRaw<
       Array<{ date: string; views: bigint }>
     >`
       SELECT
-        DATE("viewedAt") as date,
+        DATE("viewedAt" AT TIME ZONE 'Asia/Seoul') as date,
         COUNT(*)::bigint as views
       FROM "PageView"
       WHERE "isBot" = false
         AND "viewedAt" >= ${startDate}
-      GROUP BY DATE("viewedAt")
-      ORDER BY date DESC
+      GROUP BY DATE("viewedAt" AT TIME ZONE 'Asia/Seoul')
+      ORDER BY date ASC
       LIMIT 30
     `;
 
@@ -81,10 +100,10 @@ export class AnalyticsService {
       take: 5,
     });
 
-    // 평균 조회수/일
+    // 평균 조회수/일 (실제 데이터가 있는 일수로 계산)
     const avgViewsPerDay =
-      days && dailyStats.length > 0
-        ? Math.round(totalPageViews / days)
+      dailyStats.length > 0
+        ? Math.round(totalPageViews / dailyStats.length)
         : totalPageViews;
 
     return {
@@ -104,8 +123,8 @@ export class AnalyticsService {
 
   // 특정 월의 일별 통계
   async getSiteStatsByMonth(year: number, month: number) {
-    const startDate = new Date(year, month - 1, 1);
-    const endDate = new Date(year, month, 0, 23, 59, 59);
+    // KST 기준 월 범위를 UTC로 변환
+    const { startDate, endDate } = this.getKstMonthRange(year, month);
 
     // 총 페이지뷰 (봇 제외)
     const totalPageViews = await this.prisma.pageView.count({
@@ -125,18 +144,18 @@ export class AnalyticsService {
       _count: true,
     });
 
-    // 일별 통계
+    // 일별 통계 (KST 기준 날짜로 그룹핑)
     const dailyStats = await this.prisma.$queryRaw<
       Array<{ date: string; views: bigint }>
     >`
       SELECT
-        DATE("viewedAt") as date,
+        DATE("viewedAt" AT TIME ZONE 'Asia/Seoul') as date,
         COUNT(*)::bigint as views
       FROM "PageView"
       WHERE "isBot" = false
         AND "viewedAt" >= ${startDate}
         AND "viewedAt" <= ${endDate}
-      GROUP BY DATE("viewedAt")
+      GROUP BY DATE("viewedAt" AT TIME ZONE 'Asia/Seoul')
       ORDER BY date ASC
     `;
 
@@ -158,7 +177,7 @@ export class AnalyticsService {
       take: 5,
     });
 
-    // 평균 조회수/일
+    // 평균 조회수/일 (실제 데이터가 있는 일수로 계산)
     const daysInMonth = dailyStats.length;
     const avgViewsPerDay =
       daysInMonth > 0 ? Math.round(totalPageViews / daysInMonth) : totalPageViews;
@@ -183,18 +202,18 @@ export class AnalyticsService {
     const startDate = new Date();
     startDate.setMonth(startDate.getMonth() - months);
 
-    // 월별 페이지뷰 통계
+    // 월별 페이지뷰 통계 (KST 기준)
     const monthlyStats = await this.prisma.$queryRaw<
       Array<{ month: string; views: bigint; visitors: bigint }>
     >`
       SELECT
-        TO_CHAR("viewedAt", 'YYYY-MM') as month,
+        TO_CHAR("viewedAt" AT TIME ZONE 'Asia/Seoul', 'YYYY-MM') as month,
         COUNT(*)::bigint as views,
         COUNT(DISTINCT "ipAddress")::bigint as visitors
       FROM "PageView"
       WHERE "isBot" = false
         AND "viewedAt" >= ${startDate}
-      GROUP BY TO_CHAR("viewedAt", 'YYYY-MM')
+      GROUP BY TO_CHAR("viewedAt" AT TIME ZONE 'Asia/Seoul', 'YYYY-MM')
       ORDER BY month ASC
     `;
 
@@ -264,13 +283,13 @@ export class AnalyticsService {
       Array<{ month: string; clicks: bigint }>
     >`
       SELECT
-        TO_CHAR("clickedAt", 'YYYY-MM') as month,
+        TO_CHAR("clickedAt" AT TIME ZONE 'Asia/Seoul', 'YYYY-MM') as month,
         COUNT(*)::bigint as clicks
       FROM "ClickLog"
       WHERE "mechanicId" = ${mechanicId}
         AND "isBot" = false
         AND "clickedAt" >= ${startDate}
-      GROUP BY TO_CHAR("clickedAt", 'YYYY-MM')
+      GROUP BY TO_CHAR("clickedAt" AT TIME ZONE 'Asia/Seoul', 'YYYY-MM')
       ORDER BY month ASC
     `;
 
@@ -296,12 +315,12 @@ export class AnalyticsService {
       WITH monthly_stats AS (
         SELECT
           cl."mechanicId",
-          TO_CHAR(cl."clickedAt", 'YYYY-MM') as month,
+          TO_CHAR(cl."clickedAt" AT TIME ZONE 'Asia/Seoul', 'YYYY-MM') as month,
           COUNT(*) as count
         FROM "ClickLog" cl
         WHERE cl."isBot" = false
           AND cl."clickedAt" >= ${startDate}
-        GROUP BY cl."mechanicId", TO_CHAR(cl."clickedAt", 'YYYY-MM')
+        GROUP BY cl."mechanicId", TO_CHAR(cl."clickedAt" AT TIME ZONE 'Asia/Seoul', 'YYYY-MM')
       )
       SELECT
         m.id,
@@ -329,8 +348,8 @@ export class AnalyticsService {
     month: number,
     limit: number = 5,
   ) {
-    const startDate = new Date(year, month - 1, 1);
-    const endDate = new Date(year, month, 0, 23, 59, 59);
+    // KST 기준 월 범위를 UTC로 변환
+    const { startDate, endDate } = this.getKstMonthRange(year, month);
 
     const clickData = await this.prisma.$queryRaw<
       Array<{ mechanicId: number; clickCount: bigint }>
@@ -412,7 +431,8 @@ export class AnalyticsService {
     // daily 또는 monthly: ClickLog 집계
     let startDate: Date;
     if (period === 'daily') {
-      startDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+      // KST 기준 시작 날짜
+      startDate = this.getKstStartDate(days - 1);
     } else {
       // monthly
       startDate = new Date();

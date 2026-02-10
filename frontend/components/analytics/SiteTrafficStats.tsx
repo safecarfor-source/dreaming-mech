@@ -382,14 +382,12 @@ export default function SiteTrafficStats() {
                 tickLine={false}
                 tickFormatter={(value) => {
                   if (!value) return '';
-                  const date = new Date(value);
-                  if (isMonthly) {
-                    // 월별 선택 시: "월/일" 형식
-                    return `${date.getMonth() + 1}/${date.getDate()}`;
-                  } else {
-                    // 일별 선택 시: "월/일" 형식
-                    return `${date.getMonth() + 1}/${date.getDate()}`;
+                  // 날짜 문자열을 직접 파싱 (new Date() 사용 시 시간대 오류 방지)
+                  const parts = String(value).split('-');
+                  if (parts.length >= 3) {
+                    return `${parseInt(parts[1])}/${parseInt(parts[2])}`;
                   }
+                  return String(value);
                 }}
               />
               <YAxis
