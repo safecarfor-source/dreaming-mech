@@ -453,8 +453,11 @@ export class AnalyticsService {
       LIMIT ${limit}
     `;
 
-    // 정비사 상세 정보 조회
-    const mechanicIds = clickData.map((d) => d.mechanicId);
+    console.log('[getTopMechanics] period:', period, 'days:', days, 'startDate:', startDate);
+    console.log('[getTopMechanics] clickData:', clickData.map(d => ({ mechanicId: d.mechanicId, mechanicIdType: typeof d.mechanicId, clickCount: d.clickCount.toString(), clickCountType: typeof d.clickCount })));
+
+    // 정비사 상세 정보 조회 - mechanicId를 Number로 변환하여 안전하게 처리
+    const mechanicIds = clickData.map((d) => Number(d.mechanicId));
     if (mechanicIds.length === 0) {
       return [];
     }
@@ -470,11 +473,15 @@ export class AnalyticsService {
       },
     });
 
+    console.log('[getTopMechanics] mechanics:', mechanics.map(m => ({ id: m.id, name: m.name })));
+
     // clickCount를 기간별 데이터로 병합 (순서 유지)
-    return mechanicIds
+    const result = mechanicIds
       .map((id) => {
         const mechanic = mechanics.find((m) => m.id === id);
-        const clicks = clickData.find((d) => d.mechanicId === id);
+        const clicks = clickData.find((d) => Number(d.mechanicId) === id);
+
+        console.log('[getTopMechanics] map id:', id, 'mechanic:', !!mechanic, 'clicks:', !!clicks, 'clickVal:', clicks ? Number(clicks.clickCount) : 'N/A');
 
         // mechanic 또는 clicks가 없으면 null 반환
         if (!mechanic || !clicks) {
@@ -490,5 +497,8 @@ export class AnalyticsService {
         };
       })
       .filter((m) => m !== null); // null 제거
+
+    console.log('[getTopMechanics] result:', JSON.stringify(result));
+    return result;
   }
 }
