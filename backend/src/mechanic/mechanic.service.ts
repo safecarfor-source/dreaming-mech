@@ -27,7 +27,7 @@ export class MechanicService {
     const [data, total] = await Promise.all([
       this.prisma.mechanic.findMany({
         where: { isActive: true },
-        orderBy: { createdAt: 'desc' },
+        orderBy: [{ sortOrder: 'asc' }, { createdAt: 'desc' }],
         skip,
         take: limit,
       }),
@@ -78,10 +78,17 @@ export class MechanicService {
 
   // 정비사 생성
   async create(createMechanicDto: CreateMechanicDto) {
+    // 새 정비소는 목록 맨 끝에 배치
+    const maxOrder = await this.prisma.mechanic.aggregate({
+      _max: { sortOrder: true },
+    });
+    const nextOrder = (maxOrder._max.sortOrder ?? 0) + 1;
+
     const mechanic = await this.prisma.mechanic.create({
       data: {
         ...createMechanicDto,
         galleryImages: createMechanicDto.galleryImages || [],
+        sortOrder: nextOrder,
       },
     });
 
@@ -180,5 +187,18 @@ export class MechanicService {
         mapLng: Number(mechanic.mapLng),
       };
     });
+  }
+
+  // 정비사 순서 변경
+  async reorder(orderedIds: number[]) {
+    await this.prisma.$transaction(
+      orderedIds.map((id, index) =>
+        this.prisma.mechanic.update({
+          where: { id },
+          data: { sortOrder: index + 1 },
+        }),
+      ),
+    );
+    return { message: '순서가 변경되었습니다.' };
   }
 }

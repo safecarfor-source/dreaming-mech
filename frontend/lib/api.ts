@@ -20,7 +20,10 @@ api.interceptors.response.use(
         sessionStorage.clear();
 
         // 로그인 페이지가 아닌 경우에만 리다이렉트
-        if (!window.location.pathname.includes('/admin/login')) {
+        const path = window.location.pathname;
+        if (path.startsWith('/owner') && !path.includes('/owner/login')) {
+          window.location.href = '/owner/login';
+        } else if (path.startsWith('/admin') && !path.includes('/admin/login')) {
           window.location.href = '/admin/login';
         }
       }
@@ -52,6 +55,8 @@ export const mechanicsApi = {
     api.patch<Mechanic>(`/mechanics/${id}`, data),
   delete: (id: number) => api.delete(`/mechanics/${id}`),
   incrementClick: (id: number) => api.post(`/mechanics/${id}/click`),
+  reorder: (orderedIds: number[]) =>
+    api.patch('/mechanics/reorder', { orderedIds }, buildConfig()),
 };
 
 // Maps API
@@ -107,6 +112,28 @@ export const analyticsApi = {
         ...(options?.months && { months: options.months }),
       },
     })),
+};
+
+// Owner Auth API
+export const ownerAuthApi = {
+  getProfile: () => api.get('/auth/profile'),
+};
+
+// Owner Mechanics API (사장님 매장 관리)
+export const ownerMechanicsApi = {
+  getAll: () => api.get<Mechanic[]>('/owner/mechanics'),
+  create: (data: Partial<Mechanic>) => api.post<Mechanic>('/owner/mechanics', data),
+  update: (id: number, data: Partial<Mechanic>) =>
+    api.patch<Mechanic>(`/owner/mechanics/${id}`, data),
+  delete: (id: number) => api.delete(`/owner/mechanics/${id}`),
+};
+
+// Admin Owner API (관리자용 사장님 관리)
+export const adminOwnerApi = {
+  getAll: (status?: string) =>
+    api.get('/admin/owners', { params: status ? { status } : {} }),
+  approve: (id: number) => api.patch(`/admin/owners/${id}/approve`),
+  reject: (id: number) => api.patch(`/admin/owners/${id}/reject`),
 };
 
 export default api;

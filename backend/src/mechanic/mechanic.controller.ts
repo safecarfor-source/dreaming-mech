@@ -23,8 +23,10 @@ import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
 import {
   CreateMechanicSchema,
   UpdateMechanicSchema,
+  ReorderMechanicsSchema,
   type CreateMechanicDto,
   type UpdateMechanicDto,
+  type ReorderMechanicsDto,
 } from './schemas/mechanic.schema';
 import { PaginationDto } from '../common/dto/pagination.dto';
 
@@ -36,6 +38,16 @@ export class MechanicController {
   @Get()
   findAll(@Query() paginationDto: PaginationDto) {
     return this.mechanicService.findAll(paginationDto);
+  }
+
+  // PATCH /mechanics/reorder - 순서 변경 (반드시 /:id 보다 위에 선언)
+  @Patch('reorder')
+  @UseGuards(JwtAuthGuard)
+  reorder(
+    @Body(new ZodValidationPipe(ReorderMechanicsSchema))
+    reorderDto: ReorderMechanicsDto,
+  ) {
+    return this.mechanicService.reorder(reorderDto.orderedIds);
   }
 
   // GET /mechanics/:id

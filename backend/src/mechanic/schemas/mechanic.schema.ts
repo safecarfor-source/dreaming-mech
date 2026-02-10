@@ -78,6 +78,17 @@ export const CreateMechanicSchema = z.object({
 export const UpdateMechanicSchema = CreateMechanicSchema.partial();
 
 /**
+ * Zod schema for reordering mechanics
+ */
+export const ReorderMechanicsSchema = z.object({
+  orderedIds: z
+    .array(z.number().int().positive())
+    .min(1, 'At least one mechanic ID is required'),
+});
+
+export type ReorderMechanicsDto = z.infer<typeof ReorderMechanicsSchema>;
+
+/**
  * Zod schema for login
  */
 export const LoginSchema = z.object({

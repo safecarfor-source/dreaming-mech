@@ -32,6 +32,9 @@ model Mechanic {
   // 통계
   clickCount      Int      @default(0) // 클릭 수
 
+  // 정렬
+  sortOrder       Int      @default(0) // 정렬 순서 (낮을수록 먼저 표시)
+
   // 상태
   isActive        Boolean  @default(true) // 활성화 여부
 
@@ -39,12 +42,41 @@ model Mechanic {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
+  // 사장님 연결 (사장님이 직접 등록한 매장)
+  ownerId         Int?
+  owner           Owner?   @relation(fields: [ownerId], references: [id])
+
   // 관계
   clickLogs       ClickLog[]
 
   // 인덱스
   @@index([location]) // 지역별 검색 최적화
   @@index([isActive])
+  @@index([ownerId])
+  @@index([sortOrder])
+}
+
+// 사장님(Owner) 모델 - 소셜 로그인으로 가입
+enum OwnerStatus {
+  PENDING   // 가입 신청 (승인 대기)
+  APPROVED  // 승인됨
+  REJECTED  // 거절됨
+}
+
+model Owner {
+  id            Int         @id @default(autoincrement())
+  email         String?
+  name          String?
+  profileImage  String?
+  naverId       String?     @unique  // 네이버 고유 ID
+  kakaoId       String?     @unique  // 카카오 고유 ID
+  provider      String      // "naver" | "kakao"
+  status        OwnerStatus @default(PENDING)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  mechanics     Mechanic[]
+
+  @@index([status])
 }
 
 // 관리자 모델

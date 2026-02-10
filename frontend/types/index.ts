@@ -11,6 +11,7 @@ export interface Mechanic {
   galleryImages?: string[];
   youtubeUrl?: string;
   clickCount: number;
+  sortOrder: number;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
@@ -20,6 +21,17 @@ export interface Admin {
   id: number;
   email: string;
   name?: string;
+}
+
+export interface Owner {
+  id: number;
+  email?: string;
+  name?: string;
+  profileImage?: string;
+  provider: 'naver' | 'kakao';
+  status: 'PENDING' | 'APPROVED' | 'REJECTED';
+  createdAt?: string;
+  _count?: { mechanics: number };
 }
 
 export interface Coordinates {
