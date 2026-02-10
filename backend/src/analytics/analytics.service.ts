@@ -68,16 +68,17 @@ export class AnalyticsService {
     });
 
     // 일별 통계 (KST 기준 날짜로 그룹핑, 오래된 날짜→최신 날짜 순서)
+    // timestamp without time zone는 AT TIME ZONE 'UTC'로 먼저 UTC임을 명시한 후 KST로 변환
     const dailyStats = await this.prisma.$queryRaw<
       Array<{ date: string; views: bigint }>
     >`
       SELECT
-        DATE("viewedAt" AT TIME ZONE 'Asia/Seoul') as date,
+        DATE("viewedAt" AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Seoul') as date,
         COUNT(*)::bigint as views
       FROM "PageView"
       WHERE "isBot" = false
         AND "viewedAt" >= ${startDate}
-      GROUP BY DATE("viewedAt" AT TIME ZONE 'Asia/Seoul')
+      GROUP BY DATE("viewedAt" AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Seoul')
       ORDER BY date ASC
       LIMIT 30
     `;
@@ -149,13 +150,13 @@ export class AnalyticsService {
       Array<{ date: string; views: bigint }>
     >`
       SELECT
-        DATE("viewedAt" AT TIME ZONE 'Asia/Seoul') as date,
+        DATE("viewedAt" AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Seoul') as date,
         COUNT(*)::bigint as views
       FROM "PageView"
       WHERE "isBot" = false
         AND "viewedAt" >= ${startDate}
         AND "viewedAt" <= ${endDate}
-      GROUP BY DATE("viewedAt" AT TIME ZONE 'Asia/Seoul')
+      GROUP BY DATE("viewedAt" AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Seoul')
       ORDER BY date ASC
     `;
 
@@ -207,13 +208,13 @@ export class AnalyticsService {
       Array<{ month: string; views: bigint; visitors: bigint }>
     >`
       SELECT
-        TO_CHAR("viewedAt" AT TIME ZONE 'Asia/Seoul', 'YYYY-MM') as month,
+        TO_CHAR("viewedAt" AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Seoul', 'YYYY-MM') as month,
         COUNT(*)::bigint as views,
         COUNT(DISTINCT "ipAddress")::bigint as visitors
       FROM "PageView"
       WHERE "isBot" = false
         AND "viewedAt" >= ${startDate}
-      GROUP BY TO_CHAR("viewedAt" AT TIME ZONE 'Asia/Seoul', 'YYYY-MM')
+      GROUP BY TO_CHAR("viewedAt" AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Seoul', 'YYYY-MM')
       ORDER BY month ASC
     `;
 
@@ -283,13 +284,13 @@ export class AnalyticsService {
       Array<{ month: string; clicks: bigint }>
     >`
       SELECT
-        TO_CHAR("clickedAt" AT TIME ZONE 'Asia/Seoul', 'YYYY-MM') as month,
+        TO_CHAR("clickedAt" AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Seoul', 'YYYY-MM') as month,
         COUNT(*)::bigint as clicks
       FROM "ClickLog"
       WHERE "mechanicId" = ${mechanicId}
         AND "isBot" = false
         AND "clickedAt" >= ${startDate}
-      GROUP BY TO_CHAR("clickedAt" AT TIME ZONE 'Asia/Seoul', 'YYYY-MM')
+      GROUP BY TO_CHAR("clickedAt" AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Seoul', 'YYYY-MM')
       ORDER BY month ASC
     `;
 
@@ -315,12 +316,12 @@ export class AnalyticsService {
       WITH monthly_stats AS (
         SELECT
           cl."mechanicId",
-          TO_CHAR(cl."clickedAt" AT TIME ZONE 'Asia/Seoul', 'YYYY-MM') as month,
+          TO_CHAR(cl."clickedAt" AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Seoul', 'YYYY-MM') as month,
           COUNT(*) as count
         FROM "ClickLog" cl
         WHERE cl."isBot" = false
           AND cl."clickedAt" >= ${startDate}
-        GROUP BY cl."mechanicId", TO_CHAR(cl."clickedAt" AT TIME ZONE 'Asia/Seoul', 'YYYY-MM')
+        GROUP BY cl."mechanicId", TO_CHAR(cl."clickedAt" AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Seoul', 'YYYY-MM')
       )
       SELECT
         m.id,
