@@ -68,7 +68,7 @@ export default function ForMechanicsPage() {
   return (
     <Layout>
       {/* 히어로 섹션 */}
-      <section className="min-h-screen flex items-center justify-center relative overflow-hidden bg-gradient-to-br from-[#0a0a0a] via-[#1a0a2e] to-[#0a0a0a]">
+      <section className="min-h-screen flex items-center justify-center relative overflow-hidden pt-20 md:pt-24 bg-gradient-to-br from-[#0a0a0a] via-[#1a0a2e] to-[#0a0a0a]">
         {/* 배경 효과 */}
         <div className="absolute inset-0">
           <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[#bf00ff]/20 rounded-full blur-3xl" />
