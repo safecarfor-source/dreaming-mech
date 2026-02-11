@@ -2,49 +2,101 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useState } from 'react';
+import { Menu, X } from 'lucide-react';
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isForMechanics = pathname === '/for-mechanics';
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
     <div className="min-h-screen flex flex-col bg-[#0a0a0a]">
-      {/* 네비게이션 */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-[#0a0a0a]/80 backdrop-blur-md border-b border-white/5">
-        <div className="container mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3 md:gap-5">
-            <Link href="/">
-              <h1 className="text-2xl md:text-4xl font-bold">
-                <span>꿈꾸는<span className="text-[#bf00ff]"> 정비사</span></span>
-              </h1>
-            </Link>
-            {/* 정비사 전용 탭 (크몽 Biz 스타일) - 토글 기능 */}
-            <Link
-              href={isForMechanics ? '/' : '/for-mechanics'}
-              className={`flex items-center whitespace-nowrap gap-2 md:gap-4 ml-1 md:ml-3 px-3 py-2 md:px-9 md:py-4 rounded-full border-2 transition-all group ${
-                isForMechanics
-                  ? 'border-[#bf00ff] bg-[#bf00ff]/15'
-                  : 'border-white/20 hover:border-[#bf00ff]/50 hover:bg-[#bf00ff]/10'
-              }`}
-            >
-              <span className={`text-sm md:text-2xl font-bold transition-colors ${
-                isForMechanics ? 'text-[#bf00ff]' : 'text-gray-400 group-hover:text-[#bf00ff]'
-              }`}>정비사 전용</span>
-              <span className={`w-8 h-5 md:w-14 md:h-8 rounded-full relative transition-colors ${
-                isForMechanics ? 'bg-[#bf00ff]' : 'bg-gray-600 group-hover:bg-[#bf00ff]'
-              }`}>
-                <span className={`absolute top-0.5 md:top-1 w-4 h-4 md:w-6 md:h-6 bg-white rounded-full transition-all ${
-                  isForMechanics ? 'right-0.5 md:right-1' : 'left-0.5 md:left-1'
+      {/* 네비게이션 - 크몽 스타일 */}
+      <header className="fixed top-0 left-0 right-0 z-50 bg-[#0a0a0a] border-b border-white/10">
+        <div className="container mx-auto px-4 md:px-6">
+          <div className="flex items-center justify-between h-14 md:h-16">
+            {/* 왼쪽: 로고 + 뱃지 */}
+            <div className="flex items-center gap-2 md:gap-4">
+              <Link href="/" className="flex items-center gap-1">
+                <span className="text-lg md:text-xl font-extrabold tracking-tight text-white">
+                  꿈꾸는<span className="text-[#bf00ff]">정비사</span>
+                </span>
+              </Link>
+
+              {/* 구분선 */}
+              <div className="hidden md:block w-px h-5 bg-white/20" />
+
+              {/* 정비사 전용 뱃지 - 토글 */}
+              <Link
+                href={isForMechanics ? '/' : '/for-mechanics'}
+                className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs md:text-sm font-semibold transition-all ${
+                  isForMechanics
+                    ? 'bg-[#bf00ff] text-white'
+                    : 'bg-white/10 text-gray-400 hover:bg-[#bf00ff]/20 hover:text-[#bf00ff]'
+                }`}
+              >
+                정비사 전용
+                <span className={`inline-block w-2 h-2 rounded-full ${
+                  isForMechanics ? 'bg-white' : 'bg-green-400'
                 }`} />
-              </span>
-            </Link>
+              </Link>
+            </div>
+
+            {/* 오른쪽: 데스크탑 네비게이션 */}
+            <nav className="hidden md:flex items-center gap-1">
+              <a href="#" className="px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors rounded-lg hover:bg-white/5 font-medium">
+                서비스
+              </a>
+              <a href="#" className="px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors rounded-lg hover:bg-white/5 font-medium">
+                정비사 목록
+              </a>
+              <a href="#" className="px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors rounded-lg hover:bg-white/5 font-medium">
+                문의하기
+              </a>
+
+              {/* 구분선 */}
+              <div className="w-px h-5 bg-white/20 mx-2" />
+
+              <Link
+                href="/owner/login"
+                className="px-4 py-2 text-sm text-[#bf00ff] hover:bg-[#bf00ff]/10 transition-colors rounded-lg font-semibold"
+              >
+                사장님 로그인
+              </Link>
+            </nav>
+
+            {/* 모바일 햄버거 메뉴 */}
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="md:hidden p-2 text-gray-400 hover:text-white transition-colors"
+            >
+              {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
+            </button>
           </div>
-          <nav className="hidden md:flex items-center gap-10 text-lg text-gray-500">
-            <a href="#" className="hover:text-white transition-colors">서비스</a>
-            <a href="#" className="hover:text-white transition-colors">정비사 목록</a>
-            <a href="#" className="hover:text-white transition-colors">문의하기</a>
-            <a href="/owner/login" className="text-purple-400 hover:text-purple-300 transition-colors font-medium">사장님 로그인</a>
-          </nav>
+
+          {/* 모바일 메뉴 드롭다운 */}
+          {mobileMenuOpen && (
+            <div className="md:hidden border-t border-white/10 py-3 space-y-1">
+              <a href="#" className="block px-4 py-2.5 text-sm text-gray-400 hover:text-white hover:bg-white/5 rounded-lg font-medium">
+                서비스
+              </a>
+              <a href="#" className="block px-4 py-2.5 text-sm text-gray-400 hover:text-white hover:bg-white/5 rounded-lg font-medium">
+                정비사 목록
+              </a>
+              <a href="#" className="block px-4 py-2.5 text-sm text-gray-400 hover:text-white hover:bg-white/5 rounded-lg font-medium">
+                문의하기
+              </a>
+              <div className="border-t border-white/10 my-2" />
+              <Link
+                href="/owner/login"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block px-4 py-2.5 text-sm text-[#bf00ff] hover:bg-[#bf00ff]/10 rounded-lg font-semibold"
+              >
+                사장님 로그인
+              </Link>
+            </div>
+          )}
         </div>
       </header>
 

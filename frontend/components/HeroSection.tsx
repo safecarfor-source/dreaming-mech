@@ -58,7 +58,7 @@ export default function HeroSection({ totalMechanics, totalClicks }: Props) {
   );
 
   return (
-    <section className="min-h-screen flex items-center justify-center relative overflow-hidden pt-20 md:pt-24">
+    <section className="min-h-screen flex items-center justify-center relative overflow-hidden pt-14 md:pt-16">
       {/* Background Video */}
       <div className="absolute inset-0 z-0">
         <video
