@@ -84,7 +84,7 @@ export default function MechanicModal() {
               <div className="p-6 space-y-8">
                 {/* 대표 이미지 */}
                 {mechanic.mainImageUrl && (
-                  <div className="rounded-2xl overflow-hidden bg-gray-100 mx-auto" style={{ width: '90%' }}>
+                  <div className="rounded-2xl overflow-hidden bg-gray-100 mx-auto w-[90%] md:w-[50%]">
                     <img
                       src={mechanic.mainImageUrl}
                       alt={sanitizeText(mechanic.name)}
