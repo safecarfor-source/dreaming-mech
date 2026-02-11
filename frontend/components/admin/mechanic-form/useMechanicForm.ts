@@ -142,14 +142,14 @@ export function useMechanicForm({ mechanic, mode, apiBasePath = '/mechanics', re
     // Sanitize and prepare data
     const sanitizedData = {
       ...formData,
-      // Convert empty strings to undefined for optional URL fields
-      mainImageUrl: formData.mainImageUrl.trim() || undefined,
+      // Convert empty strings to null so backend clears the field
+      mainImageUrl: formData.mainImageUrl.trim() || null,
       youtubeUrl: formData.youtubeUrl
-        ? (sanitizeYouTubeUrl(formData.youtubeUrl) || undefined)
-        : undefined,
+        ? (sanitizeYouTubeUrl(formData.youtubeUrl) || null)
+        : null,
       youtubeLongUrl: formData.youtubeLongUrl
-        ? (sanitizeYouTubeUrl(formData.youtubeLongUrl) || undefined)
-        : undefined,
+        ? (sanitizeYouTubeUrl(formData.youtubeLongUrl) || null)
+        : null,
       // Add galleryImages field (empty array for now)
       galleryImages: [],
     };
