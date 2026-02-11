@@ -51,6 +51,7 @@ export const CreateMechanicSchema = z.object({
   mainImageUrl: z
     .string()
     .url('Main image URL must be a valid URL')
+    .nullable()
     .optional(),
 
   galleryImages: z
@@ -66,6 +67,7 @@ export const CreateMechanicSchema = z.object({
       /^https:\/\/(www\.)?youtube\.com\/(watch\?v=|shorts\/)/,
       'Must be a valid YouTube video or shorts URL',
     )
+    .nullable()
     .optional(),
 
   youtubeLongUrl: z
@@ -75,6 +77,7 @@ export const CreateMechanicSchema = z.object({
       /^https:\/\/(www\.)?youtube\.com\/(watch\?v=|shorts\/)/,
       'Must be a valid YouTube video or shorts URL',
     )
+    .nullable()
     .optional(),
 
   isActive: z.boolean().optional().default(true),
