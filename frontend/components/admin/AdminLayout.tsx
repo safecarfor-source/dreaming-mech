@@ -8,6 +8,7 @@ import {
   LayoutDashboard,
   Users,
   BarChart3,
+  UserCheck,
   LogOut,
   Menu,
   X,
@@ -20,6 +21,7 @@ interface Props {
 const menuItems = [
   { href: '/admin', label: '대시보드', icon: LayoutDashboard },
   { href: '/admin/mechanics', label: '정비사 관리', icon: Users },
+  { href: '/admin/owners', label: '사장님 관리', icon: UserCheck },
   { href: '/admin/stats', label: '통계', icon: BarChart3 },
 ];
 

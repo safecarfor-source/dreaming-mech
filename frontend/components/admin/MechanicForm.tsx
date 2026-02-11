@@ -10,9 +10,11 @@ import AdditionalInfoSection from './mechanic-form/AdditionalInfoSection';
 interface MechanicFormProps {
   mechanic?: Mechanic;
   mode: 'create' | 'edit';
+  apiBasePath?: string;
+  redirectPath?: string;
 }
 
-export default function MechanicForm({ mechanic, mode }: MechanicFormProps) {
+export default function MechanicForm({ mechanic, mode, apiBasePath, redirectPath }: MechanicFormProps) {
   const router = useRouter();
   const {
     formData,
@@ -23,7 +25,7 @@ export default function MechanicForm({ mechanic, mode }: MechanicFormProps) {
     handleAddressSearch,
     handleMarkerDragEnd,
     handleSubmit,
-  } = useMechanicForm({ mechanic, mode });
+  } = useMechanicForm({ mechanic, mode, apiBasePath, redirectPath });
 
   return (
     <form onSubmit={handleSubmit} className="space-y-8">

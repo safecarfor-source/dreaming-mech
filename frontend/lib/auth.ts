@@ -14,14 +14,6 @@ interface AuthState {
   logout: () => void;
 }
 
-/**
- * Authentication state management using Zustand
- *
- * SECURITY: Auth tokens are now stored in HttpOnly cookies instead of localStorage
- * to prevent XSS attacks. This store only manages admin user info.
- *
- * The auth token is automatically sent with API requests via the 'access_token' cookie.
- */
 export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
@@ -34,6 +26,40 @@ export const useAuthStore = create<AuthState>()(
     }),
     {
       name: 'auth-storage',
+    }
+  )
+);
+
+// ── 사장님(Owner) 인증 상태 ──
+
+interface OwnerInfo {
+  id: number;
+  email?: string;
+  name?: string;
+  profileImage?: string;
+  provider: string;
+  status: string;
+}
+
+interface OwnerAuthState {
+  owner: OwnerInfo | null;
+  isAuthenticated: boolean;
+  login: (owner: OwnerInfo) => void;
+  logout: () => void;
+}
+
+export const useOwnerStore = create<OwnerAuthState>()(
+  persist(
+    (set) => ({
+      owner: null,
+      isAuthenticated: false,
+      login: (owner) =>
+        set({ owner, isAuthenticated: true }),
+      logout: () =>
+        set({ owner: null, isAuthenticated: false }),
+    }),
+    {
+      name: 'owner-auth-storage',
     }
   )
 );

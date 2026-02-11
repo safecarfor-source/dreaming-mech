@@ -11,6 +11,7 @@ import { AuthModule } from './auth/auth.module';
 import { UploadModule } from './upload/upload.module';
 import { CommonModule } from './common/common.module';
 import { AnalyticsModule } from './analytics/analytics.module';
+import { OwnerModule } from './owner/owner.module';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { AnalyticsModule } from './analytics/analytics.module';
     AuthModule,
     UploadModule,
     AnalyticsModule,
+    OwnerModule,
   ],
   controllers: [AppController],
   providers: [
