@@ -2,6 +2,7 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
+import axios from 'axios';
 
 @Injectable()
 export class AuthService {
@@ -31,7 +32,7 @@ export class AuthService {
   async login(email: string, password: string) {
     const admin = await this.validateAdmin(email, password);
 
-    const payload = { email: admin.email, sub: admin.id };
+    const payload = { email: admin.email, sub: admin.id, role: 'admin' as const };
 
     return {
       access_token: this.jwtService.sign(payload),
@@ -54,5 +55,148 @@ export class AuthService {
     }
 
     return admin;
+  }
+
+  // ── 네이버 OAuth ──
+
+  getNaverLoginUrl() {
+    const params = new URLSearchParams({
+      client_id: process.env.NAVER_LOGIN_CLIENT_ID || '',
+      redirect_uri: process.env.NAVER_LOGIN_CALLBACK_URL || '',
+      response_type: 'code',
+      state: Math.random().toString(36).substring(7),
+    });
+    return `https://nid.naver.com/oauth2.0/authorize?${params}`;
+  }
+
+  async handleNaverCallback(code: string, state: string) {
+    // 1. code → access_token 교환
+    const tokenRes = await axios.get('https://nid.naver.com/oauth2.0/token', {
+      params: {
+        grant_type: 'authorization_code',
+        client_id: process.env.NAVER_LOGIN_CLIENT_ID,
+        client_secret: process.env.NAVER_LOGIN_CLIENT_SECRET,
+        code,
+        state,
+      },
+    });
+
+    const accessToken = tokenRes.data.access_token;
+    if (!accessToken) {
+      throw new UnauthorizedException('네이버 로그인에 실패했습니다.');
+    }
+
+    // 2. access_token → 사용자 정보 조회
+    const userRes = await axios.get('https://openapi.naver.com/v1/nid/me', {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+
+    const { id, email, name, profile_image } = userRes.data.response;
+
+    // 3. Owner upsert (있으면 업데이트, 없으면 생성)
+    const owner = await this.prisma.owner.upsert({
+      where: { naverId: id },
+      update: { email, name, profileImage: profile_image },
+      create: {
+        naverId: id,
+        email,
+        name,
+        profileImage: profile_image,
+        provider: 'naver',
+      },
+    });
+
+    // 4. JWT 발급
+    const payload = { sub: owner.id, email: owner.email || '', role: 'owner' as const };
+    return {
+      access_token: this.jwtService.sign(payload),
+      owner,
+    };
+  }
+
+  // ── 카카오 OAuth ──
+
+  getKakaoLoginUrl() {
+    const params = new URLSearchParams({
+      client_id: process.env.KAKAO_CLIENT_ID || '',
+      redirect_uri: process.env.KAKAO_CALLBACK_URL || '',
+      response_type: 'code',
+    });
+    return `https://kauth.kakao.com/oauth/authorize?${params}`;
+  }
+
+  async handleKakaoCallback(code: string) {
+    // 1. code → access_token 교환
+    const tokenRes = await axios.post(
+      'https://kauth.kakao.com/oauth/token',
+      new URLSearchParams({
+        grant_type: 'authorization_code',
+        client_id: process.env.KAKAO_CLIENT_ID || '',
+        client_secret: process.env.KAKAO_CLIENT_SECRET || '',
+        redirect_uri: process.env.KAKAO_CALLBACK_URL || '',
+        code,
+      }).toString(),
+      { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } },
+    );
+
+    const accessToken = tokenRes.data.access_token;
+    if (!accessToken) {
+      throw new UnauthorizedException('카카오 로그인에 실패했습니다.');
+    }
+
+    // 2. access_token → 사용자 정보 조회
+    const userRes = await axios.get('https://kapi.kakao.com/v2/user/me', {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+
+    const kakaoId = String(userRes.data.id);
+    const kakaoAccount = userRes.data.kakao_account || {};
+    const profile = kakaoAccount.profile || {};
+
+    // 3. Owner upsert
+    const owner = await this.prisma.owner.upsert({
+      where: { kakaoId },
+      update: {
+        email: kakaoAccount.email,
+        name: profile.nickname,
+        profileImage: profile.profile_image_url,
+      },
+      create: {
+        kakaoId,
+        email: kakaoAccount.email,
+        name: profile.nickname,
+        profileImage: profile.profile_image_url,
+        provider: 'kakao',
+      },
+    });
+
+    // 4. JWT 발급
+    const payload = { sub: owner.id, email: owner.email || '', role: 'owner' as const };
+    return {
+      access_token: this.jwtService.sign(payload),
+      owner,
+    };
+  }
+
+  // ── Owner 프로필 ──
+
+  async getOwnerProfile(ownerId: number) {
+    const owner = await this.prisma.owner.findUnique({
+      where: { id: ownerId },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        profileImage: true,
+        provider: true,
+        status: true,
+      },
+    });
+
+    if (!owner) {
+      throw new UnauthorizedException('사용자를 찾을 수 없습니다.');
+    }
+
+    return owner;
   }
 }

@@ -25,6 +25,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     return {
       sub: payload.sub,
       email: payload.email,
+      role: payload.role || 'admin', // 기존 토큰 하위호환
     };
   }
 }
