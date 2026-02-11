@@ -31,6 +31,8 @@ export interface Owner {
   profileImage?: string;
   provider: 'naver' | 'kakao';
   status: 'PENDING' | 'APPROVED' | 'REJECTED';
+  businessLicenseUrl?: string;
+  businessName?: string;
   createdAt?: string;
   _count?: { mechanics: number };
 }

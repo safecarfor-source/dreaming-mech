@@ -117,6 +117,19 @@ export const analyticsApi = {
 // Owner Auth API
 export const ownerAuthApi = {
   getProfile: () => api.get('/auth/profile'),
+  submitBusinessLicense: (data: { businessLicenseUrl: string; businessName: string }) =>
+    api.post('/owner/business-license', data),
+};
+
+// Upload API
+export const uploadApi = {
+  uploadImage: (file: File) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return api.post<{ url: string }>('/upload/image', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
 };
 
 // Owner Mechanics API (사장님 매장 관리)

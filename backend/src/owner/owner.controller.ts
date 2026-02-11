@@ -38,6 +38,11 @@ export class AdminOwnerController {
     return this.ownerService.findAll(status);
   }
 
+  @Get(':id')
+  findOne(@Param('id', ParseIntPipe) id: number) {
+    return this.ownerService.findOne(id);
+  }
+
   @Patch(':id/approve')
   approve(@Param('id', ParseIntPipe) id: number) {
     return this.ownerService.approve(id);
@@ -46,6 +51,26 @@ export class AdminOwnerController {
   @Patch(':id/reject')
   reject(@Param('id', ParseIntPipe) id: number) {
     return this.ownerService.reject(id);
+  }
+}
+
+// ── 사장님용: 사업자등록증 제출 ──
+
+@Controller('owner')
+@UseGuards(JwtAuthGuard)
+export class OwnerProfileController {
+  constructor(private ownerService: OwnerService) {}
+
+  @Post('business-license')
+  submitBusinessLicense(
+    @Request() req,
+    @Body() body: { businessLicenseUrl: string; businessName: string },
+  ) {
+    return this.ownerService.submitBusinessLicense(
+      req.user.sub,
+      body.businessLicenseUrl,
+      body.businessName,
+    );
   }
 }
 

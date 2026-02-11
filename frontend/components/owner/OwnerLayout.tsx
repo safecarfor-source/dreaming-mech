@@ -1,15 +1,19 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { useOwnerStore } from '@/lib/auth';
+import { ownerAuthApi, uploadApi } from '@/lib/api';
 import {
   LayoutDashboard,
   Store,
   LogOut,
   Menu,
   X,
+  Upload,
+  FileCheck,
+  Image as ImageIcon,
 } from 'lucide-react';
 
 interface Props {
@@ -24,9 +28,17 @@ const menuItems = [
 export default function OwnerLayout({ children }: Props) {
   const router = useRouter();
   const pathname = usePathname();
-  const { isAuthenticated, owner, logout } = useOwnerStore();
+  const { isAuthenticated, owner, logout, login } = useOwnerStore();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isHydrated, setIsHydrated] = useState(false);
+
+  // 사업자등록증 업로드 상태
+  const [businessName, setBusinessName] = useState('');
+  const [licenseFile, setLicenseFile] = useState<File | null>(null);
+  const [licensePreview, setLicensePreview] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     setIsHydrated(true);
@@ -52,6 +64,54 @@ export default function OwnerLayout({ children }: Props) {
     }
   };
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 10 * 1024 * 1024) {
+      setUploadError('파일 크기는 10MB 이하여야 합니다.');
+      return;
+    }
+
+    setLicenseFile(file);
+    setUploadError('');
+    const reader = new FileReader();
+    reader.onload = () => setLicensePreview(reader.result as string);
+    reader.readAsDataURL(file);
+  };
+
+  const handleSubmitLicense = async () => {
+    if (!licenseFile || !businessName.trim()) {
+      setUploadError('업체명과 사업자등록증 사진을 모두 입력해주세요.');
+      return;
+    }
+
+    setUploading(true);
+    setUploadError('');
+
+    try {
+      // 1. 이미지 업로드
+      const uploadRes = await uploadApi.uploadImage(licenseFile);
+      const imageUrl = uploadRes.data.url;
+
+      // 2. 사업자등록증 제출
+      await ownerAuthApi.submitBusinessLicense({
+        businessLicenseUrl: imageUrl,
+        businessName: businessName.trim(),
+      });
+
+      // 3. 프로필 새로고침
+      const profileRes = await ownerAuthApi.getProfile();
+      login(profileRes.data);
+
+      alert('사업자등록증이 제출되었습니다. 관리자 확인 후 승인됩니다.');
+    } catch {
+      setUploadError('제출에 실패했습니다. 다시 시도해주세요.');
+    } finally {
+      setUploading(false);
+    }
+  };
+
   if (!isHydrated || !isAuthenticated) {
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
@@ -60,17 +120,114 @@ export default function OwnerLayout({ children }: Props) {
     );
   }
 
-  // 승인 대기 상태
-  if (owner?.status === 'PENDING') {
+  // 승인 대기 + 사업자등록증 미제출 → 업로드 폼
+  if (owner?.status === 'PENDING' && !owner?.businessLicenseUrl) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+        <div className="max-w-lg w-full bg-white rounded-2xl shadow-lg p-8">
+          <div className="text-center mb-6">
+            <div className="text-5xl mb-3">📋</div>
+            <h2 className="text-xl font-bold text-gray-900 mb-2">사업자등록증 제출</h2>
+            <p className="text-gray-500 text-sm">
+              서비스 이용을 위해 사업자등록증을 제출해주세요.<br />
+              관리자 확인 후 승인되면 매장을 등록할 수 있습니다.
+            </p>
+          </div>
+
+          {/* 업체명 입력 */}
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-1">업체명</label>
+            <input
+              type="text"
+              value={businessName}
+              onChange={(e) => setBusinessName(e.target.value)}
+              placeholder="예: 한국타이어 시흥총판"
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
+            />
+          </div>
+
+          {/* 사업자등록증 업로드 */}
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-gray-700 mb-1">사업자등록증 사진</label>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleFileChange}
+              className="hidden"
+            />
+
+            {licensePreview ? (
+              <div className="relative">
+                <img
+                  src={licensePreview}
+                  alt="사업자등록증 미리보기"
+                  className="w-full rounded-xl border border-gray-200 max-h-80 object-contain bg-gray-50"
+                />
+                <button
+                  onClick={() => {
+                    setLicenseFile(null);
+                    setLicensePreview(null);
+                    if (fileInputRef.current) fileInputRef.current.value = '';
+                  }}
+                  className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                className="w-full border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-purple-400 hover:bg-purple-50 transition-colors"
+              >
+                <ImageIcon size={40} className="mx-auto text-gray-400 mb-2" />
+                <p className="text-gray-500 text-sm">클릭하여 사업자등록증 사진을 업로드하세요</p>
+                <p className="text-gray-400 text-xs mt-1">JPG, PNG, WebP (최대 10MB)</p>
+              </button>
+            )}
+          </div>
+
+          {uploadError && (
+            <p className="text-red-500 text-sm mb-4 text-center">{uploadError}</p>
+          )}
+
+          <button
+            onClick={handleSubmitLicense}
+            disabled={uploading || !licenseFile || !businessName.trim()}
+            className="w-full bg-purple-600 text-white py-3 rounded-xl font-medium hover:bg-purple-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+          >
+            {uploading ? '제출 중...' : '사업자등록증 제출하기'}
+          </button>
+
+          <button
+            onClick={handleLogout}
+            className="w-full mt-3 text-sm text-gray-500 hover:text-gray-700 py-2"
+          >
+            로그아웃
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // 승인 대기 + 사업자등록증 제출 완료 → 대기 화면
+  if (owner?.status === 'PENDING' && owner?.businessLicenseUrl) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
         <div className="max-w-md w-full bg-white rounded-2xl shadow-lg p-8 text-center">
-          <div className="text-6xl mb-4">&#9203;</div>
-          <h2 className="text-xl font-bold text-gray-900 mb-2">승인 대기 중</h2>
-          <p className="text-gray-500 mb-6">
-            관리자가 가입을 검토 중입니다.<br />
+          <div className="text-5xl mb-4">
+            <FileCheck className="mx-auto text-green-500" size={56} />
+          </div>
+          <h2 className="text-xl font-bold text-gray-900 mb-2">사업자등록증 제출 완료</h2>
+          <p className="text-gray-500 mb-2">
+            관리자가 사업자등록증을 검토 중입니다.
+          </p>
+          <p className="text-gray-400 text-sm mb-6">
             승인되면 매장을 등록할 수 있습니다.
           </p>
+          <div className="bg-gray-50 rounded-xl p-4 mb-6 text-left">
+            <p className="text-sm text-gray-600"><span className="font-medium">업체명:</span> {owner.businessName}</p>
+          </div>
           <button
             onClick={handleLogout}
             className="text-sm text-gray-500 hover:text-gray-700"

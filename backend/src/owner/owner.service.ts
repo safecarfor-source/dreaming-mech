@@ -19,10 +19,34 @@ export class OwnerService {
         profileImage: true,
         provider: true,
         status: true,
+        businessLicenseUrl: true,
+        businessName: true,
         createdAt: true,
         _count: { select: { mechanics: true } },
       },
     });
+  }
+
+  // ── 관리자용: 사장님 상세 ──
+
+  async findOne(id: number) {
+    const owner = await this.prisma.owner.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        profileImage: true,
+        provider: true,
+        status: true,
+        businessLicenseUrl: true,
+        businessName: true,
+        createdAt: true,
+        _count: { select: { mechanics: true } },
+      },
+    });
+    if (!owner) throw new NotFoundException('사장님을 찾을 수 없습니다.');
+    return owner;
   }
 
   // ── 관리자용: 승인 ──
@@ -46,6 +70,18 @@ export class OwnerService {
     return this.prisma.owner.update({
       where: { id },
       data: { status: 'REJECTED' },
+    });
+  }
+
+  // ── 사장님용: 사업자등록증 제출 ──
+
+  async submitBusinessLicense(ownerId: number, businessLicenseUrl: string, businessName: string) {
+    const owner = await this.prisma.owner.findUnique({ where: { id: ownerId } });
+    if (!owner) throw new NotFoundException('사장님을 찾을 수 없습니다.');
+
+    return this.prisma.owner.update({
+      where: { id: ownerId },
+      data: { businessLicenseUrl, businessName },
     });
   }
 

@@ -39,6 +39,8 @@ interface OwnerInfo {
   profileImage?: string;
   provider: string;
   status: string;
+  businessLicenseUrl?: string;
+  businessName?: string;
 }
 
 interface OwnerAuthState {
