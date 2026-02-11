@@ -27,7 +27,7 @@ export default function YouTubeEmbed({ url, variant = 'short' }: Props) {
   if (variant === 'long') {
     // 롱폼: 가로 16:9 비율
     return (
-      <div className="aspect-video w-full md:w-1/3 mx-auto rounded-2xl overflow-hidden bg-gray-100">
+      <div className="aspect-video w-full md:w-1/2 mx-auto rounded-2xl overflow-hidden bg-gray-100">
         <iframe
           src={embedUrl}
           className="w-full h-full"

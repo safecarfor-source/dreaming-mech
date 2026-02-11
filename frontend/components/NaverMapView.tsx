@@ -70,7 +70,7 @@ export default function NaverMapView({ lat, lng, name }: Props) {
 
   if (!clientId) {
     return (
-      <div className="w-full h-[400px] rounded-2xl bg-gray-100 flex items-center justify-center">
+      <div className="w-full md:w-1/2 mx-auto h-[300px] md:h-[400px] rounded-2xl bg-gray-100 flex items-center justify-center">
         <p className="text-gray-500">네이버 지도 API 키가 설정되지 않았습니다.</p>
       </div>
     );
@@ -78,14 +78,14 @@ export default function NaverMapView({ lat, lng, name }: Props) {
 
   if (error) {
     return (
-      <div className="w-full h-[400px] rounded-2xl bg-gray-100 flex items-center justify-center">
+      <div className="w-full md:w-1/2 mx-auto h-[300px] md:h-[400px] rounded-2xl bg-gray-100 flex items-center justify-center">
         <p className="text-gray-500">{error}</p>
       </div>
     );
   }
 
   return (
-    <div className="relative w-full h-[400px] rounded-2xl overflow-hidden bg-gray-100">
+    <div className="relative w-full md:w-1/2 mx-auto h-[300px] md:h-[400px] rounded-2xl overflow-hidden bg-gray-100">
       <div ref={mapRef} className="w-full h-full" />
       {isLoading && (
         <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
