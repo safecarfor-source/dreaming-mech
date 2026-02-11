@@ -13,15 +13,18 @@ interface MechanicFormData {
   mapLng: number;
   mainImageUrl: string;
   youtubeUrl: string;
+  youtubeLongUrl: string;
   isActive: boolean;
 }
 
 interface UseMechanicFormProps {
   mechanic?: Mechanic;
   mode: 'create' | 'edit';
+  apiBasePath?: string;    // 기본: '/mechanics', Owner: '/owner/mechanics'
+  redirectPath?: string;   // 기본: '/admin/mechanics', Owner: '/owner/mechanics'
 }
 
-export function useMechanicForm({ mechanic, mode }: UseMechanicFormProps) {
+export function useMechanicForm({ mechanic, mode, apiBasePath = '/mechanics', redirectPath = '/admin/mechanics' }: UseMechanicFormProps) {
   const router = useRouter();
 
   const [formData, setFormData] = useState<MechanicFormData>({
@@ -34,6 +37,7 @@ export function useMechanicForm({ mechanic, mode }: UseMechanicFormProps) {
     mapLng: mechanic?.mapLng ? Number(mechanic.mapLng) : 126.978,
     mainImageUrl: mechanic?.mainImageUrl || '',
     youtubeUrl: mechanic?.youtubeUrl || '',
+    youtubeLongUrl: mechanic?.youtubeLongUrl || '',
     isActive: mechanic?.isActive ?? true,
   });
 
@@ -126,7 +130,12 @@ export function useMechanicForm({ mechanic, mode }: UseMechanicFormProps) {
 
     // Validate YouTube URL if provided
     if (formData.youtubeUrl && !isValidYouTubeUrl(formData.youtubeUrl)) {
-      alert('올바른 YouTube URL을 입력해주세요.\n예: https://www.youtube.com/watch?v=VIDEO_ID');
+      alert('올바른 YouTube 숏폼 URL을 입력해주세요.\n예: https://www.youtube.com/shorts/VIDEO_ID');
+      return;
+    }
+
+    if (formData.youtubeLongUrl && !isValidYouTubeUrl(formData.youtubeLongUrl)) {
+      alert('올바른 YouTube 롱폼 URL을 입력해주세요.\n예: https://www.youtube.com/watch?v=VIDEO_ID');
       return;
     }
 
@@ -138,6 +147,9 @@ export function useMechanicForm({ mechanic, mode }: UseMechanicFormProps) {
       youtubeUrl: formData.youtubeUrl
         ? (sanitizeYouTubeUrl(formData.youtubeUrl) || undefined)
         : undefined,
+      youtubeLongUrl: formData.youtubeLongUrl
+        ? (sanitizeYouTubeUrl(formData.youtubeLongUrl) || undefined)
+        : undefined,
       // Add galleryImages field (empty array for now)
       galleryImages: [],
     };
@@ -146,8 +158,8 @@ export function useMechanicForm({ mechanic, mode }: UseMechanicFormProps) {
     try {
       const url =
         mode === 'create'
-          ? `${process.env.NEXT_PUBLIC_API_URL}/mechanics`
-          : `${process.env.NEXT_PUBLIC_API_URL}/mechanics/${mechanic?.id}`;
+          ? `${process.env.NEXT_PUBLIC_API_URL}${apiBasePath}`
+          : `${process.env.NEXT_PUBLIC_API_URL}${apiBasePath}/${mechanic?.id}`;
 
       const response = await fetch(url, {
         method: mode === 'create' ? 'POST' : 'PATCH',
@@ -159,7 +171,7 @@ export function useMechanicForm({ mechanic, mode }: UseMechanicFormProps) {
       if (!response.ok) throw new Error('저장 실패');
 
       alert(mode === 'create' ? '정비사가 추가되었습니다!' : '수정되었습니다!');
-      router.push('/admin/mechanics');
+      router.push(redirectPath);
     } catch (error) {
       console.error(error);
       alert('저장에 실패했습니다.');

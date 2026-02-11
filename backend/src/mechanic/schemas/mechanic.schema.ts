@@ -68,6 +68,15 @@ export const CreateMechanicSchema = z.object({
     )
     .optional(),
 
+  youtubeLongUrl: z
+    .string()
+    .url('YouTube URL must be a valid URL')
+    .regex(
+      /^https:\/\/(www\.)?youtube\.com\/(watch\?v=|shorts\/)/,
+      'Must be a valid YouTube video or shorts URL',
+    )
+    .optional(),
+
   isActive: z.boolean().optional().default(true),
 });
 

@@ -154,11 +154,19 @@ export default function MechanicModal() {
                   />
                 </div>
 
-                {/* 유튜브 */}
-                {mechanic.youtubeUrl && (
+                {/* 유튜브 롱폼 (가로 영상) */}
+                {mechanic.youtubeLongUrl && (
                   <div>
                     <h3 className="text-xl font-bold text-gray-900 mb-4">소개 영상</h3>
-                    <YouTubeEmbed url={mechanic.youtubeUrl} />
+                    <YouTubeEmbed url={mechanic.youtubeLongUrl} variant="long" />
+                  </div>
+                )}
+
+                {/* 유튜브 숏폼 (세로 영상) */}
+                {mechanic.youtubeUrl && (
+                  <div>
+                    <h3 className="text-xl font-bold text-gray-900 mb-4">숏폼 영상</h3>
+                    <YouTubeEmbed url={mechanic.youtubeUrl} variant="short" />
                   </div>
                 )}
 

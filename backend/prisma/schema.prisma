@@ -27,7 +27,8 @@ model Mechanic {
   galleryImages   Json?    // 갤러리 이미지 배열 ["url1", "url2", ...]
 
   // 유튜브
-  youtubeUrl      String?  // 유튜브 쇼츠 URL
+  youtubeUrl      String?  // 유튜브 숏폼(쇼츠) URL
+  youtubeLongUrl  String?  // 유튜브 롱폼(일반 영상) URL
 
   // 통계
   clickCount      Int      @default(0) // 클릭 수

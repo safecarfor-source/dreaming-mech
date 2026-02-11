@@ -10,6 +10,7 @@ export interface Mechanic {
   mainImageUrl?: string;
   galleryImages?: string[];
   youtubeUrl?: string;
+  youtubeLongUrl?: string;
   clickCount: number;
   sortOrder: number;
   isActive: boolean;

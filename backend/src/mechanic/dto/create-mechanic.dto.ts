@@ -49,6 +49,10 @@ export class CreateMechanicDto {
   @IsOptional()
   youtubeUrl?: string;
 
+  @IsUrl()
+  @IsOptional()
+  youtubeLongUrl?: string;
+
   @IsBoolean()
   @IsOptional()
   isActive?: boolean;
