@@ -95,48 +95,51 @@ export default function MechanicModal() {
 
                 {/* 기본 정보 */}
                 <div className="grid md:grid-cols-2 gap-6">
-                  <div className="space-y-4">
-                    <div className="flex items-start gap-3">
-                      <div className="p-2 bg-gray-100 rounded-lg flex-shrink-0">
-                        <MapPin size={20} className="text-gray-500" />
+                  <div className="space-y-4 md:space-y-6">
+                    <div className="flex items-start gap-3 md:gap-5">
+                      <div className="p-2 md:p-4 bg-gray-100 rounded-lg md:rounded-xl flex-shrink-0">
+                        <MapPin size={20} className="text-gray-500 md:hidden" />
+                        <MapPin size={48} className="text-gray-500 hidden md:block" />
                       </div>
                       <div className="min-w-0 flex-1">
-                        <p className="text-sm text-gray-500">주소</p>
-                        <p className="text-gray-900 font-medium break-words">{sanitizeText(mechanic.address)}</p>
+                        <p className="text-sm md:text-2xl text-gray-500">주소</p>
+                        <p className="text-gray-900 font-medium md:text-2xl break-words">{sanitizeText(mechanic.address)}</p>
                       </div>
                     </div>
 
-                    <div className="flex items-start gap-3">
-                      <div className="p-2 bg-gray-100 rounded-lg flex-shrink-0">
-                        <Phone size={20} className="text-gray-500" />
+                    <div className="flex items-start gap-3 md:gap-5">
+                      <div className="p-2 md:p-4 bg-gray-100 rounded-lg md:rounded-xl flex-shrink-0">
+                        <Phone size={20} className="text-gray-500 md:hidden" />
+                        <Phone size={48} className="text-gray-500 hidden md:block" />
                       </div>
                       <div className="min-w-0 flex-1">
-                        <p className="text-sm text-gray-500">전화번호</p>
+                        <p className="text-sm md:text-2xl text-gray-500">전화번호</p>
                         <a
                           href={`tel:${sanitizePhone(mechanic.phone)}`}
-                          className="text-gray-500 font-medium hover:underline break-all"
+                          className="text-gray-500 font-medium md:text-2xl hover:underline break-all"
                         >
                           {sanitizePhone(mechanic.phone)}
                         </a>
                       </div>
                     </div>
 
-                    <div className="flex items-start gap-3">
-                      <div className="p-2 bg-gray-100 rounded-lg flex-shrink-0">
-                        <Eye size={20} className="text-gray-500" />
+                    <div className="flex items-start gap-3 md:gap-5">
+                      <div className="p-2 md:p-4 bg-gray-100 rounded-lg md:rounded-xl flex-shrink-0">
+                        <Eye size={20} className="text-gray-500 md:hidden" />
+                        <Eye size={48} className="text-gray-500 hidden md:block" />
                       </div>
                       <div className="min-w-0 flex-1">
-                        <p className="text-sm text-gray-500">조회수</p>
-                        <p className="text-gray-900 font-medium">{mechanic.clickCount}회</p>
+                        <p className="text-sm md:text-2xl text-gray-500">조회수</p>
+                        <p className="text-gray-900 font-medium md:text-2xl">{mechanic.clickCount}회</p>
                       </div>
                     </div>
                   </div>
 
                   {/* 소개 */}
                   {mechanic.description && (
-                    <div className="p-6 bg-gray-50 rounded-2xl">
-                      <h3 className="text-lg font-bold text-gray-900 mb-3">소개</h3>
-                      <p className="text-gray-600 leading-relaxed break-words whitespace-pre-wrap">{sanitizeBasicHTML(mechanic.description)}</p>
+                    <div className="p-6 md:p-8 bg-gray-50 rounded-2xl">
+                      <h3 className="text-lg md:text-2xl font-bold text-gray-900 mb-3 md:mb-4">소개</h3>
+                      <p className="text-gray-600 md:text-xl leading-relaxed md:leading-relaxed break-words whitespace-pre-wrap">{sanitizeBasicHTML(mechanic.description)}</p>
                     </div>
                   )}
                 </div>
