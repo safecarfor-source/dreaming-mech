@@ -39,7 +39,7 @@ export class CreateMechanicDto {
 
   @IsUrl()
   @IsOptional()
-  mainImageUrl?: string;
+  mainImageUrl?: string | null;
 
   @IsArray()
   @IsOptional()
@@ -47,11 +47,11 @@ export class CreateMechanicDto {
 
   @IsUrl()
   @IsOptional()
-  youtubeUrl?: string;
+  youtubeUrl?: string | null;
 
   @IsUrl()
   @IsOptional()
-  youtubeLongUrl?: string;
+  youtubeLongUrl?: string | null;
 
   @IsBoolean()
   @IsOptional()
