@@ -142,7 +142,7 @@ export default function OwnerLayout({ children }: Props) {
               value={businessName}
               onChange={(e) => setBusinessName(e.target.value)}
               placeholder="예: 한국타이어 시흥총판"
-              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none text-gray-900 bg-white"
             />
           </div>
 
