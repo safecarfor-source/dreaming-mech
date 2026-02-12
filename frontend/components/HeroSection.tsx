@@ -79,7 +79,7 @@ export default function HeroSection({ totalMechanics, totalClicks }: Props) {
         <motion.p
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-[#bf00ff] text-lg font-medium tracking-widest mb-6"
+          className="text-[#bf00ff] text-xl md:text-2xl lg:text-3xl font-medium tracking-widest mb-6"
         >
           전국의 정비소를 소개합니다.
         </motion.p>
@@ -105,7 +105,7 @@ export default function HeroSection({ totalMechanics, totalClicks }: Props) {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 2.5 }}
-          className="text-xl text-gray-500 max-w-2xl mx-auto mb-2 min-h-[32px] break-keep"
+          className="text-xl md:text-2xl lg:text-3xl text-gray-500 max-w-3xl mx-auto mb-2 min-h-[32px] md:min-h-[40px] break-keep"
         >
           {description1.displayedText}
           {!description1.isComplete && <span className="animate-pulse">|</span>}
@@ -116,7 +116,7 @@ export default function HeroSection({ totalMechanics, totalClicks }: Props) {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 3.5 }}
-          className="text-xl text-gray-500 max-w-2xl mx-auto min-h-[32px] break-keep"
+          className="text-xl md:text-2xl lg:text-3xl text-gray-500 max-w-3xl mx-auto min-h-[32px] md:min-h-[40px] break-keep"
         >
           {description2.displayedText}
           {!description2.isComplete && <span className="animate-pulse">|</span>}
