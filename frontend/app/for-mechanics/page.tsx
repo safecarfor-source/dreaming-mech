@@ -127,34 +127,38 @@ export default function ForMechanicsPage() {
                   <p className="text-center text-gray-400 text-sm font-semibold tracking-widest mb-8">
                     단 1%만 온다면?
                   </p>
-                  <div className="flex items-center justify-center gap-4 md:gap-8">
-                    {/* 61만 */}
+
+                  {/* 모바일: 세로 스택 */}
+                  <div className="flex flex-col items-center gap-3 md:hidden">
                     <div className="text-center">
-                      <p className="text-4xl sm:text-5xl md:text-7xl font-black text-white whitespace-nowrap">61만</p>
-                      <p className="text-gray-500 text-xs md:text-sm mt-2 whitespace-nowrap">월간 조회수</p>
+                      <p className="text-6xl font-black text-white">61만</p>
+                      <p className="text-gray-500 text-xs mt-1">월간 조회수</p>
                     </div>
-
-                    {/* 화살표 → */}
-                    <div className="flex flex-col items-center">
-                      <p className="text-[#9333ea] text-2xl md:text-4xl font-black">×</p>
-                    </div>
-
-                    {/* 1% */}
+                    <p className="text-[#9333ea] text-2xl font-black">×</p>
+                    <p className="text-6xl font-black text-[#9333ea]">1%</p>
+                    <p className="text-white text-2xl font-black">=</p>
                     <div className="text-center">
-                      <p className="text-4xl sm:text-5xl md:text-7xl font-black text-[#9333ea]">1%</p>
-                    </div>
-
-                    {/* = */}
-                    <div className="flex flex-col items-center">
-                      <p className="text-white text-2xl md:text-4xl font-black">=</p>
-                    </div>
-
-                    {/* 6,100명 */}
-                    <div className="text-center">
-                      <p className="text-4xl sm:text-5xl md:text-7xl font-black text-white whitespace-nowrap">
-                        6,100<span className="text-2xl md:text-4xl">명</span>
+                      <p className="text-6xl font-black text-white">
+                        6,100<span className="text-3xl">명</span>
                       </p>
-                      <p className="text-gray-500 text-xs md:text-sm mt-2 whitespace-nowrap">매달 잠재 고객</p>
+                      <p className="text-gray-500 text-xs mt-1">매달 잠재 고객</p>
+                    </div>
+                  </div>
+
+                  {/* 데스크톱: 가로 레이아웃 */}
+                  <div className="hidden md:flex items-center justify-center gap-8">
+                    <div className="text-center">
+                      <p className="text-7xl font-black text-white">61만</p>
+                      <p className="text-gray-500 text-sm mt-2">월간 조회수</p>
+                    </div>
+                    <p className="text-[#9333ea] text-4xl font-black">×</p>
+                    <p className="text-7xl font-black text-[#9333ea]">1%</p>
+                    <p className="text-white text-4xl font-black">=</p>
+                    <div className="text-center">
+                      <p className="text-7xl font-black text-white">
+                        6,100<span className="text-4xl">명</span>
+                      </p>
+                      <p className="text-gray-500 text-sm mt-2">매달 잠재 고객</p>
                     </div>
                   </div>
                 </div>
