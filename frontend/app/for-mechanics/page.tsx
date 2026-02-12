@@ -2,12 +2,14 @@
 
 import { motion } from 'framer-motion';
 import Link from 'next/link';
+import Image from 'next/image';
 import {
   ChevronRight,
   CheckCircle2,
   ArrowRight,
   Eye,
   Users,
+  MapPin,
   Phone,
   MessageCircle,
 } from 'lucide-react';
@@ -161,70 +163,141 @@ export default function ForMechanicsPage() {
         </div>
       </section>
 
-      {/* ── 섹션 3: 차별화 포지셔닝 ── */}
-      <section className="bg-gray-50 py-20">
+      {/* ── 섹션 3: 차별화 포지셔닝 + 폰 목업 ── */}
+      <section className="bg-gray-50 py-20 overflow-hidden">
         <div className="container mx-auto px-6">
           <AnimatedSection animation="slideUp" duration={0.8}>
-            <div className="max-w-4xl mx-auto text-center">
-              <h2 className="text-3xl md:text-5xl font-black text-[#111] mb-8 break-keep">
-                방문 전, <span className="bg-[#9333ea] text-white px-3 py-1">유튜브</span>에서
-                <br />
-                그리고{' '}
-                <span className="bg-[#9333ea] text-white px-3 py-1">플랫폼</span>에서
-                <br />
-                고객님과 만나세요.
-              </h2>
-
-              <p className="text-gray-500 text-lg md:text-xl max-w-2xl mx-auto mb-12 break-keep">
-                고객은 더 이상 간판만 보고 정비소를 선택하지 않습니다.
-                <br />
-                유튜브에서 먼저 신뢰를 쌓고, 플랫폼에서 정보를 확인한 후 방문합니다.
-              </p>
-
-              {/* 플로우 설명 */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-4 mb-12">
-                <div className="bg-white rounded-2xl p-8 border border-gray-200 relative">
-                  <div className="w-12 h-12 bg-red-500 rounded-xl flex items-center justify-center mx-auto mb-4">
-                    <svg className="w-6 h-6 text-white ml-0.5" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M8 5v14l11-7z" />
-                    </svg>
-                  </div>
-                  <h3 className="text-lg font-bold text-[#111] mb-2">유튜브에서 발견</h3>
-                  <p className="text-gray-500 text-sm break-keep">
-                    꿈꾸는 정비사 영상을 통해
+            <div className="max-w-6xl mx-auto">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+                {/* 왼쪽: 문구 */}
+                <div>
+                  <h2 className="text-3xl md:text-5xl font-black text-[#111] mb-8 break-keep leading-tight">
+                    방문 전,{' '}
+                    <span className="bg-[#9333ea] text-white px-3 py-1">플랫폼</span>에서
                     <br />
-                    고객이 정비소를 알게 됩니다
+                    고객님과 만나세요.
+                  </h2>
+
+                  <p className="text-gray-500 text-lg md:text-xl mb-10 break-keep">
+                    고객은 더 이상 간판만 보고
+                    <br />
+                    정비소를 선택하지 않습니다.
                   </p>
-                  <div className="hidden md:block absolute top-1/2 -right-5 transform -translate-y-1/2 text-[#9333ea]">
-                    <ArrowRight size={24} />
+
+                  <div className="space-y-6">
+                    <div className="flex items-start gap-4">
+                      <div className="w-10 h-10 bg-red-500 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <svg className="w-5 h-5 text-white ml-0.5" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M8 5v14l11-7z" />
+                        </svg>
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-bold text-[#111] mb-1">유튜브에서 발견</h3>
+                        <p className="text-gray-500 text-sm break-keep">
+                          꿈꾸는 정비사 영상을 통해 고객이 정비소를 알게 됩니다
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-start gap-4">
+                      <div className="w-10 h-10 bg-[#9333ea] rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <Eye size={20} className="text-white" />
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-bold text-[#111] mb-1">플랫폼에서 확인</h3>
+                        <p className="text-gray-500 text-sm break-keep">
+                          사진, 소개, 위치, 영상을 보고 신뢰를 확인합니다
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-start gap-4">
+                      <div className="w-10 h-10 bg-green-500 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <Phone size={20} className="text-white" />
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-bold text-[#111] mb-1">전화 or 방문</h3>
+                        <p className="text-gray-500 text-sm break-keep">
+                          확인한 고객이 직접 전화하거나 방문합니다
+                        </p>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
-                <div className="bg-white rounded-2xl p-8 border border-gray-200 relative">
-                  <div className="w-12 h-12 bg-[#9333ea] rounded-xl flex items-center justify-center mx-auto mb-4">
-                    <Eye size={24} className="text-white" />
-                  </div>
-                  <h3 className="text-lg font-bold text-[#111] mb-2">플랫폼에서 확인</h3>
-                  <p className="text-gray-500 text-sm break-keep">
-                    위치, 사진, 소개를 보고
-                    <br />
-                    신뢰를 확인합니다
-                  </p>
-                  <div className="hidden md:block absolute top-1/2 -right-5 transform -translate-y-1/2 text-[#9333ea]">
-                    <ArrowRight size={24} />
-                  </div>
-                </div>
+                {/* 오른쪽: 폰 프레임 안 정비소 상세페이지 목업 */}
+                <div className="flex justify-center lg:justify-end">
+                  <div className="relative w-[300px] md:w-[340px]">
+                    {/* 폰 프레임 */}
+                    <div className="bg-[#111] rounded-[2.5rem] p-3 shadow-2xl shadow-black/30">
+                      {/* 노치 */}
+                      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-7 bg-[#111] rounded-b-2xl z-10" />
+                      {/* 스크린 */}
+                      <div className="bg-white rounded-[2rem] overflow-hidden">
+                        {/* 상단바 */}
+                        <div className="bg-white px-5 pt-8 pb-3 border-b border-gray-100">
+                          <p className="text-[#111] font-bold text-base">한국타이어 티스테이션 인천대공원점</p>
+                        </div>
 
-                <div className="bg-white rounded-2xl p-8 border border-gray-200">
-                  <div className="w-12 h-12 bg-green-500 rounded-xl flex items-center justify-center mx-auto mb-4">
-                    <Phone size={24} className="text-white" />
+                        {/* 대표 이미지 */}
+                        <div className="relative w-full aspect-[4/3]">
+                          <Image
+                            src="https://dreaming-mech-images-1770313120.s3.ap-northeast-2.amazonaws.com/mechanics/cb656845-6dbf-44a1-95ca-b7e2f23c39eb.png"
+                            alt="한국타이어 티스테이션 인천대공원점"
+                            fill
+                            className="object-cover"
+                            sizes="340px"
+                          />
+                        </div>
+
+                        {/* 정보 영역 */}
+                        <div className="px-5 py-4 space-y-3">
+                          <div className="flex items-center gap-2 text-gray-600 text-xs">
+                            <MapPin size={14} className="text-[#9333ea] flex-shrink-0" />
+                            <span>인천광역시 남동구 수인로 3566</span>
+                          </div>
+                          <div className="flex items-center gap-2 text-gray-600 text-xs">
+                            <Phone size={14} className="text-[#9333ea] flex-shrink-0" />
+                            <span>0507-1393-8333</span>
+                          </div>
+
+                          <div className="pt-2 border-t border-gray-100">
+                            <p className="text-[#111] text-xs font-medium mb-1">소개</p>
+                            <p className="text-gray-500 text-[11px] leading-relaxed line-clamp-3">
+                              YouTube 구독자 5.3만명의 꿈꾸는 정비사입니다.
+                              2대를 거쳐 25년간 매년 5천대 이상의 차량을 정비하는
+                              티스테이션 인천대공원점입니다.
+                            </p>
+                          </div>
+
+                          {/* 지도 영역 목업 */}
+                          <div className="pt-2 border-t border-gray-100">
+                            <p className="text-[#111] text-xs font-medium mb-2">위치</p>
+                            <div className="bg-gray-100 rounded-lg h-24 flex items-center justify-center">
+                              <div className="text-center">
+                                <MapPin size={20} className="text-[#9333ea] mx-auto mb-1" />
+                                <p className="text-gray-400 text-[10px]">네이버 지도</p>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* CTA 버튼 */}
+                          <div className="flex gap-2 pt-2">
+                            <div className="flex-1 bg-[#9333ea] text-white text-xs font-bold py-2.5 rounded-lg text-center">
+                              전화 문의하기
+                            </div>
+                            <div className="bg-gray-100 text-gray-600 text-xs font-bold py-2.5 px-4 rounded-lg text-center">
+                              길찾기
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* 장식 요소 */}
+                    <div className="absolute -top-6 -right-6 w-24 h-24 bg-[#9333ea]/10 rounded-full blur-2xl" />
+                    <div className="absolute -bottom-6 -left-6 w-32 h-32 bg-[#9333ea]/10 rounded-full blur-2xl" />
                   </div>
-                  <h3 className="text-lg font-bold text-[#111] mb-2">전화 or 방문</h3>
-                  <p className="text-gray-500 text-sm break-keep">
-                    확인한 고객이 직접
-                    <br />
-                    전화하거나 방문합니다
-                  </p>
                 </div>
               </div>
             </div>
