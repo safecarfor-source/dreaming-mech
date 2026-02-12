@@ -164,60 +164,63 @@ export default function ForMechanicsPage() {
       </section>
 
       {/* ── 섹션 3: 차별화 포지셔닝 + 폰 목업 ── */}
-      <section className="bg-gray-50 py-20 overflow-hidden">
+      <section className="bg-gray-50 py-16 md:py-20 overflow-hidden">
         <div className="container mx-auto px-6">
           <AnimatedSection animation="slideUp" duration={0.8}>
             <div className="max-w-6xl mx-auto">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
-                {/* 왼쪽: 문구 */}
-                <div>
-                  <h2 className="text-3xl md:text-5xl font-black text-[#111] mb-8 break-keep leading-tight">
+              {/* 모바일: 세로 (폰 먼저 → 문구), 데스크톱: 가로 (문구 왼쪽 → 폰 오른쪽) */}
+              <div className="flex flex-col-reverse lg:grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
+                {/* 왼쪽(데스크톱) / 아래(모바일): 문구 */}
+                <div className="text-center lg:text-left">
+                  <h2 className="text-2xl sm:text-3xl md:text-5xl font-black text-[#111] mb-4 md:mb-8 break-keep leading-tight">
                     방문 전,{' '}
-                    <span className="bg-[#9333ea] text-white px-3 py-1">플랫폼</span>에서
+                    <span className="bg-[#9333ea] text-white px-2 md:px-3 py-0.5 md:py-1">플랫폼</span>에서
                     <br />
                     고객님과 만나세요.
                   </h2>
 
-                  <p className="text-gray-500 text-lg md:text-xl mb-10 break-keep">
+                  <p className="text-gray-500 text-base md:text-xl mb-6 md:mb-10 break-keep">
                     고객은 더 이상 간판만 보고
                     <br />
                     정비소를 선택하지 않습니다.
                   </p>
 
-                  <div className="space-y-6">
-                    <div className="flex items-start gap-4">
-                      <div className="w-10 h-10 bg-red-500 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <svg className="w-5 h-5 text-white ml-0.5" fill="currentColor" viewBox="0 0 24 24">
+                  <div className="space-y-4 md:space-y-6 max-w-sm mx-auto lg:mx-0">
+                    <div className="flex items-start gap-3 md:gap-4 text-left">
+                      <div className="w-9 h-9 md:w-10 md:h-10 bg-red-500 rounded-xl flex items-center justify-center flex-shrink-0">
+                        <svg className="w-4 h-4 md:w-5 md:h-5 text-white ml-0.5" fill="currentColor" viewBox="0 0 24 24">
                           <path d="M8 5v14l11-7z" />
                         </svg>
                       </div>
                       <div>
-                        <h3 className="text-lg font-bold text-[#111] mb-1">유튜브에서 발견</h3>
-                        <p className="text-gray-500 text-sm break-keep">
+                        <h3 className="text-base md:text-lg font-bold text-[#111] mb-0.5">유튜브에서 발견</h3>
+                        <p className="text-gray-500 text-xs md:text-sm break-keep">
                           꿈꾸는 정비사 영상을 통해 고객이 정비소를 알게 됩니다
                         </p>
                       </div>
                     </div>
 
-                    <div className="flex items-start gap-4">
-                      <div className="w-10 h-10 bg-[#9333ea] rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <Eye size={20} className="text-white" />
+                    <div className="flex items-start gap-3 md:gap-4 text-left">
+                      <div className="w-9 h-9 md:w-10 md:h-10 bg-[#9333ea] rounded-xl flex items-center justify-center flex-shrink-0">
+                        <Eye size={18} className="text-white md:hidden" />
+                        <Eye size={20} className="text-white hidden md:block" />
                       </div>
                       <div>
-                        <h3 className="text-lg font-bold text-[#111] mb-1">플랫폼에서 확인</h3>
-                        <p className="text-gray-500 text-sm break-keep">
+                        <h3 className="text-base md:text-lg font-bold text-[#111] mb-0.5">플랫폼에서 확인</h3>
+                        <p className="text-gray-500 text-xs md:text-sm break-keep">
                           사진, 소개, 위치, 영상을 보고 신뢰를 확인합니다
                         </p>
                       </div>
                     </div>
 
-                    <div className="flex items-start gap-4">
-                      <div className="w-10 h-10 bg-green-500 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <Phone size={20} className="text-white" />
+                    <div className="flex items-start gap-3 md:gap-4 text-left">
+                      <div className="w-9 h-9 md:w-10 md:h-10 bg-green-500 rounded-xl flex items-center justify-center flex-shrink-0">
+                        <Phone size={18} className="text-white md:hidden" />
+                        <Phone size={20} className="text-white hidden md:block" />
                       </div>
                       <div>
-                        <h3 className="text-lg font-bold text-[#111] mb-1">전화 or 방문</h3>
-                        <p className="text-gray-500 text-sm break-keep">
+                        <h3 className="text-base md:text-lg font-bold text-[#111] mb-0.5">전화 or 방문</h3>
+                        <p className="text-gray-500 text-xs md:text-sm break-keep">
                           확인한 고객이 직접 전화하거나 방문합니다
                         </p>
                       </div>
@@ -225,18 +228,18 @@ export default function ForMechanicsPage() {
                   </div>
                 </div>
 
-                {/* 오른쪽: 폰 프레임 안 정비소 상세페이지 목업 */}
-                <div className="flex justify-center lg:justify-end">
-                  <div className="relative w-[300px] md:w-[340px]">
+                {/* 오른쪽(데스크톱) / 위(모바일): 폰 프레임 */}
+                <div className="flex justify-center">
+                  <div className="relative w-[260px] sm:w-[300px] md:w-[320px]">
                     {/* 폰 프레임 */}
-                    <div className="bg-[#111] rounded-[2.5rem] p-3 shadow-2xl shadow-black/30">
+                    <div className="bg-[#111] rounded-[2rem] sm:rounded-[2.5rem] p-2.5 sm:p-3 shadow-2xl shadow-black/30">
                       {/* 노치 */}
-                      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-7 bg-[#111] rounded-b-2xl z-10" />
+                      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-28 sm:w-32 h-6 sm:h-7 bg-[#111] rounded-b-2xl z-10" />
                       {/* 스크린 */}
-                      <div className="bg-white rounded-[2rem] overflow-hidden">
+                      <div className="bg-white rounded-[1.5rem] sm:rounded-[2rem] overflow-hidden">
                         {/* 상단바 */}
-                        <div className="bg-white px-5 pt-8 pb-3 border-b border-gray-100">
-                          <p className="text-[#111] font-bold text-base">한국타이어 티스테이션 인천대공원점</p>
+                        <div className="bg-white px-4 pt-7 pb-2.5 border-b border-gray-100">
+                          <p className="text-[#111] font-bold text-sm sm:text-base truncate">한국타이어 티스테이션 인천대공원점</p>
                         </div>
 
                         {/* 대표 이미지 */}
@@ -246,47 +249,57 @@ export default function ForMechanicsPage() {
                             alt="한국타이어 티스테이션 인천대공원점"
                             fill
                             className="object-cover"
-                            sizes="340px"
+                            sizes="320px"
                           />
                         </div>
 
                         {/* 정보 영역 */}
-                        <div className="px-5 py-4 space-y-3">
-                          <div className="flex items-center gap-2 text-gray-600 text-xs">
-                            <MapPin size={14} className="text-[#9333ea] flex-shrink-0" />
+                        <div className="px-4 py-3 space-y-2.5">
+                          <div className="flex items-center gap-2 text-gray-600 text-[11px] sm:text-xs">
+                            <MapPin size={13} className="text-[#9333ea] flex-shrink-0" />
                             <span>인천광역시 남동구 수인로 3566</span>
                           </div>
-                          <div className="flex items-center gap-2 text-gray-600 text-xs">
-                            <Phone size={14} className="text-[#9333ea] flex-shrink-0" />
+                          <div className="flex items-center gap-2 text-gray-600 text-[11px] sm:text-xs">
+                            <Phone size={13} className="text-[#9333ea] flex-shrink-0" />
                             <span>0507-1393-8333</span>
                           </div>
 
                           <div className="pt-2 border-t border-gray-100">
-                            <p className="text-[#111] text-xs font-medium mb-1">소개</p>
-                            <p className="text-gray-500 text-[11px] leading-relaxed line-clamp-3">
+                            <p className="text-[#111] text-[11px] sm:text-xs font-medium mb-1">소개</p>
+                            <p className="text-gray-500 text-[10px] sm:text-[11px] leading-relaxed line-clamp-2">
                               YouTube 구독자 5.3만명의 꿈꾸는 정비사입니다.
-                              2대를 거쳐 25년간 매년 5천대 이상의 차량을 정비하는
-                              티스테이션 인천대공원점입니다.
+                              2대를 거쳐 25년간 매년 5천대 이상의 차량을 정비합니다.
                             </p>
                           </div>
 
-                          {/* 지도 영역 목업 */}
+                          {/* 유튜브 영상 목업 */}
                           <div className="pt-2 border-t border-gray-100">
-                            <p className="text-[#111] text-xs font-medium mb-2">위치</p>
-                            <div className="bg-gray-100 rounded-lg h-24 flex items-center justify-center">
-                              <div className="text-center">
-                                <MapPin size={20} className="text-[#9333ea] mx-auto mb-1" />
-                                <p className="text-gray-400 text-[10px]">네이버 지도</p>
+                            <p className="text-[#111] text-[11px] sm:text-xs font-medium mb-1.5">영상</p>
+                            <div className="relative w-full aspect-video bg-gray-900 rounded-lg overflow-hidden">
+                              <Image
+                                src="https://img.youtube.com/vi/3YXM4zcCLqE/mqdefault.jpg"
+                                alt="유튜브 영상 썸네일"
+                                fill
+                                className="object-cover"
+                                sizes="280px"
+                              />
+                              {/* 재생 버튼 오버레이 */}
+                              <div className="absolute inset-0 flex items-center justify-center">
+                                <div className="w-10 h-10 bg-red-600 rounded-full flex items-center justify-center shadow-lg">
+                                  <svg className="w-4 h-4 text-white ml-0.5" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M8 5v14l11-7z" />
+                                  </svg>
+                                </div>
                               </div>
                             </div>
                           </div>
 
                           {/* CTA 버튼 */}
-                          <div className="flex gap-2 pt-2">
-                            <div className="flex-1 bg-[#9333ea] text-white text-xs font-bold py-2.5 rounded-lg text-center">
+                          <div className="flex gap-2 pt-1.5">
+                            <div className="flex-1 bg-[#9333ea] text-white text-[11px] sm:text-xs font-bold py-2 rounded-lg text-center">
                               전화 문의하기
                             </div>
-                            <div className="bg-gray-100 text-gray-600 text-xs font-bold py-2.5 px-4 rounded-lg text-center">
+                            <div className="bg-gray-100 text-gray-600 text-[11px] sm:text-xs font-bold py-2 px-3 rounded-lg text-center">
                               길찾기
                             </div>
                           </div>
@@ -295,8 +308,8 @@ export default function ForMechanicsPage() {
                     </div>
 
                     {/* 장식 요소 */}
-                    <div className="absolute -top-6 -right-6 w-24 h-24 bg-[#9333ea]/10 rounded-full blur-2xl" />
-                    <div className="absolute -bottom-6 -left-6 w-32 h-32 bg-[#9333ea]/10 rounded-full blur-2xl" />
+                    <div className="absolute -top-4 -right-4 w-20 h-20 bg-[#9333ea]/10 rounded-full blur-2xl" />
+                    <div className="absolute -bottom-4 -left-4 w-24 h-24 bg-[#9333ea]/10 rounded-full blur-2xl" />
                   </div>
                 </div>
               </div>

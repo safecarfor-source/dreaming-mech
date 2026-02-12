@@ -9,6 +9,11 @@ const nextConfig: NextConfig = {
         hostname: 'dreaming-mech-images-1770313120.s3.ap-northeast-2.amazonaws.com',
         pathname: '/mechanics/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'img.youtube.com',
+        pathname: '/vi/**',
+      },
     ],
   },
 };
