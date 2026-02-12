@@ -3,118 +3,58 @@
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import {
-  TrendingUp,
-  Users,
-  Search,
-  Shield,
-  BarChart3,
-  Wrench,
   ChevronRight,
   CheckCircle2,
-  Star,
-  MapPin,
   ArrowRight,
+  Eye,
+  Users,
+  TrendingUp,
+  Phone,
+  MessageCircle,
 } from 'lucide-react';
 import Layout from '@/components/Layout';
 import AnimatedSection from '@/components/animations/AnimatedSection';
 
-const benefits = [
-  {
-    icon: Users,
-    title: '신규 고객 유입',
-    description: '전국의 차량 소유주가 믿을 수 있는 정비소를 찾고 있습니다. 등록만으로 새로운 고객을 만나보세요.',
-    color: 'from-purple-500 to-indigo-600',
-  },
-  {
-    icon: Search,
-    title: '온라인 노출 확대',
-    description: '네이버, 구글 검색에서 우리 사이트를 통해 정비소가 더 많이 노출됩니다.',
-    color: 'from-blue-500 to-cyan-600',
-  },
-  {
-    icon: TrendingUp,
-    title: '실시간 통계 제공',
-    description: '조회수, 클릭수 등 정비소 관심도를 실시간으로 확인할 수 있습니다.',
-    color: 'from-green-500 to-emerald-600',
-  },
-  {
-    icon: Shield,
-    title: '신뢰도 향상',
-    description: '"꿈꾸는 정비사" 유튜브 채널(구독자 5만+)과 함께 소비자 신뢰를 높입니다.',
-    color: 'from-orange-500 to-red-500',
-  },
-  {
-    icon: BarChart3,
-    title: '무료 홍보 효과',
-    description: '유튜브 영상 노출, SNS 공유 등 추가 비용 없이 정비소를 알립니다.',
-    color: 'from-pink-500 to-rose-600',
-  },
-  {
-    icon: Wrench,
-    title: '정비사 커뮤니티',
-    description: '전국 정비사 네트워크에 합류하여 정보를 공유하고 함께 성장합니다.',
-    color: 'from-violet-500 to-purple-600',
-  },
-];
-
-const steps = [
-  { step: 1, title: '가입 신청', desc: '네이버 또는 카카오로 간편 가입' },
-  { step: 2, title: '관리자 승인', desc: '신청 내용 확인 후 빠른 승인' },
-  { step: 3, title: '정비소 등록', desc: '사진, 위치, 소개글 직접 등록' },
-  { step: 4, title: '고객 유입 시작', desc: '사이트에 노출되어 고객 방문 증가' },
-];
-
 export default function ForMechanicsPage() {
+  // 유튜브 채널 통계 (추후 API 연동 가능)
+  const youtubeSubscribers = '53,000';
+  const monthlyViews = '120만';
+
   return (
     <Layout>
-      {/* 히어로 섹션 */}
-      <section className="min-h-screen flex items-center justify-center relative overflow-hidden pt-14 md:pt-16 bg-gradient-to-br from-[#0a0a0a] via-[#1a0a2e] to-[#0a0a0a]">
-        {/* 배경 효과 */}
-        <div className="absolute inset-0">
-          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[#bf00ff]/20 rounded-full blur-3xl" />
-          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-600/10 rounded-full blur-3xl" />
-        </div>
-
-        <div className="container mx-auto px-6 text-center relative z-10 pt-20">
+      {/* ── 섹션 1: 역발상 히어로 (이상한마케팅 스타일) ── */}
+      <section className="min-h-screen flex items-center justify-center relative overflow-hidden pt-14 md:pt-16 bg-[#0a0a0a]">
+        <div className="container mx-auto px-6 relative z-10 pt-20">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
+            className="max-w-4xl"
           >
-            {/* 배지 */}
-            <div className="inline-flex items-center gap-2 bg-[#bf00ff]/20 border border-[#bf00ff]/30 rounded-full px-5 py-2 mb-8">
-              <Star size={16} className="text-[#bf00ff]" />
-              <span className="text-[#bf00ff] text-sm font-semibold">정비사 전용 페이지</span>
-            </div>
-
-            <h1 className="text-4xl sm:text-5xl md:text-7xl font-black text-white leading-tight mb-6 break-keep">
-              정비소를 <span className="text-[#bf00ff]">알리세요</span>
+            <h1 className="text-4xl sm:text-5xl md:text-7xl font-black text-white leading-tight mb-8 break-keep">
+              세상에서{' '}
+              <span className="bg-[#bf00ff] px-2 py-1 inline-block">나를 알아주지 않으면</span>
               <br />
-              고객이 <span className="text-[#bf00ff]">찾아옵니다</span>
+              아무도 오지 않습니다.
             </h1>
 
-            <p className="text-lg md:text-xl text-gray-400 max-w-2xl mx-auto mb-4 break-keep">
-              구독자 5만명의 &quot;꿈꾸는 정비사&quot; 채널과 함께
+            <p className="text-xl md:text-2xl text-gray-400 mb-4 break-keep">
+              실력이 아무리 좋아도, 고객이 모르면 소용없습니다.
             </p>
-            <p className="text-lg md:text-xl text-gray-400 max-w-2xl mx-auto mb-10 break-keep">
-              전국의 소비자에게 정비소를 소개하세요
+            <p className="text-xl md:text-2xl text-white font-bold mb-12 break-keep">
+              세상에 나를 알려야 합니다.{' '}
+              <span className="text-[#bf00ff] underline decoration-2 underline-offset-4">
+                3분이면 확인 가능합니다.
+              </span>
             </p>
 
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link
-                href="/owner/login"
-                className="inline-flex items-center justify-center gap-2 bg-[#bf00ff] hover:bg-[#a000dd] text-white px-8 py-4 rounded-2xl font-bold text-lg transition-all shadow-lg shadow-[#bf00ff]/30 hover:shadow-[#bf00ff]/50"
-              >
-                무료로 등록하기
-                <ArrowRight size={20} />
-              </Link>
-              <a
-                href="#benefits"
-                className="inline-flex items-center justify-center gap-2 border-2 border-white/20 text-white hover:border-white/40 px-8 py-4 rounded-2xl font-bold text-lg transition-all"
-              >
-                자세히 알아보기
-              </a>
-            </div>
+            <Link
+              href="/owner/login"
+              className="inline-flex items-center justify-center gap-2 bg-[#bf00ff] hover:bg-[#a000dd] text-white px-8 py-4 rounded-2xl font-bold text-lg transition-all shadow-lg shadow-[#bf00ff]/30 hover:shadow-[#bf00ff]/50"
+            >
+              무료로 시작하기
+              <ArrowRight size={20} />
+            </Link>
           </motion.div>
 
           {/* 스크롤 인디케이터 */}
@@ -122,7 +62,7 @@ export default function ForMechanicsPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 1 }}
-            className="mt-20 flex justify-center"
+            className="mt-20 flex justify-start"
           >
             <div className="w-8 h-14 border-2 border-white/30 rounded-full flex justify-center pt-2">
               <motion.div
@@ -138,40 +78,188 @@ export default function ForMechanicsPage() {
       {/* 다크 → 흰색 전환 */}
       <div className="h-32 bg-gradient-to-b from-[#0a0a0a] to-white" />
 
-      {/* 혜택 섹션 */}
-      <section id="benefits" className="bg-white py-20">
+      {/* ── 섹션 2: 유튜브 채널 신뢰 증거 (숫자로 증명) ── */}
+      <section className="bg-white py-20">
         <div className="container mx-auto px-6">
           <AnimatedSection animation="slideUp" duration={0.8}>
-            <div className="text-center mb-16">
-              <p className="text-[#bf00ff] text-sm font-semibold tracking-widest mb-4">
-                WHY US
-              </p>
-              <h2 className="text-3xl md:text-5xl font-black text-[#111] mb-4 break-keep">
-                왜 <span className="text-[#bf00ff]">꿈꾸는 정비사</span>에 등록해야 할까요?
-              </h2>
-              <p className="text-gray-500 text-lg max-w-xl mx-auto break-keep">
-                등록만으로 누릴 수 있는 다양한 혜택을 확인하세요
-              </p>
+            <div className="max-w-5xl mx-auto">
+              <div className="text-center mb-16">
+                <p className="text-[#bf00ff] text-sm font-semibold tracking-widest mb-4">
+                  YOUTUBE CHANNEL
+                </p>
+                <h2 className="text-3xl md:text-5xl font-black text-[#111] mb-6 break-keep">
+                  구독자{' '}
+                  <span className="text-[#bf00ff]">{youtubeSubscribers}명</span>의 채널
+                </h2>
+                <p className="text-gray-500 text-lg max-w-2xl mx-auto break-keep">
+                  20년차 자동차 정비사가 운영하는 &quot;꿈꾸는 정비사&quot; 유튜브 채널.
+                  <br />
+                  매달 <span className="font-bold text-[#111]">{monthlyViews} 조회수</span>의
+                  트래픽이 발생합니다.
+                </p>
+              </div>
+
+              {/* 유튜브 통계 카드 */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mb-12">
+                <div className="bg-gray-50 rounded-2xl p-6 text-center border border-gray-100">
+                  <Users size={28} className="text-[#bf00ff] mx-auto mb-3" />
+                  <p className="text-3xl md:text-4xl font-black text-[#111]">5.3만</p>
+                  <p className="text-gray-500 text-sm mt-1">구독자</p>
+                </div>
+                <div className="bg-gray-50 rounded-2xl p-6 text-center border border-gray-100">
+                  <Eye size={28} className="text-[#bf00ff] mx-auto mb-3" />
+                  <p className="text-3xl md:text-4xl font-black text-[#111]">{monthlyViews}</p>
+                  <p className="text-gray-500 text-sm mt-1">월간 조회수</p>
+                </div>
+                <div className="bg-gray-50 rounded-2xl p-6 text-center border border-gray-100">
+                  <TrendingUp size={28} className="text-[#bf00ff] mx-auto mb-3" />
+                  <p className="text-3xl md:text-4xl font-black text-[#111]">20년</p>
+                  <p className="text-gray-500 text-sm mt-1">정비 경력</p>
+                </div>
+                <div className="bg-gray-50 rounded-2xl p-6 text-center border border-gray-100">
+                  <CheckCircle2 size={28} className="text-[#bf00ff] mx-auto mb-3" />
+                  <p className="text-3xl md:text-4xl font-black text-[#111]">전국</p>
+                  <p className="text-gray-500 text-sm mt-1">정비소 네트워크</p>
+                </div>
+              </div>
+
+              {/* 핵심 메시지: 1%만 온다면? */}
+              <div className="bg-gradient-to-br from-[#0a0a0a] to-[#1a0a2e] rounded-3xl p-8 md:p-12 relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-[#bf00ff]/20 rounded-full blur-3xl" />
+                <div className="relative z-10 text-center">
+                  <h3 className="text-2xl md:text-4xl font-black text-white mb-6 break-keep">
+                    매달 <span className="text-[#bf00ff]">{monthlyViews}</span> 조회수 중
+                    <br />
+                    단 <span className="text-[#bf00ff] text-5xl md:text-7xl">1%</span>만
+                    온다면?
+                  </h3>
+                  <p className="text-gray-400 text-lg md:text-xl mb-2 break-keep">
+                    그것만으로도 매달 <span className="text-white font-bold">수천 명</span>이
+                    사장님의 정비소를 볼 수 있습니다.
+                  </p>
+                  <p className="text-gray-500 text-base break-keep">
+                    유튜브 시청자가 → 웹사이트 방문 → 사장님의 정비소를 발견합니다.
+                  </p>
+                </div>
+              </div>
             </div>
           </AnimatedSection>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
-            {benefits.map((benefit, index) => (
-              <AnimatedSection key={benefit.title} animation="slideUp" delay={index * 0.1} duration={0.5}>
-                <div className="bg-white border border-gray-200 rounded-2xl p-6 md:p-8 hover:shadow-xl hover:border-[#bf00ff]/30 transition-all group h-full">
-                  <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${benefit.color} flex items-center justify-center mb-6 shadow-lg group-hover:scale-110 transition-transform`}>
-                    <benefit.icon size={28} className="text-white" />
-                  </div>
-                  <h3 className="text-xl font-bold text-[#111] mb-3">{benefit.title}</h3>
-                  <p className="text-gray-500 leading-relaxed break-keep">{benefit.description}</p>
-                </div>
-              </AnimatedSection>
-            ))}
-          </div>
         </div>
       </section>
 
-      {/* 가입 프로세스 */}
+      {/* ── 섹션 3: 차별화 포지셔닝 ── */}
+      <section className="bg-gray-50 py-20">
+        <div className="container mx-auto px-6">
+          <AnimatedSection animation="slideUp" duration={0.8}>
+            <div className="max-w-4xl mx-auto text-center">
+              <h2 className="text-3xl md:text-5xl font-black text-[#111] mb-8 break-keep">
+                방문 전, <span className="bg-[#bf00ff] text-white px-3 py-1">유튜브</span>에서
+                <br />
+                그리고{' '}
+                <span className="bg-[#bf00ff] text-white px-3 py-1">플랫폼</span>에서
+                <br />
+                고객님과 만나세요.
+              </h2>
+
+              <p className="text-gray-500 text-lg md:text-xl max-w-2xl mx-auto mb-12 break-keep">
+                고객은 더 이상 간판만 보고 정비소를 선택하지 않습니다.
+                <br />
+                유튜브에서 먼저 신뢰를 쌓고, 플랫폼에서 정보를 확인한 후 방문합니다.
+              </p>
+
+              {/* 플로우 설명 */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-4 mb-12">
+                <div className="bg-white rounded-2xl p-8 border border-gray-200 relative">
+                  <div className="w-12 h-12 bg-red-500 rounded-xl flex items-center justify-center mx-auto mb-4">
+                    <svg className="w-6 h-6 text-white ml-0.5" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M8 5v14l11-7z" />
+                    </svg>
+                  </div>
+                  <h3 className="text-lg font-bold text-[#111] mb-2">유튜브에서 발견</h3>
+                  <p className="text-gray-500 text-sm break-keep">
+                    꿈꾸는 정비사 영상을 통해
+                    <br />
+                    고객이 정비소를 알게 됩니다
+                  </p>
+                  <div className="hidden md:block absolute top-1/2 -right-5 transform -translate-y-1/2 text-[#bf00ff]">
+                    <ArrowRight size={24} />
+                  </div>
+                </div>
+
+                <div className="bg-white rounded-2xl p-8 border border-gray-200 relative">
+                  <div className="w-12 h-12 bg-[#bf00ff] rounded-xl flex items-center justify-center mx-auto mb-4">
+                    <Eye size={24} className="text-white" />
+                  </div>
+                  <h3 className="text-lg font-bold text-[#111] mb-2">플랫폼에서 확인</h3>
+                  <p className="text-gray-500 text-sm break-keep">
+                    위치, 사진, 소개를 보고
+                    <br />
+                    신뢰를 확인합니다
+                  </p>
+                  <div className="hidden md:block absolute top-1/2 -right-5 transform -translate-y-1/2 text-[#bf00ff]">
+                    <ArrowRight size={24} />
+                  </div>
+                </div>
+
+                <div className="bg-white rounded-2xl p-8 border border-gray-200">
+                  <div className="w-12 h-12 bg-green-500 rounded-xl flex items-center justify-center mx-auto mb-4">
+                    <Phone size={24} className="text-white" />
+                  </div>
+                  <h3 className="text-lg font-bold text-[#111] mb-2">전화 or 방문</h3>
+                  <p className="text-gray-500 text-sm break-keep">
+                    확인한 고객이 직접
+                    <br />
+                    전화하거나 방문합니다
+                  </p>
+                </div>
+              </div>
+            </div>
+          </AnimatedSection>
+        </div>
+      </section>
+
+      {/* ── 섹션 4: 핵심 가치 (단 한 고객이라도) ── */}
+      <section className="bg-white py-20">
+        <div className="container mx-auto px-6">
+          <AnimatedSection animation="slideUp" duration={0.8}>
+            <div className="max-w-4xl mx-auto">
+              <div className="bg-gradient-to-br from-[#bf00ff]/5 to-purple-50 rounded-3xl p-8 md:p-16 border border-[#bf00ff]/10">
+                <div className="text-center">
+                  <h2 className="text-3xl md:text-5xl font-black text-[#111] mb-8 break-keep leading-tight">
+                    단 <span className="text-[#bf00ff]">한 고객님</span>이라도
+                    <br />더 온다면
+                  </h2>
+                  <p className="text-xl md:text-2xl text-gray-600 mb-4 break-keep">
+                    여기 웹사이트에 참여한 가치는
+                  </p>
+                  <p className="text-2xl md:text-4xl font-black text-[#bf00ff] mb-12">
+                    충분해집니다.
+                  </p>
+
+                  <div className="bg-white rounded-2xl p-6 md:p-8 shadow-lg max-w-2xl mx-auto">
+                    <div className="space-y-4 text-left">
+                      {[
+                        '등록비 무료, 유지비 무료',
+                        '5분이면 등록 완료',
+                        '사장님이 직접 사진, 소개글, 위치 관리',
+                        '유튜브 영상과 연동 가능',
+                        '조회수, 클릭수 실시간 통계 제공',
+                      ].map((item, index) => (
+                        <div key={index} className="flex items-center gap-3">
+                          <CheckCircle2 size={20} className="text-[#bf00ff] flex-shrink-0" />
+                          <p className="text-gray-700 font-medium break-keep">{item}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </AnimatedSection>
+        </div>
+      </section>
+
+      {/* ── 가입 프로세스 ── */}
       <section className="bg-gray-50 py-20">
         <div className="container mx-auto px-6">
           <AnimatedSection animation="slideUp" duration={0.8}>
@@ -182,17 +270,20 @@ export default function ForMechanicsPage() {
               <h2 className="text-3xl md:text-5xl font-black text-[#111] mb-4 break-keep">
                 <span className="text-[#bf00ff]">4단계</span>로 시작하세요
               </h2>
-              <p className="text-gray-500 text-lg break-keep">간단한 과정으로 정비소를 등록할 수 있습니다</p>
             </div>
           </AnimatedSection>
 
           <div className="max-w-4xl mx-auto">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {steps.map((item, index) => (
+              {[
+                { step: 1, title: '간편 가입', desc: '네이버 또는 카카오로 가입' },
+                { step: 2, title: '승인 대기', desc: '사업자등록증 확인 후 승인' },
+                { step: 3, title: '정비소 등록', desc: '사진, 위치, 소개글 직접 등록' },
+                { step: 4, title: '고객 유입', desc: '사이트 노출 → 고객 방문 증가' },
+              ].map((item, index) => (
                 <AnimatedSection key={item.step} animation="slideUp" delay={index * 0.15} duration={0.5}>
                   <div className="text-center relative">
-                    {/* 연결선 (데스크톱) */}
-                    {index < steps.length - 1 && (
+                    {index < 3 && (
                       <div className="hidden lg:block absolute top-8 left-[60%] w-[80%] h-0.5 bg-gradient-to-r from-[#bf00ff]/40 to-[#bf00ff]/10" />
                     )}
                     <div className="w-16 h-16 bg-[#bf00ff] rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-[#bf00ff]/20 relative z-10">
@@ -208,106 +299,7 @@ export default function ForMechanicsPage() {
         </div>
       </section>
 
-      {/* 유튜브 채널 소개 */}
-      <section className="bg-white py-20">
-        <div className="container mx-auto px-6">
-          <AnimatedSection animation="slideUp" duration={0.8}>
-            <div className="max-w-4xl mx-auto bg-gradient-to-br from-[#0a0a0a] to-[#1a0a2e] rounded-3xl p-8 md:p-12 overflow-hidden relative">
-              {/* 배경 효과 */}
-              <div className="absolute top-0 right-0 w-64 h-64 bg-[#bf00ff]/20 rounded-full blur-3xl" />
-
-              <div className="relative z-10">
-                <div className="flex flex-col md:flex-row items-center gap-8">
-                  <div className="flex-1">
-                    <div className="inline-flex items-center gap-2 bg-red-500/20 rounded-full px-4 py-1.5 mb-6">
-                      <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
-                      <span className="text-red-400 text-xs font-semibold">YouTube</span>
-                    </div>
-                    <h3 className="text-2xl md:text-3xl font-black text-white mb-4 break-keep">
-                      구독자 <span className="text-[#bf00ff]">52,000명</span>의
-                      <br />
-                      &quot;꿈꾸는 정비사&quot; 채널
-                    </h3>
-                    <p className="text-gray-400 mb-6 leading-relaxed break-keep">
-                      20년 경력의 자동차 정비사가 운영하는 유튜브 채널입니다.
-                      소비자에게 올바른 정비 정보를 전달하고,
-                      신뢰할 수 있는 전국의 정비소를 소개합니다.
-                    </p>
-
-                    <div className="flex flex-wrap gap-4">
-                      <div className="bg-white/10 rounded-xl px-4 py-3">
-                        <p className="text-[#bf00ff] text-xl font-black">52K+</p>
-                        <p className="text-gray-500 text-xs">구독자</p>
-                      </div>
-                      <div className="bg-white/10 rounded-xl px-4 py-3">
-                        <p className="text-[#bf00ff] text-xl font-black">20년</p>
-                        <p className="text-gray-500 text-xs">정비 경력</p>
-                      </div>
-                      <div className="bg-white/10 rounded-xl px-4 py-3">
-                        <p className="text-[#bf00ff] text-xl font-black">전국</p>
-                        <p className="text-gray-500 text-xs">정비소 네트워크</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex-shrink-0">
-                    <a
-                      href="https://www.youtube.com/@dreaming_mechanic"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="block w-48 h-48 md:w-56 md:h-56 bg-gradient-to-br from-[#bf00ff]/30 to-purple-900/30 rounded-3xl flex items-center justify-center border border-[#bf00ff]/20 hover:border-[#bf00ff]/50 transition-colors group"
-                    >
-                      <div className="text-center">
-                        <div className="w-16 h-16 bg-red-600 rounded-2xl flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform shadow-lg">
-                          <svg className="w-8 h-8 text-white ml-1" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M8 5v14l11-7z" />
-                          </svg>
-                        </div>
-                        <p className="text-white text-sm font-bold">채널 바로가기</p>
-                        <p className="text-gray-500 text-xs mt-1">YouTube</p>
-                      </div>
-                    </a>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </AnimatedSection>
-        </div>
-      </section>
-
-      {/* 체크리스트 섹션 */}
-      <section className="bg-gray-50 py-20">
-        <div className="container mx-auto px-6">
-          <AnimatedSection animation="slideUp" duration={0.8}>
-            <div className="max-w-3xl mx-auto">
-              <div className="text-center mb-12">
-                <h2 className="text-3xl md:text-4xl font-black text-[#111] mb-4 break-keep">
-                  이런 분들에게 <span className="text-[#bf00ff]">추천</span>합니다
-                </h2>
-              </div>
-
-              <div className="space-y-4">
-                {[
-                  '실력은 있지만 홍보가 어려운 정비소 사장님',
-                  '온라인에서 정비소를 더 많이 알리고 싶은 분',
-                  '신규 고객 유입이 필요한 분',
-                  '소비자의 신뢰를 높이고 싶은 분',
-                  '전국 정비사 네트워크에 참여하고 싶은 분',
-                ].map((item, index) => (
-                  <AnimatedSection key={index} animation="slideUp" delay={index * 0.1} duration={0.4}>
-                    <div className="flex items-center gap-4 bg-white rounded-xl p-4 md:p-5 border border-gray-200 hover:border-[#bf00ff]/30 transition-colors">
-                      <CheckCircle2 size={24} className="text-[#bf00ff] flex-shrink-0" />
-                      <p className="text-gray-800 font-medium break-keep">{item}</p>
-                    </div>
-                  </AnimatedSection>
-                ))}
-              </div>
-            </div>
-          </AnimatedSection>
-        </div>
-      </section>
-
-      {/* CTA 섹션 */}
+      {/* ── 최종 CTA ── */}
       <section className="bg-gradient-to-br from-[#bf00ff] to-purple-800 py-20">
         <div className="container mx-auto px-6">
           <AnimatedSection animation="slideUp" duration={0.8}>
@@ -331,6 +323,28 @@ export default function ForMechanicsPage() {
           </AnimatedSection>
         </div>
       </section>
+
+      {/* ── 플로팅 CTA 버튼 ── */}
+      <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-3">
+        <a
+          href="https://www.youtube.com/@dreaming_mechanic"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="w-14 h-14 bg-red-600 hover:bg-red-700 rounded-full flex items-center justify-center shadow-lg transition-all hover:scale-110"
+          title="유튜브 채널"
+        >
+          <svg className="w-6 h-6 text-white ml-0.5" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M8 5v14l11-7z" />
+          </svg>
+        </a>
+        <Link
+          href="/owner/login"
+          className="w-14 h-14 bg-[#bf00ff] hover:bg-[#a000dd] rounded-full flex items-center justify-center shadow-lg shadow-[#bf00ff]/30 transition-all hover:scale-110"
+          title="무료 등록"
+        >
+          <MessageCircle size={24} className="text-white" />
+        </Link>
+      </div>
     </Layout>
   );
 }
