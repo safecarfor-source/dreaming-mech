@@ -19,7 +19,7 @@ export class AuthController {
   ) {
     const result = await this.authService.login(loginDto.email, loginDto.password);
 
-    res.cookie('access_token', result.access_token, {
+    res.cookie('admin_token', result.access_token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
@@ -43,7 +43,8 @@ export class AuthController {
 
   @Post('logout')
   async logout(@Response({ passthrough: true }) res: ExpressResponse) {
-    res.clearCookie('access_token', { path: '/' });
+    res.clearCookie('admin_token', { path: '/' });
+    res.clearCookie('owner_token', { path: '/' });
     return { message: 'Logged out successfully' };
   }
 
@@ -65,7 +66,7 @@ export class AuthController {
       const result = await this.authService.handleNaverCallback(code, state);
       const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
 
-      res.cookie('access_token', result.access_token, {
+      res.cookie('owner_token', result.access_token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',
@@ -97,7 +98,7 @@ export class AuthController {
       const result = await this.authService.handleKakaoCallback(code);
       const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
 
-      res.cookie('access_token', result.access_token, {
+      res.cookie('owner_token', result.access_token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',

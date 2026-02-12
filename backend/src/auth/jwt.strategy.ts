@@ -9,9 +9,17 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor() {
     super({
       jwtFromRequest: ExtractJwt.fromExtractors([
-        // Try to extract from cookie first
+        // 요청 경로에 따라 적절한 쿠키 선택
         (req: Request) => {
-          return req?.cookies?.access_token || null;
+          const path = req?.path || '';
+          if (path.startsWith('/admin')) {
+            return req?.cookies?.admin_token || null;
+          }
+          if (path.startsWith('/owner')) {
+            return req?.cookies?.owner_token || null;
+          }
+          // auth/profile 등 공통 경로는 둘 다 시도
+          return req?.cookies?.admin_token || req?.cookies?.owner_token || null;
         },
         // Fallback to Authorization header for backwards compatibility
         ExtractJwt.fromAuthHeaderAsBearerToken(),
