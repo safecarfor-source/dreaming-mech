@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, MapPin, Phone, Eye, ExternalLink } from 'lucide-react';
+import { X, MapPin, Phone, ExternalLink } from 'lucide-react';
 import { useModalStore } from '@/lib/store';
 import { mechanicsApi } from '@/lib/api';
 import { sanitizeText, sanitizeBasicHTML, sanitizePhone } from '@/lib/sanitize';
@@ -123,16 +123,6 @@ export default function MechanicModal() {
                       </div>
                     </div>
 
-                    <div className="flex items-start gap-3 md:gap-5">
-                      <div className="p-2 md:p-4 bg-gray-100 rounded-lg md:rounded-xl flex-shrink-0">
-                        <Eye size={20} className="text-gray-500 md:hidden" />
-                        <Eye size={48} className="text-gray-500 hidden md:block" />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="text-sm md:text-2xl text-gray-500">조회수</p>
-                        <p className="text-gray-900 font-medium md:text-2xl">{mechanic.clickCount}회</p>
-                      </div>
-                    </div>
                   </div>
 
                   {/* 소개 */}

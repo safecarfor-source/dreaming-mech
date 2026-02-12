@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { MapPin, Phone, Eye } from 'lucide-react';
+import { MapPin, Phone } from 'lucide-react';
 import type { Mechanic } from '@/types';
 import { sanitizeText, sanitizePhone } from '@/lib/sanitize';
 
@@ -31,12 +31,6 @@ export default function MechanicCard({ mechanic, onClick }: Props) {
             이미지 없음
           </div>
         )}
-        {/* 조회수 뱃지 */}
-        <div className="absolute top-2 right-2 md:top-4 md:right-4 bg-white/90 backdrop-blur-sm px-2 py-1 md:px-3 md:py-1.5 rounded-full flex items-center gap-1 shadow-sm">
-          <Eye size={10} className="text-gray-500 md:hidden" />
-          <Eye size={14} className="text-gray-500 hidden md:block" />
-          <span className="text-xs md:text-sm font-medium text-gray-700">{mechanic.clickCount}</span>
-        </div>
       </div>
 
       {/* 정보 */}
