@@ -43,7 +43,8 @@ export default function ForMechanicsPage() {
               실력이 아무리 좋아도, 고객이 모르면 소용없습니다.
             </p>
             <p className="text-xl md:text-2xl text-white font-bold mb-12 break-keep">
-              세상에 나를 알려야 합니다.{' '}
+              세상에 나를 알려야 합니다.
+              <br />
               <span className="text-[#9333ea] underline decoration-2 underline-offset-4">
                 3분이면 확인 가능합니다.
               </span>
@@ -104,18 +105,18 @@ export default function ForMechanicsPage() {
               <div className="grid grid-cols-3 gap-4 md:gap-6 mb-12">
                 <div className="bg-gray-50 rounded-2xl p-6 text-center border border-gray-100">
                   <Users size={28} className="text-[#9333ea] mx-auto mb-3" />
-                  <p className="text-3xl md:text-4xl font-black text-[#111]">5.3만</p>
-                  <p className="text-gray-500 text-sm mt-1">구독자</p>
+                  <p className="text-2xl sm:text-3xl md:text-4xl font-black text-[#111] whitespace-nowrap">5.3만</p>
+                  <p className="text-gray-500 text-xs sm:text-sm mt-1">구독자</p>
                 </div>
                 <div className="bg-gray-50 rounded-2xl p-6 text-center border border-gray-100">
                   <Eye size={28} className="text-[#9333ea] mx-auto mb-3" />
-                  <p className="text-3xl md:text-4xl font-black text-[#111]">{monthlyViews}</p>
-                  <p className="text-gray-500 text-sm mt-1">월간 조회수</p>
+                  <p className="text-2xl sm:text-3xl md:text-4xl font-black text-[#111] whitespace-nowrap">{monthlyViews}</p>
+                  <p className="text-gray-500 text-xs sm:text-sm mt-1 whitespace-nowrap">월간 조회수</p>
                 </div>
                 <div className="bg-gray-50 rounded-2xl p-6 text-center border border-gray-100">
                   <CheckCircle2 size={28} className="text-[#9333ea] mx-auto mb-3" />
-                  <p className="text-3xl md:text-4xl font-black text-[#111]">전국</p>
-                  <p className="text-gray-500 text-sm mt-1">정비소 네트워크</p>
+                  <p className="text-2xl sm:text-3xl md:text-4xl font-black text-[#111]">전국</p>
+                  <p className="text-gray-500 text-xs sm:text-sm mt-1">정비소<br />네트워크</p>
                 </div>
               </div>
 
@@ -129,8 +130,8 @@ export default function ForMechanicsPage() {
                   <div className="flex items-center justify-center gap-4 md:gap-8">
                     {/* 61만 */}
                     <div className="text-center">
-                      <p className="text-4xl sm:text-5xl md:text-7xl font-black text-white">61만</p>
-                      <p className="text-gray-500 text-xs md:text-sm mt-2">월간 조회수</p>
+                      <p className="text-4xl sm:text-5xl md:text-7xl font-black text-white whitespace-nowrap">61만</p>
+                      <p className="text-gray-500 text-xs md:text-sm mt-2 whitespace-nowrap">월간 조회수</p>
                     </div>
 
                     {/* 화살표 → */}
@@ -150,10 +151,10 @@ export default function ForMechanicsPage() {
 
                     {/* 6,100명 */}
                     <div className="text-center">
-                      <p className="text-4xl sm:text-5xl md:text-7xl font-black text-white">
+                      <p className="text-4xl sm:text-5xl md:text-7xl font-black text-white whitespace-nowrap">
                         6,100<span className="text-2xl md:text-4xl">명</span>
                       </p>
-                      <p className="text-gray-500 text-xs md:text-sm mt-2">매달 잠재 고객</p>
+                      <p className="text-gray-500 text-xs md:text-sm mt-2 whitespace-nowrap">매달 잠재 고객</p>
                     </div>
                   </div>
                 </div>
