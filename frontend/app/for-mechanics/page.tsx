@@ -34,7 +34,7 @@ export default function ForMechanicsPage() {
           >
             <h1 className="text-4xl sm:text-5xl md:text-7xl font-black text-white leading-tight mb-8 break-keep">
               세상에서{' '}
-              <span className="bg-[#9333ea] px-2 py-1 inline-block">나를 알아주지 않으면</span>
+              <span className="bg-[#a6f546] text-[#111] px-2 py-1 inline-block">나를 알아주지 않으면</span>
               <br />
               아무도 오지 않습니다.
             </h1>
@@ -45,14 +45,14 @@ export default function ForMechanicsPage() {
             <p className="text-xl md:text-2xl text-white font-bold mb-12 break-keep">
               세상에 나를 알려야 합니다.
               <br />
-              <span className="text-[#9333ea] underline decoration-2 underline-offset-4">
+              <span className="text-[#a6f546] underline decoration-2 underline-offset-4">
                 3분이면 확인 가능합니다.
               </span>
             </p>
 
             <Link
               href="/owner/login"
-              className="inline-flex items-center justify-center gap-2 bg-[#9333ea] hover:bg-[#7e22ce] text-white px-8 py-4 rounded-2xl font-bold text-lg transition-all shadow-lg shadow-[#9333ea]/30 hover:shadow-[#9333ea]/50"
+              className="inline-flex items-center justify-center gap-2 bg-[#a6f546] hover:bg-[#8fd93a] text-[#111] px-8 py-4 rounded-2xl font-bold text-lg transition-all shadow-lg shadow-[#a6f546]/30 hover:shadow-[#a6f546]/50"
             >
               시작하기
               <ArrowRight size={20} />
@@ -70,7 +70,7 @@ export default function ForMechanicsPage() {
               <motion.div
                 animate={{ y: [0, 12, 0] }}
                 transition={{ repeat: Infinity, duration: 1.5 }}
-                className="w-1.5 h-1.5 bg-[#9333ea] rounded-full"
+                className="w-1.5 h-1.5 bg-[#a6f546] rounded-full"
               />
             </div>
           </motion.div>
@@ -86,12 +86,12 @@ export default function ForMechanicsPage() {
           <AnimatedSection animation="slideUp" duration={0.8}>
             <div className="max-w-5xl mx-auto">
               <div className="text-center mb-16">
-                <p className="text-[#9333ea] text-sm font-semibold tracking-widest mb-4">
+                <p className="text-[#65a30d] text-sm font-semibold tracking-widest mb-4">
                   YOUTUBE CHANNEL
                 </p>
                 <h2 className="text-3xl md:text-5xl font-black text-[#111] mb-6 break-keep">
                   구독자{' '}
-                  <span className="text-[#9333ea]">{youtubeSubscribers}명</span>의 채널
+                  <span className="text-[#65a30d]">{youtubeSubscribers}명</span>의 채널
                 </h2>
                 <p className="text-gray-500 text-lg max-w-2xl mx-auto break-keep">
                   &quot;꿈꾸는 정비사&quot; 유튜브 채널.
@@ -104,25 +104,25 @@ export default function ForMechanicsPage() {
               {/* 유튜브 통계 카드 */}
               <div className="grid grid-cols-3 gap-4 md:gap-6 mb-12">
                 <div className="bg-gray-50 rounded-2xl p-6 text-center border border-gray-100">
-                  <Users size={28} className="text-[#9333ea] mx-auto mb-3" />
+                  <Users size={28} className="text-[#65a30d] mx-auto mb-3" />
                   <p className="text-2xl sm:text-3xl md:text-4xl font-black text-[#111] whitespace-nowrap">5.3만</p>
                   <p className="text-gray-500 text-xs sm:text-sm mt-1">구독자</p>
                 </div>
                 <div className="bg-gray-50 rounded-2xl p-6 text-center border border-gray-100">
-                  <Eye size={28} className="text-[#9333ea] mx-auto mb-3" />
+                  <Eye size={28} className="text-[#65a30d] mx-auto mb-3" />
                   <p className="text-2xl sm:text-3xl md:text-4xl font-black text-[#111] whitespace-nowrap">{monthlyViews}</p>
                   <p className="text-gray-500 text-xs sm:text-sm mt-1 whitespace-nowrap">월간 조회수</p>
                 </div>
                 <div className="bg-gray-50 rounded-2xl p-6 text-center border border-gray-100">
-                  <CheckCircle2 size={28} className="text-[#9333ea] mx-auto mb-3" />
+                  <CheckCircle2 size={28} className="text-[#65a30d] mx-auto mb-3" />
                   <p className="text-2xl sm:text-3xl md:text-4xl font-black text-[#111]">전국</p>
                   <p className="text-gray-500 text-xs sm:text-sm mt-1">정비소<br />네트워크</p>
                 </div>
               </div>
 
               {/* 핵심 메시지: 61만 → 1% → 6,100명 직관적 플로우 */}
-              <div className="bg-gradient-to-br from-[#0a0a0a] to-[#1a0a2e] rounded-3xl px-6 py-8 md:px-10 md:py-12 relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-64 h-64 bg-[#9333ea]/20 rounded-full blur-3xl" />
+              <div className="bg-gradient-to-br from-[#0a0a0a] to-[#0a1a05] rounded-3xl px-6 py-8 md:px-10 md:py-12 relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-[#a6f546]/20 rounded-full blur-3xl" />
                 <div className="relative z-10">
                   <p className="text-center text-gray-400 text-sm font-semibold tracking-widest mb-6 md:mb-8">
                     단 1%만 온다면?
@@ -134,8 +134,8 @@ export default function ForMechanicsPage() {
                       <p className="text-7xl font-black text-white">61만</p>
                       <p className="text-gray-500 text-xs mt-1">월간 조회수</p>
                     </div>
-                    <p className="text-[#9333ea] text-[3.5rem] font-black">×</p>
-                    <p className="text-[3.5rem] font-black text-[#9333ea]">1%</p>
+                    <p className="text-[#a6f546] text-[3.5rem] font-black">×</p>
+                    <p className="text-[3.5rem] font-black text-[#a6f546]">1%</p>
                     <p className="text-white text-[3.5rem] font-black rotate-90">=</p>
                     <div className="text-center">
                       <p className="text-7xl font-black text-white">
@@ -151,8 +151,8 @@ export default function ForMechanicsPage() {
                       <p className="font-black text-white" style={{ fontSize: 'clamp(4rem, 7vw, 8rem)' }}>61만</p>
                       <p className="text-gray-500 text-sm mt-2">월간 조회수</p>
                     </div>
-                    <p className="font-black text-[#9333ea]" style={{ fontSize: 'clamp(2rem, 5.6vw, 6.4rem)' }}>×</p>
-                    <p className="font-black text-[#9333ea]" style={{ fontSize: 'clamp(3.2rem, 5.6vw, 6.4rem)' }}>1%</p>
+                    <p className="font-black text-[#a6f546]" style={{ fontSize: 'clamp(2rem, 5.6vw, 6.4rem)' }}>×</p>
+                    <p className="font-black text-[#a6f546]" style={{ fontSize: 'clamp(3.2rem, 5.6vw, 6.4rem)' }}>1%</p>
                     <p className="font-black text-white rotate-90" style={{ fontSize: 'clamp(2rem, 5.6vw, 6.4rem)' }}>=</p>
                     <div className="text-center">
                       <p className="font-black text-white" style={{ fontSize: 'clamp(4rem, 7vw, 8rem)' }}>
@@ -179,7 +179,7 @@ export default function ForMechanicsPage() {
                 <div className="text-center lg:text-left">
                   <h2 className="text-2xl sm:text-3xl md:text-5xl font-black text-[#111] mb-4 md:mb-8 break-keep leading-tight">
                     방문 전,{' '}
-                    <span className="bg-[#9333ea] text-white px-2 md:px-3 py-0.5 md:py-1">플랫폼</span>에서
+                    <span className="bg-[#a6f546] text-[#111] px-2 md:px-3 py-0.5 md:py-1">플랫폼</span>에서
                     <br />
                     고객님과 만나세요.
                   </h2>
@@ -206,9 +206,9 @@ export default function ForMechanicsPage() {
                     </div>
 
                     <div className="flex items-start gap-3 md:gap-4 text-left">
-                      <div className="w-9 h-9 md:w-10 md:h-10 bg-[#9333ea] rounded-xl flex items-center justify-center flex-shrink-0">
-                        <Eye size={18} className="text-white md:hidden" />
-                        <Eye size={20} className="text-white hidden md:block" />
+                      <div className="w-9 h-9 md:w-10 md:h-10 bg-[#a6f546] rounded-xl flex items-center justify-center flex-shrink-0">
+                        <Eye size={18} className="text-[#111] md:hidden" />
+                        <Eye size={20} className="text-[#111] hidden md:block" />
                       </div>
                       <div>
                         <h3 className="text-base md:text-lg font-bold text-[#111] mb-0.5">플랫폼에서 확인</h3>
@@ -261,11 +261,11 @@ export default function ForMechanicsPage() {
                         {/* 정보 영역 */}
                         <div className="px-4 py-3 space-y-2.5">
                           <div className="flex items-center gap-2 text-gray-600 text-[11px] sm:text-xs">
-                            <MapPin size={13} className="text-[#9333ea] flex-shrink-0" />
+                            <MapPin size={13} className="text-[#65a30d] flex-shrink-0" />
                             <span>인천광역시 남동구 수인로 3566</span>
                           </div>
                           <div className="flex items-center gap-2 text-gray-600 text-[11px] sm:text-xs">
-                            <Phone size={13} className="text-[#9333ea] flex-shrink-0" />
+                            <Phone size={13} className="text-[#65a30d] flex-shrink-0" />
                             <span>0507-1393-8333</span>
                           </div>
 
@@ -301,7 +301,7 @@ export default function ForMechanicsPage() {
 
                           {/* CTA 버튼 */}
                           <div className="flex gap-2 pt-1.5">
-                            <div className="flex-1 bg-[#9333ea] text-white text-[11px] sm:text-xs font-bold py-2 rounded-lg text-center">
+                            <div className="flex-1 bg-[#a6f546] text-[#111] text-[11px] sm:text-xs font-bold py-2 rounded-lg text-center">
                               전화 문의하기
                             </div>
                             <div className="bg-gray-100 text-gray-600 text-[11px] sm:text-xs font-bold py-2 px-3 rounded-lg text-center">
@@ -313,8 +313,8 @@ export default function ForMechanicsPage() {
                     </div>
 
                     {/* 장식 요소 */}
-                    <div className="absolute -top-4 -right-4 w-20 h-20 bg-[#9333ea]/10 rounded-full blur-2xl" />
-                    <div className="absolute -bottom-4 -left-4 w-24 h-24 bg-[#9333ea]/10 rounded-full blur-2xl" />
+                    <div className="absolute -top-4 -right-4 w-20 h-20 bg-[#a6f546]/10 rounded-full blur-2xl" />
+                    <div className="absolute -bottom-4 -left-4 w-24 h-24 bg-[#a6f546]/10 rounded-full blur-2xl" />
                   </div>
                 </div>
               </div>
@@ -328,16 +328,16 @@ export default function ForMechanicsPage() {
         <div className="container mx-auto px-6">
           <AnimatedSection animation="slideUp" duration={0.8}>
             <div className="max-w-4xl mx-auto">
-              <div className="bg-gradient-to-br from-[#9333ea]/5 to-purple-50 rounded-3xl p-8 md:p-16 border border-[#9333ea]/10">
+              <div className="bg-gradient-to-br from-[#a6f546]/5 to-lime-50 rounded-3xl p-8 md:p-16 border border-[#a6f546]/10">
                 <div className="text-center">
                   <h2 className="text-3xl md:text-5xl font-black text-[#111] mb-8 break-keep leading-tight">
-                    단 <span className="text-[#9333ea]">한 고객님</span>이라도
+                    단 <span className="text-[#65a30d]">한 고객님</span>이라도
                     <br />더 온다면
                   </h2>
                   <p className="text-xl md:text-2xl text-gray-600 mb-4 break-keep">
                     여기 웹사이트에 참여한 가치는
                   </p>
-                  <p className="text-2xl md:text-4xl font-black text-[#9333ea] mb-12">
+                  <p className="text-2xl md:text-4xl font-black text-[#65a30d] mb-12">
                     충분해집니다.
                   </p>
 
@@ -350,7 +350,7 @@ export default function ForMechanicsPage() {
                         '조회수, 클릭수 실시간 통계 제공',
                       ].map((item, index) => (
                         <div key={index} className="flex items-center gap-3">
-                          <CheckCircle2 size={20} className="text-[#9333ea] flex-shrink-0" />
+                          <CheckCircle2 size={20} className="text-[#65a30d] flex-shrink-0" />
                           <p className="text-gray-700 font-medium break-keep">{item}</p>
                         </div>
                       ))}
@@ -368,11 +368,11 @@ export default function ForMechanicsPage() {
         <div className="container mx-auto px-6">
           <AnimatedSection animation="slideUp" duration={0.8}>
             <div className="text-center mb-16">
-              <p className="text-[#9333ea] text-sm font-semibold tracking-widest mb-4">
+              <p className="text-[#65a30d] text-sm font-semibold tracking-widest mb-4">
                 HOW IT WORKS
               </p>
               <h2 className="text-3xl md:text-5xl font-black text-[#111] mb-4 break-keep">
-                <span className="text-[#9333ea]">4단계</span>로 시작하세요
+                <span className="text-[#65a30d]">4단계</span>로 시작하세요
               </h2>
             </div>
           </AnimatedSection>
@@ -388,10 +388,10 @@ export default function ForMechanicsPage() {
                 <AnimatedSection key={item.step} animation="slideUp" delay={index * 0.15} duration={0.5}>
                   <div className="text-center relative">
                     {index < 3 && (
-                      <div className="hidden lg:block absolute top-8 left-[60%] w-[80%] h-0.5 bg-gradient-to-r from-[#9333ea]/40 to-[#9333ea]/10" />
+                      <div className="hidden lg:block absolute top-8 left-[60%] w-[80%] h-0.5 bg-gradient-to-r from-[#a6f546]/40 to-[#a6f546]/10" />
                     )}
-                    <div className="w-16 h-16 bg-[#9333ea] rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-[#9333ea]/20 relative z-10">
-                      <span className="text-white text-2xl font-black">{item.step}</span>
+                    <div className="w-16 h-16 bg-[#a6f546] rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-[#a6f546]/20 relative z-10">
+                      <span className="text-[#111] text-2xl font-black">{item.step}</span>
                     </div>
                     <h3 className="text-lg font-bold text-[#111] mb-2">{item.title}</h3>
                     <p className="text-gray-500 text-sm break-keep">{item.desc}</p>
@@ -404,21 +404,21 @@ export default function ForMechanicsPage() {
       </section>
 
       {/* ── 최종 CTA ── */}
-      <section className="bg-gradient-to-br from-[#9333ea] to-purple-800 py-20">
+      <section className="bg-gradient-to-br from-[#a6f546] to-[#65a30d] py-20">
         <div className="container mx-auto px-6">
           <AnimatedSection animation="slideUp" duration={0.8}>
             <div className="text-center max-w-2xl mx-auto">
-              <h2 className="text-3xl md:text-5xl font-black text-white mb-6 break-keep">
+              <h2 className="text-3xl md:text-5xl font-black text-[#111] mb-6 break-keep">
                 지금 바로 시작하세요
               </h2>
-              <p className="text-white/80 text-lg mb-10 break-keep">
+              <p className="text-[#111]/70 text-lg mb-10 break-keep">
                 5분이면 등록 완료됩니다.
                 <br />
                 소비자가 찾아오는 정비소를 만들어 보세요.
               </p>
               <Link
                 href="/owner/login"
-                className="inline-flex items-center justify-center gap-2 bg-white text-[#9333ea] hover:bg-gray-100 px-10 py-4 rounded-2xl font-bold text-lg transition-all shadow-xl"
+                className="inline-flex items-center justify-center gap-2 bg-[#111] text-[#a6f546] hover:bg-[#222] px-10 py-4 rounded-2xl font-bold text-lg transition-all shadow-xl"
               >
                 등록 시작하기
                 <ChevronRight size={20} />
@@ -432,10 +432,10 @@ export default function ForMechanicsPage() {
       <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-3">
         <Link
           href="/inquiry"
-          className="w-14 h-14 bg-[#9333ea] hover:bg-[#7e22ce] rounded-full flex items-center justify-center shadow-lg shadow-[#9333ea]/30 transition-all hover:scale-110"
+          className="w-14 h-14 bg-[#a6f546] hover:bg-[#8fd93a] rounded-full flex items-center justify-center shadow-lg shadow-[#a6f546]/30 transition-all hover:scale-110"
           title="문의하기"
         >
-          <MessageCircle size={24} className="text-white" />
+          <MessageCircle size={24} className="text-[#111]" />
         </Link>
       </div>
     </Layout>
