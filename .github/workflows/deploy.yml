@@ -1,0 +1,47 @@
+name: Deploy to EC2
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - '*.md'
+      - '.excalidraw'
+      - '.github/workflows/claude.yml'
+      - '.github/workflows/claude-code-review.yml'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Deploy to EC2 via SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script_stop: true
+          script: |
+            cd ${{ secrets.DEPLOY_PATH || '~/dreaming-mech' }}
+
+            echo "📥 최신 코드 가져오는 중..."
+            git fetch origin main
+            git reset --hard origin/main
+
+            echo "🏗️ Docker 이미지 빌드 및 재시작..."
+            docker-compose -f docker-compose.yml --env-file .env.production build --no-cache
+            docker-compose -f docker-compose.yml --env-file .env.production up -d
+
+            echo "⏳ 헬스 체크 대기..."
+            sleep 15
+
+            echo "🏥 컨테이너 상태 확인..."
+            docker-compose ps
+
+            echo "🧹 미사용 Docker 이미지 정리..."
+            docker image prune -f
+
+            echo "✅ 배포 완료!"
