@@ -91,7 +91,7 @@ export default function Home() {
       <div className="h-40 bg-gradient-to-b from-black/60 via-black/30 via-30% to-white" />
 
       {/* 정비사 목록 섹션 - 흰색 배경 */}
-      <section className="bg-white pb-24">
+      <section id="map" className="bg-white pb-24">
         <div className="container mx-auto px-6">
           {/* 섹션 헤더 */}
           <AnimatedSection animation="slideUp" duration={0.8}>

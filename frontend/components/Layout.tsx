@@ -45,11 +45,11 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
             {/* 오른쪽: 데스크탑 네비게이션 */}
             <nav className="hidden md:flex items-center gap-1">
-              <Link href="/for-mechanics" className="px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors rounded-lg hover:bg-white/5 font-medium">
+              <Link href="/#map" className="px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors rounded-lg hover:bg-white/5 font-medium">
                 서비스
               </Link>
-              <Link href="/for-mechanics#mechanic-list" className="px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors rounded-lg hover:bg-white/5 font-medium">
-                정비사 목록
+              <Link href="/for-mechanics" className="px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors rounded-lg hover:bg-white/5 font-medium">
+                정비사 사장님 클릭!
               </Link>
               <Link href="/inquiry" className="px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors rounded-lg hover:bg-white/5 font-medium">
                 문의하기
@@ -78,11 +78,11 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           {/* 모바일 메뉴 드롭다운 */}
           {mobileMenuOpen && (
             <div className="md:hidden border-t border-white/10 py-3 space-y-1">
-              <Link href="/for-mechanics" onClick={() => setMobileMenuOpen(false)} className="block px-4 py-2.5 text-sm text-gray-400 hover:text-white hover:bg-white/5 rounded-lg font-medium">
+              <Link href="/#map" onClick={() => setMobileMenuOpen(false)} className="block px-4 py-2.5 text-sm text-gray-400 hover:text-white hover:bg-white/5 rounded-lg font-medium">
                 서비스
               </Link>
-              <Link href="/for-mechanics#mechanic-list" onClick={() => setMobileMenuOpen(false)} className="block px-4 py-2.5 text-sm text-gray-400 hover:text-white hover:bg-white/5 rounded-lg font-medium">
-                정비사 목록
+              <Link href="/for-mechanics" onClick={() => setMobileMenuOpen(false)} className="block px-4 py-2.5 text-sm text-gray-400 hover:text-white hover:bg-white/5 rounded-lg font-medium">
+                정비사 사장님 클릭!
               </Link>
               <Link href="/inquiry" onClick={() => setMobileMenuOpen(false)} className="block px-4 py-2.5 text-sm text-gray-400 hover:text-white hover:bg-white/5 rounded-lg font-medium">
                 문의하기
