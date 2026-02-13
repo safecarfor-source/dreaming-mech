@@ -12,6 +12,7 @@ import { UploadModule } from './upload/upload.module';
 import { CommonModule } from './common/common.module';
 import { AnalyticsModule } from './analytics/analytics.module';
 import { OwnerModule } from './owner/owner.module';
+import { InquiryModule } from './inquiry/inquiry.module';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { OwnerModule } from './owner/owner.module';
     UploadModule,
     AnalyticsModule,
     OwnerModule,
+    InquiryModule,
   ],
   controllers: [AppController],
   providers: [

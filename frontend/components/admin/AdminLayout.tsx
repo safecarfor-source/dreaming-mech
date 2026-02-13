@@ -9,6 +9,7 @@ import {
   Users,
   BarChart3,
   UserCheck,
+  MessageSquare,
   LogOut,
   Menu,
   X,
@@ -22,6 +23,7 @@ const menuItems = [
   { href: '/admin', label: '대시보드', icon: LayoutDashboard },
   { href: '/admin/mechanics', label: '정비사 관리', icon: Users },
   { href: '/admin/owners', label: '사장님 관리', icon: UserCheck },
+  { href: '/admin/inquiries', label: '문의 관리', icon: MessageSquare },
   { href: '/admin/stats', label: '통계', icon: BarChart3 },
 ];
 

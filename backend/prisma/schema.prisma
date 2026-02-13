@@ -106,6 +106,30 @@ model ClickLog {
   @@index([ipAddress])
 }
 
+// 문의 모델
+enum InquiryType {
+  CUSTOMER  // 소비자(고객) 문의
+  MECHANIC  // 정비사(사장님) 문의
+}
+
+model Inquiry {
+  id            Int         @id @default(autoincrement())
+  type          InquiryType // 문의 유형
+  name          String      // 이름 또는 대표자명
+  phone         String      // 연락처
+  businessName  String?     // 상호명 (정비사 문의 시)
+  content       String      @db.Text // 문의 내용
+  reply         String?     @db.Text // 답변 내용
+  isRead        Boolean     @default(false) // 읽음 여부
+  repliedAt     DateTime?   // 답변 일시
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@index([type])
+  @@index([isRead])
+  @@index([createdAt])
+}
+
 // 페이지뷰 로그 모델
 model PageView {
   id         Int      @id @default(autoincrement())

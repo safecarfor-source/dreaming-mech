@@ -51,9 +51,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               <a href="#" className="px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors rounded-lg hover:bg-white/5 font-medium">
                 정비사 목록
               </a>
-              <a href="#" className="px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors rounded-lg hover:bg-white/5 font-medium">
+              <Link href="/inquiry" className="px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors rounded-lg hover:bg-white/5 font-medium">
                 문의하기
-              </a>
+              </Link>
 
               {/* 구분선 */}
               <div className="w-px h-5 bg-white/20 mx-2" />
@@ -84,9 +84,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               <a href="#" className="block px-4 py-2.5 text-sm text-gray-400 hover:text-white hover:bg-white/5 rounded-lg font-medium">
                 정비사 목록
               </a>
-              <a href="#" className="block px-4 py-2.5 text-sm text-gray-400 hover:text-white hover:bg-white/5 rounded-lg font-medium">
+              <Link href="/inquiry" onClick={() => setMobileMenuOpen(false)} className="block px-4 py-2.5 text-sm text-gray-400 hover:text-white hover:bg-white/5 rounded-lg font-medium">
                 문의하기
-              </a>
+              </Link>
               <div className="border-t border-white/10 my-2" />
               <Link
                 href="/owner/login"

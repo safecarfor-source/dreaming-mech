@@ -58,6 +58,27 @@ export interface TopMechanic {
   clickCount: number;
 }
 
+// 문의 타입
+export interface Inquiry {
+  id: number;
+  type: 'CUSTOMER' | 'MECHANIC';
+  name: string;
+  phone: string;
+  businessName?: string;
+  content: string;
+  reply?: string;
+  isRead: boolean;
+  repliedAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface UnreadCount {
+  customer: number;
+  mechanic: number;
+  total: number;
+}
+
 // API 응답 타입
 export interface ApiResponse<T> {
   data: T;

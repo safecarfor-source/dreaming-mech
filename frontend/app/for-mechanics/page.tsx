@@ -282,7 +282,7 @@ export default function ForMechanicsPage() {
                             <p className="text-[#111] text-[11px] sm:text-xs font-medium mb-1.5">영상</p>
                             <div className="relative w-full aspect-video bg-gray-900 rounded-lg overflow-hidden">
                               <Image
-                                src="https://img.youtube.com/vi/3YXM4zcCLqE/mqdefault.jpg"
+                                src="https://img.youtube.com/vi/83ndhOghUlk/mqdefault.jpg"
                                 alt="유튜브 영상 썸네일"
                                 fill
                                 className="object-cover"
@@ -431,9 +431,9 @@ export default function ForMechanicsPage() {
       {/* ── 플로팅 CTA 버튼 ── */}
       <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-3">
         <Link
-          href="/owner/login"
+          href="/inquiry"
           className="w-14 h-14 bg-[#9333ea] hover:bg-[#7e22ce] rounded-full flex items-center justify-center shadow-lg shadow-[#9333ea]/30 transition-all hover:scale-110"
-          title="등록하기"
+          title="문의하기"
         >
           <MessageCircle size={24} className="text-white" />
         </Link>

@@ -1,5 +1,5 @@
 import axios, { AxiosRequestConfig } from 'axios';
-import { Mechanic, ApiResponse } from '@/types';
+import { Mechanic, Inquiry, UnreadCount, ApiResponse } from '@/types';
 
 const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL,
@@ -147,6 +147,39 @@ export const adminOwnerApi = {
     api.get('/admin/owners', { params: status ? { status } : {} }),
   approve: (id: number) => api.patch(`/admin/owners/${id}/approve`),
   reject: (id: number) => api.patch(`/admin/owners/${id}/reject`),
+};
+
+// Inquiry API (문의)
+export const inquiryApi = {
+  // 공개: 문의 등록
+  create: (data: {
+    type: 'CUSTOMER' | 'MECHANIC';
+    name: string;
+    phone: string;
+    businessName?: string;
+    content: string;
+  }) => api.post<Inquiry>('/inquiries', data),
+
+  // 관리자: 문의 목록
+  getAll: (params?: {
+    type?: 'CUSTOMER' | 'MECHANIC';
+    isRead?: boolean;
+    page?: number;
+    limit?: number;
+  }) => api.get<ApiResponse<Inquiry[]>>('/inquiries', { params }),
+
+  // 관리자: 문의 상세
+  getOne: (id: number) => api.get<Inquiry>(`/inquiries/${id}`),
+
+  // 관리자: 안읽은 문의 수
+  getUnreadCount: () => api.get<UnreadCount>('/inquiries/unread-count'),
+
+  // 관리자: 답변
+  reply: (id: number, reply: string) =>
+    api.patch<Inquiry>(`/inquiries/${id}/reply`, { reply }),
+
+  // 관리자: 삭제
+  delete: (id: number) => api.delete(`/inquiries/${id}`),
 };
 
 export default api;
