@@ -32,13 +32,13 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 href={isForMechanics ? '/' : '/for-mechanics'}
                 className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs md:text-sm font-semibold transition-all ${
                   isForMechanics
-                    ? 'bg-[#bf00ff] text-white'
+                    ? 'bg-[#a6f546] text-[#111]'
                     : 'bg-white/10 text-gray-400 hover:bg-[#bf00ff]/20 hover:text-[#bf00ff]'
                 }`}
               >
                 정비사 전용
                 <span className={`inline-block w-2 h-2 rounded-full ${
-                  isForMechanics ? 'bg-white' : 'bg-green-400'
+                  isForMechanics ? 'bg-[#111]' : 'bg-green-400'
                 }`} />
               </Link>
             </div>
