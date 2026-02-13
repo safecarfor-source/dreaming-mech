@@ -430,17 +430,6 @@ export default function ForMechanicsPage() {
 
       {/* ── 플로팅 CTA 버튼 ── */}
       <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-3">
-        <a
-          href="https://www.youtube.com/@dreaming_mechanic"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="w-14 h-14 bg-red-600 hover:bg-red-700 rounded-full flex items-center justify-center shadow-lg transition-all hover:scale-110"
-          title="유튜브 채널"
-        >
-          <svg className="w-6 h-6 text-white ml-0.5" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M8 5v14l11-7z" />
-          </svg>
-        </a>
         <Link
           href="/owner/login"
           className="w-14 h-14 bg-[#9333ea] hover:bg-[#7e22ce] rounded-full flex items-center justify-center shadow-lg shadow-[#9333ea]/30 transition-all hover:scale-110"
