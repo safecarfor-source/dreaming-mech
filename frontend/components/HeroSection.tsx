@@ -89,7 +89,7 @@ export default function HeroSection({ totalMechanics, totalClicks }: Props) {
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="text-5xl md:text-7xl lg:text-8xl font-black leading-tight mb-8 min-h-[200px] md:min-h-[280px] lg:min-h-[320px] break-keep"
+          className="text-[2rem] sm:text-5xl md:text-7xl lg:text-8xl font-black leading-tight mb-8 min-h-[140px] sm:min-h-[200px] md:min-h-[280px] lg:min-h-[320px] break-keep whitespace-nowrap"
         >
           {headline.displayedText.split('\n').map((line, index) => (
             <span key={index}>
