@@ -134,12 +134,12 @@ export default function ForMechanicsPage() {
                       <p className="text-7xl font-black text-white">61만</p>
                       <p className="text-gray-500 text-xs mt-1">월간 조회수</p>
                     </div>
-                    <p className="text-[#9333ea] text-3xl font-black">×</p>
-                    <p className="text-7xl font-black text-[#9333ea]">1%</p>
-                    <p className="text-white text-3xl font-black">=</p>
+                    <p className="text-[#9333ea] text-[3.5rem] font-black">×</p>
+                    <p className="text-[3.5rem] font-black text-[#9333ea]">1%</p>
+                    <p className="text-white text-[3.5rem] font-black rotate-90">=</p>
                     <div className="text-center">
                       <p className="text-7xl font-black text-white">
-                        6,100<span className="text-4xl">명</span>
+                        6,100명
                       </p>
                       <p className="text-gray-500 text-xs mt-1">매달 잠재 고객</p>
                     </div>
@@ -151,12 +151,12 @@ export default function ForMechanicsPage() {
                       <p className="font-black text-white" style={{ fontSize: 'clamp(4rem, 7vw, 8rem)' }}>61만</p>
                       <p className="text-gray-500 text-sm mt-2">월간 조회수</p>
                     </div>
-                    <p className="font-black text-[#9333ea]" style={{ fontSize: 'clamp(2.5rem, 4.5vw, 5rem)' }}>×</p>
-                    <p className="font-black text-[#9333ea]" style={{ fontSize: 'clamp(4rem, 7vw, 8rem)' }}>1%</p>
-                    <p className="font-black text-white" style={{ fontSize: 'clamp(2.5rem, 4.5vw, 5rem)' }}>=</p>
+                    <p className="font-black text-[#9333ea]" style={{ fontSize: 'clamp(2rem, 5.6vw, 6.4rem)' }}>×</p>
+                    <p className="font-black text-[#9333ea]" style={{ fontSize: 'clamp(3.2rem, 5.6vw, 6.4rem)' }}>1%</p>
+                    <p className="font-black text-white rotate-90" style={{ fontSize: 'clamp(2rem, 5.6vw, 6.4rem)' }}>=</p>
                     <div className="text-center">
                       <p className="font-black text-white" style={{ fontSize: 'clamp(4rem, 7vw, 8rem)' }}>
-                        6,100<span style={{ fontSize: '0.55em' }}>명</span>
+                        6,100명
                       </p>
                       <p className="text-gray-500 text-sm mt-2">매달 잠재 고객</p>
                     </div>
