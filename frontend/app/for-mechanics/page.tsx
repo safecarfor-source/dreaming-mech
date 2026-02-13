@@ -59,20 +59,25 @@ export default function ForMechanicsPage() {
             </Link>
           </motion.div>
 
-          {/* 스크롤 인디케이터 */}
+          {/* 스크롤 인디케이터 - 아래 화살표 */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 1 }}
             className="mt-20 flex justify-start"
           >
-            <div className="w-8 h-14 border-2 border-white/30 rounded-full flex justify-center pt-2">
-              <motion.div
-                animate={{ y: [0, 12, 0] }}
-                transition={{ repeat: Infinity, duration: 1.5 }}
-                className="w-1.5 h-1.5 bg-[#a6f546] rounded-full"
-              />
-            </div>
+            <motion.div
+              animate={{ y: [0, 12, 0] }}
+              transition={{ repeat: Infinity, duration: 1.5, ease: 'easeInOut' }}
+              className="flex flex-col items-center gap-1"
+            >
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#a6f546" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="opacity-60">
+                <path d="M6 9l6 6 6-6" />
+              </svg>
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#a6f546" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="opacity-30 -mt-3">
+                <path d="M6 9l6 6 6-6" />
+              </svg>
+            </motion.div>
           </motion.div>
         </div>
       </section>

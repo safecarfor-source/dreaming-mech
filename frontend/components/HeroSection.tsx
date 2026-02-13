@@ -122,20 +122,25 @@ export default function HeroSection({ totalMechanics, totalClicks }: Props) {
           {!description2.isComplete && <span className="animate-pulse">|</span>}
         </motion.p>
 
-        {/* 스크롤 인디케이터 */}
+        {/* 스크롤 인디케이터 - 아래 화살표 */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.8 }}
           className="mt-30 flex justify-center"
         >
-          <div className="w-10 h-20 border-4 border-white/50 rounded-full flex justify-center pt-3">
-            <motion.div
-              animate={{ y: [0, 16, 0] }}
-              transition={{ repeat: Infinity, duration: 1.5 }}
-              className="w-2 h-2 bg-gray-500 rounded-full"
-            />
-          </div>
+          <motion.div
+            animate={{ y: [0, 12, 0] }}
+            transition={{ repeat: Infinity, duration: 1.5, ease: 'easeInOut' }}
+            className="flex flex-col items-center gap-1"
+          >
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="opacity-60">
+              <path d="M6 9l6 6 6-6" />
+            </svg>
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="opacity-30 -mt-3">
+              <path d="M6 9l6 6 6-6" />
+            </svg>
+          </motion.div>
         </motion.div>
       </div>
     </section>
