@@ -121,10 +121,10 @@ export default function ForMechanicsPage() {
               </div>
 
               {/* 핵심 메시지: 61만 → 1% → 6,100명 직관적 플로우 */}
-              <div className="bg-gradient-to-br from-[#0a0a0a] to-[#1a0a2e] rounded-3xl px-6 py-8 md:px-16 md:py-14 relative overflow-hidden">
+              <div className="bg-gradient-to-br from-[#0a0a0a] to-[#1a0a2e] rounded-3xl px-6 py-8 md:px-10 md:py-12 relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-64 h-64 bg-[#9333ea]/20 rounded-full blur-3xl" />
                 <div className="relative z-10">
-                  <p className="text-center text-gray-400 text-sm font-semibold tracking-widest mb-6 md:mb-10">
+                  <p className="text-center text-gray-400 text-sm font-semibold tracking-widest mb-6 md:mb-8">
                     단 1%만 온다면?
                   </p>
 
@@ -145,18 +145,18 @@ export default function ForMechanicsPage() {
                     </div>
                   </div>
 
-                  {/* 데스크톱: 가로 레이아웃 */}
-                  <div className="hidden md:flex items-center justify-center gap-6 lg:gap-10">
+                  {/* 데스크톱: 가로 레이아웃 - 뷰포트 기반 반응형 크기 */}
+                  <div className="hidden md:flex items-center justify-center gap-[2vw]">
                     <div className="text-center">
-                      <p className="text-8xl lg:text-9xl font-black text-white">61만</p>
+                      <p className="font-black text-white" style={{ fontSize: 'clamp(4rem, 7vw, 8rem)' }}>61만</p>
                       <p className="text-gray-500 text-sm mt-2">월간 조회수</p>
                     </div>
-                    <p className="text-[#9333ea] text-6xl lg:text-7xl font-black">×</p>
-                    <p className="text-8xl lg:text-9xl font-black text-[#9333ea]">1%</p>
-                    <p className="text-white text-6xl lg:text-7xl font-black">=</p>
+                    <p className="font-black text-[#9333ea]" style={{ fontSize: 'clamp(2.5rem, 4.5vw, 5rem)' }}>×</p>
+                    <p className="font-black text-[#9333ea]" style={{ fontSize: 'clamp(4rem, 7vw, 8rem)' }}>1%</p>
+                    <p className="font-black text-white" style={{ fontSize: 'clamp(2.5rem, 4.5vw, 5rem)' }}>=</p>
                     <div className="text-center">
-                      <p className="text-8xl lg:text-9xl font-black text-white">
-                        6,100<span className="text-5xl lg:text-6xl">명</span>
+                      <p className="font-black text-white" style={{ fontSize: 'clamp(4rem, 7vw, 8rem)' }}>
+                        6,100<span style={{ fontSize: '0.55em' }}>명</span>
                       </p>
                       <p className="text-gray-500 text-sm mt-2">매달 잠재 고객</p>
                     </div>
