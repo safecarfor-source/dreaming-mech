@@ -60,6 +60,44 @@ export const CreateMechanicSchema = z.object({
     .optional()
     .default([]),
 
+  // 상세 정보 필드
+  operatingHours: z
+    .record(
+      z.string(),
+      z.object({
+        open: z.string().regex(/^\d{2}:\d{2}$/, 'Time must be in HH:MM format'),
+        close: z.string().regex(/^\d{2}:\d{2}$/, 'Time must be in HH:MM format'),
+      }).nullable()
+    )
+    .optional()
+    .nullable(),
+
+  specialties: z
+    .array(z.string().max(20, 'Each specialty must be less than 20 characters'))
+    .max(10, 'Maximum 10 specialties allowed')
+    .optional()
+    .default([]),
+
+  isVerified: z.boolean().optional().default(false),
+
+  parkingAvailable: z.boolean().nullable().optional(),
+
+  paymentMethods: z
+    .array(z.string().max(20, 'Each payment method must be less than 20 characters'))
+    .max(10, 'Maximum 10 payment methods allowed')
+    .optional()
+    .default([]),
+
+  holidays: z
+    .object({
+      type: z.enum(['weekly', 'custom', 'none']),
+      days: z.array(z.string()).optional(),
+      dates: z.array(z.string()).optional(),
+      description: z.string().max(200).optional(),
+    })
+    .optional()
+    .nullable(),
+
   youtubeUrl: z
     .string()
     .url('YouTube URL must be a valid URL')

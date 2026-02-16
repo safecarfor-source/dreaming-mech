@@ -30,6 +30,14 @@ model Mechanic {
   youtubeUrl      String?  // 유튜브 숏폼(쇼츠) URL
   youtubeLongUrl  String?  // 유튜브 롱폼(일반 영상) URL
 
+  // 상세 정보
+  operatingHours    Json?    // 운영시간 {"mon":{"open":"09:00","close":"18:00"}, ...}
+  specialties       Json?    // 전문 분야 ["엔진","미션","판금도색"]
+  isVerified        Boolean  @default(false) // YouTube 인증 배지
+  parkingAvailable  Boolean? // 주차 가능 여부 (null: 미정)
+  paymentMethods    Json?    // 결제 수단 ["현금","카드","카카오페이"]
+  holidays          Json?    // 휴무일 {"type":"weekly","days":["sun"],"description":"일요일 휴무"}
+
   // 통계
   clickCount      Int      @default(0) // 클릭 수
 
@@ -49,6 +57,8 @@ model Mechanic {
 
   // 관계
   clickLogs       ClickLog[]
+  quoteRequests   QuoteRequest[]
+  reviews         Review[]
 
   // 인덱스
   @@index([location]) // 지역별 검색 최적화
@@ -127,6 +137,65 @@ model Inquiry {
 
   @@index([type])
   @@index([isRead])
+  @@index([createdAt])
+}
+
+// 견적 요청 상태
+enum QuoteRequestStatus {
+  PENDING    // 접수됨
+  VIEWED     // 확인됨
+  REPLIED    // 답변됨
+  COMPLETED  // 완료
+  CANCELLED  // 취소
+}
+
+// 견적 요청 모델
+model QuoteRequest {
+  id            Int                @id @default(autoincrement())
+  mechanicId    Int
+  mechanic      Mechanic           @relation(fields: [mechanicId], references: [id], onDelete: Cascade)
+
+  // 고객 정보
+  customerName  String             // 고객 이름
+  customerPhone String             // 고객 연락처
+  carModel      String             // 차종 (예: 현대 아반떼 2023)
+  carYear       String?            // 연식
+  description   String    @db.Text // 증상/요청 내용
+
+  // 사진 첨부
+  images        Json?              // ["url1", "url2"] - S3 URLs (최대 3장)
+
+  status        QuoteRequestStatus @default(PENDING)
+
+  // 알림톡 발송 여부
+  alimtalkSent    Boolean   @default(false)
+  alimtalkSentAt  DateTime?
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([mechanicId, status])
+  @@index([mechanicId, createdAt])
+  @@index([status])
+}
+
+// 한줄 리뷰 모델
+model Review {
+  id          Int      @id @default(autoincrement())
+  mechanicId  Int
+  mechanic    Mechanic @relation(fields: [mechanicId], references: [id], onDelete: Cascade)
+
+  nickname    String              // 닉네임
+  content     String   @db.VarChar(100) // 한줄 리뷰 (최대 100자)
+  rating      Int      @default(5) // 1-5 별점
+
+  isApproved  Boolean  @default(false) // 관리자 승인 필요
+  isActive    Boolean  @default(true)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([mechanicId, isApproved, isActive])
   @@index([createdAt])
 }
 

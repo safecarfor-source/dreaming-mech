@@ -1,3 +1,52 @@
+// 운영시간 타입
+export interface OperatingHours {
+  [day: string]: { open: string; close: string } | null;
+}
+
+// 휴무일 타입
+export interface HolidayInfo {
+  type: 'weekly' | 'custom' | 'none';
+  days?: string[];
+  dates?: string[];
+  description?: string;
+}
+
+// 한줄 리뷰 타입
+export interface Review {
+  id: number;
+  mechanicId: number;
+  nickname: string;
+  content: string;
+  rating: number;
+  isApproved?: boolean;
+  isActive?: boolean;
+  createdAt: string;
+  mechanic?: { id: number; name: string };
+}
+
+// 견적 요청 타입
+export interface QuoteRequest {
+  id: number;
+  mechanicId: number;
+  customerName: string;
+  customerPhone: string;
+  carModel: string;
+  carYear?: string;
+  description: string;
+  images?: string[];
+  status: 'PENDING' | 'VIEWED' | 'REPLIED' | 'COMPLETED' | 'CANCELLED';
+  alimtalkSent: boolean;
+  alimtalkSentAt?: string;
+  mechanic?: {
+    id: number;
+    name: string;
+    phone: string;
+    address?: string;
+  };
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface Mechanic {
   id: number;
   name: string;
@@ -11,6 +60,15 @@ export interface Mechanic {
   galleryImages?: string[];
   youtubeUrl?: string;
   youtubeLongUrl?: string;
+  // 상세 정보
+  operatingHours?: OperatingHours | null;
+  specialties?: string[];
+  isVerified?: boolean;
+  parkingAvailable?: boolean | null;
+  paymentMethods?: string[];
+  holidays?: HolidayInfo | null;
+  reviews?: Review[];
+  // 기본 필드
   clickCount: number;
   sortOrder: number;
   isActive: boolean;

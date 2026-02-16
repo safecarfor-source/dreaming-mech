@@ -10,6 +10,8 @@ import {
   BarChart3,
   UserCheck,
   MessageSquare,
+  FileText,
+  Star,
   LogOut,
   Menu,
   X,
@@ -24,6 +26,8 @@ const menuItems = [
   { href: '/admin/mechanics', label: '정비사 관리', icon: Users },
   { href: '/admin/owners', label: '사장님 관리', icon: UserCheck },
   { href: '/admin/inquiries', label: '문의 관리', icon: MessageSquare },
+  { href: '/admin/quote-requests', label: '견적 요청', icon: FileText },
+  { href: '/admin/reviews', label: '리뷰 관리', icon: Star },
   { href: '/admin/stats', label: '통계', icon: BarChart3 },
 ];
 

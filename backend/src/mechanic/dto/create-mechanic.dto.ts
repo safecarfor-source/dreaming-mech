@@ -6,6 +6,7 @@ import {
   IsBoolean,
   IsArray,
   IsUrl,
+  IsObject,
 } from 'class-validator';
 
 export class CreateMechanicDto {
@@ -56,4 +57,34 @@ export class CreateMechanicDto {
   @IsBoolean()
   @IsOptional()
   isActive?: boolean;
+
+  // 상세 정보 필드
+  @IsObject()
+  @IsOptional()
+  operatingHours?: Record<string, { open: string; close: string } | null> | null;
+
+  @IsArray()
+  @IsOptional()
+  specialties?: string[];
+
+  @IsBoolean()
+  @IsOptional()
+  isVerified?: boolean;
+
+  @IsBoolean()
+  @IsOptional()
+  parkingAvailable?: boolean | null;
+
+  @IsArray()
+  @IsOptional()
+  paymentMethods?: string[];
+
+  @IsObject()
+  @IsOptional()
+  holidays?: {
+    type: 'weekly' | 'custom' | 'none';
+    days?: string[];
+    dates?: string[];
+    description?: string;
+  } | null;
 }

@@ -6,6 +6,8 @@ import { useMechanicForm } from './mechanic-form/useMechanicForm';
 import BasicInfoSection from './mechanic-form/BasicInfoSection';
 import LocationSection from './mechanic-form/LocationSection';
 import AdditionalInfoSection from './mechanic-form/AdditionalInfoSection';
+import DetailInfoSection from './mechanic-form/DetailInfoSection';
+import GallerySection from './mechanic-form/GallerySection';
 
 interface MechanicFormProps {
   mechanic?: Mechanic;
@@ -27,6 +29,8 @@ export default function MechanicForm({ mechanic, mode, apiBasePath, redirectPath
     handleSubmit,
   } = useMechanicForm({ mechanic, mode, apiBasePath, redirectPath });
 
+  const isAdmin = !apiBasePath?.includes('owner');
+
   return (
     <form onSubmit={handleSubmit} className="space-y-8">
       {/* 기본 정보 */}
@@ -45,7 +49,20 @@ export default function MechanicForm({ mechanic, mode, apiBasePath, redirectPath
         onMarkerDragEnd={handleMarkerDragEnd}
       />
 
-      {/* 추가 정보 */}
+      {/* 상세 정보 (운영시간, 전문분야, 주차, 결제, 휴무 등) */}
+      <DetailInfoSection
+        formData={formData}
+        onFieldChange={(field, value) => setFormData((prev) => ({ ...prev, [field]: value }))}
+        isAdmin={isAdmin}
+      />
+
+      {/* 갤러리 */}
+      <GallerySection
+        images={formData.galleryImages}
+        onImagesChange={(images) => setFormData((prev) => ({ ...prev, galleryImages: images }))}
+      />
+
+      {/* 추가 정보 (대표 이미지, 유튜브) */}
       <AdditionalInfoSection
         formData={formData}
         onChange={handleChange}

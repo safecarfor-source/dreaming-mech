@@ -3,6 +3,7 @@ import {
   NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CacheService } from '../common/services/cache.service';
 import { CreateMechanicDto } from './dto/create-mechanic.dto';
@@ -11,6 +12,15 @@ import {
   PaginationDto,
   PaginatedResult,
 } from '../common/dto/pagination.dto';
+
+/**
+ * null 값을 Prisma.JsonNull로 변환 (Json? 필드용)
+ */
+function toJsonField(value: any): any {
+  if (value === null) return Prisma.JsonNull;
+  if (value === undefined) return undefined;
+  return value;
+}
 
 @Injectable()
 export class MechanicService {
@@ -61,6 +71,18 @@ export class MechanicService {
           orderBy: { clickedAt: 'desc' },
           take: 10,
         },
+        reviews: {
+          where: { isApproved: true, isActive: true },
+          orderBy: { createdAt: 'desc' },
+          take: 5,
+          select: {
+            id: true,
+            nickname: true,
+            content: true,
+            rating: true,
+            createdAt: true,
+          },
+        },
       },
     });
 
@@ -88,6 +110,10 @@ export class MechanicService {
       data: {
         ...createMechanicDto,
         galleryImages: createMechanicDto.galleryImages || [],
+        operatingHours: toJsonField(createMechanicDto.operatingHours),
+        specialties: createMechanicDto.specialties || [],
+        paymentMethods: createMechanicDto.paymentMethods || [],
+        holidays: toJsonField(createMechanicDto.holidays),
         sortOrder: nextOrder,
       },
     });
@@ -104,9 +130,14 @@ export class MechanicService {
   async update(id: number, updateMechanicDto: UpdateMechanicDto) {
     await this.findOne(id);
 
+    // Json? 필드의 null 처리
+    const data: any = { ...updateMechanicDto };
+    if ('operatingHours' in data) data.operatingHours = toJsonField(data.operatingHours);
+    if ('holidays' in data) data.holidays = toJsonField(data.holidays);
+
     const mechanic = await this.prisma.mechanic.update({
       where: { id },
-      data: updateMechanicDto,
+      data,
     });
 
     // Decimal 타입을 숫자로 변환

@@ -1,22 +1,28 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, MapPin, Phone, ExternalLink } from 'lucide-react';
+import { X, MapPin, Phone, ExternalLink, FileText, BadgeCheck } from 'lucide-react';
 import { useModalStore } from '@/lib/store';
 import { mechanicsApi } from '@/lib/api';
 import { sanitizeText, sanitizeBasicHTML, sanitizePhone } from '@/lib/sanitize';
 import NaverMapView from './NaverMapView';
 import YouTubeEmbed from './YouTubeEmbed';
+import OperatingStatusBadge from './mechanic-detail/OperatingStatusBadge';
+import SpecialtyTags from './mechanic-detail/SpecialtyTags';
+import GalleryCarousel from './mechanic-detail/GalleryCarousel';
+import QuickInfoRow from './mechanic-detail/QuickInfoRow';
+import ReviewSection from './mechanic-detail/ReviewSection';
+import QuoteRequestForm from './mechanic-detail/QuoteRequestForm';
 
 export default function MechanicModal() {
   const { isOpen, mechanic, close } = useModalStore();
+  const [showQuoteForm, setShowQuoteForm] = useState(false);
 
   // 클릭수 증가
   useEffect(() => {
     if (isOpen && mechanic) {
       mechanicsApi.incrementClick(mechanic.id).catch((error) => {
-        // 중복 클릭(400)은 정상 동작이므로 무시
         if (error?.response?.status !== 400) {
           console.error('Failed to increment click:', error);
         }
@@ -27,11 +33,17 @@ export default function MechanicModal() {
   // ESC 키로 닫기
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') close();
+      if (e.key === 'Escape') {
+        if (showQuoteForm) {
+          setShowQuoteForm(false);
+        } else {
+          close();
+        }
+      }
     };
     window.addEventListener('keydown', handleEsc);
     return () => window.removeEventListener('keydown', handleEsc);
-  }, [close]);
+  }, [close, showQuoteForm]);
 
   // 스크롤 방지
   useEffect(() => {
@@ -43,6 +55,13 @@ export default function MechanicModal() {
     return () => {
       document.body.style.overflow = 'unset';
     };
+  }, [isOpen]);
+
+  // 모달 닫힐 때 견적 폼 초기화
+  useEffect(() => {
+    if (!isOpen) {
+      setShowQuoteForm(false);
+    }
   }, [isOpen]);
 
   if (!mechanic) return null;
@@ -70,7 +89,14 @@ export default function MechanicModal() {
           >
             {/* 헤더 */}
             <div className="flex items-center justify-between gap-4 p-6 border-b border-gray-100">
-              <h2 className="text-2xl font-bold text-gray-900 break-words min-w-0 flex-1">{sanitizeText(mechanic.name)}</h2>
+              <div className="flex items-center gap-2 min-w-0 flex-1">
+                <h2 className="text-2xl font-bold text-gray-900 break-words min-w-0 flex-1">
+                  {sanitizeText(mechanic.name)}
+                </h2>
+                {mechanic.isVerified && (
+                  <BadgeCheck size={24} className="text-blue-500 flex-shrink-0" />
+                )}
+              </div>
               <button
                 onClick={close}
                 className="p-2 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors flex-shrink-0"
@@ -81,7 +107,7 @@ export default function MechanicModal() {
 
             {/* 컨텐츠 */}
             <div className="flex-1 overflow-auto">
-              <div className="p-6 space-y-8">
+              <div className="p-6 space-y-6">
                 {/* 대표 이미지 */}
                 {mechanic.mainImageUrl && (
                   <div className="rounded-2xl overflow-hidden bg-gray-100 mx-auto w-[90%] md:w-[50%]">
@@ -92,6 +118,23 @@ export default function MechanicModal() {
                     />
                   </div>
                 )}
+
+                {/* 갤러리 */}
+                {mechanic.galleryImages && mechanic.galleryImages.length > 0 && (
+                  <GalleryCarousel
+                    images={mechanic.galleryImages}
+                    name={sanitizeText(mechanic.name)}
+                  />
+                )}
+
+                {/* 영업 상태 + 전문분야 */}
+                <div className="space-y-3">
+                  <OperatingStatusBadge
+                    operatingHours={mechanic.operatingHours}
+                    holidays={mechanic.holidays}
+                  />
+                  <SpecialtyTags specialties={mechanic.specialties} />
+                </div>
 
                 {/* 기본 정보 */}
                 <div className="grid md:grid-cols-2 gap-6">
@@ -122,7 +165,6 @@ export default function MechanicModal() {
                         </a>
                       </div>
                     </div>
-
                   </div>
 
                   {/* 소개 */}
@@ -133,6 +175,18 @@ export default function MechanicModal() {
                     </div>
                   )}
                 </div>
+
+                {/* 주차/결제수단 빠른 정보 */}
+                <QuickInfoRow
+                  parkingAvailable={mechanic.parkingAvailable}
+                  paymentMethods={mechanic.paymentMethods}
+                />
+
+                {/* 리뷰 섹션 */}
+                <ReviewSection
+                  reviews={mechanic.reviews}
+                  mechanicId={mechanic.id}
+                />
 
                 {/* 지도 */}
                 <div>
@@ -160,22 +214,53 @@ export default function MechanicModal() {
                   </div>
                 )}
 
+                {/* 견적 요청 폼 */}
+                <AnimatePresence>
+                  {showQuoteForm && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="overflow-hidden"
+                    >
+                      <div className="p-4 bg-gray-50 rounded-2xl">
+                        <QuoteRequestForm
+                          mechanicId={mechanic.id}
+                          mechanicName={mechanic.name}
+                          onClose={() => setShowQuoteForm(false)}
+                        />
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
                 {/* CTA 버튼 */}
-                <div className="flex gap-4">
+                <div className="flex gap-3">
                   <a
                     href={`tel:${mechanic.phone}`}
                     className="flex-1 bg-[#bf00ff] hover:bg-[#a600e0] text-white py-4 rounded-xl font-bold text-center transition-colors"
                   >
-                    전화 문의하기
+                    전화 문의
                   </a>
+                  <button
+                    onClick={() => setShowQuoteForm(!showQuoteForm)}
+                    className={`flex-1 flex items-center justify-center gap-2 py-4 rounded-xl font-bold transition-colors ${
+                      showQuoteForm
+                        ? 'bg-gray-200 text-gray-600'
+                        : 'bg-orange-500 hover:bg-orange-600 text-white'
+                    }`}
+                  >
+                    <FileText size={18} />
+                    {showQuoteForm ? '닫기' : '견적 요청'}
+                  </button>
                   <button
                     onClick={() => {
                       const url = `https://map.naver.com/v5/search/${encodeURIComponent(mechanic.address)}`;
                       window.open(url, '_blank');
                     }}
-                    className="flex items-center justify-center gap-2 px-6 py-4 border-2 border-gray-200 rounded-xl font-bold text-gray-700 hover:border-[#bf00ff] hover:text-purple-600 transition-colors"
+                    className="flex items-center justify-center gap-2 px-5 py-4 border-2 border-gray-200 rounded-xl font-bold text-gray-700 hover:border-[#bf00ff] hover:text-purple-600 transition-colors"
                   >
-                    <ExternalLink size={20} />
+                    <ExternalLink size={18} />
                     길찾기
                   </button>
                 </div>

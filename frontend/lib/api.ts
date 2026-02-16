@@ -1,5 +1,5 @@
 import axios, { AxiosRequestConfig } from 'axios';
-import { Mechanic, Inquiry, UnreadCount, ApiResponse } from '@/types';
+import { Mechanic, Inquiry, UnreadCount, ApiResponse, QuoteRequest, Review } from '@/types';
 
 const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL,
@@ -180,6 +180,69 @@ export const inquiryApi = {
 
   // 관리자: 삭제
   delete: (id: number) => api.delete(`/inquiries/${id}`),
+};
+
+// Quote Request API (견적 요청)
+export const quoteRequestApi = {
+  // 공개: 견적 요청 생성
+  create: (data: {
+    mechanicId: number;
+    customerName: string;
+    customerPhone: string;
+    carModel: string;
+    carYear?: string;
+    description: string;
+    images?: string[];
+  }) => api.post<QuoteRequest>('/quote-requests', data),
+
+  // 관리자: 전체 목록
+  getAll: (params?: { page?: number; limit?: number; status?: string }) =>
+    api.get<ApiResponse<QuoteRequest[]>>('/quote-requests', { params }),
+
+  // 사장님: 정비소별 목록
+  getByMechanic: (mechanicId: number, params?: { page?: number; limit?: number }) =>
+    api.get<ApiResponse<QuoteRequest[]>>(`/quote-requests/mechanic/${mechanicId}`, { params }),
+
+  // 관리자/사장님: 상세
+  getOne: (id: number) => api.get<QuoteRequest>(`/quote-requests/${id}`),
+
+  // 관리자/사장님: 상태 변경
+  updateStatus: (id: number, status: string) =>
+    api.patch(`/quote-requests/${id}/status`, { status }),
+
+  // 관리자: 미확인 건수
+  getUnreadCount: () => api.get<number>('/quote-requests/unread-count'),
+};
+
+// Review API (리뷰)
+export const reviewApi = {
+  // 공개: 리뷰 작성
+  create: (data: {
+    mechanicId: number;
+    nickname: string;
+    content: string;
+    rating: number;
+  }) => api.post<Review>('/reviews', data),
+
+  // 공개: 정비소별 승인된 리뷰
+  getByMechanic: (mechanicId: number) =>
+    api.get<Review[]>(`/reviews/mechanic/${mechanicId}`),
+
+  // 관리자: 전체 리뷰 목록
+  getAll: (params?: { page?: number; limit?: number; approved?: string }) =>
+    api.get<ApiResponse<Review[]>>('/reviews', { params }),
+
+  // 관리자: 승인
+  approve: (id: number) => api.patch(`/reviews/${id}/approve`),
+
+  // 관리자: 반려
+  reject: (id: number) => api.patch(`/reviews/${id}/reject`),
+
+  // 관리자: 삭제
+  delete: (id: number) => api.delete(`/reviews/${id}`),
+
+  // 관리자: 미승인 리뷰 수
+  getPendingCount: () => api.get<number>('/reviews/pending-count'),
 };
 
 export default api;

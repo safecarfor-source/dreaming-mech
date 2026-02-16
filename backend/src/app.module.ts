@@ -13,6 +13,9 @@ import { CommonModule } from './common/common.module';
 import { AnalyticsModule } from './analytics/analytics.module';
 import { OwnerModule } from './owner/owner.module';
 import { InquiryModule } from './inquiry/inquiry.module';
+import { NotificationModule } from './notification/notification.module';
+import { QuoteRequestModule } from './quote-request/quote-request.module';
+import { ReviewModule } from './review/review.module';
 
 @Module({
   imports: [
@@ -33,6 +36,9 @@ import { InquiryModule } from './inquiry/inquiry.module';
     AnalyticsModule,
     OwnerModule,
     InquiryModule,
+    NotificationModule,
+    QuoteRequestModule,
+    ReviewModule,
   ],
   controllers: [AppController],
   providers: [

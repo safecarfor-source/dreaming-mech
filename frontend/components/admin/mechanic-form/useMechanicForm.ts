@@ -1,9 +1,9 @@
 import { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import type { Mechanic } from '@/types';
+import type { Mechanic, OperatingHours, HolidayInfo } from '@/types';
 import { isValidYouTubeUrl, sanitizeYouTubeUrl } from '@/lib/youtube';
 
-interface MechanicFormData {
+export interface MechanicFormData {
   name: string;
   location: string;
   phone: string;
@@ -15,6 +15,14 @@ interface MechanicFormData {
   youtubeUrl: string;
   youtubeLongUrl: string;
   isActive: boolean;
+  // 상세 정보
+  operatingHours: OperatingHours | null;
+  specialties: string[];
+  isVerified: boolean;
+  parkingAvailable: boolean | null;
+  paymentMethods: string[];
+  holidays: HolidayInfo | null;
+  galleryImages: string[];
 }
 
 interface UseMechanicFormProps {
@@ -39,6 +47,14 @@ export function useMechanicForm({ mechanic, mode, apiBasePath = '/mechanics', re
     youtubeUrl: mechanic?.youtubeUrl || '',
     youtubeLongUrl: mechanic?.youtubeLongUrl || '',
     isActive: mechanic?.isActive ?? true,
+    // 상세 정보
+    operatingHours: mechanic?.operatingHours || null,
+    specialties: mechanic?.specialties || [],
+    isVerified: mechanic?.isVerified || false,
+    parkingAvailable: mechanic?.parkingAvailable ?? null,
+    paymentMethods: mechanic?.paymentMethods || [],
+    holidays: mechanic?.holidays || null,
+    galleryImages: mechanic?.galleryImages || [],
   });
 
   const [isSearching, setIsSearching] = useState(false);
@@ -150,8 +166,14 @@ export function useMechanicForm({ mechanic, mode, apiBasePath = '/mechanics', re
       youtubeLongUrl: formData.youtubeLongUrl
         ? (sanitizeYouTubeUrl(formData.youtubeLongUrl) || null)
         : null,
-      // Add galleryImages field (empty array for now)
-      galleryImages: [],
+      // 상세 정보
+      galleryImages: formData.galleryImages,
+      operatingHours: formData.operatingHours,
+      specialties: formData.specialties,
+      isVerified: formData.isVerified,
+      parkingAvailable: formData.parkingAvailable,
+      paymentMethods: formData.paymentMethods,
+      holidays: formData.holidays,
     };
 
     setIsSaving(true);
