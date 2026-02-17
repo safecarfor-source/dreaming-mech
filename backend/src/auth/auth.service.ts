@@ -57,63 +57,6 @@ export class AuthService {
     return admin;
   }
 
-  // ── 네이버 OAuth ──
-
-  getNaverLoginUrl() {
-    const params = new URLSearchParams({
-      client_id: process.env.NAVER_LOGIN_CLIENT_ID || '',
-      redirect_uri: process.env.NAVER_LOGIN_CALLBACK_URL || '',
-      response_type: 'code',
-      state: Math.random().toString(36).substring(7),
-    });
-    return `https://nid.naver.com/oauth2.0/authorize?${params}`;
-  }
-
-  async handleNaverCallback(code: string, state: string) {
-    // 1. code → access_token 교환
-    const tokenRes = await axios.get('https://nid.naver.com/oauth2.0/token', {
-      params: {
-        grant_type: 'authorization_code',
-        client_id: process.env.NAVER_LOGIN_CLIENT_ID,
-        client_secret: process.env.NAVER_LOGIN_CLIENT_SECRET,
-        code,
-        state,
-      },
-    });
-
-    const accessToken = tokenRes.data.access_token;
-    if (!accessToken) {
-      throw new UnauthorizedException('네이버 로그인에 실패했습니다.');
-    }
-
-    // 2. access_token → 사용자 정보 조회
-    const userRes = await axios.get('https://openapi.naver.com/v1/nid/me', {
-      headers: { Authorization: `Bearer ${accessToken}` },
-    });
-
-    const { id, email, name, profile_image } = userRes.data.response;
-
-    // 3. Owner upsert (있으면 업데이트, 없으면 생성)
-    const owner = await this.prisma.owner.upsert({
-      where: { naverId: id },
-      update: { email, name, profileImage: profile_image },
-      create: {
-        naverId: id,
-        email,
-        name,
-        profileImage: profile_image,
-        provider: 'naver',
-      },
-    });
-
-    // 4. JWT 발급
-    const payload = { sub: owner.id, email: owner.email || '', role: 'owner' as const };
-    return {
-      access_token: this.jwtService.sign(payload),
-      owner,
-    };
-  }
-
   // ── 카카오 OAuth ──
 
   getKakaoLoginUrl() {
@@ -126,6 +69,8 @@ export class AuthService {
   }
 
   async handleKakaoCallback(code: string) {
+    console.log('카카오 콜백 시작, code:', code?.substring(0, 20) + '...');
+
     // 1. code → access_token 교환
     const tokenRes = await axios.post(
       'https://kauth.kakao.com/oauth/token',
@@ -140,6 +85,7 @@ export class AuthService {
     );
 
     const accessToken = tokenRes.data.access_token;
+    console.log('카카오 토큰 교환 결과:', accessToken ? '성공' : '실패', tokenRes.data.error || '');
     if (!accessToken) {
       throw new UnauthorizedException('카카오 로그인에 실패했습니다.');
     }
@@ -152,6 +98,7 @@ export class AuthService {
     const kakaoId = String(userRes.data.id);
     const kakaoAccount = userRes.data.kakao_account || {};
     const profile = kakaoAccount.profile || {};
+    console.log('카카오 사용자 정보:', { kakaoId, email: kakaoAccount.email, nickname: profile.nickname });
 
     // 3. Owner upsert
     const owner = await this.prisma.owner.upsert({

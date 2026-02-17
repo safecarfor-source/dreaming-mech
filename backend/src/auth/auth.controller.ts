@@ -48,39 +48,6 @@ export class AuthController {
     return { message: 'Logged out successfully' };
   }
 
-  // ── 네이버 소셜 로그인 ──
-
-  @Get('naver')
-  naverLogin(@Response() res: ExpressResponse) {
-    const url = this.authService.getNaverLoginUrl();
-    res.redirect(url);
-  }
-
-  @Get('naver/callback')
-  async naverCallback(
-    @Query('code') code: string,
-    @Query('state') state: string,
-    @Response() res: ExpressResponse,
-  ) {
-    try {
-      const result = await this.authService.handleNaverCallback(code, state);
-      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
-
-      res.cookie('owner_token', result.access_token, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
-        maxAge: 24 * 60 * 60 * 1000,
-        path: '/',
-      });
-
-      res.redirect(`${frontendUrl}/owner/callback?status=${result.owner.status}`);
-    } catch {
-      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
-      res.redirect(`${frontendUrl}/owner/login?error=naver_failed`);
-    }
-  }
-
   // ── 카카오 소셜 로그인 ──
 
   @Get('kakao')
@@ -107,7 +74,8 @@ export class AuthController {
       });
 
       res.redirect(`${frontendUrl}/owner/callback?status=${result.owner.status}`);
-    } catch {
+    } catch (error: any) {
+      console.error('카카오 로그인 에러:', error?.response?.data || error?.message || error);
       const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
       res.redirect(`${frontendUrl}/owner/login?error=kakao_failed`);
     }

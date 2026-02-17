@@ -90,7 +90,7 @@ export interface Owner {
   email?: string;
   name?: string;
   profileImage?: string;
-  provider: 'naver' | 'kakao';
+  provider: string;
   status: 'PENDING' | 'APPROVED' | 'REJECTED';
   rejectionReason?: string;
   businessLicenseUrl?: string;

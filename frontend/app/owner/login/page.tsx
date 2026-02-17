@@ -28,16 +28,6 @@ function LoginContent() {
 
         <div className="space-y-4">
           <a
-            href={`${apiUrl}/auth/naver`}
-            className="w-full flex items-center justify-center gap-3 px-6 py-3 bg-[#03C75A] text-white font-semibold rounded-lg hover:bg-[#02b350] transition-colors"
-          >
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
-              <path d="M13.5 10.56L6.26 0H0v20h6.5V9.44L13.74 20H20V0h-6.5v10.56z" />
-            </svg>
-            네이버로 로그인
-          </a>
-
-          <a
             href={`${apiUrl}/auth/kakao`}
             className="w-full flex items-center justify-center gap-3 px-6 py-3 bg-[#FEE500] text-[#191919] font-semibold rounded-lg hover:bg-[#fdd800] transition-colors"
           >
