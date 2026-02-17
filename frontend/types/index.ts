@@ -147,3 +147,28 @@ export interface ApiResponse<T> {
     totalPages: number;
   };
 }
+
+// 📱💻 동기화 메시지 타입
+export type SyncMessageType = 'INSTRUCTION' | 'NOTE' | 'LINK' | 'IMAGE';
+export type SyncMessageStatus = 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
+
+export interface SyncMessage {
+  id: number;
+  content: string;
+  type: SyncMessageType;
+  status: SyncMessageStatus;
+  deviceFrom: string;
+  priority: number;
+  images?: string[];
+  reply?: string;
+  createdAt: string;
+  updatedAt: string;
+  completedAt?: string;
+}
+
+export interface SyncStats {
+  pending: number;
+  inProgress: number;
+  completed: number;
+  total: number;
+}
