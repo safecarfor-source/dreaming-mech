@@ -87,22 +87,22 @@ export default function Home() {
         totalClicks={totalClicks}
       />
 
-      {/* 다크 → 흰색 그라데이션 전환 */}
-      <div className="h-40 bg-gradient-to-b from-black/60 via-black/30 via-30% to-white" />
+      {/* 다크 → 라이트 그라데이션 전환 */}
+      <div className="h-32 md:h-40 bg-gradient-to-b from-black/60 via-black/30 via-30% to-[#FAFAF8]" />
 
-      {/* 정비사 목록 섹션 - 흰색 배경 */}
-      <section id="map" className="bg-white pb-24">
-        <div className="container mx-auto px-6">
+      {/* 정비사 목록 섹션 */}
+      <section id="map" className="bg-[#FAFAF8] pb-16 md:pb-24">
+        <div className="container mx-auto px-4 md:px-6">
           {/* 섹션 헤더 */}
           <AnimatedSection animation="slideUp" duration={0.8}>
-            <div className="text-center mb-16">
-              <p className="text-[#bf00ff] text-sm font-medium tracking-widest mb-4">
+            <div className="text-center mb-10 md:mb-16">
+              <p className="text-[#FF6B35] text-xs md:text-sm font-semibold tracking-widest mb-3 md:mb-4">
                 MECHANICS
               </p>
-              <h2 className="text-4xl md:text-5xl font-black text-[#111111] mb-4">
-                전국 <span className="text-[#bf00ff]">팔도</span> 정비사
+              <h2 className="text-3xl md:text-5xl font-black text-gray-900 mb-3 md:mb-4">
+                전국 <span className="text-[#1B4D3E]">팔도</span> 정비사
               </h2>
-              <p className="text-[#666666] text-lg">
+              <p className="text-gray-500 text-base md:text-lg">
                 실력과 신뢰를 갖춘 전문가들을 만나보세요
               </p>
             </div>
@@ -127,16 +127,16 @@ export default function Home() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.3 }}
-                className="bg-gradient-to-r from-[#bf00ff]/10 to-purple-50 rounded-2xl p-4 md:p-6 mb-6 md:mb-8 flex items-center justify-between"
+                className="bg-gradient-to-r from-[#1B4D3E]/8 to-[#E8F5E9] rounded-2xl p-4 md:p-6 mb-4 md:mb-8 flex items-center justify-between"
               >
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 md:w-12 md:h-12 bg-[#bf00ff] rounded-xl flex items-center justify-center">
+                <div className="flex items-center gap-2.5 md:gap-3">
+                  <div className="w-10 h-10 md:w-12 md:h-12 bg-[#1B4D3E] rounded-xl flex items-center justify-center">
                     <span className="text-white text-lg md:text-xl font-black">
                       {filteredMechanics.length}
                     </span>
                   </div>
                   <div>
-                    <h3 className="text-lg md:text-2xl font-black text-[#111111]">
+                    <h3 className="text-base md:text-2xl font-black text-gray-900">
                       {selectedRegionInfo.fullName}
                     </h3>
                     <p className="text-xs md:text-sm text-gray-500">
@@ -146,8 +146,8 @@ export default function Home() {
                 </div>
                 <button
                   onClick={() => setSelectedRegion(null)}
-                  className="text-sm font-semibold text-[#bf00ff] hover:bg-[#bf00ff] hover:text-white transition-all
-                    border-2 border-[#bf00ff] rounded-full px-4 py-2"
+                  className="text-xs md:text-sm font-semibold text-[#1B4D3E] hover:bg-[#1B4D3E] hover:text-white transition-all
+                    border-2 border-[#1B4D3E] rounded-full px-3 md:px-4 py-1.5 md:py-2"
                 >
                   전체 보기
                 </button>
@@ -157,7 +157,7 @@ export default function Home() {
 
           {/* 카드 그리드 */}
           {loading ? (
-            <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-8">
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6">
               {[...Array(6)].map((_, i) => (
                 <CardSkeleton key={i} />
               ))}
@@ -168,12 +168,12 @@ export default function Home() {
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="text-center py-16"
+              className="text-center py-12 md:py-16"
             >
-              <p className="text-gray-400 text-lg mb-2">
+              <p className="text-gray-500 text-base md:text-lg mb-2">
                 이 지역에 등록된 정비소가 없습니다.
               </p>
-              <p className="text-gray-300 text-sm">
+              <p className="text-gray-400 text-sm">
                 곧 믿을 수 있는 정비소를 찾아 등록하겠습니다!
               </p>
             </motion.div>
@@ -185,7 +185,7 @@ export default function Home() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.3 }}
-                className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-8"
+                className="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6"
               >
                 {filteredMechanics.map((mechanic, index) => (
                   <AnimatedSection

@@ -16,7 +16,7 @@ export default function ErrorMessage({ message, onRetry }: Props) {
       {onRetry && (
         <button
           onClick={onRetry}
-          className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+          className="px-6 py-2 bg-[#1B4D3E] text-white rounded-lg hover:bg-[#143D30] transition-colors"
         >
           다시 시도
         </button>

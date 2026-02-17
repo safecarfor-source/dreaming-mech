@@ -16,7 +16,7 @@ export default function MechanicCard({ mechanic, onClick }: Props) {
       whileHover={{ scale: 1.02, y: -4 }}
       whileTap={{ scale: 0.98 }}
       onClick={onClick}
-      className="bg-white border border-gray-200 rounded-xl md:rounded-2xl overflow-hidden cursor-pointer group transition-all hover:border-[#bf00ff] hover:shadow-xl hover:shadow-[#bf00ff]/10"
+      className="bg-white border border-gray-200 rounded-xl md:rounded-2xl overflow-hidden cursor-pointer group transition-all hover:border-[#1B4D3E]/40 hover:shadow-lg hover:shadow-[#1B4D3E]/8"
     >
       {/* 이미지 - 정사각형 (1:1) */}
       <div className="aspect-square bg-gray-100 relative overflow-hidden">
@@ -35,7 +35,7 @@ export default function MechanicCard({ mechanic, onClick }: Props) {
 
       {/* 정보 */}
       <div className="p-3 md:p-6">
-        <h3 className="text-sm md:text-xl font-bold text-gray-900 mb-2 md:mb-4 group-hover:text-purple-600 transition-colors break-words line-clamp-1">
+        <h3 className="text-sm md:text-xl font-bold text-gray-900 mb-2 md:mb-4 group-hover:text-[#1B4D3E] transition-colors break-words line-clamp-1">
           {sanitizeText(mechanic.name)}
         </h3>
 

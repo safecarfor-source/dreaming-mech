@@ -47,7 +47,7 @@ export default function ReviewSection({ reviews, mechanicId }: Props) {
         </h3>
         <button
           onClick={() => setShowForm(!showForm)}
-          className="text-sm text-purple-600 font-medium hover:text-purple-700"
+          className="text-sm text-[#1B4D3E] font-medium hover:text-[#143D30]"
         >
           {showForm ? '닫기' : '리뷰 작성'}
         </button>

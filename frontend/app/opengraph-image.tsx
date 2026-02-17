@@ -10,7 +10,7 @@ export default async function Image() {
     (
       <div
         style={{
-          background: 'linear-gradient(135deg, #0a0a0a 0%, #1a0a2e 50%, #0a0a0a 100%)',
+          background: 'linear-gradient(135deg, #0F2B22 0%, #1B4D3E 50%, #0F2B22 100%)',
           width: '100%',
           height: '100%',
           display: 'flex',
@@ -28,7 +28,7 @@ export default async function Image() {
             right: '120px',
             width: '200px',
             height: '200px',
-            background: 'rgba(191, 0, 255, 0.15)',
+            background: 'rgba(255, 107, 53, 0.15)',
             borderRadius: '50%',
             filter: 'blur(60px)',
           }}
@@ -40,7 +40,7 @@ export default async function Image() {
             left: '100px',
             width: '160px',
             height: '160px',
-            background: 'rgba(166, 245, 70, 0.1)',
+            background: 'rgba(45, 122, 95, 0.2)',
             borderRadius: '50%',
             filter: 'blur(50px)',
           }}
@@ -69,7 +69,7 @@ export default async function Image() {
             style={{
               fontSize: '80px',
               fontWeight: 900,
-              color: '#bf00ff',
+              color: '#FF6B35',
               letterSpacing: '-2px',
             }}
           >
@@ -81,7 +81,7 @@ export default async function Image() {
         <div
           style={{
             fontSize: '28px',
-            color: '#999999',
+            color: '#a0c4b8',
             marginBottom: '48px',
             letterSpacing: '1px',
           }}
@@ -108,8 +108,8 @@ export default async function Image() {
               border: '1px solid rgba(255, 255, 255, 0.1)',
             }}
           >
-            <span style={{ fontSize: '36px', fontWeight: 900, color: '#bf00ff' }}>5.3만</span>
-            <span style={{ fontSize: '14px', color: '#666', marginTop: '4px' }}>유튜브 구독자</span>
+            <span style={{ fontSize: '36px', fontWeight: 900, color: '#FF6B35' }}>5.3만</span>
+            <span style={{ fontSize: '14px', color: '#7faa9a', marginTop: '4px' }}>유튜브 구독자</span>
           </div>
           <div
             style={{
@@ -122,8 +122,8 @@ export default async function Image() {
               border: '1px solid rgba(255, 255, 255, 0.1)',
             }}
           >
-            <span style={{ fontSize: '36px', fontWeight: 900, color: '#a6f546' }}>61만</span>
-            <span style={{ fontSize: '14px', color: '#666', marginTop: '4px' }}>월간 조회수</span>
+            <span style={{ fontSize: '36px', fontWeight: 900, color: '#FF6B35' }}>34만</span>
+            <span style={{ fontSize: '14px', color: '#7faa9a', marginTop: '4px' }}>월간 조회수</span>
           </div>
           <div
             style={{
@@ -137,7 +137,7 @@ export default async function Image() {
             }}
           >
             <span style={{ fontSize: '36px', fontWeight: 900, color: 'white' }}>전국</span>
-            <span style={{ fontSize: '14px', color: '#666', marginTop: '4px' }}>정비소 네트워크</span>
+            <span style={{ fontSize: '14px', color: '#7faa9a', marginTop: '4px' }}>정비소 네트워크</span>
           </div>
         </div>
 
@@ -147,7 +147,7 @@ export default async function Image() {
             position: 'absolute',
             bottom: '32px',
             fontSize: '18px',
-            color: '#555555',
+            color: '#5d9a87',
             letterSpacing: '2px',
           }}
         >

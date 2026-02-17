@@ -79,7 +79,7 @@ export default function HeroSection({ totalMechanics, totalClicks }: Props) {
         <motion.p
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-[#bf00ff] text-xl md:text-2xl lg:text-3xl font-medium tracking-widest mb-6"
+          className="text-[#FF6B35] text-lg md:text-2xl lg:text-3xl font-medium tracking-widest mb-4 md:mb-6"
         >
           전국의 정비소를 소개합니다.
         </motion.p>
@@ -89,11 +89,12 @@ export default function HeroSection({ totalMechanics, totalClicks }: Props) {
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="text-[2rem] sm:text-5xl md:text-7xl lg:text-8xl font-black leading-tight mb-8 min-h-[140px] sm:min-h-[200px] md:min-h-[280px] lg:min-h-[320px] break-keep whitespace-nowrap"
+          className="font-black leading-tight mb-6 md:mb-8 min-h-[120px] sm:min-h-[200px] md:min-h-[280px] lg:min-h-[320px] break-keep whitespace-nowrap"
+          style={{ fontSize: 'clamp(1.75rem, 5vw, 6rem)' }}
         >
           {headline.displayedText.split('\n').map((line, index) => (
             <span key={index}>
-              {index === 0 ? line : <span className="text-[#bf00ff]">{line}</span>}
+              {index === 0 ? line : <span className="text-[#FF6B35]">{line}</span>}
               {index === 0 && <br />}
             </span>
           ))}
@@ -105,7 +106,7 @@ export default function HeroSection({ totalMechanics, totalClicks }: Props) {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 2.5 }}
-          className="text-xl md:text-2xl lg:text-3xl text-gray-500 max-w-3xl mx-auto mb-2 min-h-[32px] md:min-h-[40px] break-keep"
+          className="text-base md:text-2xl lg:text-3xl text-gray-400 max-w-3xl mx-auto mb-1 md:mb-2 min-h-[28px] md:min-h-[40px] break-keep"
         >
           {description1.displayedText}
           {!description1.isComplete && <span className="animate-pulse">|</span>}
@@ -116,7 +117,7 @@ export default function HeroSection({ totalMechanics, totalClicks }: Props) {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 3.5 }}
-          className="text-xl md:text-2xl lg:text-3xl text-gray-500 max-w-3xl mx-auto min-h-[32px] md:min-h-[40px] break-keep"
+          className="text-base md:text-2xl lg:text-3xl text-gray-400 max-w-3xl mx-auto min-h-[28px] md:min-h-[40px] break-keep"
         >
           {description2.displayedText}
           {!description2.isComplete && <span className="animate-pulse">|</span>}

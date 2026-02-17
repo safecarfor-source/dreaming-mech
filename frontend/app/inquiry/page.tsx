@@ -44,20 +44,20 @@ export default function InquiryPage() {
   if (isSuccess) {
     return (
       <Layout>
-        <section className="min-h-screen flex items-center justify-center bg-[#0a0a0a] pt-14">
+        <section className="min-h-screen flex items-center justify-center bg-[#FAFAF8] pt-14">
           <div className="text-center px-6">
-            <div className="w-20 h-20 bg-[#9333ea]/20 rounded-full flex items-center justify-center mx-auto mb-6">
-              <CheckCircle2 size={40} className="text-[#9333ea]" />
+            <div className="w-20 h-20 bg-[#E8F5E9] rounded-full flex items-center justify-center mx-auto mb-6">
+              <CheckCircle2 size={40} className="text-[#1B4D3E]" />
             </div>
-            <h2 className="text-2xl md:text-3xl font-bold text-white mb-3">
+            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-3">
               문의가 접수되었습니다
             </h2>
-            <p className="text-gray-400 mb-8">
+            <p className="text-gray-500 mb-8">
               빠른 시간 내에 확인 후 연락드리겠습니다.
             </p>
             <button
               onClick={() => setIsSuccess(false)}
-              className="px-6 py-3 bg-[#9333ea] hover:bg-[#7e22ce] text-white rounded-xl font-semibold transition-colors"
+              className="px-6 py-3 bg-[#1B4D3E] hover:bg-[#143D30] text-white rounded-xl font-semibold transition-colors"
             >
               추가 문의하기
             </button>
@@ -69,26 +69,26 @@ export default function InquiryPage() {
 
   return (
     <Layout>
-      <section className="min-h-screen bg-[#0a0a0a] pt-24 md:pt-28 pb-20">
-        <div className="container mx-auto px-6 max-w-xl">
+      <section className="min-h-screen bg-[#FAFAF8] pt-20 md:pt-28 pb-16 md:pb-20">
+        <div className="container mx-auto px-4 md:px-6 max-w-xl">
           {/* 헤더 */}
-          <div className="text-center mb-10">
-            <h1 className="text-3xl md:text-4xl font-bold text-white mb-3">
+          <div className="text-center mb-8 md:mb-10">
+            <h1 className="text-2xl md:text-4xl font-bold text-gray-900 mb-2 md:mb-3">
               문의하기
             </h1>
-            <p className="text-gray-400">
+            <p className="text-gray-500 text-sm md:text-base">
               궁금한 점이 있으시면 편하게 문의해주세요.
             </p>
           </div>
 
           {/* 탭 */}
-          <div className="flex bg-white/5 rounded-xl p-1 mb-8">
+          <div className="flex bg-gray-100 rounded-xl p-1 mb-6 md:mb-8">
             <button
               onClick={() => setTab('CUSTOMER')}
               className={`flex-1 py-3 rounded-lg text-sm font-semibold transition-all ${
                 tab === 'CUSTOMER'
-                  ? 'bg-[#9333ea] text-white'
-                  : 'text-gray-400 hover:text-white'
+                  ? 'bg-[#1B4D3E] text-white shadow-sm'
+                  : 'text-gray-500 hover:text-gray-700'
               }`}
             >
               일반 문의
@@ -97,8 +97,8 @@ export default function InquiryPage() {
               onClick={() => setTab('MECHANIC')}
               className={`flex-1 py-3 rounded-lg text-sm font-semibold transition-all ${
                 tab === 'MECHANIC'
-                  ? 'bg-[#9333ea] text-white'
-                  : 'text-gray-400 hover:text-white'
+                  ? 'bg-[#1B4D3E] text-white shadow-sm'
+                  : 'text-gray-500 hover:text-gray-700'
               }`}
             >
               정비사 문의
@@ -106,11 +106,11 @@ export default function InquiryPage() {
           </div>
 
           {/* 폼 */}
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={handleSubmit} className="space-y-4 md:space-y-5">
             {tab === 'MECHANIC' && (
               <div>
-                <label className="flex items-center gap-2 text-sm font-medium text-gray-300 mb-2">
-                  <Building2 size={16} />
+                <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                  <Building2 size={16} className="text-gray-400" />
                   상호명
                 </label>
                 <input
@@ -118,14 +118,14 @@ export default function InquiryPage() {
                   value={businessName}
                   onChange={(e) => setBusinessName(e.target.value)}
                   placeholder="정비소 상호명"
-                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-[#9333ea] transition-colors"
+                  className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#1B4D3E] focus:ring-1 focus:ring-[#1B4D3E]/20 transition-colors"
                 />
               </div>
             )}
 
             <div>
-              <label className="flex items-center gap-2 text-sm font-medium text-gray-300 mb-2">
-                <User size={16} />
+              <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                <User size={16} className="text-gray-400" />
                 {tab === 'MECHANIC' ? '대표자명' : '이름'}
               </label>
               <input
@@ -134,13 +134,13 @@ export default function InquiryPage() {
                 onChange={(e) => setName(e.target.value)}
                 placeholder={tab === 'MECHANIC' ? '대표자 성함' : '이름을 입력해주세요'}
                 required
-                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-[#9333ea] transition-colors"
+                className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#1B4D3E] focus:ring-1 focus:ring-[#1B4D3E]/20 transition-colors"
               />
             </div>
 
             <div>
-              <label className="flex items-center gap-2 text-sm font-medium text-gray-300 mb-2">
-                <Phone size={16} />
+              <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                <Phone size={16} className="text-gray-400" />
                 연락처
               </label>
               <input
@@ -149,13 +149,13 @@ export default function InquiryPage() {
                 onChange={(e) => setPhone(e.target.value)}
                 placeholder="010-0000-0000"
                 required
-                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-[#9333ea] transition-colors"
+                className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#1B4D3E] focus:ring-1 focus:ring-[#1B4D3E]/20 transition-colors"
               />
             </div>
 
             <div>
-              <label className="flex items-center gap-2 text-sm font-medium text-gray-300 mb-2">
-                <MessageSquare size={16} />
+              <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                <MessageSquare size={16} className="text-gray-400" />
                 문의 내용
               </label>
               <textarea
@@ -168,14 +168,14 @@ export default function InquiryPage() {
                 }
                 required
                 rows={5}
-                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-[#9333ea] transition-colors resize-none"
+                className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#1B4D3E] focus:ring-1 focus:ring-[#1B4D3E]/20 transition-colors resize-none"
               />
             </div>
 
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full flex items-center justify-center gap-2 py-4 bg-[#9333ea] hover:bg-[#7e22ce] disabled:opacity-50 text-white rounded-xl font-semibold text-lg transition-colors"
+              className="w-full flex items-center justify-center gap-2 py-4 bg-[#FF6B35] hover:bg-[#E55A2B] disabled:opacity-50 text-white rounded-xl font-semibold text-base md:text-lg transition-colors"
             >
               {isSubmitting ? (
                 '접수 중...'
