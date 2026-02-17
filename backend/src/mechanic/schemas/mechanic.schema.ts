@@ -119,6 +119,9 @@ export const CreateMechanicSchema = z.object({
     .optional(),
 
   isActive: z.boolean().optional().default(true),
+
+  // 사장님 연결 (관리자 전용)
+  ownerId: z.number().int().positive().nullable().optional(),
 });
 
 /**

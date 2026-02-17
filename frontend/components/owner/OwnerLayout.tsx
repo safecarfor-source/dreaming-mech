@@ -14,6 +14,8 @@ import {
   Upload,
   FileCheck,
   Image as ImageIcon,
+  AlertCircle,
+  RefreshCw,
 } from 'lucide-react';
 
 interface Props {
@@ -39,6 +41,9 @@ export default function OwnerLayout({ children }: Props) {
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // 재신청 모드
+  const [showReapply, setShowReapply] = useState(false);
 
   useEffect(() => {
     setIsHydrated(true);
@@ -107,6 +112,40 @@ export default function OwnerLayout({ children }: Props) {
       alert('사업자등록증이 제출되었습니다. 관리자 확인 후 승인됩니다.');
     } catch {
       setUploadError('제출에 실패했습니다. 다시 시도해주세요.');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  // 재신청 처리
+  const handleReapply = async () => {
+    if (!licenseFile || !businessName.trim()) {
+      setUploadError('업체명과 사업자등록증 사진을 모두 입력해주세요.');
+      return;
+    }
+
+    setUploading(true);
+    setUploadError('');
+
+    try {
+      // 1. 이미지 업로드
+      const uploadRes = await uploadApi.uploadImage(licenseFile);
+      const imageUrl = uploadRes.data.url;
+
+      // 2. 재신청 API 호출
+      await ownerAuthApi.reapply({
+        businessLicenseUrl: imageUrl,
+        businessName: businessName.trim(),
+      });
+
+      // 3. 프로필 새로고침
+      const profileRes = await ownerAuthApi.getProfile();
+      login(profileRes.data);
+
+      setShowReapply(false);
+      alert('재신청이 완료되었습니다. 관리자 확인 후 승인됩니다.');
+    } catch {
+      setUploadError('재신청에 실패했습니다. 다시 시도해주세요.');
     } finally {
       setUploading(false);
     }
@@ -241,17 +280,138 @@ export default function OwnerLayout({ children }: Props) {
 
   // 거절 상태
   if (owner?.status === 'REJECTED') {
+    // 재신청 폼
+    if (showReapply) {
+      return (
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+          <div className="max-w-lg w-full bg-white rounded-2xl shadow-lg p-8">
+            <div className="text-center mb-6">
+              <RefreshCw className="mx-auto text-purple-500 mb-3" size={48} />
+              <h2 className="text-xl font-bold text-gray-900 mb-2">재신청하기</h2>
+              <p className="text-gray-500 text-sm">
+                업체명과 사업자등록증을 다시 제출해주세요.
+              </p>
+            </div>
+
+            {/* 업체명 입력 */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">업체명</label>
+              <input
+                type="text"
+                value={businessName}
+                onChange={(e) => setBusinessName(e.target.value)}
+                placeholder="예: 한국타이어 시흥총판"
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none text-gray-900 bg-white"
+              />
+            </div>
+
+            {/* 사업자등록증 업로드 */}
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-1">사업자등록증 사진</label>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleFileChange}
+                className="hidden"
+              />
+
+              {licensePreview ? (
+                <div className="relative">
+                  <img
+                    src={licensePreview}
+                    alt="사업자등록증 미리보기"
+                    className="w-full rounded-xl border border-gray-200 max-h-80 object-contain bg-gray-50"
+                  />
+                  <button
+                    onClick={() => {
+                      setLicenseFile(null);
+                      setLicensePreview(null);
+                      if (fileInputRef.current) fileInputRef.current.value = '';
+                    }}
+                    className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                  >
+                    <X size={16} />
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  className="w-full border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-purple-400 hover:bg-purple-50 transition-colors"
+                >
+                  <ImageIcon size={40} className="mx-auto text-gray-400 mb-2" />
+                  <p className="text-gray-500 text-sm">클릭하여 사업자등록증 사진을 업로드하세요</p>
+                  <p className="text-gray-400 text-xs mt-1">JPG, PNG, WebP (최대 10MB)</p>
+                </button>
+              )}
+            </div>
+
+            {uploadError && (
+              <p className="text-red-500 text-sm mb-4 text-center">{uploadError}</p>
+            )}
+
+            <button
+              onClick={handleReapply}
+              disabled={uploading || !licenseFile || !businessName.trim()}
+              className="w-full bg-purple-600 text-white py-3 rounded-xl font-medium hover:bg-purple-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+            >
+              {uploading ? '제출 중...' : '재신청하기'}
+            </button>
+
+            <button
+              onClick={() => {
+                setShowReapply(false);
+                setLicenseFile(null);
+                setLicensePreview(null);
+                setBusinessName('');
+                setUploadError('');
+              }}
+              className="w-full mt-3 text-sm text-gray-500 hover:text-gray-700 py-2"
+            >
+              뒤로가기
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    // 거절 상태 메인 화면
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
         <div className="max-w-md w-full bg-white rounded-2xl shadow-lg p-8 text-center">
           <div className="text-6xl mb-4">&#10060;</div>
           <h2 className="text-xl font-bold text-gray-900 mb-2">가입이 거절되었습니다</h2>
-          <p className="text-gray-500 mb-6">
-            관리자에게 문의해주세요.
-          </p>
+
+          {/* 거절 사유 표시 */}
+          {owner?.rejectionReason ? (
+            <div className="mt-4 mb-6 p-4 bg-red-50 rounded-xl border border-red-100 text-left">
+              <div className="flex items-center gap-2 mb-2">
+                <AlertCircle size={16} className="text-red-500" />
+                <p className="text-sm text-red-600 font-medium">거절 사유</p>
+              </div>
+              <p className="text-sm text-red-700">{owner.rejectionReason}</p>
+            </div>
+          ) : (
+            <p className="text-gray-500 mb-6">
+              관리자에게 문의해주세요.
+            </p>
+          )}
+
+          {/* 재신청 버튼 */}
+          <button
+            onClick={() => {
+              setShowReapply(true);
+              setBusinessName(owner?.businessName || '');
+            }}
+            className="w-full bg-purple-600 text-white py-3 rounded-xl font-medium hover:bg-purple-700 transition-colors flex items-center justify-center gap-2"
+          >
+            <RefreshCw size={18} />
+            사업자등록증 다시 제출하기
+          </button>
+
           <button
             onClick={handleLogout}
-            className="text-sm text-gray-500 hover:text-gray-700"
+            className="w-full mt-3 text-sm text-gray-500 hover:text-gray-700 py-2"
           >
             로그아웃
           </button>

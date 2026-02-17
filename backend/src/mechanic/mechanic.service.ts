@@ -40,6 +40,15 @@ export class MechanicService {
         orderBy: [{ sortOrder: 'asc' }, { createdAt: 'desc' }],
         skip,
         take: limit,
+        include: {
+          owner: {
+            select: {
+              id: true,
+              name: true,
+              businessName: true,
+            },
+          },
+        },
       }),
       this.prisma.mechanic.count({ where: { isActive: true } }),
     ]);
@@ -81,6 +90,14 @@ export class MechanicService {
             content: true,
             rating: true,
             createdAt: true,
+          },
+        },
+        owner: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            businessName: true,
           },
         },
       },

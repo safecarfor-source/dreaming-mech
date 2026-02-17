@@ -39,6 +39,7 @@ interface OwnerInfo {
   profileImage?: string;
   provider: string;
   status: string;
+  rejectionReason?: string;
   businessLicenseUrl?: string;
   businessName?: string;
 }

@@ -8,6 +8,7 @@ import LocationSection from './mechanic-form/LocationSection';
 import AdditionalInfoSection from './mechanic-form/AdditionalInfoSection';
 import DetailInfoSection from './mechanic-form/DetailInfoSection';
 import GallerySection from './mechanic-form/GallerySection';
+import OwnerLinkSection from './mechanic-form/OwnerLinkSection';
 
 interface MechanicFormProps {
   mechanic?: Mechanic;
@@ -61,6 +62,14 @@ export default function MechanicForm({ mechanic, mode, apiBasePath, redirectPath
         images={formData.galleryImages}
         onImagesChange={(images) => setFormData((prev) => ({ ...prev, galleryImages: images }))}
       />
+
+      {/* 사장님 연결 (관리자 전용) */}
+      {isAdmin && (
+        <OwnerLinkSection
+          ownerId={formData.ownerId}
+          onOwnerChange={(ownerId) => setFormData((prev) => ({ ...prev, ownerId }))}
+        />
+      )}
 
       {/* 추가 정보 (대표 이미지, 유튜브) */}
       <AdditionalInfoSection

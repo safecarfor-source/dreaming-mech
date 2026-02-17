@@ -68,6 +68,9 @@ export interface Mechanic {
   paymentMethods?: string[];
   holidays?: HolidayInfo | null;
   reviews?: Review[];
+  // 사장님 연결
+  ownerId?: number | null;
+  owner?: { id: number; name?: string; email?: string; businessName?: string };
   // 기본 필드
   clickCount: number;
   sortOrder: number;
@@ -89,6 +92,7 @@ export interface Owner {
   profileImage?: string;
   provider: 'naver' | 'kakao';
   status: 'PENDING' | 'APPROVED' | 'REJECTED';
+  rejectionReason?: string;
   businessLicenseUrl?: string;
   businessName?: string;
   createdAt?: string;

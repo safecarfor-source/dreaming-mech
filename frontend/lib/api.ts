@@ -119,6 +119,8 @@ export const ownerAuthApi = {
   getProfile: () => api.get('/auth/profile'),
   submitBusinessLicense: (data: { businessLicenseUrl: string; businessName: string }) =>
     api.post('/owner/business-license', data),
+  reapply: (data: { businessLicenseUrl: string; businessName: string }) =>
+    api.post('/owner/reapply', data),
 };
 
 // Upload API
@@ -146,7 +148,8 @@ export const adminOwnerApi = {
   getAll: (status?: string) =>
     api.get('/admin/owners', { params: status ? { status } : {} }),
   approve: (id: number) => api.patch(`/admin/owners/${id}/approve`),
-  reject: (id: number) => api.patch(`/admin/owners/${id}/reject`),
+  reject: (id: number, reason?: string) =>
+    api.patch(`/admin/owners/${id}/reject`, { reason }),
 };
 
 // Inquiry API (문의)

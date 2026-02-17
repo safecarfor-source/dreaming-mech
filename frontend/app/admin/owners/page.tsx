@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { adminOwnerApi } from '@/lib/api';
 import { Owner } from '@/types';
-import { Check, X, Clock, UserCheck, UserX, Eye, Building2 } from 'lucide-react';
+import { Check, X, Clock, UserCheck, UserX, Eye, Building2, AlertCircle } from 'lucide-react';
 
 type FilterStatus = 'all' | 'PENDING' | 'APPROVED' | 'REJECTED';
 
@@ -13,6 +13,11 @@ export default function AdminOwnersPage() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<FilterStatus>('all');
   const [selectedOwner, setSelectedOwner] = useState<Owner | null>(null);
+
+  // 거절 사유 모달 상태
+  const [rejectModalOwner, setRejectModalOwner] = useState<Owner | null>(null);
+  const [rejectReason, setRejectReason] = useState('');
+  const [rejecting, setRejecting] = useState(false);
 
   const fetchOwners = async () => {
     try {
@@ -41,14 +46,30 @@ export default function AdminOwnersPage() {
     }
   };
 
-  const handleReject = async (id: number) => {
-    if (!confirm('이 사장님을 거절하시겠습니까?')) return;
+  // 거절 버튼 → 거절 사유 모달 열기
+  const openRejectModal = (owner: Owner) => {
+    setRejectModalOwner(owner);
+    setRejectReason('');
+  };
+
+  // 거절 사유 입력 후 실제 거절 처리
+  const handleRejectConfirm = async () => {
+    if (!rejectModalOwner) return;
+    if (!rejectReason.trim()) {
+      alert('거절 사유를 입력해주세요.');
+      return;
+    }
+
+    setRejecting(true);
     try {
-      await adminOwnerApi.reject(id);
+      await adminOwnerApi.reject(rejectModalOwner.id, rejectReason.trim());
+      setRejectModalOwner(null);
       setSelectedOwner(null);
       fetchOwners();
     } catch {
       alert('거절에 실패했습니다.');
+    } finally {
+      setRejecting(false);
     }
   };
 
@@ -170,7 +191,16 @@ export default function AdminOwnersPage() {
                   <td className="px-6 py-4 hidden md:table-cell">
                     {providerLabel(owner.provider)}
                   </td>
-                  <td className="px-6 py-4">{statusBadge(owner.status)}</td>
+                  <td className="px-6 py-4">
+                    <div>
+                      {statusBadge(owner.status)}
+                      {owner.status === 'REJECTED' && owner.rejectionReason && (
+                        <p className="text-xs text-red-500 mt-1 max-w-[150px] truncate" title={owner.rejectionReason}>
+                          사유: {owner.rejectionReason}
+                        </p>
+                      )}
+                    </div>
+                  </td>
                   <td className="px-6 py-4 hidden md:table-cell">
                     {owner.businessLicenseUrl ? (
                       <button
@@ -204,7 +234,7 @@ export default function AdminOwnersPage() {
                             <Check size={18} />
                           </button>
                           <button
-                            onClick={() => handleReject(owner.id)}
+                            onClick={() => openRejectModal(owner)}
                             className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                             title="거절"
                           >
@@ -268,6 +298,17 @@ export default function AdminOwnersPage() {
               </div>
             </div>
 
+            {/* 거절 사유 표시 */}
+            {selectedOwner.status === 'REJECTED' && selectedOwner.rejectionReason && (
+              <div className="mb-4 p-4 bg-red-50 rounded-xl border border-red-100">
+                <div className="flex items-center gap-2 mb-1">
+                  <AlertCircle size={16} className="text-red-500" />
+                  <p className="text-sm text-red-600 font-medium">거절 사유</p>
+                </div>
+                <p className="text-sm text-red-700">{selectedOwner.rejectionReason}</p>
+              </div>
+            )}
+
             {/* 업체 정보 */}
             {selectedOwner.businessName && (
               <div className="mb-4 p-4 bg-blue-50 rounded-xl">
@@ -298,7 +339,10 @@ export default function AdminOwnersPage() {
                   <Check size={20} /> 승인
                 </button>
                 <button
-                  onClick={() => handleReject(selectedOwner.id)}
+                  onClick={() => {
+                    setSelectedOwner(null);
+                    openRejectModal(selectedOwner);
+                  }}
                   className="flex-1 bg-red-600 text-white py-3 rounded-xl font-medium hover:bg-red-700 transition-colors flex items-center justify-center gap-2"
                 >
                   <X size={20} /> 거절
@@ -313,6 +357,62 @@ export default function AdminOwnersPage() {
                 재승인
               </button>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* 거절 사유 입력 모달 */}
+      {rejectModalOwner && (
+        <div
+          className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4"
+          onClick={() => setRejectModalOwner(null)}
+        >
+          <div
+            className="bg-white rounded-2xl max-w-md w-full p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold text-gray-900">거절 사유 입력</h3>
+              <button
+                onClick={() => setRejectModalOwner(null)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <p className="text-sm text-gray-500 mb-4">
+              <strong>{rejectModalOwner.name || '(이름 없음)'}</strong>님의 가입을 거절합니다.
+              <br />
+              사장님에게 보여질 거절 사유를 입력해주세요.
+            </p>
+
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">거절 사유 *</label>
+              <textarea
+                value={rejectReason}
+                onChange={(e) => setRejectReason(e.target.value)}
+                rows={3}
+                placeholder="예: 사업자등록증이 불분명합니다. 선명한 사진으로 다시 제출해주세요."
+                className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm resize-none focus:outline-none focus:border-red-500 text-gray-900"
+              />
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setRejectModalOwner(null)}
+                className="flex-1 py-2.5 border border-gray-200 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors"
+              >
+                취소
+              </button>
+              <button
+                onClick={handleRejectConfirm}
+                disabled={rejecting || !rejectReason.trim()}
+                className="flex-1 py-2.5 bg-red-600 text-white rounded-xl text-sm font-medium hover:bg-red-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+              >
+                {rejecting ? '처리 중...' : '거절하기'}
+              </button>
+            </div>
           </div>
         </div>
       )}

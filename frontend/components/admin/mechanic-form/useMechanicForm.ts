@@ -23,6 +23,8 @@ export interface MechanicFormData {
   paymentMethods: string[];
   holidays: HolidayInfo | null;
   galleryImages: string[];
+  // 사장님 연결
+  ownerId: number | null;
 }
 
 interface UseMechanicFormProps {
@@ -55,6 +57,8 @@ export function useMechanicForm({ mechanic, mode, apiBasePath = '/mechanics', re
     paymentMethods: mechanic?.paymentMethods || [],
     holidays: mechanic?.holidays || null,
     galleryImages: mechanic?.galleryImages || [],
+    // 사장님 연결
+    ownerId: mechanic?.ownerId ?? null,
   });
 
   const [isSearching, setIsSearching] = useState(false);
@@ -174,6 +178,7 @@ export function useMechanicForm({ mechanic, mode, apiBasePath = '/mechanics', re
       parkingAvailable: formData.parkingAvailable,
       paymentMethods: formData.paymentMethods,
       holidays: formData.holidays,
+      ownerId: formData.ownerId,
     };
 
     setIsSaving(true);

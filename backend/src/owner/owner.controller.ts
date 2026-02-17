@@ -49,12 +49,15 @@ export class AdminOwnerController {
   }
 
   @Patch(':id/reject')
-  reject(@Param('id', ParseIntPipe) id: number) {
-    return this.ownerService.reject(id);
+  reject(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() body: { reason?: string },
+  ) {
+    return this.ownerService.reject(id, body.reason);
   }
 }
 
-// ── 사장님용: 사업자등록증 제출 ──
+// ── 사장님용: 사업자등록증 제출 + 재신청 ──
 
 @Controller('owner')
 @UseGuards(JwtAuthGuard)
@@ -67,6 +70,18 @@ export class OwnerProfileController {
     @Body() body: { businessLicenseUrl: string; businessName: string },
   ) {
     return this.ownerService.submitBusinessLicense(
+      req.user.sub,
+      body.businessLicenseUrl,
+      body.businessName,
+    );
+  }
+
+  @Post('reapply')
+  reapply(
+    @Request() req,
+    @Body() body: { businessLicenseUrl: string; businessName: string },
+  ) {
+    return this.ownerService.reapply(
       req.user.sub,
       body.businessLicenseUrl,
       body.businessName,

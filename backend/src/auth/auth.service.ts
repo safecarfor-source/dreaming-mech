@@ -190,6 +190,7 @@ export class AuthService {
         profileImage: true,
         provider: true,
         status: true,
+        rejectionReason: true,
         businessLicenseUrl: true,
         businessName: true,
       },

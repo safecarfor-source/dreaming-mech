@@ -19,6 +19,7 @@ export class OwnerService {
         profileImage: true,
         provider: true,
         status: true,
+        rejectionReason: true,
         businessLicenseUrl: true,
         businessName: true,
         createdAt: true,
@@ -39,6 +40,7 @@ export class OwnerService {
         profileImage: true,
         provider: true,
         status: true,
+        rejectionReason: true,
         businessLicenseUrl: true,
         businessName: true,
         createdAt: true,
@@ -57,19 +59,39 @@ export class OwnerService {
 
     return this.prisma.owner.update({
       where: { id },
-      data: { status: 'APPROVED' },
+      data: { status: 'APPROVED', rejectionReason: null },
     });
   }
 
   // ── 관리자용: 거절 ──
 
-  async reject(id: number) {
+  async reject(id: number, reason?: string) {
     const owner = await this.prisma.owner.findUnique({ where: { id } });
     if (!owner) throw new NotFoundException('사장님을 찾을 수 없습니다.');
 
     return this.prisma.owner.update({
       where: { id },
-      data: { status: 'REJECTED' },
+      data: { status: 'REJECTED', rejectionReason: reason || null },
+    });
+  }
+
+  // ── 사장님용: 재신청 (거절된 상태에서 사업자등록증 재제출) ──
+
+  async reapply(ownerId: number, businessLicenseUrl: string, businessName: string) {
+    const owner = await this.prisma.owner.findUnique({ where: { id: ownerId } });
+    if (!owner) throw new NotFoundException('사장님을 찾을 수 없습니다.');
+    if (owner.status !== 'REJECTED') {
+      throw new ForbiddenException('거절 상태에서만 재신청할 수 있습니다.');
+    }
+
+    return this.prisma.owner.update({
+      where: { id: ownerId },
+      data: {
+        status: 'PENDING',
+        rejectionReason: null,
+        businessLicenseUrl,
+        businessName,
+      },
     });
   }
 
