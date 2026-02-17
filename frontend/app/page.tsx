@@ -88,21 +88,21 @@ export default function Home() {
       />
 
       {/* 다크 → 라이트 그라데이션 전환 */}
-      <div className="h-32 md:h-40 bg-gradient-to-b from-black/60 via-black/30 via-30% to-[#F8F7FC]" />
+      <div className="h-24 sm:h-32 md:h-40 bg-gradient-to-b from-black/60 via-black/20 via-40% to-white" />
 
-      {/* 정비사 목록 섹션 */}
-      <section id="map" className="bg-[#F8F7FC] pb-16 md:pb-24">
-        <div className="container mx-auto px-4 md:px-6">
+      {/* 정비사 목록 섹션 — 60% 화이트 배경 */}
+      <section id="map" className="bg-white pb-16 sm:pb-20 md:pb-24">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8">
           {/* 섹션 헤더 */}
           <AnimatedSection animation="slideUp" duration={0.8}>
-            <div className="text-center mb-10 md:mb-16">
-              <p className="text-[#F59E0B] text-xs md:text-sm font-semibold tracking-widest mb-3 md:mb-4">
+            <div className="text-center mb-10 sm:mb-12 md:mb-16">
+              <p className="text-accent-500 text-[var(--text-caption)] font-semibold tracking-[0.12em] uppercase mb-3">
                 MECHANICS
               </p>
-              <h2 className="text-3xl md:text-5xl font-black text-gray-900 mb-3 md:mb-4">
-                전국 <span className="text-[#7C4DFF]">팔도</span> 정비사
+              <h2 className="text-[var(--text-h2)] md:text-[var(--text-h1)] font-black text-text-primary mb-3">
+                전국 <span className="text-brand-500">팔도</span> 정비사
               </h2>
-              <p className="text-gray-500 text-base md:text-lg">
+              <p className="text-text-tertiary text-[var(--text-body)] md:text-[var(--text-h5)]">
                 실력과 신뢰를 갖춘 전문가들을 만나보세요
               </p>
             </div>
@@ -127,27 +127,27 @@ export default function Home() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.3 }}
-                className="bg-gradient-to-r from-[#7C4DFF]/8 to-[#F5F3FF] rounded-2xl p-4 md:p-6 mb-4 md:mb-8 flex items-center justify-between"
+                className="bg-brand-50 border border-brand-200 rounded-2xl p-4 sm:p-5 md:p-6 mb-4 sm:mb-6 md:mb-8 flex items-center justify-between"
               >
-                <div className="flex items-center gap-2.5 md:gap-3">
-                  <div className="w-10 h-10 md:w-12 md:h-12 bg-[#7C4DFF] rounded-xl flex items-center justify-center">
-                    <span className="text-white text-lg md:text-xl font-black">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 md:w-12 md:h-12 bg-brand-500 rounded-xl flex items-center justify-center shadow-[var(--shadow-sm)]">
+                    <span className="text-white text-[var(--text-h5)] md:text-[var(--text-h4)] font-black">
                       {filteredMechanics.length}
                     </span>
                   </div>
                   <div>
-                    <h3 className="text-base md:text-2xl font-black text-gray-900">
+                    <h3 className="text-[var(--text-body)] md:text-[var(--text-h4)] font-bold text-text-primary">
                       {selectedRegionInfo.fullName}
                     </h3>
-                    <p className="text-xs md:text-sm text-gray-500">
+                    <p className="text-[var(--text-caption)] text-text-tertiary">
                       등록된 정비소
                     </p>
                   </div>
                 </div>
                 <button
                   onClick={() => setSelectedRegion(null)}
-                  className="text-xs md:text-sm font-semibold text-[#7C4DFF] hover:bg-[#7C4DFF] hover:text-white transition-all
-                    border-2 border-[#7C4DFF] rounded-full px-3 md:px-4 py-1.5 md:py-2"
+                  className="text-[var(--text-caption)] md:text-[var(--text-body)] font-semibold text-brand-500 hover:bg-brand-500 hover:text-white
+                    border-2 border-brand-500 rounded-full px-3 sm:px-4 py-1.5 sm:py-2 transition-all duration-[var(--duration-normal)]"
                 >
                   전체 보기
                 </button>
@@ -157,7 +157,7 @@ export default function Home() {
 
           {/* 카드 그리드 */}
           {loading ? (
-            <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6">
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 md:gap-6">
               {[...Array(6)].map((_, i) => (
                 <CardSkeleton key={i} />
               ))}
@@ -168,12 +168,12 @@ export default function Home() {
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="text-center py-12 md:py-16"
+              className="text-center py-16 md:py-24"
             >
-              <p className="text-gray-500 text-base md:text-lg mb-2">
+              <p className="text-text-secondary text-[var(--text-body)] md:text-[var(--text-h5)] mb-2">
                 이 지역에 등록된 정비소가 없습니다.
               </p>
-              <p className="text-gray-400 text-sm">
+              <p className="text-text-muted text-[var(--text-caption)] md:text-[var(--text-body)]">
                 곧 믿을 수 있는 정비소를 찾아 등록하겠습니다!
               </p>
             </motion.div>
@@ -185,7 +185,7 @@ export default function Home() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.3 }}
-                className="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6"
+                className="grid grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 md:gap-6"
               >
                 {filteredMechanics.map((mechanic, index) => (
                   <AnimatedSection
