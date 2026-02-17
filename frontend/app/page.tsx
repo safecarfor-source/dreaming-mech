@@ -88,19 +88,19 @@ export default function Home() {
       />
 
       {/* 다크 → 라이트 그라데이션 전환 */}
-      <div className="h-32 md:h-40 bg-gradient-to-b from-black/60 via-black/30 via-30% to-[#FAFAF8]" />
+      <div className="h-32 md:h-40 bg-gradient-to-b from-black/60 via-black/30 via-30% to-[#F8F7FC]" />
 
       {/* 정비사 목록 섹션 */}
-      <section id="map" className="bg-[#FAFAF8] pb-16 md:pb-24">
+      <section id="map" className="bg-[#F8F7FC] pb-16 md:pb-24">
         <div className="container mx-auto px-4 md:px-6">
           {/* 섹션 헤더 */}
           <AnimatedSection animation="slideUp" duration={0.8}>
             <div className="text-center mb-10 md:mb-16">
-              <p className="text-[#FF6B35] text-xs md:text-sm font-semibold tracking-widest mb-3 md:mb-4">
+              <p className="text-[#F59E0B] text-xs md:text-sm font-semibold tracking-widest mb-3 md:mb-4">
                 MECHANICS
               </p>
               <h2 className="text-3xl md:text-5xl font-black text-gray-900 mb-3 md:mb-4">
-                전국 <span className="text-[#1B4D3E]">팔도</span> 정비사
+                전국 <span className="text-[#7C4DFF]">팔도</span> 정비사
               </h2>
               <p className="text-gray-500 text-base md:text-lg">
                 실력과 신뢰를 갖춘 전문가들을 만나보세요
@@ -127,10 +127,10 @@ export default function Home() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.3 }}
-                className="bg-gradient-to-r from-[#1B4D3E]/8 to-[#E8F5E9] rounded-2xl p-4 md:p-6 mb-4 md:mb-8 flex items-center justify-between"
+                className="bg-gradient-to-r from-[#7C4DFF]/8 to-[#F5F3FF] rounded-2xl p-4 md:p-6 mb-4 md:mb-8 flex items-center justify-between"
               >
                 <div className="flex items-center gap-2.5 md:gap-3">
-                  <div className="w-10 h-10 md:w-12 md:h-12 bg-[#1B4D3E] rounded-xl flex items-center justify-center">
+                  <div className="w-10 h-10 md:w-12 md:h-12 bg-[#7C4DFF] rounded-xl flex items-center justify-center">
                     <span className="text-white text-lg md:text-xl font-black">
                       {filteredMechanics.length}
                     </span>
@@ -146,8 +146,8 @@ export default function Home() {
                 </div>
                 <button
                   onClick={() => setSelectedRegion(null)}
-                  className="text-xs md:text-sm font-semibold text-[#1B4D3E] hover:bg-[#1B4D3E] hover:text-white transition-all
-                    border-2 border-[#1B4D3E] rounded-full px-3 md:px-4 py-1.5 md:py-2"
+                  className="text-xs md:text-sm font-semibold text-[#7C4DFF] hover:bg-[#7C4DFF] hover:text-white transition-all
+                    border-2 border-[#7C4DFF] rounded-full px-3 md:px-4 py-1.5 md:py-2"
                 >
                   전체 보기
                 </button>

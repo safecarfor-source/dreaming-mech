@@ -100,7 +100,7 @@ export default function QuoteRequestForm({ mechanicId, mechanicName, onClose }: 
         </p>
         <button
           onClick={onClose}
-          className="mt-4 px-6 py-3 bg-[#1B4D3E] hover:bg-[#143D30] text-white rounded-xl font-medium transition-colors"
+          className="mt-4 px-6 py-3 bg-[#7C4DFF] hover:bg-[#5B3FBF] text-white rounded-xl font-medium transition-colors"
         >
           확인
         </button>
@@ -129,7 +129,7 @@ export default function QuoteRequestForm({ mechanicId, mechanicName, onClose }: 
           value={customerName}
           onChange={(e) => setCustomerName(e.target.value)}
           placeholder="홍길동"
-          className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-[#1B4D3E] text-gray-900"
+          className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-[#7C4DFF] text-gray-900"
         />
       </div>
 
@@ -141,7 +141,7 @@ export default function QuoteRequestForm({ mechanicId, mechanicName, onClose }: 
           value={customerPhone}
           onChange={(e) => setCustomerPhone(e.target.value)}
           placeholder="010-1234-5678"
-          className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-[#1B4D3E] text-gray-900"
+          className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-[#7C4DFF] text-gray-900"
         />
       </div>
 
@@ -153,7 +153,7 @@ export default function QuoteRequestForm({ mechanicId, mechanicName, onClose }: 
           value={carModel}
           onChange={(e) => setCarModel(e.target.value)}
           placeholder="예: 현대 아반떼 2023"
-          className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-[#1B4D3E] text-gray-900"
+          className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-[#7C4DFF] text-gray-900"
         />
       </div>
 
@@ -165,7 +165,7 @@ export default function QuoteRequestForm({ mechanicId, mechanicName, onClose }: 
           value={carYear}
           onChange={(e) => setCarYear(e.target.value)}
           placeholder="예: 2023"
-          className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-[#1B4D3E] text-gray-900"
+          className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-[#7C4DFF] text-gray-900"
         />
       </div>
 
@@ -179,7 +179,7 @@ export default function QuoteRequestForm({ mechanicId, mechanicName, onClose }: 
           onChange={(e) => setDescription(e.target.value.slice(0, 1000))}
           rows={4}
           placeholder="차량 증상이나 정비 요청 내용을 자세히 적어주세요 (최소 10자)"
-          className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm resize-none focus:outline-none focus:border-[#1B4D3E] text-gray-900"
+          className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm resize-none focus:outline-none focus:border-[#7C4DFF] text-gray-900"
         />
       </div>
 
@@ -222,7 +222,7 @@ export default function QuoteRequestForm({ mechanicId, mechanicName, onClose }: 
         type="button"
         onClick={handleSubmit}
         disabled={isSubmitting}
-        className="w-full py-3 bg-[#FF6B35] hover:bg-[#E55A2B] disabled:bg-gray-400 text-white rounded-xl font-bold transition-colors flex items-center justify-center gap-2"
+        className="w-full py-3 bg-[#F59E0B] hover:bg-[#D97706] disabled:bg-gray-400 text-white rounded-xl font-bold transition-colors flex items-center justify-center gap-2"
       >
         {isSubmitting ? (
           <>

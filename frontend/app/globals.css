@@ -1,25 +1,25 @@
 @import "tailwindcss";
 
 :root {
-  --background: #FAFAF8;
-  --foreground: #1A1A1A;
+  --background: #F8F7FC;
+  --foreground: #1A0A2E;
   --surface: #FFFFFF;
 
-  /* 브랜드 메인 컬러 (고객 페이지) */
-  --brand-primary: #1B4D3E;
-  --brand-primary-light: #2D7A5F;
-  --brand-primary-dark: #143D30;
-  --brand-accent: #FF6B35;
-  --brand-accent-hover: #E55A2B;
+  /* 프리미엄 퍼플 브랜드 컬러 (고객 페이지) */
+  --brand-primary: #7C4DFF;
+  --brand-primary-light: #A78BFA;
+  --brand-primary-dark: #5B3FBF;
+  --brand-accent: #F59E0B;
+  --brand-accent-hover: #D97706;
 
   /* 보라색 강조 (관리자 페이지 전용) */
   --accent: #7C3AED;
   --accent-light: #A78BFA;
   --accent-dark: #6D28D9;
 
-  /* 접근성 개선: Gray-500 사용 (WCAG AA 준수, 4.83:1 대비) */
+  /* 접근성 개선 */
   --text-muted: #6B7280;
-  --border: #E5E5E5;
+  --border: #DDD6FE;
 }
 
 @theme inline {

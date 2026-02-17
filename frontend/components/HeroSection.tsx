@@ -79,7 +79,7 @@ export default function HeroSection({ totalMechanics, totalClicks }: Props) {
         <motion.p
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-[#FF6B35] text-lg md:text-2xl lg:text-3xl font-medium tracking-widest mb-4 md:mb-6"
+          className="text-[#F59E0B] text-lg md:text-2xl lg:text-3xl font-medium tracking-widest mb-4 md:mb-6"
         >
           전국의 정비소를 소개합니다.
         </motion.p>
@@ -94,7 +94,7 @@ export default function HeroSection({ totalMechanics, totalClicks }: Props) {
         >
           {headline.displayedText.split('\n').map((line, index) => (
             <span key={index}>
-              {index === 0 ? line : <span className="text-[#FF6B35]">{line}</span>}
+              {index === 0 ? line : <span className="text-[#A78BFA]">{line}</span>}
               {index === 0 && <br />}
             </span>
           ))}

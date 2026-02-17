@@ -238,7 +238,7 @@ export default function MechanicModal() {
                 <div className="flex gap-3">
                   <a
                     href={`tel:${mechanic.phone}`}
-                    className="flex-1 bg-[#1B4D3E] hover:bg-[#143D30] text-white py-4 rounded-xl font-bold text-center transition-colors"
+                    className="flex-1 bg-[#7C4DFF] hover:bg-[#5B3FBF] text-white py-4 rounded-xl font-bold text-center transition-colors"
                   >
                     전화 문의
                   </a>
@@ -247,7 +247,7 @@ export default function MechanicModal() {
                     className={`flex-1 flex items-center justify-center gap-2 py-4 rounded-xl font-bold transition-colors ${
                       showQuoteForm
                         ? 'bg-gray-200 text-gray-600'
-                        : 'bg-orange-500 hover:bg-orange-600 text-white'
+                        : 'bg-[#F59E0B] hover:bg-[#D97706] text-white'
                     }`}
                   >
                     <FileText size={18} />
@@ -258,7 +258,7 @@ export default function MechanicModal() {
                       const url = `https://map.naver.com/v5/search/${encodeURIComponent(mechanic.address)}`;
                       window.open(url, '_blank');
                     }}
-                    className="flex items-center justify-center gap-2 px-5 py-4 border-2 border-gray-200 rounded-xl font-bold text-gray-700 hover:border-[#1B4D3E] hover:text-[#1B4D3E] transition-colors"
+                    className="flex items-center justify-center gap-2 px-5 py-4 border-2 border-gray-200 rounded-xl font-bold text-gray-700 hover:border-[#7C4DFF] hover:text-[#7C4DFF] transition-colors"
                   >
                     <ExternalLink size={18} />
                     길찾기

@@ -57,7 +57,7 @@ export default function ReviewForm({ mechanicId, onSubmitted, onCancel }: Props)
   }
 
   return (
-    <div className="p-4 bg-[#F0FDF4] rounded-xl space-y-3">
+    <div className="p-4 bg-[#F5F3FF] rounded-xl space-y-3">
       {/* 별점 */}
       <div className="flex items-center gap-2">
         <span className="text-sm font-medium text-gray-700">별점</span>
@@ -90,7 +90,7 @@ export default function ReviewForm({ mechanicId, onSubmitted, onCancel }: Props)
         onChange={(e) => setNickname(e.target.value)}
         placeholder="닉네임"
         maxLength={20}
-        className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-[#1B4D3E] text-gray-900"
+        className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-[#7C4DFF] text-gray-900"
       />
 
       {/* 리뷰 내용 */}
@@ -101,7 +101,7 @@ export default function ReviewForm({ mechanicId, onSubmitted, onCancel }: Props)
           placeholder="한줄 리뷰를 남겨주세요"
           rows={2}
           maxLength={100}
-          className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm resize-none focus:outline-none focus:border-[#1B4D3E] text-gray-900"
+          className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm resize-none focus:outline-none focus:border-[#7C4DFF] text-gray-900"
         />
         <span className="absolute bottom-2 right-3 text-xs text-gray-400">
           {content.length}/100
@@ -121,7 +121,7 @@ export default function ReviewForm({ mechanicId, onSubmitted, onCancel }: Props)
           type="button"
           onClick={handleSubmit}
           disabled={isSubmitting}
-          className="px-4 py-2 bg-[#1B4D3E] hover:bg-[#143D30] disabled:bg-gray-400 text-white text-sm rounded-lg font-medium transition-colors flex items-center gap-1"
+          className="px-4 py-2 bg-[#7C4DFF] hover:bg-[#5B3FBF] disabled:bg-gray-400 text-white text-sm rounded-lg font-medium transition-colors flex items-center gap-1"
         >
           {isSubmitting ? (
             <>

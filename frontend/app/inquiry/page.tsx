@@ -44,10 +44,10 @@ export default function InquiryPage() {
   if (isSuccess) {
     return (
       <Layout>
-        <section className="min-h-screen flex items-center justify-center bg-[#FAFAF8] pt-14">
+        <section className="min-h-screen flex items-center justify-center bg-[#F8F7FC] pt-14">
           <div className="text-center px-6">
-            <div className="w-20 h-20 bg-[#E8F5E9] rounded-full flex items-center justify-center mx-auto mb-6">
-              <CheckCircle2 size={40} className="text-[#1B4D3E]" />
+            <div className="w-20 h-20 bg-[#EDE9FE] rounded-full flex items-center justify-center mx-auto mb-6">
+              <CheckCircle2 size={40} className="text-[#7C4DFF]" />
             </div>
             <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-3">
               문의가 접수되었습니다
@@ -57,7 +57,7 @@ export default function InquiryPage() {
             </p>
             <button
               onClick={() => setIsSuccess(false)}
-              className="px-6 py-3 bg-[#1B4D3E] hover:bg-[#143D30] text-white rounded-xl font-semibold transition-colors"
+              className="px-6 py-3 bg-[#7C4DFF] hover:bg-[#5B3FBF] text-white rounded-xl font-semibold transition-colors"
             >
               추가 문의하기
             </button>
@@ -69,7 +69,7 @@ export default function InquiryPage() {
 
   return (
     <Layout>
-      <section className="min-h-screen bg-[#FAFAF8] pt-20 md:pt-28 pb-16 md:pb-20">
+      <section className="min-h-screen bg-[#F8F7FC] pt-20 md:pt-28 pb-16 md:pb-20">
         <div className="container mx-auto px-4 md:px-6 max-w-xl">
           {/* 헤더 */}
           <div className="text-center mb-8 md:mb-10">
@@ -87,7 +87,7 @@ export default function InquiryPage() {
               onClick={() => setTab('CUSTOMER')}
               className={`flex-1 py-3 rounded-lg text-sm font-semibold transition-all ${
                 tab === 'CUSTOMER'
-                  ? 'bg-[#1B4D3E] text-white shadow-sm'
+                  ? 'bg-[#7C4DFF] text-white shadow-sm'
                   : 'text-gray-500 hover:text-gray-700'
               }`}
             >
@@ -97,7 +97,7 @@ export default function InquiryPage() {
               onClick={() => setTab('MECHANIC')}
               className={`flex-1 py-3 rounded-lg text-sm font-semibold transition-all ${
                 tab === 'MECHANIC'
-                  ? 'bg-[#1B4D3E] text-white shadow-sm'
+                  ? 'bg-[#7C4DFF] text-white shadow-sm'
                   : 'text-gray-500 hover:text-gray-700'
               }`}
             >
@@ -118,7 +118,7 @@ export default function InquiryPage() {
                   value={businessName}
                   onChange={(e) => setBusinessName(e.target.value)}
                   placeholder="정비소 상호명"
-                  className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#1B4D3E] focus:ring-1 focus:ring-[#1B4D3E]/20 transition-colors"
+                  className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#7C4DFF] focus:ring-1 focus:ring-[#7C4DFF]/20 transition-colors"
                 />
               </div>
             )}
@@ -134,7 +134,7 @@ export default function InquiryPage() {
                 onChange={(e) => setName(e.target.value)}
                 placeholder={tab === 'MECHANIC' ? '대표자 성함' : '이름을 입력해주세요'}
                 required
-                className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#1B4D3E] focus:ring-1 focus:ring-[#1B4D3E]/20 transition-colors"
+                className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#7C4DFF] focus:ring-1 focus:ring-[#7C4DFF]/20 transition-colors"
               />
             </div>
 
@@ -149,7 +149,7 @@ export default function InquiryPage() {
                 onChange={(e) => setPhone(e.target.value)}
                 placeholder="010-0000-0000"
                 required
-                className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#1B4D3E] focus:ring-1 focus:ring-[#1B4D3E]/20 transition-colors"
+                className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#7C4DFF] focus:ring-1 focus:ring-[#7C4DFF]/20 transition-colors"
               />
             </div>
 
@@ -168,14 +168,14 @@ export default function InquiryPage() {
                 }
                 required
                 rows={5}
-                className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#1B4D3E] focus:ring-1 focus:ring-[#1B4D3E]/20 transition-colors resize-none"
+                className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#7C4DFF] focus:ring-1 focus:ring-[#7C4DFF]/20 transition-colors resize-none"
               />
             </div>
 
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full flex items-center justify-center gap-2 py-4 bg-[#FF6B35] hover:bg-[#E55A2B] disabled:opacity-50 text-white rounded-xl font-semibold text-base md:text-lg transition-colors"
+              className="w-full flex items-center justify-center gap-2 py-4 bg-[#F59E0B] hover:bg-[#D97706] disabled:opacity-50 text-white rounded-xl font-semibold text-base md:text-lg transition-colors"
             >
               {isSubmitting ? (
                 '접수 중...'

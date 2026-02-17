@@ -42,21 +42,21 @@ export default function KoreaMap({
   const [hoveredRegion, setHoveredRegion] = useState<string | null>(null);
 
   const getRegionFill = (regionId: string) => {
-    if (selectedRegion === regionId) return '#1B4D3E';
-    if (hoveredRegion === regionId) return '#E8F5E9';
+    if (selectedRegion === regionId) return '#7C4DFF';
+    if (hoveredRegion === regionId) return '#EDE9FE';
     return '#ffffff';
   };
 
   const getRegionStroke = (regionId: string) => {
-    if (selectedRegion === regionId) return '#143D30';
-    if (hoveredRegion === regionId) return '#2D7A5F';
-    return '#D1D5DB';
+    if (selectedRegion === regionId) return '#5B3FBF';
+    if (hoveredRegion === regionId) return '#A78BFA';
+    return '#C4B5FD';
   };
 
   const getBadgeFill = (regionId: string) => {
-    if (selectedRegion === regionId) return '#FF6B35';
-    if (hoveredRegion === regionId) return '#1B4D3E';
-    return '#374151';
+    if (selectedRegion === regionId) return '#F59E0B';
+    if (hoveredRegion === regionId) return '#5B3FBF';
+    return '#2D1B69';
   };
 
   const regionName = (regionId: string) => {
@@ -81,7 +81,7 @@ export default function KoreaMap({
           aria-label="대한민국 지도 - 지역을 클릭하여 정비소를 찾으세요"
         >
           {/* 배경 */}
-          <rect x="168" y="155" width="75" height="100" rx="4" fill="#F0EDE8" />
+          <rect x="168" y="155" width="75" height="100" rx="4" fill="#F5F3FF" />
 
           {/* 1단계: 지역 영역(path) 먼저 모두 렌더링 — 서브패스를 개별 path로 */}
           {entries.map(([regionId, { paths: regionPaths }]) => {
@@ -203,7 +203,7 @@ export default function KoreaMap({
                     x={lx}
                     y={ly + 5}
                     textAnchor="middle"
-                    fill="#FFD4BC"
+                    fill="#C4B5FD"
                     fontSize="3.5"
                     fontWeight="700"
                     fontFamily="Pretendard, -apple-system, sans-serif"
