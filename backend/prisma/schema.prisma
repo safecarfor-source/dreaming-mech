@@ -213,3 +213,39 @@ model PageView {
   @@index([path, viewedAt])
   @@index([isBot])
 }
+
+// ========================================
+// 📱💻 폰-컴퓨터 동기화 (Sync) 모델
+// ========================================
+
+enum SyncMessageType {
+  INSTRUCTION  // 지시/명령
+  NOTE         // 메모
+  LINK         // 링크
+  IMAGE        // 이미지
+}
+
+enum SyncMessageStatus {
+  PENDING      // 대기
+  IN_PROGRESS  // 진행 중
+  COMPLETED    // 완료
+  CANCELLED    // 취소
+}
+
+model SyncMessage {
+  id          Int               @id @default(autoincrement())
+  content     String            @db.Text         // 지시 내용
+  type        SyncMessageType   @default(INSTRUCTION)
+  status      SyncMessageStatus @default(PENDING)
+  deviceFrom  String            @default("phone") // "phone" | "computer"
+  priority    Int               @default(0)       // 0=보통, 1=높음, 2=긴급
+  images      Json?             // S3 이미지 URL 배열
+  reply       String?           @db.Text          // 답변/메모
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  completedAt DateTime?
+
+  @@index([status])
+  @@index([createdAt])
+  @@index([deviceFrom])
+}

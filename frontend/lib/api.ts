@@ -1,5 +1,5 @@
 import axios, { AxiosRequestConfig } from 'axios';
-import { Mechanic, Inquiry, UnreadCount, ApiResponse, QuoteRequest, Review } from '@/types';
+import { Mechanic, Inquiry, UnreadCount, ApiResponse, QuoteRequest, Review, SyncMessage, SyncStats } from '@/types';
 
 const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL,
@@ -246,6 +246,35 @@ export const reviewApi = {
 
   // 관리자: 미승인 리뷰 수
   getPendingCount: () => api.get<number>('/reviews/pending-count'),
+};
+
+// Sync API (📱💻 폰-컴퓨터 동기화)
+export const syncApi = {
+  // 지시 생성
+  create: (data: {
+    content: string;
+    type?: string;
+    deviceFrom?: string;
+    priority?: number;
+    images?: string[];
+  }) => api.post<SyncMessage>('/sync', data),
+
+  // 목록 조회
+  getAll: (params?: { status?: string; deviceFrom?: string; page?: number; limit?: number }) =>
+    api.get<ApiResponse<SyncMessage[]>>('/sync', { params }),
+
+  // 통계
+  getStats: () => api.get<SyncStats>('/sync/stats'),
+
+  // 상세 조회
+  getOne: (id: number) => api.get<SyncMessage>(`/sync/${id}`),
+
+  // 업데이트 (상태 변경, 답변)
+  update: (id: number, data: { status?: string; reply?: string; priority?: number }) =>
+    api.patch<SyncMessage>(`/sync/${id}`, data),
+
+  // 삭제
+  delete: (id: number) => api.delete(`/sync/${id}`),
 };
 
 export default api;

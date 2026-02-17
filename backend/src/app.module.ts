@@ -16,6 +16,7 @@ import { InquiryModule } from './inquiry/inquiry.module';
 import { NotificationModule } from './notification/notification.module';
 import { QuoteRequestModule } from './quote-request/quote-request.module';
 import { ReviewModule } from './review/review.module';
+import { SyncModule } from './sync/sync.module';
 
 @Module({
   imports: [
@@ -39,6 +40,7 @@ import { ReviewModule } from './review/review.module';
     NotificationModule,
     QuoteRequestModule,
     ReviewModule,
+    SyncModule,
   ],
   controllers: [AppController],
   providers: [
