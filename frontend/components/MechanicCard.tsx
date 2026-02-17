@@ -20,7 +20,7 @@ export default function MechanicCard({ mechanic, onClick }: Props) {
         shadow-[var(--shadow-xs)] hover:shadow-[var(--shadow-lg)] hover:border-brand-400/40
         transition-[box-shadow,border-color] duration-[var(--duration-slow)]"
     >
-      {/* 이미지 — 4:3 비율 통일 */}
+      {/* 이미지 — 4:3 비율 통일 + Hims 스타일 호버 오버레이 */}
       <div className="aspect-[4/3] bg-bg-tertiary relative overflow-hidden">
         {mechanic.mainImageUrl ? (
           <img
@@ -29,10 +29,22 @@ export default function MechanicCard({ mechanic, onClick }: Props) {
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-text-muted text-[var(--text-caption)]">
-            이미지 없음
+          <div className="w-full h-full bg-gradient-to-br from-brand-50 to-brand-100 flex items-center justify-center">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-brand-300">
+              <path d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0H5m14 0h2m-16 0H3" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M9 7h.01M9 11h.01M9 15h.01M13 7h.01M13 11h.01M13 15h.01" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
           </div>
         )}
+        {/* Hims 스타일 호버 오버레이 CTA */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent
+          opacity-0 group-hover:opacity-100
+          transition-opacity duration-[var(--duration-slow)]
+          flex items-end p-3 sm:p-4">
+          <span className="text-white font-bold text-[var(--text-caption)] sm:text-[var(--text-body)]">
+            바로 확인 &rarr;
+          </span>
+        </div>
       </div>
 
       {/* 정보 — 8px 그리드 기반 패딩 */}
@@ -57,10 +69,10 @@ export default function MechanicCard({ mechanic, onClick }: Props) {
           </div>
         </div>
 
-        {/* 자세히 보기 — 데스크탑 */}
+        {/* 견적 받기 — 데스크탑 */}
         <div className="hidden md:block mt-4 pt-3 border-t border-border-light">
-          <span className="text-[var(--text-caption)] font-medium text-text-tertiary group-hover:text-brand-500 transition-colors">
-            자세히 보기 &rarr;
+          <span className="text-[var(--text-caption)] font-semibold text-text-tertiary group-hover:text-brand-500 transition-colors duration-[var(--duration-fast)]">
+            견적 받기 &rarr;
           </span>
         </div>
       </div>

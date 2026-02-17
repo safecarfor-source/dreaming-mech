@@ -10,6 +10,21 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isForMechanics = pathname === '/for-mechanics';
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [scrollProgress, setScrollProgress] = useState(0);
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  // 스크롤 프로그레스 바 + 네비 축소 효과
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollTop = window.scrollY;
+      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+      const progress = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
+      setScrollProgress(progress);
+      setIsScrolled(scrollTop > 60);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   // 모바일 메뉴 열릴 때 스크롤 방지
   useEffect(() => {
@@ -23,10 +38,18 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
-      {/* 네비게이션 — 깔끔한 화이트, 미니멀 보더 */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-b border-[var(--border)]">
+      {/* Hims 스타일 스크롤 프로그레스 바 */}
+      <div
+        className="fixed top-0 left-0 h-[2px] bg-brand-500 z-[60] transition-[width] duration-100"
+        style={{ width: `${scrollProgress}%` }}
+      />
+
+      {/* 네비게이션 — 스크롤 시 축소 (Hims 스타일) */}
+      <header className={`fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-b border-[var(--border)]
+        transition-all duration-[var(--duration-normal)] ${isScrolled ? 'shadow-[var(--shadow-xs)]' : ''}`}>
         <div className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8">
-          <div className="flex items-center justify-between h-14 md:h-16">
+          <div className={`flex items-center justify-between transition-all duration-[var(--duration-normal)]
+            ${isScrolled ? 'h-12 md:h-13' : 'h-14 md:h-16'}`}>
             {/* 왼쪽: 로고 + 뱃지 */}
             <div className="flex items-center gap-2 md:gap-4">
               <Link href="/" className="flex items-center gap-1">
@@ -95,7 +118,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -8 }}
               transition={{ duration: 0.2 }}
-              className="md:hidden fixed inset-x-0 top-14 bottom-0 bg-white z-40"
+              className={`md:hidden fixed inset-x-0 bottom-0 bg-white z-40 ${isScrolled ? 'top-12' : 'top-14'}`}
             >
               <div className="flex flex-col h-full">
                 <nav className="flex-1 px-5 py-6 space-y-1">

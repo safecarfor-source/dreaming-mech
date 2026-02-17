@@ -87,23 +87,23 @@ export default function Home() {
         totalClicks={totalClicks}
       />
 
-      {/* 다크 → 라이트 그라데이션 전환 */}
-      <div className="h-24 sm:h-32 md:h-40 bg-gradient-to-b from-black/60 via-black/20 via-40% to-white" />
+      {/* 다크 → 라이트 그라데이션 전환 — Hims 스타일: 더 넉넉한 브리딩 스페이스 */}
+      <div className="h-28 sm:h-36 md:h-48 bg-gradient-to-b from-black/60 via-black/20 via-40% to-white" />
 
-      {/* 정비사 목록 섹션 — 60% 화이트 배경 */}
-      <section id="map" className="bg-white pb-16 sm:pb-20 md:pb-24">
+      {/* 정비사 목록 섹션 — 60% 화이트 배경, 여백 확대 */}
+      <section id="map" className="bg-white pb-20 sm:pb-24 md:pb-32">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8">
-          {/* 섹션 헤더 */}
+          {/* 섹션 헤더 — Hims 스타일: 임팩트 카피 */}
           <AnimatedSection animation="slideUp" duration={0.8}>
-            <div className="text-center mb-10 sm:mb-12 md:mb-16">
-              <p className="text-accent-500 text-[var(--text-caption)] font-semibold tracking-[0.12em] uppercase mb-3">
-                MECHANICS
+            <div className="text-center mb-12 sm:mb-16 md:mb-20">
+              <p className="text-accent-500 text-[var(--text-caption)] font-semibold tracking-[0.12em] uppercase mb-3 sm:mb-4">
+                FIND YOUR MECHANIC
               </p>
-              <h2 className="text-[var(--text-h2)] md:text-[var(--text-h1)] font-black text-text-primary mb-3">
-                전국 <span className="text-brand-500">팔도</span> 정비사
+              <h2 className="text-[var(--text-h2)] md:text-[var(--text-h1)] font-black text-text-primary mb-3 sm:mb-4">
+                믿을 수 있는 <span className="text-brand-500">정비소</span>, 한눈에
               </h2>
-              <p className="text-text-tertiary text-[var(--text-body)] md:text-[var(--text-h5)]">
-                실력과 신뢰를 갖춘 전문가들을 만나보세요
+              <p className="text-text-tertiary text-[var(--text-body)] md:text-[var(--text-h5)] max-w-xl mx-auto">
+                지도에서 지역을 선택하면 검증된 정비소를 바로 확인할 수 있어요
               </p>
             </div>
           </AnimatedSection>
@@ -157,7 +157,7 @@ export default function Home() {
 
           {/* 카드 그리드 */}
           {loading ? (
-            <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 md:gap-6">
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6 md:gap-8">
               {[...Array(6)].map((_, i) => (
                 <CardSkeleton key={i} />
               ))}
@@ -185,14 +185,14 @@ export default function Home() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.3 }}
-                className="grid grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 md:gap-6"
+                className="grid grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6 md:gap-8"
               >
                 {filteredMechanics.map((mechanic, index) => (
                   <AnimatedSection
                     key={mechanic.id}
                     animation="slideUp"
-                    delay={index * 0.1}
-                    duration={0.5}
+                    delay={index * 0.08}
+                    duration={0.6}
                   >
                     <MechanicCard
                       mechanic={mechanic}

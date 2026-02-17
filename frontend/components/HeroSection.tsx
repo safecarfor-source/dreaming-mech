@@ -47,12 +47,12 @@ export default function HeroSection({ totalMechanics, totalClicks }: Props) {
   // Typing effects with sequential delays
   const headline = useTypingEffect('차를 리프팅합니다\n신뢰를 리프팅 합니다', 80, 400);
   const description1 = useTypingEffect(
-    '정비사는 정비를 판매하지 않습니다',
+    '정비를 판매하지 않습니다',
     60,
     400 + 2400
   );
   const description2 = useTypingEffect(
-    '대신 차량을 관리해 드립니다',
+    '차량을 관리해 드립니다',
     60,
     400 + 2400 + 1200
   );
@@ -85,15 +85,15 @@ export default function HeroSection({ totalMechanics, totalClicks }: Props) {
           전국의 정비소를 소개합니다.
         </motion.p>
 
-        {/* 메인 헤드라인 — 모듈러 스케일 적용 */}
+        {/* 메인 헤드라인 — Hims 스타일: 더 크고 대담하게 */}
         <motion.h1
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="font-black leading-[1.1] mb-6 sm:mb-8 md:mb-10
+          className="font-black leading-[1.1] mb-8 sm:mb-10 md:mb-12
             min-h-[100px] sm:min-h-[160px] md:min-h-[240px] lg:min-h-[280px]
             break-keep whitespace-nowrap"
-          style={{ fontSize: 'clamp(1.75rem, 5vw, 5rem)' }}
+          style={{ fontSize: 'clamp(2rem, 6vw, 5.5rem)' }}
         >
           {headline.displayedText.split('\n').map((line, index) => (
             <span key={index}>
@@ -128,6 +128,30 @@ export default function HeroSection({ totalMechanics, totalClicks }: Props) {
           {description2.displayedText}
           {!description2.isComplete && <span className="animate-pulse">|</span>}
         </motion.p>
+
+        {/* Hims 스타일 CTA 버튼 — 대담한 라운드 + 충분한 여백 */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 4.5, duration: 0.6 }}
+          className="mt-10 sm:mt-12 md:mt-14"
+        >
+          <motion.a
+            href="#map"
+            whileHover={{ scale: 1.03 }}
+            whileTap={{ scale: 0.97 }}
+            className="inline-flex items-center gap-2.5 bg-brand-500 hover:bg-brand-600 text-white
+              rounded-full font-bold px-8 sm:px-10 py-4 sm:py-5
+              text-[var(--text-body)] sm:text-[var(--text-h5)]
+              shadow-[var(--shadow-lg)] hover:shadow-[var(--shadow-xl)]
+              transition-all duration-[var(--duration-normal)]"
+          >
+            내 주변 정비소 찾기
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M7 17l9.2-9.2M17 17V7H7" />
+            </svg>
+          </motion.a>
+        </motion.div>
 
         {/* 스크롤 인디케이터 */}
         <motion.div
