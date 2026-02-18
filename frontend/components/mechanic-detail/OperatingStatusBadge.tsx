@@ -74,21 +74,21 @@ export default function OperatingStatusBadge({ operatingHours, holidays }: Props
         className="flex items-center gap-2"
       >
         <span
-          className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-bold ${
+          className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-base md:text-lg font-bold ${
             result.status === 'open'
               ? 'bg-green-100 text-green-700'
               : 'bg-red-100 text-red-700'
           }`}
         >
           <span
-            className={`w-2 h-2 rounded-full ${
+            className={`w-2.5 h-2.5 rounded-full ${
               result.status === 'open' ? 'bg-green-500' : 'bg-red-500'
             }`}
           />
           {result.label}
         </span>
         {result.todayHours && (
-          <span className="text-sm text-gray-500">{result.todayHours}</span>
+          <span className="text-base md:text-lg text-gray-500">{result.todayHours}</span>
         )}
         {operatingHours && (
           showTable ? <ChevronUp size={16} className="text-gray-400" /> : <ChevronDown size={16} className="text-gray-400" />
