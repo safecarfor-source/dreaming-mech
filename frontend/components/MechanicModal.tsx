@@ -140,41 +140,35 @@ export default function MechanicModal() {
                   <SpecialtyTags specialties={mechanic.specialties} />
                 </div>
 
-                {/* 기본 정보 — 점진적 간격 */}
-                <div className="grid md:grid-cols-2 gap-5 sm:gap-6">
-                  <div className="space-y-4">
-                    <div className="flex items-start gap-3">
-                      <div className="p-2.5 bg-bg-secondary rounded-xl flex-shrink-0">
-                        <MapPin size={20} className="text-text-tertiary" />
+                {/* 기본 정보 */}
+                <div className="space-y-4 sm:space-y-5">
+                  <div className="flex flex-col gap-2.5">
+                    <div className="flex items-center gap-2.5">
+                      <div className="p-1.5 bg-bg-secondary rounded-lg flex-shrink-0">
+                        <MapPin size={16} className="text-text-tertiary" />
                       </div>
-                      <div className="min-w-0 flex-1 pt-0.5">
-                        <p className="text-[var(--text-caption)] text-text-tertiary mb-0.5">주소</p>
-                        <p className="text-[var(--text-body)] md:text-[var(--text-h5)] text-text-primary font-medium break-words">
-                          {sanitizeText(mechanic.address)}
-                        </p>
-                      </div>
+                      <p className="text-[var(--text-body)] text-text-primary font-medium break-words min-w-0 flex-1">
+                        {sanitizeText(mechanic.address)}
+                      </p>
                     </div>
 
-                    <div className="flex items-start gap-3">
-                      <div className="p-2.5 bg-bg-secondary rounded-xl flex-shrink-0">
-                        <Phone size={20} className="text-text-tertiary" />
+                    <div className="flex items-center gap-2.5">
+                      <div className="p-1.5 bg-bg-secondary rounded-lg flex-shrink-0">
+                        <Phone size={16} className="text-text-tertiary" />
                       </div>
-                      <div className="min-w-0 flex-1 pt-0.5">
-                        <p className="text-[var(--text-caption)] text-text-tertiary mb-0.5">전화번호</p>
-                        <a
-                          href={`tel:${sanitizePhone(mechanic.phone)}`}
-                          className="text-[var(--text-body)] md:text-[var(--text-h5)] text-brand-500 font-medium hover:underline break-all"
-                        >
-                          {sanitizePhone(mechanic.phone)}
-                        </a>
-                      </div>
+                      <a
+                        href={`tel:${sanitizePhone(mechanic.phone)}`}
+                        className="text-[var(--text-body)] text-brand-500 font-medium hover:underline break-all"
+                      >
+                        {sanitizePhone(mechanic.phone)}
+                      </a>
                     </div>
                   </div>
 
                   {/* 소개 */}
                   {mechanic.description && (
-                    <div className="p-5 sm:p-6 bg-bg-secondary rounded-2xl">
-                      <h3 className="text-[var(--text-h5)] md:text-[var(--text-h4)] font-bold text-text-primary mb-3">소개</h3>
+                    <div className="p-4 sm:p-5 bg-bg-secondary rounded-xl">
+                      <h3 className="text-[var(--text-h5)] font-bold text-text-primary mb-2">소개</h3>
                       <p className="text-[var(--text-body)] text-text-secondary leading-[1.7] break-words whitespace-pre-wrap">
                         {sanitizeBasicHTML(mechanic.description)}
                       </p>
