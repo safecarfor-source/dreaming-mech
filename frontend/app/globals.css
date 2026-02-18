@@ -1,38 +1,113 @@
 @import "tailwindcss";
 
 :root {
-  --background: #F8F7FC;
-  --foreground: #1A0A2E;
+  /* ── 60% 지배색: 배경, 여백, 기본 표면 ── */
+  --background: #FFFFFF;
+  --bg-secondary: #F9FAFB;
+  --bg-tertiary: #F3F4F6;
   --surface: #FFFFFF;
+  --foreground: #111827;
 
-  /* 프리미엄 퍼플 브랜드 컬러 (고객 페이지) */
+  /* ── 30% 보조색: 브랜드 퍼플 (단일 계열 통합) ── */
+  --brand-50:  #F5F3FF;
+  --brand-100: #EDE9FE;
+  --brand-200: #DDD6FE;
+  --brand-400: #A78BFA;
+  --brand-500: #7C4DFF;
+  --brand-600: #6D3FE0;
+  --brand-700: #5B2FC2;
+
+  /* ── 10% 강조색: 앰버/골드 ── */
+  --accent-400: #FBBF24;
+  --accent-500: #F59E0B;
+  --accent-600: #D97706;
+
+  /* ── 텍스트 ── */
+  --text-primary:   #111827;
+  --text-secondary:  #4B5563;
+  --text-tertiary:   #6B7280;
+  --text-muted:      #9CA3AF;
+
+  /* ── 보더 ── */
+  --border: #E5E7EB;
+  --border-light: #F3F4F6;
+  --border-focus: #7C4DFF;
+
+  /* ── 시맨틱 ── */
+  --color-success: #10B981;
+  --color-error:   #EF4444;
+  --color-warning: #F59E0B;
+  --color-info:    #3B82F6;
+
+  /* ── 타이포그래피 스케일 (Minor Third 1.200) ── */
+  --text-display: 3rem;       /* 48px */
+  --text-h1:      2.5rem;     /* 40px */
+  --text-h2:      2.074rem;   /* 33px */
+  --text-h3:      1.728rem;   /* 28px */
+  --text-h4:      1.44rem;    /* 23px */
+  --text-h5:      1.2rem;     /* 19px */
+  --text-body:    1rem;       /* 16px */
+  --text-caption: 0.833rem;   /* 13px */
+  --text-small:   0.694rem;   /* 11px */
+
+  /* ── 그림자 체계 ── */
+  --shadow-xs:  0 1px 2px rgba(0,0,0,0.05);
+  --shadow-sm:  0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md:  0 4px 6px rgba(0,0,0,0.06), 0 2px 4px rgba(0,0,0,0.04);
+  --shadow-lg:  0 10px 15px rgba(0,0,0,0.08), 0 4px 6px rgba(0,0,0,0.03);
+  --shadow-xl:  0 20px 25px rgba(0,0,0,0.08), 0 8px 10px rgba(0,0,0,0.03);
+
+  /* ── 트랜지션 ── */
+  --duration-fast:   150ms;
+  --duration-normal: 200ms;
+  --duration-slow:   300ms;
+  --ease-default: cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* ── 호환성: 관리자 페이지용 (기존 변수 유지) ── */
   --brand-primary: #7C4DFF;
   --brand-primary-light: #A78BFA;
-  --brand-primary-dark: #5B3FBF;
+  --brand-primary-dark: #5B2FC2;
   --brand-accent: #F59E0B;
   --brand-accent-hover: #D97706;
-
-  /* 보라색 강조 (관리자 페이지 전용) */
-  --accent: #7C3AED;
+  --accent: #7C4DFF;
   --accent-light: #A78BFA;
-  --accent-dark: #6D28D9;
-
-  /* 접근성 개선 */
-  --text-muted: #6B7280;
-  --border: #DDD6FE;
+  --accent-dark: #5B2FC2;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-surface: var(--surface);
+  --color-bg-secondary: var(--bg-secondary);
+  --color-bg-tertiary: var(--bg-tertiary);
+
+  --color-brand-50: var(--brand-50);
+  --color-brand-100: var(--brand-100);
+  --color-brand-200: var(--brand-200);
+  --color-brand-400: var(--brand-400);
+  --color-brand-500: var(--brand-500);
+  --color-brand-600: var(--brand-600);
+  --color-brand-700: var(--brand-700);
+
+  --color-accent-400: var(--accent-400);
+  --color-accent-500: var(--accent-500);
+  --color-accent-600: var(--accent-600);
+
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-tertiary: var(--text-tertiary);
+  --color-text-muted: var(--text-muted);
+
+  --color-border: var(--border);
+  --color-border-light: var(--border-light);
+  --color-border-focus: var(--border-focus);
+
   --color-brand-primary: var(--brand-primary);
   --color-brand-accent: var(--brand-accent);
   --color-accent: var(--accent);
   --color-accent-light: var(--accent-light);
   --color-accent-dark: var(--accent-dark);
-  --color-text-muted: var(--text-muted);
-  --color-border: var(--border);
+
   --font-sans: 'Pretendard', system-ui, sans-serif;
 }
 
@@ -44,6 +119,21 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: 'Pretendard', system-ui, sans-serif;
+  line-height: 1.6;
+  letter-spacing: -0.01em;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* 한글 본문 최적 line-height */
+p, li, dd, blockquote {
+  line-height: 1.7;
+}
+
+/* 제목 line-height */
+h1, h2, h3, h4, h5, h6 {
+  line-height: 1.2;
+  letter-spacing: -0.02em;
 }
 
 ::selection {
