@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { MapPin, Phone } from 'lucide-react';
 import type { Mechanic } from '@/types';
@@ -23,10 +24,13 @@ export default function MechanicCard({ mechanic, onClick }: Props) {
       {/* 이미지 — 4:3 비율 통일 + Hims 스타일 호버 오버레이 */}
       <div className="aspect-[4/3] bg-bg-tertiary relative overflow-hidden">
         {mechanic.mainImageUrl ? (
-          <img
+          <Image
             src={mechanic.mainImageUrl}
             alt={sanitizeText(mechanic.name)}
+            width={400}
+            height={300}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
+            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 33vw"
           />
         ) : (
           <div className="w-full h-full bg-gradient-to-br from-brand-50 to-brand-100 flex items-center justify-center">

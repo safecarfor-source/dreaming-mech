@@ -17,6 +17,7 @@ import MechanicModal from '@/components/MechanicModal';
 import CardSkeleton from '@/components/ui/CardSkeleton';
 import ErrorMessage from '@/components/ui/ErrorMessage';
 import AnimatedSection from '@/components/animations/AnimatedSection';
+import CountUp from '@/components/animations/CountUp';
 import type { Mechanic } from '@/types';
 
 export default function Home() {
@@ -87,11 +88,111 @@ export default function Home() {
         totalClicks={totalClicks}
       />
 
-      {/* 다크 → 라이트 그라데이션 전환 — Hims 스타일: 더 넉넉한 브리딩 스페이스 */}
-      <div className="h-28 sm:h-36 md:h-48 bg-gradient-to-b from-black/60 via-black/20 via-40% to-white" />
+      {/* 다크 → 라이트 그라데이션 전환 */}
+      <div className="h-20 sm:h-28 md:h-36 bg-gradient-to-b from-black/60 via-black/20 via-40% to-bg-secondary" />
 
-      {/* 정비사 목록 섹션 — 60% 화이트 배경, 여백 확대 */}
-      <section id="map" className="bg-white pb-20 sm:pb-24 md:pb-32">
+      {/* 신뢰 지표 섹션 */}
+      <section className="bg-bg-secondary py-12 sm:py-16 md:py-20">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 md:px-8">
+          <AnimatedSection animation="slideUp" duration={0.7}>
+            <div className="grid grid-cols-3 gap-4 sm:gap-8">
+              {[
+                { value: mechanics.length, suffix: '곳+', label: '검증된 정비소' },
+                { value: 5.3, suffix: '만', label: '유튜브 구독자', decimals: 1 },
+                { value: totalClicks, suffix: '+', label: '누적 조회수' },
+              ].map((stat, i) => (
+                <div key={i} className="text-center">
+                  <p className="text-[var(--text-h3)] sm:text-[var(--text-h2)] md:text-[var(--text-h1)] font-black text-brand-500">
+                    <CountUp end={stat.value} duration={1800} delay={i * 200} suffix={stat.suffix} decimals={stat.decimals || 0} />
+                  </p>
+                  <p className="text-[var(--text-caption)] sm:text-[var(--text-body)] text-text-tertiary font-medium mt-1">
+                    {stat.label}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </AnimatedSection>
+        </div>
+      </section>
+
+      {/* 이용 방법 섹션 */}
+      <section className="bg-white py-16 sm:py-20 md:py-24">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 md:px-8">
+          <AnimatedSection animation="slideUp" duration={0.7}>
+            <div className="text-center mb-10 sm:mb-14">
+              <p className="text-accent-500 text-[var(--text-caption)] font-semibold tracking-[0.12em] uppercase mb-3">
+                HOW IT WORKS
+              </p>
+              <h2 className="text-[var(--text-h3)] sm:text-[var(--text-h2)] font-black text-text-primary">
+                간단한 3단계로 시작하세요
+              </h2>
+            </div>
+          </AnimatedSection>
+
+          <div className="grid md:grid-cols-3 gap-6 sm:gap-8">
+            {[
+              {
+                step: '01',
+                title: '지역 선택',
+                desc: '지도에서 원하는 지역을 탭하세요',
+                icon: (
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
+                    <circle cx="12" cy="10" r="3" />
+                  </svg>
+                ),
+              },
+              {
+                step: '02',
+                title: '정비소 확인',
+                desc: '검증된 정비소의 상세 정보를 확인하세요',
+                icon: (
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M9 11l3 3L22 4" />
+                    <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" />
+                  </svg>
+                ),
+              },
+              {
+                step: '03',
+                title: '견적 요청',
+                desc: '간편하게 견적을 요청하고 연락받으세요',
+                icon: (
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+                    <polyline points="14 2 14 8 20 8" />
+                    <line x1="16" y1="13" x2="8" y2="13" />
+                    <line x1="16" y1="17" x2="8" y2="17" />
+                    <polyline points="10 9 9 9 8 9" />
+                  </svg>
+                ),
+              },
+            ].map((item, i) => (
+              <AnimatedSection key={i} animation="slideUp" delay={i * 0.15} duration={0.6}>
+                <div className="relative bg-bg-secondary rounded-2xl p-6 sm:p-8 text-center
+                  border border-transparent hover:border-brand-200 hover:shadow-[var(--shadow-md)]
+                  transition-all duration-[var(--duration-slow)] group">
+                  <div className="w-14 h-14 mx-auto mb-5 rounded-2xl bg-brand-50 text-brand-500
+                    flex items-center justify-center group-hover:bg-brand-500 group-hover:text-white
+                    transition-colors duration-[var(--duration-slow)]">
+                    {item.icon}
+                  </div>
+                  <p className="text-[var(--text-caption)] font-bold text-brand-400 mb-2">{item.step}</p>
+                  <h3 className="text-[var(--text-h5)] sm:text-[var(--text-h4)] font-bold text-text-primary mb-2">
+                    {item.title}
+                  </h3>
+                  <p className="text-[var(--text-caption)] sm:text-[var(--text-body)] text-text-tertiary">
+                    {item.desc}
+                  </p>
+                </div>
+              </AnimatedSection>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* 정비사 목록 섹션 */}
+      <section id="map" className="bg-bg-secondary py-16 sm:py-20 md:py-24">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8">
           {/* 섹션 헤더 — Hims 스타일: 임팩트 카피 */}
           <AnimatedSection animation="slideUp" duration={0.8}>
@@ -203,6 +304,33 @@ export default function Home() {
               </motion.div>
             </AnimatePresence>
           )}
+        </div>
+      </section>
+
+      {/* 정비사 모집 CTA 배너 */}
+      <section className="bg-brand-500 py-14 sm:py-16 md:py-20">
+        <div className="max-w-3xl mx-auto px-6 sm:px-8 text-center">
+          <AnimatedSection animation="slideUp" duration={0.7}>
+            <h2 className="text-[var(--text-h3)] sm:text-[var(--text-h2)] font-black text-white mb-3 sm:mb-4">
+              정비사 사장님이신가요?
+            </h2>
+            <p className="text-[var(--text-body)] sm:text-[var(--text-h5)] text-white/70 mb-8 sm:mb-10">
+              꿈꾸는정비사에 정비소를 등록하고<br className="sm:hidden" /> 더 많은 고객을 만나보세요
+            </p>
+            <a
+              href="/for-mechanics"
+              className="inline-flex items-center gap-2.5 bg-white text-brand-600 rounded-full
+                font-bold px-8 sm:px-10 py-4 sm:py-5
+                text-[var(--text-body)] sm:text-[var(--text-h5)]
+                shadow-[var(--shadow-lg)] hover:shadow-[var(--shadow-xl)]
+                hover:bg-brand-50 transition-all duration-[var(--duration-normal)]"
+            >
+              무료로 등록하기
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M5 12h14M12 5l7 7-7 7" />
+              </svg>
+            </a>
+          </AnimatedSection>
         </div>
       </section>
 

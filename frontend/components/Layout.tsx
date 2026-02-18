@@ -165,15 +165,61 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
       <main className="flex-1">{children}</main>
 
-      {/* 푸터 — 다크, 여유로운 간격 */}
-      <footer className="bg-[#111827] py-10 sm:py-12 md:py-14">
-        <div className="max-w-6xl mx-auto px-6 sm:px-8 text-center">
-          <p className="text-[var(--text-h5)] font-bold text-white/90 mb-2">
-            꿈꾸는<span className="text-brand-400">정비사</span>
-          </p>
-          <p className="text-[var(--text-caption)] text-white/40">
-            &copy; 2025 꿈꾸는정비사. All rights reserved.
-          </p>
+      {/* 푸터 */}
+      <footer className="bg-[#111827] pt-12 sm:pt-16 pb-8 sm:pb-10">
+        <div className="max-w-6xl mx-auto px-6 sm:px-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12 mb-10 md:mb-12">
+            {/* 브랜드 */}
+            <div>
+              <p className="text-[var(--text-h5)] font-bold text-white/90 mb-3">
+                꿈꾸는<span className="text-brand-400">정비사</span>
+              </p>
+              <p className="text-[var(--text-caption)] text-white/50 leading-relaxed">
+                유튜브 구독자 5.3만 꿈꾸는 정비사가<br />
+                직접 검증한 전국 자동차 정비소를<br />
+                한 곳에서 만나보세요.
+              </p>
+            </div>
+
+            {/* 바로가기 */}
+            <div>
+              <p className="text-[var(--text-body)] font-semibold text-white/70 mb-3">바로가기</p>
+              <nav className="space-y-2">
+                <Link href="/#map" className="block text-[var(--text-caption)] text-white/40 hover:text-brand-400 transition-colors duration-[var(--duration-fast)]">
+                  정비소 찾기
+                </Link>
+                <Link href="/for-mechanics" className="block text-[var(--text-caption)] text-white/40 hover:text-brand-400 transition-colors duration-[var(--duration-fast)]">
+                  정비사 사장님
+                </Link>
+                <Link href="/inquiry" className="block text-[var(--text-caption)] text-white/40 hover:text-brand-400 transition-colors duration-[var(--duration-fast)]">
+                  문의하기
+                </Link>
+                <Link href="/owner/login" className="block text-[var(--text-caption)] text-white/40 hover:text-brand-400 transition-colors duration-[var(--duration-fast)]">
+                  사장님 로그인
+                </Link>
+              </nav>
+            </div>
+
+            {/* 연락처 */}
+            <div>
+              <p className="text-[var(--text-body)] font-semibold text-white/70 mb-3">소셜</p>
+              <a
+                href="https://www.youtube.com/@dreaming-mechanic"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 text-[var(--text-caption)] text-white/40 hover:text-brand-400 transition-colors duration-[var(--duration-fast)]"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M23.5 6.5a3 3 0 00-2.1-2.1C19.5 4 12 4 12 4s-7.5 0-9.4.4a3 3 0 00-2.1 2.1C0 8.4 0 12 0 12s0 3.6.5 5.5a3 3 0 002.1 2.1c1.9.4 9.4.4 9.4.4s7.5 0 9.4-.4a3 3 0 002.1-2.1c.5-1.9.5-5.5.5-5.5s0-3.6-.5-5.5zM9.5 15.5v-7l6.3 3.5-6.3 3.5z"/></svg>
+                유튜브 채널
+              </a>
+            </div>
+          </div>
+
+          <div className="border-t border-white/10 pt-6 sm:pt-8">
+            <p className="text-[var(--text-caption)] text-white/30 text-center">
+              &copy; 2025 꿈꾸는정비사. All rights reserved.
+            </p>
+          </div>
         </div>
       </footer>
     </div>

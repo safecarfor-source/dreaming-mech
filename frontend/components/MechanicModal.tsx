@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import Image from 'next/image';
 import { X, MapPin, Phone, ExternalLink, FileText, BadgeCheck } from 'lucide-react';
 import { useModalStore } from '@/lib/store';
 import { mechanicsApi } from '@/lib/api';
@@ -110,11 +111,14 @@ export default function MechanicModal() {
               <div className="max-w-3xl mx-auto px-5 sm:px-6 py-6 sm:py-8 space-y-6 sm:space-y-8">
                 {/* 대표 이미지 — 16:9 비율 */}
                 {mechanic.mainImageUrl && (
-                  <div className="rounded-2xl overflow-hidden bg-bg-tertiary aspect-[16/9]">
-                    <img
+                  <div className="rounded-2xl overflow-hidden bg-bg-tertiary aspect-[16/9] relative">
+                    <Image
                       src={mechanic.mainImageUrl}
                       alt={sanitizeText(mechanic.name)}
-                      className="w-full h-full object-cover"
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 768px) 100vw, 768px"
+                      priority
                     />
                   </div>
                 )}
