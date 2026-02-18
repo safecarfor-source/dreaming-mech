@@ -58,7 +58,7 @@ export default function HeroSection({ totalMechanics, totalClicks }: Props) {
   );
 
   return (
-    <section className="min-h-screen flex items-center justify-center relative overflow-hidden pt-14 md:pt-16">
+    <section className="min-h-screen flex items-center justify-center relative overflow-hidden pt-14 md:pt-16 bg-black">
       {/* Background Video */}
       <div className="absolute inset-0 z-0">
         <video
@@ -71,50 +71,70 @@ export default function HeroSection({ totalMechanics, totalClicks }: Props) {
         />
       </div>
 
-      {/* Dark overlay — 65%로 약간 더 어둡게 (텍스트 대비율 확보) */}
-      <div className="absolute inset-0 bg-black/65 z-0" />
+      {/* Netflix 스타일 멀티 레이어 오버레이 */}
+      {/* Layer 1: 베이스 틴트 — 전체 균일 어둡게 */}
+      <div className="absolute inset-0 z-[1] bg-black/40" />
+      {/* Layer 2: 하단 집중 그라데이션 — 텍스트 영역 강화 */}
+      <div
+        className="absolute inset-0 z-[2]"
+        style={{
+          background: 'linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.4) 40%, rgba(0,0,0,0.1) 70%, rgba(0,0,0,0.5) 100%)',
+        }}
+      />
+      {/* Layer 3: 비네팅 효과 — 가장자리 자연스러운 어둡게 */}
+      <div
+        className="absolute inset-0 z-[3]"
+        style={{
+          background: 'radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.4) 100%)',
+        }}
+      />
 
       <div className="max-w-5xl mx-auto px-6 sm:px-8 text-center relative z-10">
-        {/* 서브 타이틀 — 10% 강조색 */}
+        {/* 서브 타이틀 — 밝은 화이트 + 약간 작게 */}
         <motion.p
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-[var(--accent-400)] text-[var(--text-body)] sm:text-[var(--text-h5)] md:text-[var(--text-h4)]
-            font-medium tracking-[0.08em] mb-4 sm:mb-5 md:mb-6"
+          className="text-white/80 text-[var(--text-caption)] sm:text-[var(--text-body)] md:text-[var(--text-h5)]
+            font-medium tracking-[0.1em] uppercase mb-5 sm:mb-6 md:mb-8"
+          style={{ textShadow: '0 2px 8px rgba(0,0,0,0.5)' }}
         >
-          전국의 정비소를 소개합니다.
+          전국의 정비소를 소개합니다
         </motion.p>
 
-        {/* 메인 헤드라인 — Hims 스타일: 더 크고 대담하게 */}
+        {/* 메인 헤드라인 — 넷플릭스 원칙: 순백 #FFF, font-black, text-shadow */}
         <motion.h1
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="font-black leading-[1.1] mb-8 sm:mb-10 md:mb-12
+          className="text-white font-black leading-[1.1] mb-8 sm:mb-10 md:mb-12
             min-h-[100px] sm:min-h-[160px] md:min-h-[240px] lg:min-h-[280px]
             break-keep whitespace-nowrap"
-          style={{ fontSize: 'clamp(2rem, 6vw, 5.5rem)' }}
+          style={{
+            fontSize: 'clamp(2rem, 6vw, 5.5rem)',
+            textShadow: '0 2px 4px rgba(0,0,0,0.5), 0 4px 16px rgba(0,0,0,0.3)',
+          }}
         >
           {headline.displayedText.split('\n').map((line, index) => (
             <span key={index}>
-              {index === 0 ? line : <span className="text-brand-400">{line}</span>}
+              {line}
               {index === 0 && <br />}
             </span>
           ))}
-          <span className="animate-pulse">|</span>
+          <span className="animate-pulse text-white/60">|</span>
         </motion.h1>
 
-        {/* 설명 — 절제된 크기, 더 나은 여백 */}
+        {/* 설명 — white/80으로 가독성 확보, text-shadow 추가 */}
         <motion.p
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 2.5 }}
           className="text-[var(--text-body)] sm:text-[var(--text-h5)] md:text-[var(--text-h4)]
-            text-white/60 max-w-2xl mx-auto mb-1.5 sm:mb-2
-            min-h-[24px] sm:min-h-[32px] md:min-h-[36px] break-keep"
+            text-white/80 max-w-2xl mx-auto mb-1.5 sm:mb-2
+            min-h-[24px] sm:min-h-[32px] md:min-h-[36px] break-keep font-medium"
+          style={{ textShadow: '0 1px 6px rgba(0,0,0,0.5)' }}
         >
           {description1.displayedText}
-          {!description1.isComplete && <span className="animate-pulse">|</span>}
+          {!description1.isComplete && <span className="animate-pulse text-white/50">|</span>}
         </motion.p>
 
         <motion.p
@@ -122,14 +142,15 @@ export default function HeroSection({ totalMechanics, totalClicks }: Props) {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 3.5 }}
           className="text-[var(--text-body)] sm:text-[var(--text-h5)] md:text-[var(--text-h4)]
-            text-white/60 max-w-2xl mx-auto
-            min-h-[24px] sm:min-h-[32px] md:min-h-[36px] break-keep"
+            text-white/80 max-w-2xl mx-auto
+            min-h-[24px] sm:min-h-[32px] md:min-h-[36px] break-keep font-medium"
+          style={{ textShadow: '0 1px 6px rgba(0,0,0,0.5)' }}
         >
           {description2.displayedText}
-          {!description2.isComplete && <span className="animate-pulse">|</span>}
+          {!description2.isComplete && <span className="animate-pulse text-white/50">|</span>}
         </motion.p>
 
-        {/* Hims 스타일 CTA 버튼 — 대담한 라운드 + 충분한 여백 */}
+        {/* CTA 버튼 — 브랜드 색상은 여기에만 (넷플릭스 원칙) */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -143,7 +164,7 @@ export default function HeroSection({ totalMechanics, totalClicks }: Props) {
             className="inline-flex items-center gap-2.5 bg-brand-500 hover:bg-brand-600 text-white
               rounded-full font-bold px-8 sm:px-10 py-4 sm:py-5
               text-[var(--text-body)] sm:text-[var(--text-h5)]
-              shadow-[var(--shadow-lg)] hover:shadow-[var(--shadow-xl)]
+              shadow-[0_4px_24px_rgba(124,77,255,0.4)] hover:shadow-[0_6px_32px_rgba(124,77,255,0.5)]
               transition-all duration-[var(--duration-normal)]"
           >
             내 주변 정비소 찾기
