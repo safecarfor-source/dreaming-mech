@@ -805,6 +805,61 @@ export default function ForMechanicsPage() {
       </section>
 
       {/* ══════════════════════════════════════════════
+          섹션 9.5: 유튜브 콘텐츠 기획 서비스 (SHIPIT 컨셉)
+      ══════════════════════════════════════════════ */}
+      <section className="bg-[#0a0a0a] py-12 md:py-20">
+        <div className="container mx-auto px-5 md:px-6">
+          <AnimatedSection animation="slideUp" duration={0.7}>
+            <div className="max-w-4xl mx-auto">
+              <div className="text-center mb-8 md:mb-12">
+                <p className="text-[#a6f546] text-xs font-semibold tracking-[0.2em] mb-3">
+                  YOU ANSWER, WE PLAN
+                </p>
+                <h2
+                  className="font-black text-white break-keep leading-tight mb-4"
+                  style={{ fontSize: 'clamp(1.375rem, 4vw, 3rem)' }}
+                >
+                  5가지 질문에 답하면
+                  <br />
+                  <span className="bg-[#a6f546] text-[#111] px-2 py-0.5">유튜브 기획안</span>이 나옵니다.
+                </h2>
+                <p className="text-gray-400 text-sm md:text-base max-w-lg mx-auto break-keep">
+                  20년 경험이 콘텐츠가 됩니다. 촬영 경험도, 편집 실력도 필요 없습니다.
+                  질문에 답하는 것만으로 영상 5개 기획안이 완성됩니다.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                {[
+                  { step: '01', title: '5가지 질문에 답한다', desc: '전문 분야, 황당했던 사례, 자주 받는 질문 등 경험을 그대로 씁니다', icon: '✍️' },
+                  { step: '02', title: '기획안 5개가 나온다', desc: '제목, 첫 3초 훅, 이 영상이 잘 되는 이유까지 자동 완성', icon: '⚡' },
+                  { step: '03', title: '찍고 올리면 끝', desc: '캡컷으로 편집, 스마트폰으로 촬영. 그것만으로 충분합니다', icon: '🎬' },
+                ].map((card, i) => (
+                  <div key={i} className="bg-white/5 border border-white/10 rounded-xl p-5">
+                    <p className="text-[10px] text-[#a6f546] font-bold tracking-widest mb-3">{card.step}</p>
+                    <p className="text-2xl mb-2">{card.icon}</p>
+                    <h3 className="text-white font-bold text-sm mb-1.5 break-keep">{card.title}</h3>
+                    <p className="text-gray-400 text-xs break-keep leading-relaxed">{card.desc}</p>
+                  </div>
+                ))}
+              </div>
+
+              <div className="text-center">
+                <Link
+                  href="/youtube-idea"
+                  className="inline-flex items-center gap-2 bg-[#a6f546] hover:bg-[#8fd93a] text-[#111] px-7 py-3.5 md:px-10 md:py-4 rounded-xl md:rounded-2xl font-bold text-sm md:text-lg transition-all shadow-lg shadow-[#a6f546]/20"
+                >
+                  무료로 기획안 만들기
+                  <ArrowRight size={18} />
+                </Link>
+                <p className="text-gray-500 text-xs mt-3">무료 · 로그인 불필요 · 2분이면 완성</p>
+              </div>
+            </div>
+          </AnimatedSection>
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════════
           섹션 10: 최종 CTA
       ══════════════════════════════════════════════ */}
       <section className="bg-gradient-to-br from-[#a6f546] to-[#65a30d] py-12 md:py-20">

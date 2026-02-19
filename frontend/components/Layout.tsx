@@ -62,6 +62,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               <Link href="/for-mechanics" className="px-4 py-2 text-sm text-gray-600 hover:text-[#7C4DFF] transition-colors rounded-lg hover:bg-[#7C4DFF]/5 font-medium">
                 정비사 사장님
               </Link>
+              <Link href="/youtube-idea" className="px-4 py-2 text-sm text-gray-600 hover:text-[#7C4DFF] transition-colors rounded-lg hover:bg-[#7C4DFF]/5 font-medium">
+                유튜브 기획
+              </Link>
               <Link href="/inquiry" className="px-4 py-2 text-sm text-gray-600 hover:text-[#7C4DFF] transition-colors rounded-lg hover:bg-[#7C4DFF]/5 font-medium">
                 문의하기
               </Link>
@@ -112,6 +115,13 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                     className="flex items-center gap-3 px-4 py-4 text-base text-gray-700 hover:text-[#7C4DFF] hover:bg-[#7C4DFF]/5 rounded-xl font-medium transition-colors"
                   >
                     정비사 사장님
+                  </Link>
+                  <Link
+                    href="/youtube-idea"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center gap-3 px-4 py-4 text-base text-gray-700 hover:text-[#7C4DFF] hover:bg-[#7C4DFF]/5 rounded-xl font-medium transition-colors"
+                  >
+                    유튜브 기획
                   </Link>
                   <Link
                     href="/inquiry"
