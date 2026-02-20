@@ -1,3 +1,8 @@
+'use client';
+
+import { useState, useRef, useEffect } from 'react';
+import { ChevronDown, Search, X } from 'lucide-react';
+
 /**
  * 11개 지역 + 주요 시/군/구를 포함한 지역 옵션
  * 형식: "시도 시군구" (예: "인천 남동구", "전북 전주시")
@@ -16,6 +21,156 @@ const LOCATION_OPTIONS: { group: string; options: string[] }[] = [
   { group: '제주특별자치도', options: ['제주 제주시', '제주 서귀포시'] },
 ];
 
+// 모든 옵션을 flat하게
+const ALL_OPTIONS = LOCATION_OPTIONS.flatMap((g) => g.options);
+
+interface LocationSearchDropdownProps {
+  value: string;
+  onChange: (value: string) => void;
+}
+
+function LocationSearchDropdown({ value, onChange }: LocationSearchDropdownProps) {
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState('');
+  const containerRef = useRef<HTMLDivElement>(null);
+  const searchRef = useRef<HTMLInputElement>(null);
+
+  // 외부 클릭 시 닫기
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setOpen(false);
+        setSearch('');
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // 드롭다운 열릴 때 검색창 포커스
+  useEffect(() => {
+    if (open && searchRef.current) {
+      setTimeout(() => searchRef.current?.focus(), 50);
+    }
+  }, [open]);
+
+  const filtered = search.trim()
+    ? ALL_OPTIONS.filter((opt) => opt.includes(search.trim()))
+    : null; // null이면 그룹별 표시
+
+  const handleSelect = (opt: string) => {
+    onChange(opt);
+    setOpen(false);
+    setSearch('');
+  };
+
+  const handleClear = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onChange('');
+    setSearch('');
+  };
+
+  return (
+    <div ref={containerRef} className="relative">
+      {/* 선택 버튼 */}
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        className={`w-full px-4 py-3 border rounded-xl focus:outline-none text-left flex items-center justify-between transition-colors ${
+          open ? 'border-purple-600' : 'border-gray-200'
+        } text-gray-900 bg-white`}
+      >
+        <span className={value ? 'text-gray-900' : 'text-gray-400'}>
+          {value || '지역을 선택하세요'}
+        </span>
+        <div className="flex items-center gap-1">
+          {value && (
+            <span
+              onClick={handleClear}
+              className="p-0.5 rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-600 cursor-pointer"
+            >
+              <X size={14} />
+            </span>
+          )}
+          <ChevronDown
+            size={16}
+            className={`text-gray-400 transition-transform ${open ? 'rotate-180' : ''}`}
+          />
+        </div>
+      </button>
+
+      {/* 드롭다운 패널 */}
+      {open && (
+        <div className="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden">
+          {/* 검색창 */}
+          <div className="p-2 border-b border-gray-100 flex items-center gap-2 bg-gray-50">
+            <Search size={15} className="text-gray-400 shrink-0" />
+            <input
+              ref={searchRef}
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="지역 검색 (예: 강남, 수원, 부산)"
+              className="flex-1 text-sm bg-transparent outline-none text-gray-900 placeholder-gray-400"
+            />
+            {search && (
+              <button type="button" onClick={() => setSearch('')} className="text-gray-400 hover:text-gray-600">
+                <X size={14} />
+              </button>
+            )}
+          </div>
+
+          {/* 목록 */}
+          <div className="max-h-64 overflow-y-auto">
+            {filtered !== null ? (
+              // 검색 결과
+              filtered.length > 0 ? (
+                filtered.map((opt) => (
+                  <button
+                    key={opt}
+                    type="button"
+                    onClick={() => handleSelect(opt)}
+                    className={`w-full text-left px-4 py-2.5 text-sm hover:bg-purple-50 hover:text-purple-700 transition-colors ${
+                      value === opt ? 'bg-purple-50 text-purple-700 font-medium' : 'text-gray-700'
+                    }`}
+                  >
+                    {opt}
+                  </button>
+                ))
+              ) : (
+                <div className="px-4 py-6 text-sm text-gray-400 text-center">
+                  검색 결과가 없습니다
+                </div>
+              )
+            ) : (
+              // 그룹별 표시
+              LOCATION_OPTIONS.map((group) => (
+                <div key={group.group}>
+                  <div className="px-4 py-1.5 text-xs font-semibold text-gray-400 bg-gray-50 sticky top-0">
+                    {group.group}
+                  </div>
+                  {group.options.map((opt) => (
+                    <button
+                      key={opt}
+                      type="button"
+                      onClick={() => handleSelect(opt)}
+                      className={`w-full text-left px-4 py-2.5 text-sm hover:bg-purple-50 hover:text-purple-700 transition-colors ${
+                        value === opt ? 'bg-purple-50 text-purple-700 font-medium' : 'text-gray-700'
+                      }`}
+                    >
+                      {opt}
+                    </button>
+                  ))}
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 interface BasicInfoSectionProps {
   formData: {
     name: string;
@@ -33,6 +188,14 @@ export default function BasicInfoSection({
   onChange,
   onActiveChange,
 }: BasicInfoSectionProps) {
+  // location 변경을 onChange 형식에 맞게 래핑
+  const handleLocationChange = (value: string) => {
+    const syntheticEvent = {
+      target: { name: 'location', value },
+    } as React.ChangeEvent<HTMLSelectElement>;
+    onChange(syntheticEvent);
+  };
+
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 space-y-6">
       <h2 className="text-xl font-bold text-gray-900">기본 정보</h2>
@@ -57,24 +220,10 @@ export default function BasicInfoSection({
           <label className="block text-sm font-medium text-gray-700 mb-2">
             지역 <span className="text-red-500">*</span>
           </label>
-          <select
-            name="location"
+          <LocationSearchDropdown
             value={formData.location}
-            onChange={onChange}
-            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:border-purple-600 text-gray-900"
-            required
-          >
-            <option value="">지역을 선택하세요</option>
-            {LOCATION_OPTIONS.map((group) => (
-              <optgroup key={group.group} label={group.group}>
-                {group.options.map((opt) => (
-                  <option key={opt} value={opt}>
-                    {opt}
-                  </option>
-                ))}
-              </optgroup>
-            ))}
-          </select>
+            onChange={handleLocationChange}
+          />
         </div>
 
         <div>

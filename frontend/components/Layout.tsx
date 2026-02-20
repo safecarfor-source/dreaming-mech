@@ -98,42 +98,42 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -8 }}
               transition={{ duration: 0.2 }}
-              className="md:hidden fixed inset-x-0 top-14 bottom-0 bg-white z-40"
+              className="md:hidden fixed inset-x-0 top-14 bottom-0 bg-[#1A0A2E] z-40"
             >
               <div className="flex flex-col h-full">
                 <nav className="flex-1 px-6 py-6 space-y-1">
                   <Link
                     href="/#map"
                     onClick={() => setMobileMenuOpen(false)}
-                    className="flex items-center gap-3 px-4 py-4 text-base text-gray-700 hover:text-[#7C4DFF] hover:bg-[#7C4DFF]/5 rounded-xl font-medium transition-colors"
+                    className="flex items-center gap-3 px-4 py-4 text-base text-white/90 hover:text-white hover:bg-white/10 rounded-xl font-medium transition-colors"
                   >
                     서비스
                   </Link>
                   <Link
                     href="/for-mechanics"
                     onClick={() => setMobileMenuOpen(false)}
-                    className="flex items-center gap-3 px-4 py-4 text-base text-gray-700 hover:text-[#7C4DFF] hover:bg-[#7C4DFF]/5 rounded-xl font-medium transition-colors"
+                    className="flex items-center gap-3 px-4 py-4 text-base text-white/90 hover:text-white hover:bg-white/10 rounded-xl font-medium transition-colors"
                   >
                     정비사 사장님
                   </Link>
                   <Link
                     href="/youtube-idea"
                     onClick={() => setMobileMenuOpen(false)}
-                    className="flex items-center gap-3 px-4 py-4 text-base text-gray-700 hover:text-[#7C4DFF] hover:bg-[#7C4DFF]/5 rounded-xl font-medium transition-colors"
+                    className="flex items-center gap-3 px-4 py-4 text-base text-white/90 hover:text-white hover:bg-white/10 rounded-xl font-medium transition-colors"
                   >
                     유튜브 기획
                   </Link>
                   <Link
                     href="/inquiry"
                     onClick={() => setMobileMenuOpen(false)}
-                    className="flex items-center gap-3 px-4 py-4 text-base text-gray-700 hover:text-[#7C4DFF] hover:bg-[#7C4DFF]/5 rounded-xl font-medium transition-colors"
+                    className="flex items-center gap-3 px-4 py-4 text-base text-white/90 hover:text-white hover:bg-white/10 rounded-xl font-medium transition-colors"
                   >
                     문의하기
                   </Link>
                 </nav>
 
                 {/* 하단 사장님 로그인 */}
-                <div className="px-6 pb-8 pt-4 border-t border-gray-100">
+                <div className="px-6 pb-8 pt-4 border-t border-white/10">
                   <Link
                     href="/owner/login"
                     onClick={() => setMobileMenuOpen(false)}
