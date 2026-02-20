@@ -62,9 +62,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               <Link href="/for-mechanics" className="px-4 py-2 text-sm text-gray-600 hover:text-[#7C4DFF] transition-colors rounded-lg hover:bg-[#7C4DFF]/5 font-medium">
                 정비사 사장님
               </Link>
-              <Link href="/youtube-idea" className="px-4 py-2 text-sm text-gray-600 hover:text-[#7C4DFF] transition-colors rounded-lg hover:bg-[#7C4DFF]/5 font-medium">
-                유튜브 기획
-              </Link>
               <Link href="/inquiry" className="px-4 py-2 text-sm text-gray-600 hover:text-[#7C4DFF] transition-colors rounded-lg hover:bg-[#7C4DFF]/5 font-medium">
                 문의하기
               </Link>
@@ -90,63 +87,57 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           </div>
         </div>
 
-        {/* 모바일 메뉴 — 풀스크린 오버레이 */}
-        <AnimatePresence>
-          {mobileMenuOpen && (
-            <motion.div
-              initial={{ opacity: 0, y: -8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.2 }}
-              className="md:hidden fixed inset-x-0 top-14 bottom-0 bg-[#1A0A2E] z-40"
-            >
-              <div className="flex flex-col h-full">
-                <nav className="flex-1 px-6 py-6 space-y-1">
-                  <Link
-                    href="/#map"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="flex items-center gap-3 px-4 py-4 text-base text-white/90 hover:text-white hover:bg-white/10 rounded-xl font-medium transition-colors"
-                  >
-                    서비스
-                  </Link>
-                  <Link
-                    href="/for-mechanics"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="flex items-center gap-3 px-4 py-4 text-base text-white/90 hover:text-white hover:bg-white/10 rounded-xl font-medium transition-colors"
-                  >
-                    정비사 사장님
-                  </Link>
-                  <Link
-                    href="/youtube-idea"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="flex items-center gap-3 px-4 py-4 text-base text-white/90 hover:text-white hover:bg-white/10 rounded-xl font-medium transition-colors"
-                  >
-                    유튜브 기획
-                  </Link>
-                  <Link
-                    href="/inquiry"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="flex items-center gap-3 px-4 py-4 text-base text-white/90 hover:text-white hover:bg-white/10 rounded-xl font-medium transition-colors"
-                  >
-                    문의하기
-                  </Link>
-                </nav>
-
-                {/* 하단 사장님 로그인 */}
-                <div className="px-6 pb-8 pt-4 border-t border-white/10">
-                  <Link
-                    href="/owner/login"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="block w-full text-center px-4 py-3.5 bg-[#7C4DFF] text-white rounded-xl font-semibold text-base transition-colors hover:bg-[#5B3FBF]"
-                  >
-                    사장님 로그인
-                  </Link>
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
       </header>
+
+      {/* 모바일 메뉴 — 헤더 밖에 위치해야 backdrop-blur 영향 안 받음 */}
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.2 }}
+            className="md:hidden fixed inset-x-0 top-14 bottom-0 bg-[#1A0A2E] z-40"
+          >
+            <div className="flex flex-col h-full">
+              <nav className="flex-1 px-6 py-6 space-y-1">
+                <Link
+                  href="/#map"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center gap-3 px-4 py-4 text-base text-white/90 hover:text-white hover:bg-white/10 rounded-xl font-medium transition-colors"
+                >
+                  서비스
+                </Link>
+                <Link
+                  href="/for-mechanics"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center gap-3 px-4 py-4 text-base text-white/90 hover:text-white hover:bg-white/10 rounded-xl font-medium transition-colors"
+                >
+                  정비사 사장님
+                </Link>
+                <Link
+                  href="/inquiry"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center gap-3 px-4 py-4 text-base text-white/90 hover:text-white hover:bg-white/10 rounded-xl font-medium transition-colors"
+                >
+                  문의하기
+                </Link>
+              </nav>
+
+              {/* 하단 사장님 로그인 */}
+              <div className="px-6 pb-8 pt-4 border-t border-white/10">
+                <Link
+                  href="/owner/login"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="block w-full text-center px-4 py-3.5 bg-[#7C4DFF] text-white rounded-xl font-semibold text-base transition-colors hover:bg-[#5B3FBF]"
+                >
+                  사장님 로그인
+                </Link>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <main className="flex-1">{children}</main>
 
