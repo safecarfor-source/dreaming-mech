@@ -45,8 +45,15 @@ backend/prisma/migrations/
 # figma
 /figma-plugin-ui
 
-# md
+# md (일반 마크다운은 무시하되, 프로젝트 설정 파일은 추적)
 *.md
+!CLAUDE.md
+!README.md
+!DESIGN_SKILLS_ROADMAP.md
+!WEB_UPGRADE_PLAYBOOK.md
+!.claude/agents/*.md
+!.claude/commands/*.md
+!tasks/*.md
 
 
 # docs

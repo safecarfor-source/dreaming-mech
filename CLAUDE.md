@@ -68,6 +68,26 @@
 - 복잡한 문제에는 서브에이전트를 통해 더 많은 컴퓨팅 투입
 - 집중된 실행을 위해 서브에이전트당 하나의 작업만 배정
 
+#### 사용 가능한 서브에이전트 (`.claude/agents/`)
+| 에이전트 | 역할 | 모델 | 용도 |
+|---------|------|------|------|
+| `frontend-dev` | 프론트엔드 개발 | sonnet | UI 구현, 컴포넌트 개발 |
+| `backend-dev` | 백엔드 개발 | sonnet | API, DB, 비즈니스 로직 |
+| `researcher` | 조사/분석 | haiku | 코드베이스 탐색, 기술 리서치 |
+| `reviewer` | 코드 리뷰 | sonnet | 품질, 보안, 디자인 규칙 검증 |
+| `tester` | 테스트/검증 | haiku | 빌드 확인, 테스트 실행 |
+
+#### 병렬 실행 패턴
+- **조사 → 설계 → 구현**: researcher로 조사 후, frontend-dev + backend-dev 병렬 실행
+- **구현 → 리뷰 → 검증**: 구현 후 reviewer + tester 병렬 실행
+- **프론트+백 동시 개발**: API 인터페이스 합의 후 frontend-dev + backend-dev 동시 진행
+
+#### 사용 가능한 슬래시 커맨드 (`.claude/commands/`)
+- `/plan [기능명]` — 기능 설계 및 구현 계획 수립
+- `/parallel-build [작업]` — 프론트/백 병렬 개발
+- `/review [파일]` — 코드 리뷰
+- `/build-check` — 프론트/백 빌드 + 테스트 검증
+
 ### 3. 자기개선 루프
 - 사용자로부터 수정 받을 때마다 `tasks/lessons.md`에 패턴 업데이트
 - 동일한 실수를 방지하는 규칙을 스스로 작성

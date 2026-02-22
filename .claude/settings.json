@@ -1,0 +1,26 @@
+{
+  "permissions": {
+    "allow": [
+      "Skill",
+      "Read",
+      "Glob",
+      "Grep",
+      "WebFetch",
+      "WebSearch",
+      "Task"
+    ]
+  },
+  "hooks": {
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '[Stop Hook] Claude 작업 완료 — tasks/todo.md 업데이트 확인'"
+          }
+        ]
+      }
+    ]
+  }
+}
