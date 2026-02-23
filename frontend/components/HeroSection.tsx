@@ -48,18 +48,18 @@ export default function HeroSection({ totalMechanics, totalClicks }: Props) {
   const headline1 = useTypingEffect('차를 리프팅합니다', 80, 400);
   const headline2 = useTypingEffect('신뢰를 리프팅합니다', 80, 400 + 1600);
   const description1 = useTypingEffect(
-    '정비를 판매하지 않습니다',
+    '정비사는 정비를 판매하지 않습니다',
     60,
-    400 + 2400
+    400 + 1600 + 1800 // Start after headlines complete
   );
   const description2 = useTypingEffect(
-    '차량을 관리해 드립니다',
+    '대신 차량을 관리해 드립니다',
     60,
-    400 + 2400 + 1200
+    400 + 1600 + 1800 + 1200 // Start after description1 completes
   );
 
   return (
-    <section className="min-h-screen flex items-center justify-center relative overflow-hidden pt-14 md:pt-16 bg-black">
+    <section className="min-h-screen flex items-center justify-center relative overflow-hidden pt-14 md:pt-16">
       {/* Background Video */}
       <div className="absolute inset-0 z-0">
         <video
@@ -72,127 +72,76 @@ export default function HeroSection({ totalMechanics, totalClicks }: Props) {
         />
       </div>
 
-      {/* Netflix 스타일 멀티 레이어 오버레이 */}
-      {/* Layer 1: 베이스 틴트 — 전체 균일 어둡게 */}
-      <div className="absolute inset-0 z-[1] bg-black/40" />
-      {/* Layer 2: 하단 집중 그라데이션 — 텍스트 영역 강화 */}
-      <div
-        className="absolute inset-0 z-[2]"
-        style={{
-          background: 'linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.4) 40%, rgba(0,0,0,0.1) 70%, rgba(0,0,0,0.5) 100%)',
-        }}
-      />
-      {/* Layer 3: 비네팅 효과 — 가장자리 자연스러운 어둡게 */}
-      <div
-        className="absolute inset-0 z-[3]"
-        style={{
-          background: 'radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.4) 100%)',
-        }}
-      />
+      {/* Dark overlay for text readability - stronger like 이상한마케팅 */}
+      <div className="absolute inset-0 bg-black/70 z-0" />
 
-      <div className="max-w-5xl mx-auto px-6 sm:px-8 text-center relative z-10">
-        {/* 서브 타이틀 — 밝은 화이트 + 약간 작게 */}
+      <div className="container mx-auto px-6 text-left relative z-10 max-w-5xl">
+        {/* 서브 타이틀 */}
         <motion.p
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-white/80 text-[var(--text-caption)] sm:text-[var(--text-body)] md:text-[var(--text-h5)]
-            font-medium tracking-[0.1em] uppercase mb-5 sm:mb-6 md:mb-8"
-          style={{ textShadow: '0 2px 8px rgba(0,0,0,0.5)' }}
+          className="text-white/70 text-sm md:text-lg lg:text-xl font-medium tracking-widest mb-4 md:mb-6 uppercase"
         >
           전국의 정비소를 소개합니다
         </motion.p>
 
-        {/* 메인 헤드라인 — 순백 #FFF, font-black, text-shadow */}
+        {/* 메인 헤드라인 - 이상한마케팅 스타일: 흰색 + 브랜드색 강조 */}
         <motion.h1
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="text-white font-black leading-[1.1] mb-8 sm:mb-10 md:mb-12
-            min-h-[100px] sm:min-h-[160px] md:min-h-[240px] lg:min-h-[280px]
-            break-keep whitespace-nowrap"
-          style={{
-            fontSize: 'clamp(2rem, 6vw, 5.5rem)',
-            textShadow: '0 2px 4px rgba(0,0,0,0.5), 0 4px 16px rgba(0,0,0,0.3)',
-          }}
+          className="font-black leading-[1.15] mb-6 md:mb-8 min-h-[100px] sm:min-h-[160px] md:min-h-[220px] lg:min-h-[260px] break-keep"
+          style={{ fontSize: 'clamp(2rem, 5.5vw, 5.5rem)' }}
         >
-          <span>
+          <span className="text-white">
             {headline1.displayedText}
-            {!headline1.isComplete && <span className="animate-pulse text-white/60">|</span>}
+            {!headline1.isComplete && <span className="animate-pulse">|</span>}
           </span>
           <br />
-          <span>
+          <span className="text-[#B388FF]">
             {headline2.displayedText}
-            {headline1.isComplete && !headline2.isComplete && <span className="animate-pulse text-white/60">|</span>}
+            {headline1.isComplete && !headline2.isComplete && <span className="animate-pulse">|</span>}
           </span>
         </motion.h1>
 
-        {/* 설명 — white/80으로 가독성 확보, text-shadow 추가 */}
+        {/* 설명 - 흰색 반투명 */}
         <motion.p
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 2.5 }}
-          className="text-[var(--text-body)] sm:text-[var(--text-h5)] md:text-[var(--text-h4)]
-            text-white/80 max-w-2xl mx-auto mb-1.5 sm:mb-2
-            min-h-[24px] sm:min-h-[32px] md:min-h-[36px] break-keep font-medium"
-          style={{ textShadow: '0 1px 6px rgba(0,0,0,0.5)' }}
+          className="text-base md:text-xl lg:text-2xl text-white/60 max-w-3xl mb-1 md:mb-2 min-h-[28px] md:min-h-[36px] break-keep"
         >
           {description1.displayedText}
-          {!description1.isComplete && headline2.isComplete && <span className="animate-pulse text-white/50">|</span>}
+          {!description1.isComplete && headline2.isComplete && <span className="animate-pulse text-white">|</span>}
         </motion.p>
 
+        {/* 설명2 */}
         <motion.p
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 3.5 }}
-          className="text-[var(--text-body)] sm:text-[var(--text-h5)] md:text-[var(--text-h4)]
-            text-white/80 max-w-2xl mx-auto
-            min-h-[24px] sm:min-h-[32px] md:min-h-[36px] break-keep font-medium"
-          style={{ textShadow: '0 1px 6px rgba(0,0,0,0.5)' }}
+          className="text-base md:text-xl lg:text-2xl text-white/60 max-w-3xl min-h-[28px] md:min-h-[36px] break-keep"
         >
           {description2.displayedText}
-          {!description2.isComplete && description1.isComplete && <span className="animate-pulse text-white/50">|</span>}
+          {!description2.isComplete && description1.isComplete && <span className="animate-pulse text-white">|</span>}
         </motion.p>
 
-        {/* CTA 버튼 — 브랜드 색상은 여기에만 (넷플릭스 원칙) */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 4.5, duration: 0.6 }}
-          className="mt-10 sm:mt-12 md:mt-14"
-        >
-          <motion.a
-            href="#map"
-            whileHover={{ scale: 1.03 }}
-            whileTap={{ scale: 0.97 }}
-            className="inline-flex items-center gap-2.5 bg-brand-500 hover:bg-brand-600 text-white
-              rounded-full font-bold px-8 sm:px-10 py-4 sm:py-5
-              text-[var(--text-body)] sm:text-[var(--text-h5)]
-              shadow-[0_4px_24px_rgba(124,77,255,0.4)] hover:shadow-[0_6px_32px_rgba(124,77,255,0.5)]
-              transition-all duration-[var(--duration-normal)]"
-          >
-            내 주변 정비소 찾기
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M7 17l9.2-9.2M17 17V7H7" />
-            </svg>
-          </motion.a>
-        </motion.div>
-
-        {/* 스크롤 인디케이터 */}
+        {/* 스크롤 인디케이터 - 아래 화살표 */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.8 }}
-          className="mt-16 sm:mt-20 md:mt-24 flex justify-center"
+          className="mt-30 flex justify-center"
         >
           <motion.div
-            animate={{ y: [0, 10, 0] }}
-            transition={{ repeat: Infinity, duration: 1.8, ease: 'easeInOut' }}
-            className="flex flex-col items-center gap-0.5"
+            animate={{ y: [0, 12, 0] }}
+            transition={{ repeat: Infinity, duration: 1.5, ease: 'easeInOut' }}
+            className="flex flex-col items-center gap-1"
           >
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="opacity-50">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="opacity-60">
               <path d="M6 9l6 6 6-6" />
             </svg>
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="opacity-25 -mt-3">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="opacity-30 -mt-3">
               <path d="M6 9l6 6 6-6" />
             </svg>
           </motion.div>
