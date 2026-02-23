@@ -89,12 +89,12 @@ export default function MechanicModal() {
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
             className="pointer-events-auto w-full bg-white rounded-t-3xl overflow-hidden flex flex-col
               max-h-[calc(100vh-4rem)]
-              md:max-h-[85vh] md:w-[33vw] md:min-w-[480px] md:max-w-[560px] md:rounded-2xl md:shadow-[var(--shadow-xl)]"
+              md:max-h-[85vh] md:w-[28vw] md:min-w-[400px] md:max-w-[480px] md:rounded-2xl md:shadow-[var(--shadow-xl)]"
           >
             {/* 헤더 */}
-            <div className="flex items-center justify-between gap-4 px-5 sm:px-6 py-4 sm:py-5 border-b border-[var(--border)]">
+            <div className="flex items-center justify-between gap-4 px-4 sm:px-5 py-3 sm:py-4 border-b border-[var(--border)]">
               <div className="flex items-center gap-2 min-w-0 flex-1">
-                <h2 className="text-[var(--text-h4)] md:text-[var(--text-h3)] font-bold text-text-primary break-words min-w-0 flex-1">
+                <h2 className="text-[var(--text-h5)] md:text-[var(--text-h4)] font-bold text-text-primary break-words min-w-0 flex-1">
                   {sanitizeText(mechanic.name)}
                 </h2>
                 {mechanic.isVerified && (
@@ -111,10 +111,10 @@ export default function MechanicModal() {
 
             {/* 컨텐츠 */}
             <div className="flex-1 overflow-auto">
-              <div className="px-5 sm:px-6 py-6 sm:py-8 space-y-6 sm:space-y-8">
+              <div className="px-4 sm:px-5 py-4 sm:py-5 space-y-4 sm:space-y-5">
                 {/* 대표 이미지 — 16:9 비율 */}
                 {mechanic.mainImageUrl && (
-                  <div className="rounded-2xl overflow-hidden bg-bg-tertiary aspect-[16/9] relative">
+                  <div className="rounded-xl overflow-hidden bg-bg-tertiary aspect-[2/1] relative">
                     <Image
                       src={mechanic.mainImageUrl}
                       alt={sanitizeText(mechanic.name)}
@@ -144,11 +144,11 @@ export default function MechanicModal() {
                 </div>
 
                 {/* 기본 정보 */}
-                <div className="space-y-4 sm:space-y-5">
+                <div className="space-y-3 sm:space-y-4">
                   <div className="flex flex-col gap-2.5">
                     <div className="flex items-center gap-2.5">
-                      <div className="p-1.5 bg-bg-secondary rounded-lg flex-shrink-0">
-                        <MapPin size={16} className="text-text-tertiary" />
+                      <div className="p-1 bg-bg-secondary rounded-lg flex-shrink-0">
+                        <MapPin size={14} className="text-text-tertiary" />
                       </div>
                       <p className="text-[var(--text-body)] text-text-primary font-medium break-words min-w-0 flex-1">
                         {sanitizeText(mechanic.address)}
@@ -156,8 +156,8 @@ export default function MechanicModal() {
                     </div>
 
                     <div className="flex items-center gap-2.5">
-                      <div className="p-1.5 bg-bg-secondary rounded-lg flex-shrink-0">
-                        <Phone size={16} className="text-text-tertiary" />
+                      <div className="p-1 bg-bg-secondary rounded-lg flex-shrink-0">
+                        <Phone size={14} className="text-text-tertiary" />
                       </div>
                       <a
                         href={`tel:${sanitizePhone(mechanic.phone)}`}
@@ -170,8 +170,8 @@ export default function MechanicModal() {
 
                   {/* 소개 */}
                   {mechanic.description && (
-                    <div className="p-4 sm:p-5 bg-bg-secondary rounded-xl">
-                      <h3 className="text-[var(--text-h5)] font-bold text-text-primary mb-2">소개</h3>
+                    <div className="p-3 sm:p-4 bg-bg-secondary rounded-xl">
+                      <h3 className="text-[var(--text-body)] font-bold text-text-primary mb-2">소개</h3>
                       <p className="text-[var(--text-body)] text-text-secondary leading-[1.7] break-words whitespace-pre-wrap">
                         {sanitizeBasicHTML(mechanic.description)}
                       </p>
@@ -193,7 +193,7 @@ export default function MechanicModal() {
 
                 {/* 지도 */}
                 <div>
-                  <h3 className="text-[var(--text-h5)] md:text-[var(--text-h4)] font-bold text-text-primary mb-4">위치</h3>
+                  <h3 className="text-[var(--text-body)] md:text-[var(--text-h5)] font-bold text-text-primary mb-4">위치</h3>
                   <NaverMapView
                     lat={mechanic.mapLat}
                     lng={mechanic.mapLng}
@@ -204,7 +204,7 @@ export default function MechanicModal() {
                 {/* 유튜브 롱폼 */}
                 {mechanic.youtubeLongUrl && (
                   <div>
-                    <h3 className="text-[var(--text-h5)] md:text-[var(--text-h4)] font-bold text-text-primary mb-4">소개 영상</h3>
+                    <h3 className="text-[var(--text-body)] md:text-[var(--text-h5)] font-bold text-text-primary mb-4">소개 영상</h3>
                     <YouTubeEmbed url={mechanic.youtubeLongUrl} variant="long" />
                   </div>
                 )}
@@ -212,7 +212,7 @@ export default function MechanicModal() {
                 {/* 유튜브 숏폼 */}
                 {mechanic.youtubeUrl && (
                   <div>
-                    <h3 className="text-[var(--text-h5)] md:text-[var(--text-h4)] font-bold text-text-primary mb-4">숏폼 영상</h3>
+                    <h3 className="text-[var(--text-body)] md:text-[var(--text-h5)] font-bold text-text-primary mb-4">숏폼 영상</h3>
                     <YouTubeEmbed url={mechanic.youtubeUrl} variant="short" />
                   </div>
                 )}
@@ -226,7 +226,7 @@ export default function MechanicModal() {
                       exit={{ opacity: 0, height: 0 }}
                       className="overflow-hidden"
                     >
-                      <div className="p-4 sm:p-5 bg-bg-secondary rounded-2xl">
+                      <div className="p-3 sm:p-4 bg-bg-secondary rounded-2xl">
                         <QuoteRequestForm
                           mechanicId={mechanic.id}
                           mechanicName={mechanic.name}
@@ -242,7 +242,7 @@ export default function MechanicModal() {
                   <a
                     href={`tel:${mechanic.phone}`}
                     className="flex-1 bg-brand-500 hover:bg-brand-600 text-white
-                      py-3.5 sm:py-4 rounded-xl font-bold text-center text-[var(--text-body)]
+                      py-2.5 sm:py-3 rounded-xl font-bold text-center text-[var(--text-caption)] md:text-[var(--text-body)]
                       transition-colors duration-[var(--duration-normal)]
                       shadow-[var(--shadow-sm)] hover:shadow-[var(--shadow-md)]"
                   >
@@ -251,14 +251,14 @@ export default function MechanicModal() {
                   <button
                     onClick={() => setShowQuoteForm(!showQuoteForm)}
                     className={`flex-1 flex items-center justify-center gap-2
-                      py-3.5 sm:py-4 rounded-xl font-bold text-[var(--text-body)]
+                      py-2.5 sm:py-3 rounded-xl font-bold text-[var(--text-caption)] md:text-[var(--text-body)]
                       transition-colors duration-[var(--duration-normal)] ${
                       showQuoteForm
                         ? 'bg-bg-tertiary text-text-secondary'
                         : 'bg-accent-500 hover:bg-accent-600 text-white shadow-[var(--shadow-sm)] hover:shadow-[var(--shadow-md)]'
                     }`}
                   >
-                    <FileText size={18} />
+                    <FileText size={16} />
                     {showQuoteForm ? '닫기' : '견적 요청'}
                   </button>
                   <button
@@ -267,12 +267,12 @@ export default function MechanicModal() {
                       window.open(url, '_blank');
                     }}
                     className="flex items-center justify-center gap-2
-                      px-4 sm:px-5 py-3.5 sm:py-4
-                      border-2 border-[var(--border)] rounded-xl font-bold text-[var(--text-body)]
+                      px-4 sm:px-5 py-2.5 sm:py-3
+                      border-2 border-[var(--border)] rounded-xl font-bold text-[var(--text-caption)] md:text-[var(--text-body)]
                       text-text-secondary hover:border-brand-500 hover:text-brand-500
                       transition-colors duration-[var(--duration-normal)]"
                   >
-                    <ExternalLink size={18} />
+                    <ExternalLink size={16} />
                     길찾기
                   </button>
                 </div>

@@ -21,16 +21,16 @@ export default function MechanicCard({ mechanic, onClick }: Props) {
         shadow-[var(--shadow-xs)] hover:shadow-[var(--shadow-lg)] hover:border-brand-400/40
         transition-[box-shadow,border-color] duration-[var(--duration-slow)]"
     >
-      {/* 이미지 — 2:1 비율 (기존 4:3에서 높이 1/3 축소) + Hims 스타일 호버 오버레이 */}
-      <div className="aspect-[2/1] bg-bg-tertiary relative overflow-hidden">
+      {/* 이미지 — 3:2 비율 (smaller cards need taller ratio) + Hims 스타일 호버 오버레이 */}
+      <div className="aspect-[3/2] bg-bg-tertiary relative overflow-hidden">
         {mechanic.mainImageUrl ? (
           <Image
             src={mechanic.mainImageUrl}
             alt={sanitizeText(mechanic.name)}
-            width={400}
-            height={300}
+            width={300}
+            height={200}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
-            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 33vw"
+            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
           />
         ) : (
           <div className="w-full h-full bg-gradient-to-br from-brand-50 to-brand-100 flex items-center justify-center">
@@ -44,37 +44,37 @@ export default function MechanicCard({ mechanic, onClick }: Props) {
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent
           opacity-0 group-hover:opacity-100
           transition-opacity duration-[var(--duration-slow)]
-          flex items-end p-3 sm:p-4">
-          <span className="text-white font-bold text-[var(--text-caption)] sm:text-[var(--text-body)]">
+          flex items-end p-2 sm:p-3">
+          <span className="text-white font-bold text-[var(--text-caption)]">
             바로 확인 &rarr;
           </span>
         </div>
       </div>
 
       {/* 정보 — 8px 그리드 기반 패딩 */}
-      <div className="p-3 sm:p-4 md:p-5">
-        <h3 className="text-[var(--text-body)] md:text-[var(--text-h5)] font-bold text-text-primary mb-2 sm:mb-3
+      <div className="p-2.5 sm:p-3 md:p-3.5">
+        <h3 className="text-[var(--text-caption)] md:text-[var(--text-body)] font-bold text-text-primary mb-1.5 sm:mb-2
           group-hover:text-brand-500 transition-colors duration-[var(--duration-normal)] line-clamp-1">
           {sanitizeText(mechanic.name)}
         </h3>
 
         <div className="space-y-1.5 sm:space-y-2">
           <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
-            <MapPin size={14} className="text-text-muted flex-shrink-0" />
-            <span className="text-[var(--text-caption)] md:text-[var(--text-body)] text-text-secondary line-clamp-1">
+            <MapPin size={12} className="text-text-muted flex-shrink-0" />
+            <span className="text-[var(--text-caption)] text-text-secondary line-clamp-1">
               {sanitizeText(mechanic.location)}
             </span>
           </div>
           <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
-            <Phone size={14} className="text-text-muted flex-shrink-0" />
-            <span className="text-[var(--text-caption)] md:text-[var(--text-body)] text-text-secondary line-clamp-1">
+            <Phone size={12} className="text-text-muted flex-shrink-0" />
+            <span className="text-[var(--text-caption)] text-text-secondary line-clamp-1">
               {sanitizePhone(mechanic.phone)}
             </span>
           </div>
         </div>
 
         {/* 견적 받기 — 데스크탑 */}
-        <div className="hidden md:block mt-4 pt-3 border-t border-border-light">
+        <div className="hidden md:block mt-2.5 pt-2 border-t border-border-light">
           <span className="text-[var(--text-caption)] font-semibold text-text-tertiary group-hover:text-brand-500 transition-colors duration-[var(--duration-fast)]">
             견적 받기 &rarr;
           </span>
