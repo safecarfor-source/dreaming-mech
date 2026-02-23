@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import Image from 'next/image';
 import { X, MapPin, Phone, ExternalLink, FileText, BadgeCheck } from 'lucide-react';
 import { useModalStore } from '@/lib/store';
 import { mechanicsApi } from '@/lib/api';
@@ -79,42 +80,48 @@ export default function MechanicModal() {
             className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40"
           />
 
-          {/* 모달 */}
+          {/* 모달 위치 래퍼: 모바일=하단 시트, 데스크탑=화면 가운데 1/3 */}
+          <div className="fixed inset-0 z-50 flex items-end md:items-center md:justify-center pointer-events-none">
           <motion.div
             initial={{ y: '100%' }}
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed inset-x-0 bottom-0 top-16 bg-white rounded-t-3xl z-50 overflow-hidden flex flex-col"
+            className="pointer-events-auto w-full bg-white rounded-t-3xl overflow-hidden flex flex-col
+              max-h-[calc(100vh-4rem)]
+              md:max-h-[85vh] md:w-[28vw] md:min-w-[400px] md:max-w-[480px] md:rounded-2xl md:shadow-[var(--shadow-xl)]"
           >
             {/* 헤더 */}
-            <div className="flex items-center justify-between gap-4 p-6 border-b border-gray-100">
+            <div className="flex items-center justify-between gap-4 px-4 sm:px-5 py-3 sm:py-4 border-b border-[var(--border)]">
               <div className="flex items-center gap-2 min-w-0 flex-1">
-                <h2 className="text-2xl font-bold text-gray-900 break-words min-w-0 flex-1">
+                <h2 className="text-[var(--text-h5)] md:text-[var(--text-h4)] font-bold text-text-primary break-words min-w-0 flex-1">
                   {sanitizeText(mechanic.name)}
                 </h2>
                 {mechanic.isVerified && (
-                  <BadgeCheck size={24} className="text-blue-500 flex-shrink-0" />
+                  <BadgeCheck size={22} className="text-[var(--color-info)] flex-shrink-0" />
                 )}
               </div>
               <button
                 onClick={close}
-                className="p-2 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors flex-shrink-0"
+                className="p-2 bg-bg-tertiary rounded-full hover:bg-gray-200 transition-colors duration-[var(--duration-fast)] flex-shrink-0"
               >
-                <X size={24} className="text-gray-600" />
+                <X size={20} className="text-text-secondary" />
               </button>
             </div>
 
             {/* 컨텐츠 */}
             <div className="flex-1 overflow-auto">
-              <div className="p-6 space-y-6">
-                {/* 대표 이미지 */}
+              <div className="px-4 sm:px-5 py-4 sm:py-5 space-y-4 sm:space-y-5">
+                {/* 대표 이미지 — 16:9 비율 */}
                 {mechanic.mainImageUrl && (
-                  <div className="rounded-2xl overflow-hidden bg-gray-100 mx-auto w-[90%] md:w-[50%]">
-                    <img
+                  <div className="rounded-xl overflow-hidden bg-bg-tertiary aspect-[2/1] relative">
+                    <Image
                       src={mechanic.mainImageUrl}
                       alt={sanitizeText(mechanic.name)}
-                      className="w-full object-contain"
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 768px) 100vw, 768px"
+                      priority
                     />
                   </div>
                 )}
@@ -137,41 +144,37 @@ export default function MechanicModal() {
                 </div>
 
                 {/* 기본 정보 */}
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div className="space-y-4 md:space-y-6">
-                    <div className="flex items-start gap-3 md:gap-5">
-                      <div className="p-2 md:p-4 bg-gray-100 rounded-lg md:rounded-xl flex-shrink-0">
-                        <MapPin size={20} className="text-gray-500 md:hidden" />
-                        <MapPin size={48} className="text-gray-500 hidden md:block" />
+                <div className="space-y-3 sm:space-y-4">
+                  <div className="flex flex-col gap-2.5">
+                    <div className="flex items-center gap-2.5">
+                      <div className="p-1 bg-bg-secondary rounded-lg flex-shrink-0">
+                        <MapPin size={14} className="text-text-tertiary" />
                       </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="text-sm md:text-2xl text-gray-500">주소</p>
-                        <p className="text-gray-900 font-medium md:text-2xl break-words">{sanitizeText(mechanic.address)}</p>
-                      </div>
+                      <p className="text-[var(--text-body)] text-text-primary font-medium break-words min-w-0 flex-1">
+                        {sanitizeText(mechanic.address)}
+                      </p>
                     </div>
 
-                    <div className="flex items-start gap-3 md:gap-5">
-                      <div className="p-2 md:p-4 bg-gray-100 rounded-lg md:rounded-xl flex-shrink-0">
-                        <Phone size={20} className="text-gray-500 md:hidden" />
-                        <Phone size={48} className="text-gray-500 hidden md:block" />
+                    <div className="flex items-center gap-2.5">
+                      <div className="p-1 bg-bg-secondary rounded-lg flex-shrink-0">
+                        <Phone size={14} className="text-text-tertiary" />
                       </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="text-sm md:text-2xl text-gray-500">전화번호</p>
-                        <a
-                          href={`tel:${sanitizePhone(mechanic.phone)}`}
-                          className="text-gray-500 font-medium md:text-2xl hover:underline break-all"
-                        >
-                          {sanitizePhone(mechanic.phone)}
-                        </a>
-                      </div>
+                      <a
+                        href={`tel:${sanitizePhone(mechanic.phone)}`}
+                        className="text-[var(--text-body)] text-brand-500 font-medium hover:underline break-all"
+                      >
+                        {sanitizePhone(mechanic.phone)}
+                      </a>
                     </div>
                   </div>
 
                   {/* 소개 */}
                   {mechanic.description && (
-                    <div className="p-6 md:p-8 bg-gray-50 rounded-2xl">
-                      <h3 className="text-lg md:text-2xl font-bold text-gray-900 mb-3 md:mb-4">소개</h3>
-                      <p className="text-gray-600 md:text-xl leading-relaxed md:leading-relaxed break-words whitespace-pre-wrap">{sanitizeBasicHTML(mechanic.description)}</p>
+                    <div className="p-3 sm:p-4 bg-bg-secondary rounded-xl">
+                      <h3 className="text-[var(--text-body)] font-bold text-text-primary mb-2">소개</h3>
+                      <p className="text-[var(--text-body)] text-text-secondary leading-[1.7] break-words whitespace-pre-wrap">
+                        {sanitizeBasicHTML(mechanic.description)}
+                      </p>
                     </div>
                   )}
                 </div>
@@ -190,7 +193,7 @@ export default function MechanicModal() {
 
                 {/* 지도 */}
                 <div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-4">위치</h3>
+                  <h3 className="text-[var(--text-body)] md:text-[var(--text-h5)] font-bold text-text-primary mb-4">위치</h3>
                   <NaverMapView
                     lat={mechanic.mapLat}
                     lng={mechanic.mapLng}
@@ -198,18 +201,18 @@ export default function MechanicModal() {
                   />
                 </div>
 
-                {/* 유튜브 롱폼 (가로 영상) */}
+                {/* 유튜브 롱폼 */}
                 {mechanic.youtubeLongUrl && (
                   <div>
-                    <h3 className="text-xl font-bold text-gray-900 mb-4">소개 영상</h3>
+                    <h3 className="text-[var(--text-body)] md:text-[var(--text-h5)] font-bold text-text-primary mb-4">소개 영상</h3>
                     <YouTubeEmbed url={mechanic.youtubeLongUrl} variant="long" />
                   </div>
                 )}
 
-                {/* 유튜브 숏폼 (세로 영상) */}
+                {/* 유튜브 숏폼 */}
                 {mechanic.youtubeUrl && (
                   <div>
-                    <h3 className="text-xl font-bold text-gray-900 mb-4">숏폼 영상</h3>
+                    <h3 className="text-[var(--text-body)] md:text-[var(--text-h5)] font-bold text-text-primary mb-4">숏폼 영상</h3>
                     <YouTubeEmbed url={mechanic.youtubeUrl} variant="short" />
                   </div>
                 )}
@@ -223,7 +226,7 @@ export default function MechanicModal() {
                       exit={{ opacity: 0, height: 0 }}
                       className="overflow-hidden"
                     >
-                      <div className="p-4 bg-gray-50 rounded-2xl">
+                      <div className="p-3 sm:p-4 bg-bg-secondary rounded-2xl">
                         <QuoteRequestForm
                           mechanicId={mechanic.id}
                           mechanicName={mechanic.name}
@@ -234,23 +237,28 @@ export default function MechanicModal() {
                   )}
                 </AnimatePresence>
 
-                {/* CTA 버튼 */}
-                <div className="flex gap-3">
+                {/* CTA 버튼 — 충분한 여백, 체계적 색상 */}
+                <div className="flex gap-3 pt-2">
                   <a
                     href={`tel:${mechanic.phone}`}
-                    className="flex-1 bg-[#7C4DFF] hover:bg-[#5B3FBF] text-white py-4 rounded-xl font-bold text-center transition-colors"
+                    className="flex-1 bg-brand-500 hover:bg-brand-600 text-white
+                      py-2.5 sm:py-3 rounded-xl font-bold text-center text-[var(--text-caption)] md:text-[var(--text-body)]
+                      transition-colors duration-[var(--duration-normal)]
+                      shadow-[var(--shadow-sm)] hover:shadow-[var(--shadow-md)]"
                   >
                     전화 문의
                   </a>
                   <button
                     onClick={() => setShowQuoteForm(!showQuoteForm)}
-                    className={`flex-1 flex items-center justify-center gap-2 py-4 rounded-xl font-bold transition-colors ${
+                    className={`flex-1 flex items-center justify-center gap-2
+                      py-2.5 sm:py-3 rounded-xl font-bold text-[var(--text-caption)] md:text-[var(--text-body)]
+                      transition-colors duration-[var(--duration-normal)] ${
                       showQuoteForm
-                        ? 'bg-gray-200 text-gray-600'
-                        : 'bg-[#F59E0B] hover:bg-[#D97706] text-white'
+                        ? 'bg-bg-tertiary text-text-secondary'
+                        : 'bg-accent-500 hover:bg-accent-600 text-white shadow-[var(--shadow-sm)] hover:shadow-[var(--shadow-md)]'
                     }`}
                   >
-                    <FileText size={18} />
+                    <FileText size={16} />
                     {showQuoteForm ? '닫기' : '견적 요청'}
                   </button>
                   <button
@@ -258,15 +266,20 @@ export default function MechanicModal() {
                       const url = `https://map.naver.com/v5/search/${encodeURIComponent(mechanic.address)}`;
                       window.open(url, '_blank');
                     }}
-                    className="flex items-center justify-center gap-2 px-5 py-4 border-2 border-gray-200 rounded-xl font-bold text-gray-700 hover:border-[#7C4DFF] hover:text-[#7C4DFF] transition-colors"
+                    className="flex items-center justify-center gap-2
+                      px-4 sm:px-5 py-2.5 sm:py-3
+                      border-2 border-[var(--border)] rounded-xl font-bold text-[var(--text-caption)] md:text-[var(--text-body)]
+                      text-text-secondary hover:border-brand-500 hover:text-brand-500
+                      transition-colors duration-[var(--duration-normal)]"
                   >
-                    <ExternalLink size={18} />
+                    <ExternalLink size={16} />
                     길찾기
                   </button>
                 </div>
               </div>
             </div>
           </motion.div>
+          </div>
         </>
       )}
     </AnimatePresence>

@@ -67,6 +67,7 @@ export interface Mechanic {
   parkingAvailable?: boolean | null;
   paymentMethods?: string[];
   holidays?: HolidayInfo | null;
+  kakaoOpenChatUrl?: string;
   reviews?: Review[];
   // 사장님 연결
   ownerId?: number | null;
@@ -175,4 +176,23 @@ export interface SyncStats {
   inProgress: number;
   completed: number;
   total: number;
+}
+
+// 타이어 문의 타입
+export type TireServiceType = 'REPLACEMENT' | 'REPAIR' | 'ALIGNMENT' | 'INSPECTION';
+export type TireInquiryStatus = 'PENDING' | 'IN_PROGRESS' | 'MATCHED' | 'COMPLETED' | 'CANCELLED';
+
+export interface TireInquiry {
+  id: number;
+  region: string;
+  subRegion?: string;
+  tireSize: string;
+  serviceType: TireServiceType;
+  carModel?: string;
+  images?: string[];
+  description?: string;
+  status: TireInquiryStatus;
+  adminNote?: string;
+  createdAt: string;
+  updatedAt: string;
 }

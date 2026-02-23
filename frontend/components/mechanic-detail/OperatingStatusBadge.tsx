@@ -16,10 +16,9 @@ function getOperatingStatus(
   if (!operatingHours) return { status: 'unknown', label: '정보 없음' };
 
   const now = new Date();
-  const dayIndex = now.getDay(); // 0=Sun, 1=Mon, ...
+  const dayIndex = now.getDay();
   const dayKey = DAY_KEYS[dayIndex];
 
-  // 휴무일 체크
   if (holidays?.type === 'weekly' && holidays.days?.includes(dayKey)) {
     return { status: 'closed', label: '오늘 휴무' };
   }
@@ -53,7 +52,6 @@ export default function OperatingStatusBadge({ operatingHours, holidays }: Props
   const [showTable, setShowTable] = useState(false);
   const [result, setResult] = useState(getOperatingStatus(operatingHours, holidays));
 
-  // Update every minute
   useEffect(() => {
     setResult(getOperatingStatus(operatingHours, holidays));
     const interval = setInterval(() => {
@@ -74,30 +72,31 @@ export default function OperatingStatusBadge({ operatingHours, holidays }: Props
         className="flex items-center gap-2"
       >
         <span
-          className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-base md:text-lg font-bold ${
+          className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[var(--text-caption)] font-bold ${
             result.status === 'open'
-              ? 'bg-green-100 text-green-700'
-              : 'bg-red-100 text-red-700'
+              ? 'bg-emerald-50 text-emerald-600'
+              : 'bg-red-50 text-red-600'
           }`}
         >
           <span
-            className={`w-2.5 h-2.5 rounded-full ${
-              result.status === 'open' ? 'bg-green-500' : 'bg-red-500'
+            className={`w-1.5 h-1.5 rounded-full ${
+              result.status === 'open' ? 'bg-emerald-500' : 'bg-red-500'
             }`}
           />
           {result.label}
         </span>
         {result.todayHours && (
-          <span className="text-base md:text-lg text-gray-500">{result.todayHours}</span>
+          <span className="text-[var(--text-caption)] text-text-muted">{result.todayHours}</span>
         )}
         {operatingHours && (
-          showTable ? <ChevronUp size={16} className="text-gray-400" /> : <ChevronDown size={16} className="text-gray-400" />
+          showTable
+            ? <ChevronUp size={14} className="text-text-muted" />
+            : <ChevronDown size={14} className="text-text-muted" />
         )}
       </button>
 
-      {/* 운영시간 테이블 */}
       {showTable && operatingHours && (
-        <div className="mt-3 bg-gray-50 rounded-xl p-4 space-y-1.5">
+        <div className="mt-2 bg-bg-secondary rounded-xl p-3 space-y-1">
           {['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'].map((day) => {
             const schedule = operatingHours[day];
             const isToday = day === todayKey;
@@ -106,8 +105,8 @@ export default function OperatingStatusBadge({ operatingHours, holidays }: Props
             return (
               <div
                 key={day}
-                className={`flex justify-between text-sm ${
-                  isToday ? 'font-bold text-[#7C4DFF]' : 'text-gray-600'
+                className={`flex justify-between text-[var(--text-caption)] ${
+                  isToday ? 'font-bold text-brand-500' : 'text-text-secondary'
                 }`}
               >
                 <span>{DAY_LABELS[day]}{isToday ? ' (오늘)' : ''}</span>
@@ -122,7 +121,7 @@ export default function OperatingStatusBadge({ operatingHours, holidays }: Props
             );
           })}
           {holidays?.description && (
-            <p className="text-xs text-gray-500 mt-2 pt-2 border-t border-gray-200">
+            <p className="text-[var(--text-small)] text-text-muted mt-1.5 pt-1.5 border-t border-[var(--border-light)]">
               {holidays.description}
             </p>
           )}

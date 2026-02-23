@@ -10,7 +10,7 @@ export default function SpecialtyTags({ specialties }: Props) {
       {specialties.map((tag) => (
         <span
           key={tag}
-          className="px-3.5 py-1.5 bg-[#EDE9FE] text-[#5B3FBF] rounded-full text-sm md:text-base font-semibold"
+          className="px-2 py-0.5 bg-brand-50 text-brand-600 rounded-md text-[var(--text-caption)] font-medium"
         >
           {tag}
         </span>
