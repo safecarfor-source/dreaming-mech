@@ -87,4 +87,16 @@ export class ServiceInquiryController {
 
     return this.serviceInquiryService.updateStatus(id, status);
   }
+
+  // 공유 메시지 생성 (관리자)
+  @Get(':id/share-message')
+  @UseGuards(JwtAuthGuard)
+  async getShareMessage(@Param('id', ParseIntPipe) id: number, @Request() req) {
+    if (req.user.role !== 'admin') {
+      throw new BadRequestException('관리자만 공유 메시지를 생성할 수 있습니다.');
+    }
+
+    const message = await this.serviceInquiryService.getShareMessage(id);
+    return { message };
+  }
 }

@@ -18,7 +18,8 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
           if (path.startsWith('/owner')) {
             return req?.cookies?.owner_token || null;
           }
-          if (path.startsWith('/service-inquiries')) {
+          // 고객 관련 경로: /auth/customer, /service-inquiries, /inquiry
+          if (path.startsWith('/auth/customer') || path.startsWith('/service-inquiries') || path.startsWith('/inquiry')) {
             return req?.cookies?.customer_token || null;
           }
           // auth/profile 등 공통 경로는 모두 시도

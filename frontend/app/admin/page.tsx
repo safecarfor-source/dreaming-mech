@@ -1,20 +1,27 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import AdminLayout from '@/components/admin/AdminLayout';
-import { Users, Eye, TrendingUp, Calendar } from 'lucide-react';
-import { mechanicsApi } from '@/lib/api';
+import { Users, Eye, TrendingUp, Calendar, MessageCircle } from 'lucide-react';
+import { mechanicsApi, serviceInquiryApi } from '@/lib/api';
 import type { Mechanic } from '@/types';
 
 export default function AdminDashboard() {
+  const router = useRouter();
   const [mechanics, setMechanics] = useState<Mechanic[]>([]);
+  const [serviceInquiryCount, setServiceInquiryCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await mechanicsApi.getAll();
-        setMechanics(response.data.data || []);
+        const [mechanicsRes, serviceInquiriesRes] = await Promise.all([
+          mechanicsApi.getAll(),
+          serviceInquiryApi.getAll(1, 1000),
+        ]);
+        setMechanics(mechanicsRes.data.data || []);
+        setServiceInquiryCount(serviceInquiriesRes.data.data?.data?.length || 0);
       } catch (error) {
         console.error(error);
       } finally {
@@ -33,24 +40,28 @@ export default function AdminDashboard() {
       value: mechanics.length,
       icon: Users,
       color: 'bg-purple-600',
+      href: '/admin/mechanics',
     },
     {
       label: '활성 정비사',
       value: activeMechanics,
       icon: TrendingUp,
       color: 'bg-green-500',
+      href: '/admin/mechanics',
+    },
+    {
+      label: '서비스 문의',
+      value: serviceInquiryCount,
+      icon: MessageCircle,
+      color: 'bg-purple-500',
+      href: '/admin/service-inquiries',
     },
     {
       label: '총 조회수',
       value: totalClicks.toLocaleString(),
       icon: Eye,
       color: 'bg-blue-500',
-    },
-    {
-      label: '이번 달',
-      value: new Date().toLocaleDateString('ko-KR', { month: 'long' }),
-      icon: Calendar,
-      color: 'bg-orange-500',
+      href: '/admin/stats',
     },
   ];
 
@@ -68,7 +79,10 @@ export default function AdminDashboard() {
           {stats.map((stat) => (
             <div
               key={stat.label}
-              className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100"
+              onClick={() => stat.href && router.push(stat.href)}
+              className={`bg-white rounded-2xl p-6 shadow-sm border border-gray-100 ${
+                stat.href ? 'cursor-pointer hover:shadow-md transition-shadow' : ''
+              }`}
             >
               <div className="flex items-center justify-between">
                 <div>

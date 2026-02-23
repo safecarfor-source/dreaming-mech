@@ -41,6 +41,17 @@ export class AuthController {
     return this.authService.getProfile(req.user.sub);
   }
 
+  // ── 고객 프로필 조회 ──
+  @UseGuards(JwtAuthGuard)
+  @Get('customer/profile')
+  async getCustomerProfile(@Request() req) {
+    const profile = await this.authService.getCustomerProfile(req.user.sub);
+    return {
+      success: true,
+      data: profile,
+    };
+  }
+
   @Post('logout')
   async logout(@Response({ passthrough: true }) res: ExpressResponse) {
     res.clearCookie('admin_token', { path: '/' });
@@ -93,11 +104,10 @@ export class AuthController {
   @Get('kakao/customer/callback')
   async kakaoCustomerCallback(
     @Query('code') code: string,
-    @Query('phone') phone: string,
     @Response() res: ExpressResponse,
   ) {
     try {
-      const result = await this.authService.handleKakaoCustomerCallback(code, phone || '');
+      const result = await this.authService.handleKakaoCustomerCallback(code);
       const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
 
       res.cookie('customer_token', result.access_token, {

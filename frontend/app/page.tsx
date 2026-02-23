@@ -434,13 +434,30 @@ function HomeContent() {
                   </div>
                 </div>
 
+                {/* 카카오 오픈채팅 */}
+                <a
+                  href={process.env.NEXT_PUBLIC_KAKAO_OPENCHAT_URL || 'https://open.kakao.com/o/gXXXXXX'}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-center gap-2 w-full bg-[#FEE500] text-gray-900
+                    px-6 py-4 rounded-xl font-bold text-base hover:bg-[#FDD835] transition-all mb-4"
+                >
+                  <span className="text-xl">💬</span>
+                  <span>카카오 오픈채팅 참여하기</span>
+                  <span className="text-xs font-normal text-gray-600 ml-1">진행상황 안내</span>
+                </a>
+
                 <button
                   onClick={resetFunnel}
                   className="bg-[#7C4DFF] text-white px-8 py-3 rounded-lg font-bold
-                    hover:bg-[#6D3FE0] transition-all"
+                    hover:bg-[#6D3FE0] transition-all w-full"
                 >
                   새로운 문의하기
                 </button>
+
+                <p className="text-xs text-gray-400 text-center mt-3">
+                  오픈채팅 참여 시 빠른 답변을 받으실 수 있습니다
+                </p>
               </motion.div>
             )}
           </AnimatePresence>

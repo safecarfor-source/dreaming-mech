@@ -276,7 +276,7 @@ model Customer {
   kakaoId     String   @unique  // 카카오 고유 ID
   nickname    String?           // 카카오 닉네임
   email       String?           // 카카오 이메일 (선택)
-  phone       String            // 직접 입력 전화번호 (필수)
+  phone       String?           // 직접 입력 전화번호 (문의 생성 시 업데이트)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -323,6 +323,9 @@ model ServiceInquiry {
 
   // 상태
   status        ServiceInquiryStatus   @default(PENDING)
+
+  // 카카오 오픈채팅 URL
+  kakaoOpenChatUrl  String?  // 운영자가 지정한 카카오 오픈채팅 링크
 
   // 텔레그램 알림 발송 여부
   telegramSent    Boolean   @default(false)

@@ -334,6 +334,8 @@ export const serviceInquiryApi = {
 
   updateStatus: (id: number, status: ServiceInquiryStatus) =>
     api.patch<ApiResponse<ServiceInquiry>>(`/service-inquiries/${id}/status`, { status }),
+
+  getShareMessage: (id: number) => api.get<ApiResponse<string>>(`/service-inquiries/${id}/share-message`),
 };
 
 export default api;

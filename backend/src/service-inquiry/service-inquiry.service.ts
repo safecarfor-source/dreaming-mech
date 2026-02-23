@@ -32,7 +32,10 @@ export class ServiceInquiryService {
       data: { phone: dto.phone },
     });
 
-    // 2. ServiceInquiry 생성
+    // 2. 환경변수에서 카카오 오픈채팅 URL 가져오기
+    const kakaoOpenChatUrl = process.env.KAKAO_OPENCHAT_URL || null;
+
+    // 3. ServiceInquiry 생성
     const inquiry = await this.prisma.serviceInquiry.create({
       data: {
         customerId,
@@ -40,13 +43,14 @@ export class ServiceInquiryService {
         regionSigungu: dto.regionSigungu,
         serviceType: dto.serviceType,
         description: dto.description,
+        kakaoOpenChatUrl,
       },
       include: {
         customer: true,
       },
     });
 
-    // 3. 텔레그램 알림 발송 (비동기, 실패해도 문의는 성공)
+    // 4. 텔레그램 알림 발송 (비동기, 실패해도 문의는 성공)
     this.sendTelegramNotification(inquiry).catch((error) => {
       this.logger.error('텔레그램 알림 발송 실패 (문의는 접수됨):', error);
     });
@@ -160,5 +164,22 @@ export class ServiceInquiryService {
     });
 
     return inquiry;
+  }
+
+  async getShareMessage(id: number): Promise<string> {
+    const inquiry = await this.findOne(id);
+    const serviceTypeKo = this.getServiceTypeKorean(inquiry.serviceType);
+
+    let message = `🔔 고객 문의 도착!\n`;
+    message += `📍 ${inquiry.regionSido} ${inquiry.regionSigungu}\n`;
+    message += `🔧 ${serviceTypeKo}\n`;
+    if (inquiry.description) {
+      message += `📝 ${inquiry.description}\n`;
+    }
+    message += `\n👉 고객 연락처 확인:\n`;
+    message += `https://dreammechaniclab.com/inquiry/${inquiry.id}\n`;
+    message += `(회원 정비사만 전화번호 확인 가능)`;
+
+    return message;
   }
 }

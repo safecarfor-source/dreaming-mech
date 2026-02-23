@@ -161,7 +161,7 @@ export class AuthService {
     return `https://kauth.kakao.com/oauth/authorize?${params}`;
   }
 
-  async handleKakaoCustomerCallback(code: string, phone: string) {
+  async handleKakaoCustomerCallback(code: string) {
     console.log('고객 카카오 콜백 시작, code:', code?.substring(0, 20) + '...');
 
     // 1. code → access_token 교환
@@ -193,19 +193,17 @@ export class AuthService {
     const profile = kakaoAccount.profile || {};
     console.log('고객 카카오 사용자 정보:', { kakaoId, email: kakaoAccount.email, nickname: profile.nickname });
 
-    // 3. Customer upsert
+    // 3. Customer upsert (phone은 나중에 문의 생성 시 업데이트)
     const customer = await this.prisma.customer.upsert({
       where: { kakaoId },
       update: {
         email: kakaoAccount.email,
         nickname: profile.nickname,
-        phone, // 전화번호는 나중에 문의 생성 시 업데이트
       },
       create: {
         kakaoId,
         email: kakaoAccount.email,
         nickname: profile.nickname,
-        phone: phone || '', // 기본값 (나중에 업데이트)
       },
     });
 
@@ -215,5 +213,26 @@ export class AuthService {
       access_token: this.jwtService.sign(payload),
       customer,
     };
+  }
+
+  // ── 고객 프로필 ──
+
+  async getCustomerProfile(customerId: number) {
+    const customer = await this.prisma.customer.findUnique({
+      where: { id: customerId },
+      select: {
+        id: true,
+        kakaoId: true,
+        nickname: true,
+        email: true,
+        phone: true,
+      },
+    });
+
+    if (!customer) {
+      throw new UnauthorizedException('고객을 찾을 수 없습니다.');
+    }
+
+    return customer;
   }
 }

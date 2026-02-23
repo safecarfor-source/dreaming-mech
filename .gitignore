@@ -67,6 +67,13 @@ aws-setup-*.log
 *.key
 .aws/
 
+# YouTube OAuth (민감 정보)
+scripts/youtube/client_secret.json
+scripts/youtube/token.json
+
+# Preview
+preview.html
+
 # Backups
 backups/
 *.sql
