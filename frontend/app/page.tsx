@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Search } from 'lucide-react';
 import { mechanicsApi } from '@/lib/api';
 import { useModalStore } from '@/lib/store';
 import {
@@ -25,8 +24,6 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedSpecialty, setSelectedSpecialty] = useState('');
   const openModal = useModalStore((state) => state.open);
   const mechanicListRef = useRef<HTMLDivElement>(null);
 
@@ -57,34 +54,11 @@ export default function Home() {
     [mechanics],
   );
 
-  // 선택된 지역 + 검색 + 전문분야 필터링
+  // 선택된 지역 정비소 필터링
   const filteredMechanics = useMemo(() => {
-    let result = mechanics;
-
-    // 지역 필터
-    if (selectedRegion) {
-      result = getMechanicsByRegion(result, selectedRegion);
-    }
-
-    // 검색 필터
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase().trim();
-      result = result.filter((m) =>
-        m.name.toLowerCase().includes(query) ||
-        m.address.toLowerCase().includes(query) ||
-        m.location.toLowerCase().includes(query)
-      );
-    }
-
-    // 전문분야 필터
-    if (selectedSpecialty) {
-      result = result.filter((m) =>
-        m.specialties?.some((s) => s.includes(selectedSpecialty))
-      );
-    }
-
-    return result;
-  }, [mechanics, selectedRegion, searchQuery, selectedSpecialty]);
+    if (!selectedRegion) return mechanics;
+    return getMechanicsByRegion(mechanics, selectedRegion);
+  }, [mechanics, selectedRegion]);
 
   // 선택된 지역 정보
   const selectedRegionInfo = selectedRegion
@@ -143,36 +117,8 @@ export default function Home() {
             />
           </AnimatedSection>
 
-          {/* 검색 & 필터 */}
-          <div ref={mechanicListRef} />
-          <div className="flex flex-col sm:flex-row gap-3 mb-6 md:mb-8 mt-10">
-            <div className="relative flex-1">
-              <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="정비소명 또는 지역 검색..."
-                className="w-full pl-11 pr-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#7C4DFF] focus:ring-1 focus:ring-[#7C4DFF]/20 transition-colors"
-              />
-            </div>
-            <select
-              value={selectedSpecialty}
-              onChange={(e) => setSelectedSpecialty(e.target.value)}
-              className="sm:w-48 px-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 appearance-none focus:outline-none focus:border-[#7C4DFF] focus:ring-1 focus:ring-[#7C4DFF]/20 transition-colors"
-            >
-              <option value="">전체 분야</option>
-              <option value="엔진">엔진</option>
-              <option value="미션">미션</option>
-              <option value="판금도색">판금도색</option>
-              <option value="타이어">타이어</option>
-              <option value="브레이크">브레이크</option>
-              <option value="에어컨">에어컨</option>
-              <option value="전기전자">전기전자</option>
-            </select>
-          </div>
-
           {/* 선택된 지역 표시 + 전체 보기 버튼 */}
+          <div ref={mechanicListRef} />
           <AnimatePresence mode="wait">
             {selectedRegionInfo && (
               <motion.div
@@ -211,7 +157,7 @@ export default function Home() {
 
           {/* 카드 그리드 */}
           {loading ? (
-            <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6">
+            <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 md:gap-3">
               {[...Array(6)].map((_, i) => (
                 <CardSkeleton key={i} />
               ))}
@@ -239,7 +185,7 @@ export default function Home() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.3 }}
-                className="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6"
+                className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 md:gap-3"
               >
                 {filteredMechanics.map((mechanic, index) => (
                   <AnimatedSection
