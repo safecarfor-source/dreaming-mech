@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
+import { Search } from 'lucide-react';
 import { mechanicsApi } from '@/lib/api';
 import { useModalStore } from '@/lib/store';
 import {
@@ -25,6 +26,8 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedSpecialty, setSelectedSpecialty] = useState('');
   const openModal = useModalStore((state) => state.open);
   const mechanicListRef = useRef<HTMLDivElement>(null);
 
@@ -55,11 +58,34 @@ export default function Home() {
     [mechanics],
   );
 
-  // 선택된 지역 정비소 필터링
+  // 선택된 지역 + 검색 + 전문분야 필터링
   const filteredMechanics = useMemo(() => {
-    if (!selectedRegion) return mechanics;
-    return getMechanicsByRegion(mechanics, selectedRegion);
-  }, [mechanics, selectedRegion]);
+    let result = mechanics;
+
+    // 지역 필터
+    if (selectedRegion) {
+      result = getMechanicsByRegion(result, selectedRegion);
+    }
+
+    // 검색 필터
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim();
+      result = result.filter((m) =>
+        m.name.toLowerCase().includes(query) ||
+        m.address.toLowerCase().includes(query) ||
+        m.location.toLowerCase().includes(query)
+      );
+    }
+
+    // 전문분야 필터
+    if (selectedSpecialty) {
+      result = result.filter((m) =>
+        m.specialties?.some((s) => s.includes(selectedSpecialty))
+      );
+    }
+
+    return result;
+  }, [mechanics, selectedRegion, searchQuery, selectedSpecialty]);
 
   // 선택된 지역 정보
   const selectedRegionInfo = selectedRegion
@@ -218,8 +244,36 @@ export default function Home() {
             />
           </AnimatedSection>
 
-          {/* 선택된 지역 표시 + 전체 보기 버튼 */}
+          {/* 검색 & 필터 */}
           <div ref={mechanicListRef} />
+          <div className="flex flex-col sm:flex-row gap-3 mb-6 sm:mb-8 mt-12">
+            <div className="relative flex-1">
+              <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-text-muted" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="정비소명 또는 지역 검색..."
+                className="w-full pl-11 pr-4 py-3 bg-white border border-[var(--border)] rounded-xl text-text-primary placeholder-text-muted focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500/20 transition-colors duration-[var(--duration-fast)]"
+              />
+            </div>
+            <select
+              value={selectedSpecialty}
+              onChange={(e) => setSelectedSpecialty(e.target.value)}
+              className="sm:w-48 px-4 py-3 bg-white border border-[var(--border)] rounded-xl text-text-primary appearance-none focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500/20 transition-colors duration-[var(--duration-fast)]"
+            >
+              <option value="">전체 분야</option>
+              <option value="엔진">엔진</option>
+              <option value="미션">미션</option>
+              <option value="판금도색">판금도색</option>
+              <option value="타이어">타이어</option>
+              <option value="브레이크">브레이크</option>
+              <option value="에어컨">에어컨</option>
+              <option value="전기전자">전기전자</option>
+            </select>
+          </div>
+
+          {/* 선택된 지역 표시 + 전체 보기 버튼 */}
           <AnimatePresence mode="wait">
             {selectedRegionInfo && (
               <motion.div
@@ -304,6 +358,33 @@ export default function Home() {
               </motion.div>
             </AnimatePresence>
           )}
+        </div>
+      </section>
+
+      {/* 타이어 문의 CTA */}
+      <section className="bg-white py-14 sm:py-16 md:py-20">
+        <div className="max-w-3xl mx-auto px-6 sm:px-8 text-center">
+          <AnimatedSection animation="slideUp" duration={0.7}>
+            <h2 className="text-[var(--text-h3)] sm:text-[var(--text-h2)] font-black text-text-primary mb-3 sm:mb-4">
+              타이어 교체, 어디서 하지?
+            </h2>
+            <p className="text-[var(--text-body)] sm:text-[var(--text-h5)] text-text-tertiary mb-8 sm:mb-10">
+              지역과 타이어 사이즈만 입력하면<br className="sm:hidden" /> 검증된 정비소를 매칭해드려요
+            </p>
+            <a
+              href="/tire-inquiry"
+              className="inline-flex items-center gap-2.5 bg-accent-500 text-white rounded-full
+                font-bold px-8 sm:px-10 py-4 sm:py-5
+                text-[var(--text-body)] sm:text-[var(--text-h5)]
+                shadow-[var(--shadow-lg)] hover:shadow-[var(--shadow-xl)]
+                hover:bg-accent-600 transition-all duration-[var(--duration-normal)]"
+            >
+              무료 견적 받기
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M5 12h14M12 5l7 7-7 7" />
+              </svg>
+            </a>
+          </AnimatedSection>
         </div>
       </section>
 

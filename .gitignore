@@ -71,3 +71,6 @@ aws-setup-*.log
 backups/
 *.sql
 *.sql.gz
+
+# SSL Certificates (Let's Encrypt)
+certbot/

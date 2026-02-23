@@ -1,5 +1,5 @@
 import axios, { AxiosRequestConfig } from 'axios';
-import { Mechanic, Inquiry, UnreadCount, ApiResponse, QuoteRequest, Review, SyncMessage, SyncStats } from '@/types';
+import { Mechanic, Inquiry, UnreadCount, ApiResponse, QuoteRequest, Review, SyncMessage, SyncStats, TireInquiry } from '@/types';
 
 const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL,
@@ -246,6 +246,37 @@ export const reviewApi = {
 
   // 관리자: 미승인 리뷰 수
   getPendingCount: () => api.get<number>('/reviews/pending-count'),
+};
+
+// Tire Inquiry API (타이어 문의)
+export const tireInquiryApi = {
+  // 공개: 타이어 문의 생성
+  create: (data: {
+    region: string;
+    subRegion?: string;
+    tireSize: string;
+    serviceType?: string;
+    carModel?: string;
+    images?: string[];
+    description?: string;
+  }) => api.post<TireInquiry>('/tire-inquiries', data),
+
+  // 관리자: 전체 목록
+  getAll: (params?: { page?: number; limit?: number; status?: string; region?: string }) =>
+    api.get<ApiResponse<TireInquiry[]>>('/tire-inquiries', { params }),
+
+  // 관리자: 상세
+  getOne: (id: number) => api.get<TireInquiry>(`/tire-inquiries/${id}`),
+
+  // 관리자: 상태 변경
+  updateStatus: (id: number, status: string, adminNote?: string) =>
+    api.patch(`/tire-inquiries/${id}/status`, { status, adminNote }),
+
+  // 관리자: 미확인 건수
+  getUnreadCount: () => api.get<{ count: number }>('/tire-inquiries/unread-count'),
+
+  // 관리자: 삭제
+  delete: (id: number) => api.delete(`/tire-inquiries/${id}`),
 };
 
 // Sync API (📱💻 폰-컴퓨터 동기화)

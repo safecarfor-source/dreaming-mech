@@ -29,14 +29,37 @@ export class MechanicService {
     private cacheService: CacheService,
   ) {}
 
-  // 모든 정비사 조회 (페이지네이션 지원)
-  async findAll(paginationDto?: PaginationDto): Promise<PaginatedResult<any>> {
-    const { page = 1, limit = 20 } = paginationDto || {};
+  // 모든 정비사 조회 (페이지네이션 + 검색/필터링 지원)
+  async findAll(paginationDto?: PaginationDto & { search?: string; location?: string; specialty?: string }): Promise<PaginatedResult<any>> {
+    const { page = 1, limit = 20, search, location, specialty } = paginationDto || {};
     const skip = (page - 1) * limit;
+
+    // 검색/필터 조건 구성
+    const where: any = { isActive: true };
+
+    // 검색어: 이름 또는 주소에 포함된 키워드
+    if (search) {
+      where.OR = [
+        { name: { contains: search, mode: 'insensitive' } },
+        { address: { contains: search, mode: 'insensitive' } },
+      ];
+    }
+
+    // 지역 필터
+    if (location) {
+      where.location = { contains: location, mode: 'insensitive' };
+    }
+
+    // 전문 분야 필터 (JSON array contains)
+    if (specialty) {
+      where.specialties = {
+        array_contains: specialty,
+      };
+    }
 
     const [data, total] = await Promise.all([
       this.prisma.mechanic.findMany({
-        where: { isActive: true },
+        where,
         orderBy: [{ sortOrder: 'asc' }, { createdAt: 'desc' }],
         skip,
         take: limit,
@@ -50,7 +73,7 @@ export class MechanicService {
           },
         },
       }),
-      this.prisma.mechanic.count({ where: { isActive: true } }),
+      this.prisma.mechanic.count({ where }),
     ]);
 
     // Decimal 타입을 숫자로 변환
