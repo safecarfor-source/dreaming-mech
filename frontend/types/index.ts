@@ -196,3 +196,34 @@ export interface TireInquiry {
   createdAt: string;
   updatedAt: string;
 }
+
+// Phase 1 타입들
+export interface Customer {
+  id: number;
+  kakaoId: string;
+  nickname?: string;
+  phone: string;
+  createdAt: string;
+}
+
+export type ServiceType = 'TIRE' | 'OIL' | 'BRAKE' | 'MAINTENANCE' | 'CONSULT';
+export type ServiceInquiryStatus = 'PENDING' | 'SHARED' | 'CONNECTED' | 'COMPLETED';
+
+export interface ServiceInquiry {
+  id: number;
+  customerId: number;
+  customer?: Customer;
+  regionSido: string;
+  regionSigungu: string;
+  serviceType: ServiceType;
+  description?: string;
+  status: ServiceInquiryStatus;
+  createdAt: string;
+}
+
+export interface CustomerAuthState {
+  customer: Customer | null;
+  isLoading: boolean;
+  login: (customer: Customer) => void;
+  logout: () => void;
+}

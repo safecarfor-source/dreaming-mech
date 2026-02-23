@@ -18,6 +18,7 @@ import { QuoteRequestModule } from './quote-request/quote-request.module';
 import { ReviewModule } from './review/review.module';
 import { SyncModule } from './sync/sync.module';
 import { TireInquiryModule } from './tire-inquiry/tire-inquiry.module';
+import { ServiceInquiryModule } from './service-inquiry/service-inquiry.module';
 
 @Module({
   imports: [
@@ -43,6 +44,7 @@ import { TireInquiryModule } from './tire-inquiry/tire-inquiry.module';
     ReviewModule,
     SyncModule,
     TireInquiryModule,
+    ServiceInquiryModule,
   ],
   controllers: [AppController],
   providers: [

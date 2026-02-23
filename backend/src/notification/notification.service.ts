@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import axios from 'axios';
 
 @Injectable()
 export class NotificationService {
@@ -88,6 +89,38 @@ export class NotificationService {
         `알림톡 발송 실패 - ${params.mechanicName}:`,
         error,
       );
+      return false;
+    }
+  }
+
+  /**
+   * 텔레그램 메시지 발송
+   */
+  async sendTelegramMessage(message: string): Promise<boolean> {
+    const botToken = process.env.TELEGRAM_BOT_TOKEN;
+    const chatId = process.env.TELEGRAM_CHAT_ID;
+
+    if (!botToken || !chatId) {
+      this.logger.warn(
+        '텔레그램 설정이 없습니다. 텔레그램 알림이 비활성화됩니다.',
+      );
+      return false;
+    }
+
+    try {
+      await axios.post(
+        `https://api.telegram.org/bot${botToken}/sendMessage`,
+        {
+          chat_id: chatId,
+          text: message,
+          parse_mode: 'HTML',
+        },
+      );
+
+      this.logger.log('텔레그램 메시지 발송 성공');
+      return true;
+    } catch (error) {
+      this.logger.error('텔레그램 메시지 발송 실패:', error);
       return false;
     }
   }

@@ -18,8 +18,11 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
           if (path.startsWith('/owner')) {
             return req?.cookies?.owner_token || null;
           }
-          // auth/profile 등 공통 경로는 둘 다 시도
-          return req?.cookies?.admin_token || req?.cookies?.owner_token || null;
+          if (path.startsWith('/service-inquiries')) {
+            return req?.cookies?.customer_token || null;
+          }
+          // auth/profile 등 공통 경로는 모두 시도
+          return req?.cookies?.admin_token || req?.cookies?.owner_token || req?.cookies?.customer_token || null;
         },
         // Fallback to Authorization header for backwards compatibility
         ExtractJwt.fromAuthHeaderAsBearerToken(),

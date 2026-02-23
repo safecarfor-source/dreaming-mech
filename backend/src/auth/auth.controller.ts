@@ -45,10 +45,11 @@ export class AuthController {
   async logout(@Response({ passthrough: true }) res: ExpressResponse) {
     res.clearCookie('admin_token', { path: '/' });
     res.clearCookie('owner_token', { path: '/' });
+    res.clearCookie('customer_token', { path: '/' });
     return { message: 'Logged out successfully' };
   }
 
-  // ── 카카오 소셜 로그인 ──
+  // ── 카카오 소셜 로그인 (정비사) ──
 
   @Get('kakao')
   kakaoLogin(@Response() res: ExpressResponse) {
@@ -78,6 +79,40 @@ export class AuthController {
       console.error('카카오 로그인 에러:', error?.response?.data || error?.message || error);
       const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
       res.redirect(`${frontendUrl}/owner/login?error=kakao_failed`);
+    }
+  }
+
+  // ── 카카오 소셜 로그인 (고객) ──
+
+  @Get('kakao/customer')
+  kakaoCustomerLogin(@Response() res: ExpressResponse) {
+    const url = this.authService.getKakaoCustomerLoginUrl();
+    res.redirect(url);
+  }
+
+  @Get('kakao/customer/callback')
+  async kakaoCustomerCallback(
+    @Query('code') code: string,
+    @Query('phone') phone: string,
+    @Response() res: ExpressResponse,
+  ) {
+    try {
+      const result = await this.authService.handleKakaoCustomerCallback(code, phone || '');
+      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+
+      res.cookie('customer_token', result.access_token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 24 * 60 * 60 * 1000,
+        path: '/',
+      });
+
+      res.redirect(`${frontendUrl}/inquiry/callback?success=true`);
+    } catch (error: any) {
+      console.error('고객 카카오 로그인 에러:', error?.response?.data || error?.message || error);
+      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+      res.redirect(`${frontendUrl}/inquiry?error=kakao_failed`);
     }
   }
 }

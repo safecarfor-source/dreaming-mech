@@ -1,5 +1,5 @@
 import axios, { AxiosRequestConfig } from 'axios';
-import { Mechanic, Inquiry, UnreadCount, ApiResponse, QuoteRequest, Review, SyncMessage, SyncStats, TireInquiry } from '@/types';
+import { Mechanic, Inquiry, UnreadCount, ApiResponse, QuoteRequest, Review, SyncMessage, SyncStats, TireInquiry, Customer, ServiceInquiry, ServiceType, ServiceInquiryStatus } from '@/types';
 
 const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL,
@@ -306,6 +306,34 @@ export const syncApi = {
 
   // 삭제
   delete: (id: number) => api.delete(`/sync/${id}`),
+};
+
+// 고객 인증 API
+export const customerAuthApi = {
+  getProfile: () => api.get<ApiResponse<Customer>>('/auth/customer/profile'),
+  updatePhone: (phone: string) => api.patch<ApiResponse<Customer>>('/auth/customer/phone', { phone }),
+};
+
+// 서비스 문의 API
+export const serviceInquiryApi = {
+  create: (data: {
+    regionSido: string;
+    regionSigungu: string;
+    serviceType: ServiceType;
+    description?: string;
+    phone: string;
+  }) => api.post<ApiResponse<ServiceInquiry>>('/service-inquiries', data),
+
+  getPublic: (id: number) => api.get<ApiResponse<ServiceInquiry>>(`/service-inquiries/${id}`),
+
+  // 관리자용
+  getAll: (page = 1, limit = 20) =>
+    api.get<ApiResponse<{ data: ServiceInquiry[]; total: number }>>(`/service-inquiries?page=${page}&limit=${limit}`),
+
+  getFull: (id: number) => api.get<ApiResponse<ServiceInquiry>>(`/service-inquiries/${id}/full`),
+
+  updateStatus: (id: number, status: ServiceInquiryStatus) =>
+    api.patch<ApiResponse<ServiceInquiry>>(`/service-inquiries/${id}/status`, { status }),
 };
 
 export default api;

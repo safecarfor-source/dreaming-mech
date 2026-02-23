@@ -268,6 +268,76 @@ enum TireServiceType {
   INSPECTION   // 타이어 점검
 }
 
+// ========================================
+// 🚗 고객 (Customer) 모델 - Phase 1
+// ========================================
+model Customer {
+  id          Int      @id @default(autoincrement())
+  kakaoId     String   @unique  // 카카오 고유 ID
+  nickname    String?           // 카카오 닉네임
+  email       String?           // 카카오 이메일 (선택)
+  phone       String            // 직접 입력 전화번호 (필수)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  serviceInquiries ServiceInquiry[]
+
+  @@index([kakaoId])
+  @@index([phone])
+}
+
+// 서비스 문의 타입
+enum ServiceType {
+  TIRE         // 타이어 (교체·펑크·위치교환)
+  OIL          // 엔진오일 (교환·보충)
+  BRAKE        // 브레이크 (패드·디스크·점검)
+  MAINTENANCE  // 경정비 (에어컨·배터리·기타)
+  CONSULT      // 종합상담 (뭘 해야 할지 모를 때)
+}
+
+// 서비스 문의 상태
+enum ServiceInquiryStatus {
+  PENDING    // 접수됨 (텔레그램 알림 발송 완료)
+  SHARED     // 운영자가 단톡방에 공유함
+  CONNECTED  // 정비사-고객 연결됨
+  COMPLETED  // 정비 완료
+}
+
+// ========================================
+// 🔔 서비스 문의 모델 - Phase 1 핵심
+// ========================================
+model ServiceInquiry {
+  id            Int                    @id @default(autoincrement())
+
+  // 고객 정보
+  customerId    Int
+  customer      Customer               @relation(fields: [customerId], references: [id])
+
+  // 지역 정보
+  regionSido    String                 // 시/도 (예: "경기도")
+  regionSigungu String                 // 시/군/구 (예: "수원시")
+
+  // 서비스 정보
+  serviceType   ServiceType            // 정비 항목
+  description   String?   @db.Text    // 추가 설명 (선택)
+
+  // 상태
+  status        ServiceInquiryStatus   @default(PENDING)
+
+  // 텔레그램 알림 발송 여부
+  telegramSent    Boolean   @default(false)
+  telegramSentAt  DateTime?
+
+  createdAt     DateTime               @default(now())
+  updatedAt     DateTime               @updatedAt
+
+  @@index([customerId])
+  @@index([regionSido, regionSigungu])
+  @@index([serviceType])
+  @@index([status])
+  @@index([createdAt])
+}
+
 // 타이어 문의 모델
 model TireInquiry {
   id            Int                @id @default(autoincrement())
