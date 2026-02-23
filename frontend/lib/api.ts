@@ -117,6 +117,8 @@ export const analyticsApi = {
 // Owner Auth API
 export const ownerAuthApi = {
   getProfile: () => api.get('/auth/profile'),
+  updateProfile: (data: { phone?: string; businessName?: string }) =>
+    api.patch('/auth/owner/profile', data),
   submitBusinessLicense: (data: { businessLicenseUrl: string; businessName: string }) =>
     api.post('/owner/business-license', data),
   reapply: (data: { businessLicenseUrl: string; businessName: string }) =>

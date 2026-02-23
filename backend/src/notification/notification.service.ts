@@ -94,6 +94,79 @@ export class NotificationService {
   }
 
   /**
+   * 서비스 문의 알림톡 발송 (정비사용)
+   */
+  async sendServiceInquiryAlimtalk(params: {
+    mechanicPhone: string;
+    mechanicName: string;
+    regionSido: string;
+    regionSigungu: string;
+    serviceType: string;
+    description: string | null;
+    inquiryId: number;
+  }): Promise<boolean> {
+    if (!this.isConfigured || !this.messageService) {
+      this.logger.warn(
+        `알림톡 미발송 (SOLAPI 미설정) - 문의 #${params.inquiryId}`,
+      );
+      return false;
+    }
+
+    const senderPhone = process.env.SOLAPI_SENDER_PHONE;
+    const channelId = process.env.SOLAPI_KAKAO_CHANNEL_ID;
+    const templateId = process.env.SOLAPI_INQUIRY_TEMPLATE_ID;
+
+    if (!senderPhone || !channelId || !templateId) {
+      this.logger.warn(
+        '알림톡 환경변수 부족 (SOLAPI_INQUIRY_TEMPLATE_ID 필요)',
+      );
+      return false;
+    }
+
+    const serviceTypeMap: Record<string, string> = {
+      TIRE: '타이어',
+      OIL: '엔진오일',
+      BRAKE: '브레이크',
+      MAINTENANCE: '경정비',
+      CONSULT: '종합상담',
+    };
+    const serviceTypeKo = serviceTypeMap[params.serviceType] || params.serviceType;
+
+    try {
+      const cleanPhone = params.mechanicPhone.replace(/-/g, '');
+
+      await this.messageService.send({
+        to: cleanPhone,
+        from: senderPhone,
+        kakaoOptions: {
+          pfId: channelId,
+          templateId: templateId,
+          variables: {
+            '#{정비소명}': params.mechanicName,
+            '#{지역}': `${params.regionSido} ${params.regionSigungu}`,
+            '#{서비스}': serviceTypeKo,
+            '#{내용}': params.description
+              ? params.description.substring(0, 50)
+              : '내용 없음',
+            '#{링크}': `https://dreammechaniclab.com/inquiry/${params.inquiryId}`,
+          },
+        },
+      });
+
+      this.logger.log(
+        `문의 알림톡 발송 성공 - ${params.mechanicName} (문의 #${params.inquiryId})`,
+      );
+      return true;
+    } catch (error) {
+      this.logger.error(
+        `문의 알림톡 발송 실패 - ${params.mechanicName}:`,
+        error,
+      );
+      return false;
+    }
+  }
+
+  /**
    * 텔레그램 메시지 발송
    */
   async sendTelegramMessage(message: string): Promise<boolean> {

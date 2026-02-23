@@ -55,6 +55,11 @@ export class ServiceInquiryService {
       this.logger.error('텔레그램 알림 발송 실패 (문의는 접수됨):', error);
     });
 
+    // 5. 해당 지역 정비사 알림톡 발송 (비동기, 실패해도 문의는 성공)
+    this.sendInquiryAlimtalkToLocalMechanics(inquiry).catch((error) => {
+      this.logger.error('정비사 알림톡 발송 실패 (문의는 접수됨):', error);
+    });
+
     return inquiry;
   }
 
@@ -80,6 +85,69 @@ export class ServiceInquiryService {
         },
       });
     }
+  }
+
+  private async sendInquiryAlimtalkToLocalMechanics(inquiry: any) {
+    // 해당 지역(regionSigungu)의 활성 정비소 찾기
+    // Mechanic.location이 regionSigungu를 포함하는 경우 매칭
+    const mechanics = await this.prisma.mechanic.findMany({
+      where: {
+        isActive: true,
+        OR: [
+          { location: { contains: inquiry.regionSigungu } },
+          { location: { contains: inquiry.regionSido } },
+        ],
+      },
+      include: {
+        owner: {
+          select: {
+            id: true,
+            phone: true,
+            status: true,
+          },
+        },
+      },
+    });
+
+    // APPROVED된 사장님이 있는 정비소, 또는 phone이 있는 정비소만 필터
+    const targetMechanics = mechanics.filter(
+      (m) =>
+        m.phone && // 정비소 전화번호 있음
+        (m.owner?.status === 'APPROVED' || !m.ownerId), // 승인된 사장님 OR 독립 정비소
+    );
+
+    if (targetMechanics.length === 0) {
+      this.logger.log(
+        `알림 대상 정비사 없음 - ${inquiry.regionSido} ${inquiry.regionSigungu}`,
+      );
+      return;
+    }
+
+    this.logger.log(
+      `${inquiry.regionSido} ${inquiry.regionSigungu} 정비사 ${targetMechanics.length}곳에 알림톡 발송 시작`,
+    );
+
+    // 각 정비소에 알림톡 발송 (병렬)
+    const results = await Promise.allSettled(
+      targetMechanics.map((mechanic) =>
+        this.notificationService.sendServiceInquiryAlimtalk({
+          mechanicPhone: mechanic.phone,
+          mechanicName: mechanic.name,
+          regionSido: inquiry.regionSido,
+          regionSigungu: inquiry.regionSigungu,
+          serviceType: inquiry.serviceType,
+          description: inquiry.description,
+          inquiryId: inquiry.id,
+        }),
+      ),
+    );
+
+    const successCount = results.filter(
+      (r) => r.status === 'fulfilled' && r.value === true,
+    ).length;
+    this.logger.log(
+      `알림톡 발송 완료: ${successCount}/${targetMechanics.length}건 성공`,
+    );
   }
 
   async findAll(page: number = 1, limit: number = 20) {

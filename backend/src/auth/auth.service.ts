@@ -140,6 +140,7 @@ export class AuthService {
         rejectionReason: true,
         businessLicenseUrl: true,
         businessName: true,
+        phone: true,
       },
     });
 
@@ -148,6 +149,24 @@ export class AuthService {
     }
 
     return owner;
+  }
+
+  async updateOwnerProfile(ownerId: number, data: { phone?: string; businessName?: string }) {
+    return this.prisma.owner.update({
+      where: { id: ownerId },
+      data: {
+        ...(data.phone !== undefined && { phone: data.phone }),
+        ...(data.businessName !== undefined && { businessName: data.businessName }),
+      },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        phone: true,
+        businessName: true,
+        status: true,
+      },
+    });
   }
 
   // ── 고객 카카오 OAuth ──

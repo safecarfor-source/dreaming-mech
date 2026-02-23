@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Get, UseGuards, Request, Response, UsePipes, Query } from '@nestjs/common';
+import { Controller, Post, Body, Get, UseGuards, Request, Response, UsePipes, Query, Patch } from '@nestjs/common';
 import type { Response as ExpressResponse } from 'express';
 import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './jwt-auth.guard';
@@ -50,6 +50,16 @@ export class AuthController {
       success: true,
       data: profile,
     };
+  }
+
+  // ── 사장님 프로필 업데이트 ──
+  @UseGuards(JwtAuthGuard)
+  @Patch('owner/profile')
+  async updateOwnerProfile(
+    @Request() req,
+    @Body() body: { phone?: string; businessName?: string },
+  ) {
+    return this.authService.updateOwnerProfile(req.user.sub, body);
   }
 
   @Post('logout')

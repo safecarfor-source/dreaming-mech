@@ -96,6 +96,7 @@ export interface Owner {
   rejectionReason?: string;
   businessLicenseUrl?: string;
   businessName?: string;
+  phone?: string;
   createdAt?: string;
   _count?: { mechanics: number };
 }

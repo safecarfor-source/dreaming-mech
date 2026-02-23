@@ -31,6 +31,13 @@ services:
       # Telegram Bot
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
       TELEGRAM_CHAT_ID: ${TELEGRAM_CHAT_ID}
+      # SOLAPI 알림톡
+      SOLAPI_API_KEY: ${SOLAPI_API_KEY:-}
+      SOLAPI_API_SECRET: ${SOLAPI_API_SECRET:-}
+      SOLAPI_SENDER_PHONE: ${SOLAPI_SENDER_PHONE:-}
+      SOLAPI_KAKAO_CHANNEL_ID: ${SOLAPI_KAKAO_CHANNEL_ID:-}
+      SOLAPI_QUOTE_TEMPLATE_ID: ${SOLAPI_QUOTE_TEMPLATE_ID:-}
+      SOLAPI_INQUIRY_TEMPLATE_ID: ${SOLAPI_INQUIRY_TEMPLATE_ID:-}
     networks:
       - app-network
     command: sh -c "npx prisma migrate deploy && npm run start:prod"
