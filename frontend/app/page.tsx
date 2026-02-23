@@ -15,6 +15,7 @@ import HeroSection from '@/components/HeroSection';
 import KoreaMap from '@/components/KoreaMap';
 import MechanicCard from '@/components/MechanicCard';
 import MechanicModal from '@/components/MechanicModal';
+import QuickInquiry from '@/components/QuickInquiry';
 import CardSkeleton from '@/components/ui/CardSkeleton';
 import ErrorMessage from '@/components/ui/ErrorMessage';
 import AnimatedSection from '@/components/animations/AnimatedSection';
@@ -140,6 +141,12 @@ export default function Home() {
           </AnimatedSection>
         </div>
       </section>
+
+      {/* 빠른 문의 섹션 */}
+      <QuickInquiry
+        mechanics={mechanics}
+        onSelectMechanic={openModal}
+      />
 
       {/* 이용 방법 섹션 */}
       <section className="bg-white py-16 sm:py-20 md:py-24">

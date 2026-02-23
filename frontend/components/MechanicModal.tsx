@@ -80,13 +80,16 @@ export default function MechanicModal() {
             className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40"
           />
 
-          {/* 모달 */}
+          {/* 모달 위치 래퍼: 모바일=하단 시트, 데스크탑=화면 가운데 1/3 */}
+          <div className="fixed inset-0 z-50 flex items-end md:items-center md:justify-center pointer-events-none">
           <motion.div
             initial={{ y: '100%' }}
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed inset-x-0 bottom-0 top-16 bg-white rounded-t-3xl z-50 overflow-hidden flex flex-col"
+            className="pointer-events-auto w-full bg-white rounded-t-3xl overflow-hidden flex flex-col
+              max-h-[calc(100vh-4rem)]
+              md:max-h-[85vh] md:w-[33vw] md:min-w-[480px] md:max-w-[560px] md:rounded-2xl md:shadow-[var(--shadow-xl)]"
           >
             {/* 헤더 */}
             <div className="flex items-center justify-between gap-4 px-5 sm:px-6 py-4 sm:py-5 border-b border-[var(--border)]">
@@ -108,7 +111,7 @@ export default function MechanicModal() {
 
             {/* 컨텐츠 */}
             <div className="flex-1 overflow-auto">
-              <div className="max-w-3xl mx-auto px-5 sm:px-6 py-6 sm:py-8 space-y-6 sm:space-y-8">
+              <div className="px-5 sm:px-6 py-6 sm:py-8 space-y-6 sm:space-y-8">
                 {/* 대표 이미지 — 16:9 비율 */}
                 {mechanic.mainImageUrl && (
                   <div className="rounded-2xl overflow-hidden bg-bg-tertiary aspect-[16/9] relative">
@@ -276,6 +279,7 @@ export default function MechanicModal() {
               </div>
             </div>
           </motion.div>
+          </div>
         </>
       )}
     </AnimatePresence>

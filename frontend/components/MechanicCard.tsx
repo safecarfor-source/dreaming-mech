@@ -21,8 +21,8 @@ export default function MechanicCard({ mechanic, onClick }: Props) {
         shadow-[var(--shadow-xs)] hover:shadow-[var(--shadow-lg)] hover:border-brand-400/40
         transition-[box-shadow,border-color] duration-[var(--duration-slow)]"
     >
-      {/* 이미지 — 4:3 비율 통일 + Hims 스타일 호버 오버레이 */}
-      <div className="aspect-[4/3] bg-bg-tertiary relative overflow-hidden">
+      {/* 이미지 — 2:1 비율 (기존 4:3에서 높이 1/3 축소) + Hims 스타일 호버 오버레이 */}
+      <div className="aspect-[2/1] bg-bg-tertiary relative overflow-hidden">
         {mechanic.mainImageUrl ? (
           <Image
             src={mechanic.mainImageUrl}
