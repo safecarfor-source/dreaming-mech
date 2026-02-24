@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { useAuthStore } from '@/lib/auth';
@@ -26,8 +26,8 @@ const menuItems = [
   { href: '/admin', label: '대시보드', icon: LayoutDashboard },
   { href: '/admin/mechanics', label: '정비사 관리', icon: Users },
   { href: '/admin/owners', label: '사장님 관리', icon: UserCheck },
-  { href: '/admin/inquiries', label: '문의 관리', icon: MessageSquare },
-  { href: '/admin/service-inquiries', label: '서비스 문의', icon: MessageCircle },
+  { href: '/admin/inquiries', label: '문의 관리', icon: MessageSquare, badgeKey: 'inquiries' as const },
+  { href: '/admin/service-inquiries', label: '서비스 문의', icon: MessageCircle, badgeKey: 'serviceInquiries' as const },
   { href: '/admin/quote-requests', label: '견적 요청', icon: FileText },
   { href: '/admin/reviews', label: '리뷰 관리', icon: Star },
   { href: '/admin/stats', label: '통계', icon: BarChart3 },
@@ -39,11 +39,36 @@ export default function AdminLayout({ children }: Props) {
   const { isAuthenticated, admin, logout } = useAuthStore();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isHydrated, setIsHydrated] = useState(false);
+  const [badges, setBadges] = useState<{ inquiries: number; serviceInquiries: number }>({ inquiries: 0, serviceInquiries: 0 });
+
+  // 문의 건수 가져오기
+  const fetchBadges = useCallback(async () => {
+    try {
+      const [inqRes, svcRes] = await Promise.all([
+        fetch(`${process.env.NEXT_PUBLIC_API_URL}/inquiries?page=1&limit=1`, { credentials: 'include' }).catch(() => null),
+        fetch(`${process.env.NEXT_PUBLIC_API_URL}/service-inquiries?page=1&limit=1`, { credentials: 'include' }).catch(() => null),
+      ]);
+      const inqData = inqRes?.ok ? await inqRes.json() : null;
+      const svcData = svcRes?.ok ? await svcRes.json() : null;
+      setBadges({
+        inquiries: inqData?.total || 0,
+        serviceInquiries: svcData?.total || 0,
+      });
+    } catch {}
+  }, []);
 
   // Wait for Zustand store to hydrate from localStorage
   useEffect(() => {
     setIsHydrated(true);
   }, []);
+
+  // 뱃지 카운트 로드 + 30초 간격 폴링
+  useEffect(() => {
+    if (!isHydrated || !isAuthenticated) return;
+    fetchBadges();
+    const interval = setInterval(fetchBadges, 30000);
+    return () => clearInterval(interval);
+  }, [isHydrated, isAuthenticated, fetchBadges]);
 
   useEffect(() => {
     // Only check authentication after hydration
@@ -111,6 +136,7 @@ export default function AdminLayout({ children }: Props) {
           <nav className="space-y-2">
             {menuItems.map((item) => {
               const isActive = pathname === item.href;
+              const badgeCount = item.badgeKey ? badges[item.badgeKey] : 0;
               return (
                 <Link
                   key={item.href}
@@ -123,7 +149,14 @@ export default function AdminLayout({ children }: Props) {
                   }`}
                 >
                   <item.icon size={20} />
-                  <span>{item.label}</span>
+                  <span className="flex-1">{item.label}</span>
+                  {badgeCount > 0 && (
+                    <span className={`min-w-[20px] h-5 px-1.5 flex items-center justify-center rounded-full text-xs font-bold ${
+                      isActive ? 'bg-white text-purple-600' : 'bg-red-500 text-white'
+                    }`}>
+                      {badgeCount > 99 ? '99+' : badgeCount}
+                    </span>
+                  )}
                 </Link>
               );
             })}
