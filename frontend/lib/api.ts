@@ -14,16 +14,14 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // 401 에러 시 토큰 및 세션 정보 정리
       if (typeof window !== 'undefined') {
-        localStorage.clear();
-        sessionStorage.clear();
-
-        // 로그인 페이지가 아닌 경우에만 리다이렉트
+        // 해당 역할의 인증 정보만 선택적으로 삭제 (다른 스토리지는 보존)
         const path = window.location.pathname;
         if (path.startsWith('/owner') && !path.includes('/owner/login')) {
+          localStorage.removeItem('owner-auth-storage');
           window.location.href = '/owner/login';
         } else if (path.startsWith('/admin') && !path.includes('/admin/login')) {
+          localStorage.removeItem('auth-storage');
           window.location.href = '/admin/login';
         }
       }

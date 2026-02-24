@@ -12,17 +12,18 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         // 요청 경로에 따라 적절한 쿠키 선택
         (req: Request) => {
           const path = req?.path || '';
+          // 역할별 전용 경로
           if (path.startsWith('/admin')) {
             return req?.cookies?.admin_token || null;
           }
           if (path.startsWith('/owner')) {
             return req?.cookies?.owner_token || null;
           }
-          // 고객 관련 경로: /auth/customer, /service-inquiries, /inquiry
-          if (path.startsWith('/auth/customer') || path.startsWith('/service-inquiries') || path.startsWith('/inquiry')) {
+          if (path.startsWith('/auth/customer')) {
             return req?.cookies?.customer_token || null;
           }
-          // auth/profile 등 공통 경로는 모두 시도
+          // 공유 경로 (/service-inquiries, /inquiries, /mechanics 등)
+          // 관리자·사장님·고객 모두 접근 가능 → 모든 토큰 시도
           return req?.cookies?.admin_token || req?.cookies?.owner_token || req?.cookies?.customer_token || null;
         },
         // Fallback to Authorization header for backwards compatibility

@@ -57,9 +57,21 @@ export default function AdminLayout({ children }: Props) {
     } catch {}
   }, []);
 
-  // Wait for Zustand store to hydrate from localStorage
+  // Zustand persist가 localStorage에서 완전히 복원된 후에만 인증 체크
   useEffect(() => {
-    setIsHydrated(true);
+    const checkHydration = () => {
+      if (useAuthStore.persist.hasHydrated?.()) {
+        setIsHydrated(true);
+        return;
+      }
+      const unsub = useAuthStore.persist.onFinishHydration?.(() => {
+        setIsHydrated(true);
+      });
+      return unsub;
+    };
+    
+    const cleanup = checkHydration();
+    return cleanup;
   }, []);
 
   // 뱃지 카운트 로드 + 30초 간격 폴링
