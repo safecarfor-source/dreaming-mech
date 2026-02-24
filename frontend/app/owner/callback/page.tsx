@@ -17,7 +17,16 @@ function CallbackContent() {
         const res = await ownerAuthApi.getProfile();
         login(res.data);
 
-        if (status === 'REJECTED') {
+        // 공유 링크에서 왔으면 원래 문의로 복귀
+        const returnUrl = typeof window !== 'undefined'
+          ? sessionStorage.getItem('mechanic_return_url')
+          : null;
+
+        if (returnUrl) {
+          sessionStorage.removeItem('mechanic_return_url');
+          sessionStorage.setItem('mechanic_just_signed_up', 'true');
+          router.replace(returnUrl);
+        } else if (status === 'REJECTED') {
           router.replace('/owner?rejected=true');
         } else {
           router.replace('/owner');

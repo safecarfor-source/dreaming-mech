@@ -350,6 +350,9 @@ export const unifiedInquiryApi = {
   getPublic: (type: string, id: number) =>
     api.get(`/unified-inquiries/${type.toLowerCase()}/${id}`),
 
+  getPublicStats: () =>
+    api.get<{ recentCount: number }>('/unified-inquiries/public-stats'),
+
   updateStatus: (type: string, id: number, status: string) =>
     api.patch(`/unified-inquiries/${type.toLowerCase()}/${id}/status`, { status }),
 

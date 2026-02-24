@@ -172,25 +172,28 @@ export class UnifiedInquiryService {
         });
         if (!inq) throw new Error('Not found');
         const serviceKo = SERVICE_TYPE_MAP[inq.serviceType] || inq.serviceType;
-        let msg = `🔔 고객 문의 도착!\n`;
+        let msg = `🚨 [긴급] 고객 문의 접수!\n\n`;
         msg += `📍 ${inq.regionSido} ${inq.regionSigungu}\n`;
-        msg += `🔧 ${serviceKo}\n`;
-        if ((inq as any).name) msg += `👤 ${(inq as any).name}\n`;
-        if (inq.description) msg += `📝 ${inq.description}\n`;
-        msg += `\n👉 고객 연락처 확인:\n`;
+        msg += `🔧 ${serviceKo}`;
+        if (inq.description) msg += ` - ${inq.description}`;
+        msg += `\n📞 전화번호: 회원만 확인 가능\n`;
+        msg += `\n👉 지금 확인하기:\n`;
         msg += `https://dreammechaniclab.com/inquiry/service/${inq.id}\n`;
-        msg += `(회원 정비사만 전화번호 확인 가능)`;
+        msg += `\n⚡ 먼저 전화하는 정비사가 고객을 잡습니다\n`;
+        msg += `(카카오 3초 가입 → 바로 전화번호 확인)`;
         return msg;
       }
       case 'GENERAL': {
         const inq = await this.prisma.inquiry.findUnique({ where: { id } });
         if (!inq) throw new Error('Not found');
-        let msg = `🔔 고객 문의 도착!\n`;
+        let msg = `🚨 [긴급] 고객 문의 접수!\n\n`;
         msg += `👤 ${inq.name}\n`;
         if (inq.content) msg += `📝 ${inq.content}\n`;
-        msg += `\n👉 상세 확인:\n`;
+        msg += `📞 전화번호: 회원만 확인 가능\n`;
+        msg += `\n👉 지금 확인하기:\n`;
         msg += `https://dreammechaniclab.com/inquiry/general/${inq.id}\n`;
-        msg += `(회원 정비사만 전화번호 확인 가능)`;
+        msg += `\n⚡ 먼저 전화하는 정비사가 고객을 잡습니다\n`;
+        msg += `(카카오 3초 가입 → 바로 전화번호 확인)`;
         return msg;
       }
       case 'QUOTE': {
@@ -199,13 +202,15 @@ export class UnifiedInquiryService {
           include: { mechanic: { select: { name: true } } },
         });
         if (!qr) throw new Error('Not found');
-        let msg = `🔔 견적 요청 도착!\n`;
+        let msg = `🚨 [긴급] 견적 요청 접수!\n\n`;
         msg += `👤 ${qr.customerName}\n`;
         msg += `🚗 ${qr.carModel}\n`;
         if (qr.description) msg += `📝 ${qr.description}\n`;
-        msg += `\n👉 상세 확인:\n`;
+        msg += `📞 전화번호: 회원만 확인 가능\n`;
+        msg += `\n👉 지금 확인하기:\n`;
         msg += `https://dreammechaniclab.com/inquiry/quote/${qr.id}\n`;
-        msg += `(회원 정비사만 전화번호 확인 가능)`;
+        msg += `\n⚡ 먼저 전화하는 정비사가 고객을 잡습니다\n`;
+        msg += `(카카오 3초 가입 → 바로 전화번호 확인)`;
         return msg;
       }
       default:
@@ -276,5 +281,15 @@ export class UnifiedInquiryService {
       where: { id: ownerId },
       select: { status: true },
     });
+  }
+
+  async getPublicStats() {
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+    const recentCount = await this.prisma.serviceInquiry.count({
+      where: { createdAt: { gte: sevenDaysAgo } },
+    });
+    return { recentCount };
   }
 }

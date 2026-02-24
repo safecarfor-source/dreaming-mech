@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import {
@@ -14,6 +14,12 @@ import {
   ArrowLeft,
   Car,
   User,
+  Shield,
+  Zap,
+  CheckCircle,
+  Store,
+  List,
+  Info,
 } from 'lucide-react';
 import Layout from '@/components/Layout';
 import { unifiedInquiryApi } from '@/lib/api';
@@ -59,10 +65,10 @@ interface InquiryDetail {
 
 export default function SharedInquiryPage() {
   const params = useParams();
+  const router = useRouter();
   const rawType = params.type as string;
   const rawId = params.id as string;
 
-  // 기존 /inquiry/123 URL 호환: type이 숫자면 service 타입으로 처리
   const isLegacyUrl = /^\d+$/.test(rawType);
   const type = isLegacyUrl ? 'service' : rawType;
   const id = isLegacyUrl ? Number(rawType) : Number(rawId);
@@ -70,6 +76,8 @@ export default function SharedInquiryPage() {
   const [inquiry, setInquiry] = useState<InquiryDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [recentCount, setRecentCount] = useState<number>(0);
+  const [isNewSignup, setIsNewSignup] = useState(false);
 
   useEffect(() => {
     const fetchInquiry = async () => {
@@ -82,8 +90,44 @@ export default function SharedInquiryPage() {
         setLoading(false);
       }
     };
-    if (type && id && !isNaN(id)) fetchInquiry();
+
+    const fetchStats = async () => {
+      try {
+        const res = await unifiedInquiryApi.getPublicStats();
+        setRecentCount(res.data.recentCount);
+      } catch {
+        // 무시
+      }
+    };
+
+    if (type && id && !isNaN(id)) {
+      fetchInquiry();
+      fetchStats();
+    }
+
+    // 가입 후 돌아왔는지 확인
+    if (typeof window !== 'undefined') {
+      const justSignedUp = sessionStorage.getItem('mechanic_just_signed_up');
+      if (justSignedUp) {
+        setIsNewSignup(true);
+        sessionStorage.removeItem('mechanic_just_signed_up');
+      }
+    }
   }, [type, id]);
+
+  const handleSignupClick = () => {
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('mechanic_return_url', `/inquiry/${type}/${id}`);
+    }
+    router.push('/owner/login');
+  };
+
+  const handleLoginClick = () => {
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('mechanic_return_url', `/inquiry/${type}/${id}`);
+    }
+    router.push('/owner/login');
+  };
 
   return (
     <Layout>
@@ -126,7 +170,7 @@ export default function SharedInquiryPage() {
                       {TYPE_LABELS[inquiry.type] || '문의'}
                     </p>
                     <h1 className="text-xl font-bold text-gray-900">
-                      🔔 고객 문의 #{inquiry.id}
+                      고객 문의 #{inquiry.id}
                     </h1>
                   </div>
                   <span
@@ -211,50 +255,136 @@ export default function SharedInquiryPage() {
                     <p className="text-xs text-gray-400 text-center">
                       터치하면 바로 전화 연결됩니다
                     </p>
+
+                    {/* 신규 가입자 환영 + 탐색 유도 */}
+                    {isNewSignup && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="mt-4 pt-4 border-t border-gray-100"
+                      >
+                        <p className="text-center text-sm font-bold text-[#7C4DFF] mb-3">
+                          가입을 환영합니다!
+                        </p>
+                        <p className="text-center text-xs text-gray-500 mb-4">
+                          꿈꾸는정비사에서 더 많은 고객을 만나보세요
+                        </p>
+                        <div className="space-y-2">
+                          <Link
+                            href="/owner"
+                            className="flex items-center gap-3 w-full p-3 bg-[#F5F3FF] rounded-xl hover:bg-[#EDE9FF] transition-colors"
+                          >
+                            <Store size={18} className="text-[#7C4DFF]" />
+                            <span className="text-sm font-medium text-gray-800">내 정비소 등록하기</span>
+                          </Link>
+                          <Link
+                            href="/"
+                            className="flex items-center gap-3 w-full p-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors"
+                          >
+                            <List size={18} className="text-gray-500" />
+                            <span className="text-sm font-medium text-gray-800">다른 고객 문의 보기</span>
+                          </Link>
+                          <Link
+                            href="/for-mechanics"
+                            className="flex items-center gap-3 w-full p-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors"
+                          >
+                            <Info size={18} className="text-gray-500" />
+                            <span className="text-sm font-medium text-gray-800">정비사 혜택 알아보기</span>
+                          </Link>
+                        </div>
+                      </motion.div>
+                    )}
                   </div>
                 ) : (
                   /* 전화번호 블러 (비로그인 / 미승인) */
                   <div className="text-center py-4">
-                    <div className="flex items-center justify-center gap-2 text-2xl font-bold text-gray-300 mb-4">
+                    <div className="flex items-center justify-center gap-2 text-2xl font-bold text-gray-300 mb-3">
                       <Lock size={24} />
                       <span>010-****-****</span>
                     </div>
+
+                    {/* 긴급성 메시지 */}
+                    <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 mb-4">
+                      <p className="text-sm font-bold text-amber-800 flex items-center justify-center gap-1">
+                        <Zap size={16} />
+                        이 고객은 지금 전화를 기다리고 있습니다
+                      </p>
+                    </div>
+
                     <div className="bg-[#F5F3FF] rounded-xl p-4 mb-4">
                       <p className="text-sm text-gray-700 font-medium mb-1">
                         회원 정비사만 고객 연락처를 확인할 수 있습니다
                       </p>
                       <p className="text-xs text-gray-500">
-                        카카오 로그인으로 간편하게 가입하세요
+                        카카오 로그인 한 번이면 바로 확인 가능
                       </p>
                     </div>
-                    <Link
-                      href="/for-mechanics"
-                      className="inline-flex items-center gap-2 w-full justify-center bg-[#7C4DFF] text-white px-6 py-4 rounded-xl font-bold text-base hover:bg-[#6D3FE0] transition-all shadow-lg"
+
+                    {/* 메인 CTA — /owner/login 직접 연결 */}
+                    <button
+                      onClick={handleSignupClick}
+                      className="inline-flex items-center gap-2 w-full justify-center bg-[#7C4DFF] text-white px-6 py-4 rounded-xl font-bold text-base hover:bg-[#6D3FE0] transition-all shadow-lg cursor-pointer"
                     >
-                      🔑 정비사 회원가입
-                    </Link>
+                      카카오로 3초 가입 → 전화번호 확인
+                    </button>
                     <p className="text-xs text-gray-400 mt-3">
                       이미 회원이신가요?{' '}
-                      <Link href="/owner/login" className="text-[#7C4DFF] font-medium">
+                      <button onClick={handleLoginClick} className="text-[#7C4DFF] font-medium cursor-pointer">
                         로그인
-                      </Link>
+                      </button>
                     </p>
                   </div>
                 )}
               </div>
 
-              {/* 꿈꾸는정비사 안내 */}
-              <div className="bg-gradient-to-br from-[#7C4DFF]/5 to-[#F5F3FF] rounded-2xl p-6 text-center">
-                <p className="text-sm text-gray-600 mb-2">
-                  <span className="font-bold text-[#7C4DFF]">꿈꾸는정비사</span>에서 검증된 고객 문의를 받아보세요
-                </p>
-                <Link
-                  href="/for-mechanics"
-                  className="text-[#7C4DFF] text-sm font-semibold hover:underline"
-                >
-                  정비사 가입 안내 →
-                </Link>
-              </div>
+              {/* 소셜 프루프 + 혜택 섹션 (비로그인 시만) */}
+              {!inquiry.phone && (
+                <div className="bg-gradient-to-br from-[#7C4DFF]/5 to-[#F5F3FF] rounded-2xl p-6 mb-4">
+                  <div className="text-center mb-4">
+                    <p className="text-sm font-bold text-gray-900">
+                      <span className="text-[#7C4DFF]">꿈꾸는정비사</span>
+                    </p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      유튜브 5.3만 구독자가 운영하는 정비소 매칭 플랫폼
+                    </p>
+                  </div>
+
+                  {recentCount > 0 && (
+                    <div className="bg-white/80 rounded-lg p-3 mb-4 text-center">
+                      <p className="text-sm font-medium text-gray-800">
+                        이번 주 <span className="text-[#7C4DFF] font-bold">{recentCount}건</span>의 고객 문의 접수 중
+                      </p>
+                    </div>
+                  )}
+
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-3 bg-white/60 rounded-lg p-3">
+                      <CheckCircle size={18} className="text-green-500 flex-shrink-0" />
+                      <span className="text-sm text-gray-700">고객 직접 연결 · 중개수수료 없음</span>
+                    </div>
+                    <div className="flex items-center gap-3 bg-white/60 rounded-lg p-3">
+                      <CheckCircle size={18} className="text-green-500 flex-shrink-0" />
+                      <span className="text-sm text-gray-700">카카오 3초 가입 · 무료</span>
+                    </div>
+                    <div className="flex items-center gap-3 bg-white/60 rounded-lg p-3">
+                      <CheckCircle size={18} className="text-green-500 flex-shrink-0" />
+                      <span className="text-sm text-gray-700">전화번호 바로 확인 가능</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* 하단 안내 (비로그인 시) */}
+              {!inquiry.phone && (
+                <div className="text-center">
+                  <Link
+                    href="/for-mechanics"
+                    className="text-[#7C4DFF] text-sm font-semibold hover:underline"
+                  >
+                    정비사 혜택 더 알아보기 →
+                  </Link>
+                </div>
+              )}
             </motion.div>
           )}
         </div>

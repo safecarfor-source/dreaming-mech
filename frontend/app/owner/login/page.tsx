@@ -1,23 +1,38 @@
 'use client';
 
 import { useSearchParams } from 'next/navigation';
-import { Suspense } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 
 function LoginContent() {
   const searchParams = useSearchParams();
   const error = searchParams.get('error');
   const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+  const [fromInquiry, setFromInquiry] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const returnUrl = sessionStorage.getItem('mechanic_return_url');
+      setFromInquiry(!!returnUrl);
+    }
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
       <div className="max-w-md w-full bg-white rounded-2xl shadow-lg p-8">
         <div className="text-center mb-8">
           <h1 className="text-2xl font-bold text-gray-900 mb-2">
-            정비소 사장님 로그인
+            {fromInquiry ? '고객 전화번호 확인' : '정비소 사장님 로그인'}
           </h1>
           <p className="text-gray-500 text-sm">
-            소셜 계정으로 간편하게 로그인하세요
+            {fromInquiry
+              ? '카카오 로그인으로 바로 확인하세요'
+              : '소셜 계정으로 간편하게 로그인하세요'}
           </p>
+          {fromInquiry && (
+            <p className="text-xs text-gray-400 mt-1">
+              가입 3초 · 무료 · 바로 전화 연결
+            </p>
+          )}
         </div>
 
         {error && (
@@ -42,9 +57,11 @@ function LoginContent() {
           <p className="text-xs text-gray-400">
             처음 로그인하시면 자동으로 가입됩니다.
           </p>
-          <p className="text-xs text-gray-400 mt-1">
-            관리자 승인 후 매장을 등록할 수 있습니다.
-          </p>
+          {!fromInquiry && (
+            <p className="text-xs text-gray-400 mt-1">
+              관리자 승인 후 매장을 등록할 수 있습니다.
+            </p>
+          )}
         </div>
 
         <div className="mt-6 text-center">

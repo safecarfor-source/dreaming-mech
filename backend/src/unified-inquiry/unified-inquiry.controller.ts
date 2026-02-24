@@ -45,6 +45,12 @@ export class UnifiedInquiryController {
     return this.service.getCount();
   }
 
+  // 공개 통계 (인증 불필요 - 공유 링크 페이지용)
+  @Get('public-stats')
+  async getPublicStats() {
+    return this.service.getPublicStats();
+  }
+
   // 상태 변경 (관리자)
   @Patch(':type/:id/status')
   @UseGuards(JwtAuthGuard)
