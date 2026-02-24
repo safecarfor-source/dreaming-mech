@@ -10,9 +10,7 @@ import {
   BarChart3,
   UserCheck,
   MessageSquare,
-  FileText,
   Star,
-  MessageCircle,
   LogOut,
   Menu,
   X,
@@ -26,9 +24,7 @@ const menuItems = [
   { href: '/admin', label: '대시보드', icon: LayoutDashboard },
   { href: '/admin/mechanics', label: '정비사 관리', icon: Users },
   { href: '/admin/owners', label: '사장님 관리', icon: UserCheck },
-  { href: '/admin/inquiries', label: '문의 관리', icon: MessageSquare, badgeKey: 'inquiries' as const },
-  { href: '/admin/service-inquiries', label: '서비스 문의', icon: MessageCircle, badgeKey: 'serviceInquiries' as const },
-  { href: '/admin/quote-requests', label: '견적 요청', icon: FileText },
+  { href: '/admin/unified-inquiries', label: '문의 관리', icon: MessageSquare, badgeKey: 'unified' as const },
   { href: '/admin/reviews', label: '리뷰 관리', icon: Star },
   { href: '/admin/stats', label: '통계', icon: BarChart3 },
 ];
@@ -39,20 +35,15 @@ export default function AdminLayout({ children }: Props) {
   const { isAuthenticated, admin, logout } = useAuthStore();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isHydrated, setIsHydrated] = useState(false);
-  const [badges, setBadges] = useState<{ inquiries: number; serviceInquiries: number }>({ inquiries: 0, serviceInquiries: 0 });
+  const [badges, setBadges] = useState<{ unified: number }>({ unified: 0 });
 
   // 문의 건수 가져오기
   const fetchBadges = useCallback(async () => {
     try {
-      const [inqRes, svcRes] = await Promise.all([
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/inquiries?page=1&limit=1`, { credentials: 'include' }).catch(() => null),
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/service-inquiries?page=1&limit=1`, { credentials: 'include' }).catch(() => null),
-      ]);
-      const inqData = inqRes?.ok ? await inqRes.json() : null;
-      const svcData = svcRes?.ok ? await svcRes.json() : null;
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/unified-inquiries/count`, { credentials: 'include' }).catch(() => null);
+      const data = res?.ok ? await res.json() : null;
       setBadges({
-        inquiries: inqData?.total || 0,
-        serviceInquiries: svcData?.total || 0,
+        unified: data?.total || 0,
       });
     } catch {}
   }, []);

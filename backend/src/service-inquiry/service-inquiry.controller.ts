@@ -29,16 +29,11 @@ export class ServiceInquiryController {
     private readonly jwtService: JwtService,
   ) {}
 
-  // 문의 접수 (고객 인증 필요)
+  // 문의 접수 (비로그인 허용)
   @Post()
-  @UseGuards(JwtAuthGuard)
   @UsePipes(new ZodValidationPipe(CreateServiceInquirySchema))
-  async create(@Body() dto: CreateServiceInquiryDto, @Request() req) {
-    if (req.user.role !== 'customer') {
-      throw new BadRequestException('고객만 문의를 접수할 수 있습니다.');
-    }
-
-    return this.serviceInquiryService.create(dto, req.user.sub);
+  async create(@Body() dto: CreateServiceInquiryDto) {
+    return this.serviceInquiryService.create(dto);
   }
 
   // 목록 조회 (관리자)

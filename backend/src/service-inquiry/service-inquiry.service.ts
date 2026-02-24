@@ -25,20 +25,14 @@ export class ServiceInquiryService {
     return map[serviceType] || serviceType;
   }
 
-  async create(dto: CreateServiceInquiryDto, customerId: number) {
-    // 1. Customer phone 업데이트
-    await this.prisma.customer.update({
-      where: { id: customerId },
-      data: { phone: dto.phone },
-    });
-
-    // 2. 환경변수에서 카카오 오픈채팅 URL 가져오기
+  async create(dto: CreateServiceInquiryDto) {
+    // 1. 환경변수에서 카카오 오픈채팅 URL 가져오기
     const kakaoOpenChatUrl = process.env.KAKAO_OPENCHAT_URL || null;
 
-    // 3. ServiceInquiry 생성
+    // 2. ServiceInquiry 생성 (비로그인 접수, customerId 없음)
     const inquiry = await this.prisma.serviceInquiry.create({
       data: {
-        customerId,
+        name: dto.name,
         regionSido: dto.regionSido,
         regionSigungu: dto.regionSigungu,
         serviceType: dto.serviceType,
@@ -46,17 +40,14 @@ export class ServiceInquiryService {
         phone: dto.phone,
         kakaoOpenChatUrl,
       },
-      include: {
-        customer: true,
-      },
     });
 
-    // 4. 텔레그램 알림 발송 (비동기, 실패해도 문의는 성공)
+    // 3. 텔레그램 알림 발송 (비동기, 실패해도 문의는 성공)
     this.sendTelegramNotification(inquiry).catch((error) => {
       this.logger.error('텔레그램 알림 발송 실패 (문의는 접수됨):', error);
     });
 
-    // 5. 해당 지역 정비사 알림톡 발송 (비동기, 실패해도 문의는 성공)
+    // 4. 해당 지역 정비사 알림톡 발송 (비동기, 실패해도 문의는 성공)
     this.sendInquiryAlimtalkToLocalMechanics(inquiry).catch((error) => {
       this.logger.error('정비사 알림톡 발송 실패 (문의는 접수됨):', error);
     });
@@ -69,6 +60,9 @@ export class ServiceInquiryService {
     let message = `🔔 <b>새 정비 문의</b>\n`;
     message += `📍 지역: ${inquiry.regionSido} ${inquiry.regionSigungu}\n`;
     message += `🔧 항목: ${serviceTypeKo}\n`;
+    if (inquiry.name) {
+      message += `👤 고객: ${inquiry.name}\n`;
+    }
     if (inquiry.description) {
       message += `📝 ${inquiry.description}\n`;
     }
@@ -173,7 +167,7 @@ export class ServiceInquiryService {
     ]);
 
     return {
-      items,
+      data: items,
       total,
       page,
       limit,
@@ -242,6 +236,9 @@ export class ServiceInquiryService {
     let message = `🔔 고객 문의 도착!\n`;
     message += `📍 ${inquiry.regionSido} ${inquiry.regionSigungu}\n`;
     message += `🔧 ${serviceTypeKo}\n`;
+    if (inquiry.name) {
+      message += `👤 ${inquiry.name}\n`;
+    }
     if (inquiry.description) {
       message += `📝 ${inquiry.description}\n`;
     }

@@ -60,8 +60,32 @@
 
 ---
 
-## ⏳ Phase 2 (1~2개월 후)
+## ⏳ Phase 2: 통합 문의 관리 시스템 (진행 중)
 
+### 백엔드 통합 API ✅ 완료 (2026-02-24)
+- [x] UnifiedInquiryModule 생성
+  - `/Users/shinjeayoun/dreaming-mech/backend/src/unified-inquiry/unified-inquiry.service.ts`
+  - `/Users/shinjeayoun/dreaming-mech/backend/src/unified-inquiry/unified-inquiry.controller.ts`
+  - `/Users/shinjeayoun/dreaming-mech/backend/src/unified-inquiry/unified-inquiry.module.ts`
+- [x] app.module.ts에 모듈 등록
+- [x] 3개 테이블 통합 조회 API
+  - Inquiry (GENERAL) → 정비사 문의
+  - ServiceInquiry (SERVICE) → 고객 정비 문의
+  - QuoteRequest (QUOTE) → 견적 요청
+- [x] 빌드 검증 완료
+
+### API 엔드포인트 (관리자 전용)
+- `GET /unified-inquiries?page=1&limit=20` — 통합 목록 조회
+- `GET /unified-inquiries/count` — 총 건수 (뱃지용)
+- `PATCH /unified-inquiries/:type/:id/status` — 상태 변경
+- `GET /unified-inquiries/:type/:id/share-message` — 공유 메시지
+
+### 프론트엔드 (다음 작업)
+- [ ] /admin/inquiries — 통합 문의 관리 페이지
+- [ ] 타입별 필터 (GENERAL/SERVICE/QUOTE)
+- [ ] 상태별 필터 (PENDING/SHARED/COMPLETED)
+- [ ] 페이지네이션 (무한 스크롤)
+- [ ] 공유 메시지 복사 버튼
 - [ ] /inquiry/:id 공개 상세 페이지 — 비회원 시 전화번호 블러 처리
 - [ ] /mechanic/register — 정비사 회원가입 유도 페이지
 - [ ] 정비사 마이페이지 (/mechanic/inquiries) — 문의 목록 조회
@@ -110,3 +134,4 @@
 | 2026-02-22 | 타이어 문의 + HTTPS | ✅ |
 | 2026-02-23 | Phase 1 MVP 완료 (문의 퍼널 + 카카오 오픈채팅) | ✅ |
 | 2026-02-23 | 코드 테스트 11개 항목 전체 통과 | ✅ |
+| 2026-02-24 | Phase 2: 백엔드 통합 문의 API 구현 | ✅ |

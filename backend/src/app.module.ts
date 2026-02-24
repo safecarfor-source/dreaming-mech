@@ -19,6 +19,7 @@ import { ReviewModule } from './review/review.module';
 import { SyncModule } from './sync/sync.module';
 import { TireInquiryModule } from './tire-inquiry/tire-inquiry.module';
 import { ServiceInquiryModule } from './service-inquiry/service-inquiry.module';
+import { UnifiedInquiryModule } from './unified-inquiry/unified-inquiry.module';
 
 @Module({
   imports: [
@@ -45,6 +46,7 @@ import { ServiceInquiryModule } from './service-inquiry/service-inquiry.module';
     SyncModule,
     TireInquiryModule,
     ServiceInquiryModule,
+    UnifiedInquiryModule,
   ],
   controllers: [AppController],
   providers: [

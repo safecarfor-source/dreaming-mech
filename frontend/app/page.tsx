@@ -3,7 +3,7 @@
 import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { mechanicsApi } from '@/lib/api';
+import { mechanicsApi, serviceInquiryApi } from '@/lib/api';
 import { useModalStore } from '@/lib/store';
 import {
   countMechanicsByRegion,
@@ -59,8 +59,10 @@ function HomeContent() {
   const [selectedRegion, setSelectedRegion] = useState<Region | null>(null);
   const [selectedService, setSelectedService] = useState<ServiceType | null>(null);
   const [phone, setPhone] = useState('');
+  const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [regionSearchQuery, setRegionSearchQuery] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
   // 지역 검색 결과
   const regionSearchResults = useMemo(() => {
@@ -145,23 +147,26 @@ function HomeContent() {
     setStep(3);
   };
 
-  // Step 3: 카카오 로그인 후 접수
-  const handleSubmit = () => {
+  // Step 3: 바로 접수
+  const handleSubmit = async () => {
     if (!selectedRegion || !selectedService || !phone) return;
-
-    // sessionStorage에 데이터 저장
-    const tempData = {
-      regionSido: selectedRegion.sido,
-      regionSigungu: selectedRegion.sigungu,
-      serviceType: selectedService,
-      phone: phone.replace(/[^\d]/g, ''),
-      description: description || undefined,
-    };
-    sessionStorage.setItem('temp-inquiry-data', JSON.stringify(tempData));
-
-    // 카카오 로그인으로 이동
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
-    window.location.href = `${apiUrl}/auth/kakao/customer`;
+    setSubmitting(true);
+    try {
+      await serviceInquiryApi.create({
+        name: name || undefined,
+        regionSido: selectedRegion.sido,
+        regionSigungu: selectedRegion.sigungu,
+        serviceType: selectedService,
+        phone: phone.replace(/[^\d]/g, ''),
+        description: description || undefined,
+      });
+      setStep(4);
+    } catch (error) {
+      console.error('문의 접수 실패:', error);
+      alert('문의 접수에 실패했습니다. 다시 시도해주세요.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const resetFunnel = () => {
@@ -169,6 +174,7 @@ function HomeContent() {
     setSelectedRegion(null);
     setSelectedService(null);
     setPhone('');
+    setName('');
     setDescription('');
     setRegionSearchQuery('');
   };
@@ -360,6 +366,19 @@ function HomeContent() {
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      이름 (선택)
+                    </label>
+                    <input
+                      type="text"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      placeholder="홍길동"
+                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-[#7C4DFF] focus:outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
                       전화번호 <span className="text-red-500">*</span>
                     </label>
                     <input
@@ -387,17 +406,23 @@ function HomeContent() {
 
                   <button
                     onClick={handleSubmit}
-                    disabled={!phone || phone.length < 12}
-                    className="w-full bg-[#FEE500] text-gray-900 px-6 py-4 rounded-lg font-bold text-lg
-                      hover:bg-[#FDD835] transition-all disabled:opacity-50 disabled:cursor-not-allowed
-                      flex items-center justify-center gap-2"
+                    disabled={!phone || phone.length < 12 || submitting}
+                    className="w-full bg-[#7C4DFF] text-white px-6 py-4 rounded-xl font-bold text-lg
+                      hover:bg-[#6D3FE0] transition-all disabled:opacity-50 disabled:cursor-not-allowed
+                      flex items-center justify-center gap-2 shadow-lg"
                   >
-                    <span>💬</span>
-                    카카오로 문의 접수
+                    {submitting ? (
+                      <span>접수 중...</span>
+                    ) : (
+                      <>
+                        <span>📋</span>
+                        문의 접수하기
+                      </>
+                    )}
                   </button>
 
                   <p className="text-xs text-gray-500 text-center">
-                    카카오 로그인 후 문의가 접수됩니다
+                    전화번호로 빠르게 연락드리겠습니다
                   </p>
                 </div>
               </motion.div>

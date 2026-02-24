@@ -212,8 +212,10 @@ export type ServiceInquiryStatus = 'PENDING' | 'SHARED' | 'CONNECTED' | 'COMPLET
 
 export interface ServiceInquiry {
   id: number;
-  customerId: number;
+  customerId?: number;
   customer?: Customer;
+  name?: string;
+  phone?: string;
   regionSido: string;
   regionSigungu: string;
   serviceType: ServiceType;
@@ -228,4 +230,29 @@ export interface CustomerAuthState {
   isLoading: boolean;
   login: (customer: Customer) => void;
   logout: () => void;
+}
+
+// 통합 문의 타입
+export interface UnifiedInquiry {
+  id: number;
+  type: 'GENERAL' | 'SERVICE' | 'QUOTE';
+  name?: string;
+  phone?: string;
+  regionSido?: string;
+  regionSigungu?: string;
+  serviceType?: string;
+  description?: string;
+  status: string;
+  createdAt: string;
+  shareUrl: string;
+  businessName?: string;
+  carModel?: string;
+  mechanicName?: string;
+}
+
+export interface UnifiedInquiryCount {
+  total: number;
+  inquiries: number;
+  serviceInquiries: number;
+  quoteRequests: number;
 }

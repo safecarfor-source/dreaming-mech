@@ -1,5 +1,5 @@
 import axios, { AxiosRequestConfig } from 'axios';
-import { Mechanic, Inquiry, UnreadCount, ApiResponse, QuoteRequest, Review, SyncMessage, SyncStats, TireInquiry, Customer, ServiceInquiry, ServiceType, ServiceInquiryStatus } from '@/types';
+import { Mechanic, Inquiry, UnreadCount, ApiResponse, QuoteRequest, Review, SyncMessage, SyncStats, TireInquiry, Customer, ServiceInquiry, ServiceType, ServiceInquiryStatus, UnifiedInquiry, UnifiedInquiryCount } from '@/types';
 
 const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL,
@@ -317,6 +317,7 @@ export const customerAuthApi = {
 // 서비스 문의 API
 export const serviceInquiryApi = {
   create: (data: {
+    name?: string;
     regionSido: string;
     regionSigungu: string;
     serviceType: ServiceType;
@@ -336,6 +337,24 @@ export const serviceInquiryApi = {
     api.patch<ApiResponse<ServiceInquiry>>(`/service-inquiries/${id}/status`, { status }),
 
   getShareMessage: (id: number) => api.get<ApiResponse<string>>(`/service-inquiries/${id}/share-message`),
+};
+
+// 통합 문의 API
+export const unifiedInquiryApi = {
+  getAll: (page = 1, limit = 20) =>
+    api.get<{ data: UnifiedInquiry[]; total: number; page: number; limit: number; totalPages: number }>(`/unified-inquiries?page=${page}&limit=${limit}`),
+
+  getCount: () =>
+    api.get<UnifiedInquiryCount>('/unified-inquiries/count'),
+
+  getPublic: (type: string, id: number) =>
+    api.get(`/unified-inquiries/${type.toLowerCase()}/${id}`),
+
+  updateStatus: (type: string, id: number, status: string) =>
+    api.patch(`/unified-inquiries/${type.toLowerCase()}/${id}/status`, { status }),
+
+  getShareMessage: (type: string, id: number) =>
+    api.get<{ message: string }>(`/unified-inquiries/${type.toLowerCase()}/${id}/share-message`),
 };
 
 export default api;

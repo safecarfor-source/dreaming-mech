@@ -311,8 +311,9 @@ model ServiceInquiry {
   id            Int                    @id @default(autoincrement())
 
   // 고객 정보
-  customerId    Int
-  customer      Customer               @relation(fields: [customerId], references: [id])
+  customerId    Int?
+  customer      Customer?              @relation(fields: [customerId], references: [id])
+  name          String?                // 비로그인 고객 이름
 
   // 지역 정보
   regionSido    String                 // 시/도 (예: "경기도")
