@@ -250,4 +250,11 @@ export class ServiceInquiryService {
 
     return message;
   }
+
+  async getOwnerStatus(ownerId: number) {
+    return this.prisma.owner.findUnique({
+      where: { id: ownerId },
+      select: { status: true },
+    });
+  }
 }

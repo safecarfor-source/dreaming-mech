@@ -219,6 +219,7 @@ export interface ServiceInquiry {
   serviceType: ServiceType;
   description?: string;
   status: ServiceInquiryStatus;
+  kakaoOpenChatUrl?: string;
   createdAt: string;
 }
 
