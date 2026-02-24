@@ -266,12 +266,12 @@ export default function AdminServiceInquiriesPage() {
                           </span>
                         </td>
                         <td className="px-4 py-3 text-sm">
-                          {inquiry.customer?.phone ? (
+                          {(inquiry as any).phone || inquiry.customer?.phone ? (
                             <a
-                              href={`tel:${inquiry.customer.phone}`}
+                              href={`tel:${(inquiry as any).phone || inquiry.customer?.phone}`}
                               className="text-purple-600 hover:underline"
                             >
-                              {inquiry.customer.phone}
+                              {(inquiry as any).phone || inquiry.customer?.phone}
                             </a>
                           ) : (
                             <span className="text-gray-400">비공개</span>

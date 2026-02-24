@@ -43,6 +43,7 @@ export class ServiceInquiryService {
         regionSigungu: dto.regionSigungu,
         serviceType: dto.serviceType,
         description: dto.description,
+        phone: dto.phone,
         kakaoOpenChatUrl,
       },
       include: {
