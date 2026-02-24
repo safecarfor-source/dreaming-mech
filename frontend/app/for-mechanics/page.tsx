@@ -773,19 +773,18 @@ export default function ForMechanicsPage() {
                 className="font-black text-[#111] break-keep"
                 style={{ fontSize: 'clamp(1.375rem, 4vw, 3rem)' }}
               >
-                <span className="text-[#65a30d]">4단계</span>로 시작하세요
+                <span className="text-[#65a30d]">3단계</span>로 시작하세요
               </h2>
             </div>
           </AnimatedSection>
 
           <div className="max-w-3xl mx-auto">
-            {/* 모바일: 세로 리스트, lg: 4열 */}
-            <div className="space-y-3 lg:space-y-0 lg:grid lg:grid-cols-4 lg:gap-5">
+            {/* 모바일: 세로 리스트, lg: 3열 */}
+            <div className="space-y-3 lg:space-y-0 lg:grid lg:grid-cols-3 lg:gap-5">
               {[
-                { step: 1, title: '간편 가입', desc: '카카오로 가입' },
-                { step: 2, title: '승인 대기', desc: '사업자등록증 확인' },
-                { step: 3, title: '정비소 등록', desc: '사진 · 위치 · 소개글' },
-                { step: 4, title: '고객 유입', desc: '노출 → 방문 증가' },
+                { step: 1, title: '카카오 가입', desc: '3초면 완료' },
+                { step: 2, title: '정비소 등록', desc: '사진 · 위치 · 소개글' },
+                { step: 3, title: '고객 유입', desc: '노출 → 방문 증가' },
               ].map((item, i) => (
                 <AnimatedSection key={item.step} animation="slideUp" delay={i * 0.1} duration={0.5}>
                   <div className="flex items-center gap-4 lg:flex-col lg:text-center bg-white rounded-xl p-4 lg:p-5 border border-gray-100">

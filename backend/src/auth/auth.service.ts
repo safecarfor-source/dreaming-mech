@@ -114,6 +114,7 @@ export class AuthService {
         name: profile.nickname,
         profileImage: profile.profile_image_url,
         provider: 'kakao',
+        status: 'APPROVED', // 자동 승인
       },
     });
 

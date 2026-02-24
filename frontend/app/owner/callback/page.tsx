@@ -17,9 +17,7 @@ function CallbackContent() {
         const res = await ownerAuthApi.getProfile();
         login(res.data);
 
-        if (status === 'PENDING') {
-          router.replace('/owner?pending=true');
-        } else if (status === 'REJECTED') {
+        if (status === 'REJECTED') {
           router.replace('/owner?rejected=true');
         } else {
           router.replace('/owner');
