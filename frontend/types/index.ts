@@ -97,6 +97,7 @@ export interface Owner {
   businessLicenseUrl?: string;
   businessName?: string;
   phone?: string;
+  address?: string;
   createdAt?: string;
   _count?: { mechanics: number };
 }

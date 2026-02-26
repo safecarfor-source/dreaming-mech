@@ -88,6 +88,7 @@ model Owner {
   businessLicenseUrl  String?     // 사업자등록증 이미지 URL
   businessName        String?     // 업체명
   phone               String?     // 알림톡 발송용 전화번호
+  address             String?     // 매장 주소
   createdAt           DateTime    @default(now())
   updatedAt           DateTime    @updatedAt
   mechanics           Mechanic[]

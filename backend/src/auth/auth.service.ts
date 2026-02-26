@@ -142,6 +142,8 @@ export class AuthService {
         businessLicenseUrl: true,
         businessName: true,
         phone: true,
+        address: true,
+        createdAt: true,
       },
     });
 
@@ -152,12 +154,14 @@ export class AuthService {
     return owner;
   }
 
-  async updateOwnerProfile(ownerId: number, data: { phone?: string; businessName?: string }) {
+  async updateOwnerProfile(ownerId: number, data: { phone?: string; businessName?: string; address?: string; name?: string }) {
     return this.prisma.owner.update({
       where: { id: ownerId },
       data: {
         ...(data.phone !== undefined && { phone: data.phone }),
         ...(data.businessName !== undefined && { businessName: data.businessName }),
+        ...(data.address !== undefined && { address: data.address }),
+        ...(data.name !== undefined && { name: data.name }),
       },
       select: {
         id: true,
@@ -165,6 +169,7 @@ export class AuthService {
         name: true,
         phone: true,
         businessName: true,
+        address: true,
         status: true,
       },
     });
