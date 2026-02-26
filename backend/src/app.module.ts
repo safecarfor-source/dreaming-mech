@@ -20,6 +20,7 @@ import { SyncModule } from './sync/sync.module';
 import { TireInquiryModule } from './tire-inquiry/tire-inquiry.module';
 import { ServiceInquiryModule } from './service-inquiry/service-inquiry.module';
 import { UnifiedInquiryModule } from './unified-inquiry/unified-inquiry.module';
+import { TrackingLinkModule } from './tracking-link/tracking-link.module';
 
 @Module({
   imports: [
@@ -47,6 +48,7 @@ import { UnifiedInquiryModule } from './unified-inquiry/unified-inquiry.module';
     TireInquiryModule,
     ServiceInquiryModule,
     UnifiedInquiryModule,
+    TrackingLinkModule,
   ],
   controllers: [AppController],
   providers: [

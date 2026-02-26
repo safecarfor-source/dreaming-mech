@@ -253,6 +253,43 @@ model SyncMessage {
   @@index([deviceFrom])
 }
 
+// ========================================
+// 🔗 추적 링크 (Tracking Link) 모델
+// ========================================
+
+// 추적 링크 — 단톡방/카페 등에 공유할 때 고유 코드 부여
+model TrackingLink {
+  id          Int      @id @default(autoincrement())
+  code        String   @unique  // 고유 코드 (예: "abc123")
+  name        String             // 관리용 이름 (예: "강남맘카페")
+  description String?            // 설명 (선택)
+  targetUrl   String   @default("/")  // 도착 페이지 (기본: 홈)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  clicks      LinkClick[]
+  customers   Customer[]
+  inquiries   ServiceInquiry[]
+
+  @@index([code])
+  @@index([isActive])
+}
+
+// 링크 클릭 로그
+model LinkClick {
+  id             Int          @id @default(autoincrement())
+  trackingLinkId Int
+  trackingLink   TrackingLink @relation(fields: [trackingLinkId], references: [id], onDelete: Cascade)
+  ipAddress      String?
+  userAgent      String?      @db.Text
+  isBot          Boolean      @default(false)
+  clickedAt      DateTime     @default(now())
+
+  @@index([trackingLinkId, clickedAt])
+  @@index([ipAddress])
+}
+
 // 타이어 문의 상태
 enum TireInquiryStatus {
   PENDING      // 접수됨
@@ -279,6 +316,8 @@ model Customer {
   nickname    String?           // 카카오 닉네임
   email       String?           // 카카오 이메일 (선택)
   phone       String?           // 직접 입력 전화번호 (문의 생성 시 업데이트)
+  trackingCode String?          // 어떤 추적 링크를 통해 가입했는지
+  trackingLink TrackingLink?    @relation(fields: [trackingCode], references: [code])
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -286,6 +325,7 @@ model Customer {
 
   @@index([kakaoId])
   @@index([phone])
+  @@index([trackingCode])
 }
 
 // 서비스 문의 타입
@@ -344,6 +384,10 @@ model ServiceInquiry {
   // 공유 링크 만료 시간 (공유 시 자동 기록, 24시간 후 전화번호 블러)
   sharedAt        DateTime?
 
+  // 추적 링크 코드
+  trackingCode    String?
+  trackingLink    TrackingLink?          @relation(fields: [trackingCode], references: [code])
+
   createdAt     DateTime               @default(now())
   updatedAt     DateTime               @updatedAt
 
@@ -352,6 +396,7 @@ model ServiceInquiry {
   @@index([serviceType])
   @@index([status])
   @@index([createdAt])
+  @@index([trackingCode])
 }
 
 // 타이어 문의 모델

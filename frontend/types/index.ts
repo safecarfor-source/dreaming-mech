@@ -251,6 +251,7 @@ export interface UnifiedInquiry {
   businessName?: string;
   carModel?: string;
   mechanicName?: string;
+  trackingLinkName?: string;
 }
 
 export interface UnifiedInquiryCount {
@@ -258,4 +259,28 @@ export interface UnifiedInquiryCount {
   inquiries: number;
   serviceInquiries: number;
   quoteRequests: number;
+}
+
+// 추적 링크 타입
+export interface TrackingLink {
+  id: number;
+  code: string;
+  name: string;
+  description?: string;
+  targetUrl: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+  // 통계 (목록 조회 시)
+  totalClicks?: number;
+  uniqueClicks?: number;
+  totalInquiries?: number;
+  totalSignups?: number;
+  conversionRate?: number;
+}
+
+export interface TrackingLinkDetail extends TrackingLink {
+  dailyClicks: { date: string; clicks: number }[];
+  customers: { id: number; nickname?: string; phone?: string; createdAt: string }[];
+  inquiries: { id: number; serviceType: string; regionSido: string; regionSigungu: string; phone?: string; createdAt: string }[];
 }

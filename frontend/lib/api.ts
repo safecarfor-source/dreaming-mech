@@ -312,6 +312,7 @@ export const syncApi = {
 export const customerAuthApi = {
   getProfile: () => api.get<ApiResponse<Customer>>('/auth/customer/profile'),
   updatePhone: (phone: string) => api.patch<ApiResponse<Customer>>('/auth/customer/phone', { phone }),
+  updateTracking: (trackingCode: string) => api.patch('/auth/customer/tracking', { trackingCode }),
 };
 
 // 서비스 문의 API
@@ -325,6 +326,7 @@ export const serviceInquiryApi = {
     phone: string;
     vehicleNumber?: string;
     vehicleModel?: string;
+    trackingCode?: string;
   }) => api.post<ApiResponse<ServiceInquiry>>('/service-inquiries', data),
 
   getPublic: (id: number) => api.get<ApiResponse<ServiceInquiry>>(`/service-inquiries/${id}`),
@@ -360,6 +362,30 @@ export const unifiedInquiryApi = {
 
   getShareMessage: (type: string, id: number) =>
     api.get<{ message: string }>(`/unified-inquiries/${type.toLowerCase()}/${id}/share-message`),
+};
+
+// 추적 링크 API
+export const trackingLinkApi = {
+  // Admin: 추적 링크 생성
+  create: (data: { name: string; description?: string; targetUrl?: string }) =>
+    api.post('/tracking-links', data),
+
+  // Admin: 전체 목록 (통계 포함)
+  getAll: () => api.get('/tracking-links'),
+
+  // Admin: 상세 (일별 추이 + 고객/문의 목록)
+  getOne: (id: number) => api.get(`/tracking-links/${id}`),
+
+  // Admin: 수정
+  update: (id: number, data: { name?: string; description?: string; isActive?: boolean }) =>
+    api.patch(`/tracking-links/${id}`, data),
+
+  // Admin: 삭제
+  delete: (id: number) => api.delete(`/tracking-links/${id}`),
+
+  // 공개: 클릭 기록
+  recordClick: (code: string) =>
+    api.post('/tracking-links/click', { code }),
 };
 
 export default api;

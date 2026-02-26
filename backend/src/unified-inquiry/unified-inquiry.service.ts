@@ -17,6 +17,7 @@ export interface UnifiedInquiry {
   businessName?: string; // GENERAL (정비사 문의)
   carModel?: string; // QUOTE
   mechanicName?: string; // QUOTE
+  trackingLinkName?: string; // 유입 경로 (추적 링크 이름)
 }
 
 @Injectable()
@@ -33,6 +34,9 @@ export class UnifiedInquiryService {
         include: {
           customer: {
             select: { id: true, nickname: true, phone: true },
+          },
+          trackingLink: {
+            select: { name: true },
           },
         },
         orderBy: { createdAt: 'desc' },
@@ -79,6 +83,7 @@ export class UnifiedInquiryService {
         status: svc.status,
         createdAt: svc.createdAt.toISOString(),
         shareUrl: `https://dreammechaniclab.com/inquiry/service/${svc.id}`,
+        trackingLinkName: svc.trackingLink?.name || undefined,
       });
     }
 

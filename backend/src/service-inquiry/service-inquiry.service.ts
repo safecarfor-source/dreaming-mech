@@ -41,6 +41,8 @@ export class ServiceInquiryService {
         vehicleNumber: dto.vehicleNumber,
         vehicleModel: dto.vehicleModel,
         kakaoOpenChatUrl,
+        // 추적 코드가 있으면 TrackingLink와 연결
+        ...(dto.trackingCode && { trackingCode: dto.trackingCode }),
       },
     });
 

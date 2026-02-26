@@ -4,6 +4,7 @@ import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { mechanicsApi, serviceInquiryApi } from '@/lib/api';
+import { getTrackingCode } from '@/lib/tracking';
 import { useModalStore } from '@/lib/store';
 import {
   countMechanicsByRegion,
@@ -164,6 +165,7 @@ function HomeContent() {
         vehicleNumber: vehicleNumber.trim() || undefined,
         vehicleModel: vehicleModel.trim() || undefined,
         description: description || undefined,
+        trackingCode: getTrackingCode() || undefined,
       });
       setStep(4);
     } catch (error) {
