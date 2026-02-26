@@ -10,6 +10,7 @@ export const CreateServiceInquirySchema = z.object({
   vehicleNumber: z.string().optional(), // 차량번호 (예: 12가3456)
   vehicleModel: z.string().optional(),  // 차종 (예: 현대 아반떼)
   trackingCode: z.string().optional(), // 추적 링크 코드 (유입 경로 추적)
+  mechanicId: z.number().int().positive().optional(), // 선택된 정비소 ID
 });
 
 export type CreateServiceInquiryDto = z.infer<typeof CreateServiceInquirySchema>;

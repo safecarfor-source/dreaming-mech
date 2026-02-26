@@ -55,6 +55,10 @@ export const mechanicsApi = {
   incrementClick: (id: number) => api.post(`/mechanics/${id}/click`),
   reorder: (orderedIds: number[]) =>
     api.patch('/mechanics/reorder', { orderedIds }, buildConfig()),
+  getByRegion: (sido: string, sigungu: string) =>
+    api.get<{ data: Array<{ id: number; name: string; address: string; location: string }> }>(
+      `/mechanics?sido=${encodeURIComponent(sido)}&sigungu=${encodeURIComponent(sigungu)}`
+    ),
 };
 
 // Maps API
@@ -327,6 +331,7 @@ export const serviceInquiryApi = {
     vehicleNumber?: string;
     vehicleModel?: string;
     trackingCode?: string;
+    mechanicId?: number;
   }) => api.post<ApiResponse<ServiceInquiry>>('/service-inquiries', data),
 
   getPublic: (id: number) => api.get<ApiResponse<ServiceInquiry>>(`/service-inquiries/${id}`),

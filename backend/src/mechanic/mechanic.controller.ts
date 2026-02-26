@@ -34,15 +34,17 @@ import { PaginationDto } from '../common/dto/pagination.dto';
 export class MechanicController {
   constructor(private readonly mechanicService: MechanicService) {}
 
-  // GET /mechanics?page=1&limit=20&search=검색어&location=지역&specialty=전문분야
+  // GET /mechanics?page=1&limit=20&search=검색어&location=지역&specialty=전문분야&sido=시도&sigungu=시군구
   @Get()
   findAll(
     @Query() paginationDto: PaginationDto,
     @Query('search') search?: string,
     @Query('location') location?: string,
     @Query('specialty') specialty?: string,
+    @Query('sido') sido?: string,
+    @Query('sigungu') sigungu?: string,
   ) {
-    return this.mechanicService.findAll({ ...paginationDto, search, location, specialty });
+    return this.mechanicService.findAll({ ...paginationDto, search, location, specialty, sido, sigungu });
   }
 
   // PATCH /mechanics/reorder - 순서 변경 (반드시 /:id 보다 위에 선언)

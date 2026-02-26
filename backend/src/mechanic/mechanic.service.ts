@@ -30,8 +30,8 @@ export class MechanicService {
   ) {}
 
   // 모든 정비사 조회 (페이지네이션 + 검색/필터링 지원)
-  async findAll(paginationDto?: PaginationDto & { search?: string; location?: string; specialty?: string }): Promise<PaginatedResult<any>> {
-    const { page = 1, limit = 20, search, location, specialty } = paginationDto || {};
+  async findAll(paginationDto?: PaginationDto & { search?: string; location?: string; specialty?: string; sido?: string; sigungu?: string }): Promise<PaginatedResult<any>> {
+    const { page = 1, limit = 20, search, location, specialty, sido, sigungu } = paginationDto || {};
     const skip = (page - 1) * limit;
 
     // 검색/필터 조건 구성
@@ -45,9 +45,22 @@ export class MechanicService {
       ];
     }
 
-    // 지역 필터
+    // 지역 필터 (기존 단순 키워드 방식)
     if (location) {
       where.location = { contains: location, mode: 'insensitive' };
+    }
+
+    // sido/sigungu 필터 (정비소 선택 시 지역 기반 조회용)
+    // sido와 sigungu 중 하나라도 있으면 OR 조건으로 매칭
+    if (sido || sigungu) {
+      const regionConditions: any[] = [];
+      if (sigungu) {
+        regionConditions.push({ location: { contains: sigungu, mode: 'insensitive' } });
+      }
+      if (sido) {
+        regionConditions.push({ location: { contains: sido, mode: 'insensitive' } });
+      }
+      where.OR = regionConditions;
     }
 
     // 전문 분야 필터 (JSON array contains)

@@ -67,12 +67,26 @@ function HomeContent() {
   const [privacyAgreed, setPrivacyAgreed] = useState(false);
   const [regionSearchQuery, setRegionSearchQuery] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [selectedMechanicId, setSelectedMechanicId] = useState<number | null>(null);
+  const [localMechanics, setLocalMechanics] = useState<Array<{ id: number; name: string; address: string; location: string }>>([]);
+  const [loadingMechanics, setLoadingMechanics] = useState(false);
 
   // 지역 검색 결과
   const regionSearchResults = useMemo(() => {
     if (!regionSearchQuery) return [];
     return searchRegions(regionSearchQuery);
   }, [regionSearchQuery]);
+
+  // STEP3 진입 시 지역 정비소 로드
+  useEffect(() => {
+    if (step === 3 && selectedRegion) {
+      setLoadingMechanics(true);
+      mechanicsApi.getByRegion(selectedRegion.sido, selectedRegion.sigungu)
+        .then(res => setLocalMechanics(res.data.data || []))
+        .catch(() => setLocalMechanics([]))
+        .finally(() => setLoadingMechanics(false));
+    }
+  }, [step, selectedRegion]);
 
   const fetchMechanics = async () => {
     try {
@@ -166,6 +180,7 @@ function HomeContent() {
         vehicleModel: vehicleModel.trim() || undefined,
         description: description || undefined,
         trackingCode: getTrackingCode() || undefined,
+        ...(selectedMechanicId && { mechanicId: selectedMechanicId }),
       });
       setStep(4);
     } catch (error) {
@@ -187,6 +202,8 @@ function HomeContent() {
     setVehicleModel('');
     setPrivacyAgreed(false);
     setRegionSearchQuery('');
+    setSelectedMechanicId(null);
+    setLocalMechanics([]);
   };
 
   return (
@@ -374,6 +391,65 @@ function HomeContent() {
                 </p>
 
                 <div className="space-y-4">
+                  {/* 정비소 선택 (선택사항) */}
+                  {localMechanics.length > 0 && (
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        원하는 정비소 선택 <span className="text-gray-400 font-normal">(선택사항)</span>
+                      </label>
+                      <div className="space-y-2 max-h-48 overflow-y-auto">
+                        {/* 선택 안함 버튼 */}
+                        <button
+                          type="button"
+                          onClick={() => setSelectedMechanicId(null)}
+                          className={`w-full text-left px-4 py-3 rounded-lg border-2 transition-all text-sm ${
+                            selectedMechanicId === null
+                              ? 'border-[#7C4DFF] bg-[#F5F3FF] text-[#7C4DFF] font-semibold'
+                              : 'border-gray-200 hover:border-gray-300 text-gray-600'
+                          }`}
+                        >
+                          🏪 선택 안함 (가장 빠른 정비소 연결)
+                        </button>
+                        {/* 정비소 카드들 */}
+                        {localMechanics.map((mechanic) => (
+                          <button
+                            key={mechanic.id}
+                            type="button"
+                            onClick={() => setSelectedMechanicId(mechanic.id)}
+                            className={`w-full text-left px-4 py-3 rounded-lg border-2 transition-all ${
+                              selectedMechanicId === mechanic.id
+                                ? 'border-[#7C4DFF] bg-[#F5F3FF]'
+                                : 'border-gray-200 hover:border-[#7C4DFF] hover:bg-[#F5F3FF]/50'
+                            }`}
+                          >
+                            <div className="flex items-start gap-2">
+                              <span className="text-lg">🔧</span>
+                              <div>
+                                <p className={`font-semibold text-sm ${selectedMechanicId === mechanic.id ? 'text-[#7C4DFF]' : 'text-gray-800'}`}>
+                                  {mechanic.name}
+                                </p>
+                                <p className="text-xs text-gray-500 mt-0.5">{mechanic.address}</p>
+                              </div>
+                              {selectedMechanicId === mechanic.id && (
+                                <span className="ml-auto text-[#7C4DFF]">✓</span>
+                              )}
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                      {selectedMechanicId && (
+                        <p className="text-xs text-[#7C4DFF] mt-1">
+                          ✓ 선택하신 정비소에 직접 문의가 전달됩니다
+                        </p>
+                      )}
+                    </div>
+                  )}
+
+                  {/* 로딩 상태 */}
+                  {loadingMechanics && (
+                    <div className="text-sm text-gray-400 py-2 text-center">정비소 목록 불러오는 중...</div>
+                  )}
+
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2">
                       이름 (선택)

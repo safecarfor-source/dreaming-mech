@@ -43,6 +43,13 @@ export class ServiceInquiryService {
         kakaoOpenChatUrl,
         // 추적 코드가 있으면 TrackingLink와 연결
         ...(dto.trackingCode && { trackingCode: dto.trackingCode }),
+        // 선택된 정비소가 있으면 연결
+        ...(dto.mechanicId && { mechanicId: dto.mechanicId }),
+      },
+      include: {
+        mechanic: {
+          select: { id: true, name: true, address: true, phone: true },
+        },
       },
     });
 
@@ -76,6 +83,11 @@ export class ServiceInquiryService {
     if (inquiry.description) {
       message += `📝 ${inquiry.description}\n`;
     }
+    // 선택된 정비소 정보 표시
+    if (inquiry.mechanic) {
+      message += `🏪 선택 정비소: ${inquiry.mechanic.name}\n`;
+      message += `📮 주소: ${inquiry.mechanic.address}\n`;
+    }
     message += `👉 https://dreammechaniclab.com/admin/inquiries/${inquiry.id}`;
 
     const sent = await this.notificationService.sendTelegramMessage(message);
@@ -93,6 +105,43 @@ export class ServiceInquiryService {
   }
 
   private async sendInquiryAlimtalkToLocalMechanics(inquiry: any) {
+    // 정비소가 직접 선택된 경우: 해당 정비소 하나에만 알림톡 발송
+    if (inquiry.mechanicId) {
+      const selectedMechanic = await this.prisma.mechanic.findUnique({
+        where: { id: inquiry.mechanicId },
+        include: {
+          owner: {
+            select: { id: true, phone: true, status: true },
+          },
+        },
+      });
+
+      if (!selectedMechanic || !selectedMechanic.phone) {
+        this.logger.log(`선택 정비소(#${inquiry.mechanicId}) 전화번호 없음 — 알림톡 스킵`);
+        return;
+      }
+
+      // ownerId가 있으면 APPROVED 사장님만, 없으면 독립 정비소로 취급
+      if (selectedMechanic.ownerId && selectedMechanic.owner?.status !== 'APPROVED') {
+        this.logger.log(`선택 정비소(#${inquiry.mechanicId}) 사장님 미승인 — 알림톡 스킵`);
+        return;
+      }
+
+      await this.notificationService.sendServiceInquiryAlimtalk({
+        mechanicPhone: selectedMechanic.phone,
+        mechanicName: selectedMechanic.name,
+        regionSido: inquiry.regionSido,
+        regionSigungu: inquiry.regionSigungu,
+        serviceType: inquiry.serviceType,
+        description: inquiry.description,
+        inquiryId: inquiry.id,
+      });
+
+      this.logger.log(`선택 정비소(${selectedMechanic.name})에 알림톡 발송 완료`);
+      return;
+    }
+
+    // 정비소가 선택되지 않은 경우: 지역 자동 매칭
     // 해당 지역(regionSigungu)의 활성 정비소 찾기
     // Mechanic.location이 regionSigungu를 포함하는 경우 매칭
     const mechanics = await this.prisma.mechanic.findMany({

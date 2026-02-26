@@ -57,9 +57,10 @@ model Mechanic {
   owner           Owner?   @relation(fields: [ownerId], references: [id])
 
   // 관계
-  clickLogs       ClickLog[]
-  quoteRequests   QuoteRequest[]
-  reviews         Review[]
+  clickLogs        ClickLog[]
+  quoteRequests    QuoteRequest[]
+  reviews          Review[]
+  serviceInquiries ServiceInquiry[]
 
   // 인덱스
   @@index([location]) // 지역별 검색 최적화
@@ -388,6 +389,10 @@ model ServiceInquiry {
   trackingCode    String?
   trackingLink    TrackingLink?          @relation(fields: [trackingCode], references: [code])
 
+  // 선택된 정비소 (선택사항)
+  mechanicId    Int?
+  mechanic      Mechanic?              @relation(fields: [mechanicId], references: [id])
+
   createdAt     DateTime               @default(now())
   updatedAt     DateTime               @updatedAt
 
@@ -397,6 +402,7 @@ model ServiceInquiry {
   @@index([status])
   @@index([createdAt])
   @@index([trackingCode])
+  @@index([mechanicId])
 }
 
 // 타이어 문의 모델
