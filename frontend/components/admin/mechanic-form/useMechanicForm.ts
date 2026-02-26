@@ -195,13 +195,16 @@ export function useMechanicForm({ mechanic, mode, apiBasePath = '/mechanics', re
         body: JSON.stringify(sanitizedData),
       });
 
-      if (!response.ok) throw new Error('저장 실패');
+      if (!response.ok) {
+        const errData = await response.json().catch(() => null);
+        throw new Error(errData?.message || '저장 실패');
+      }
 
       alert(mode === 'create' ? '정비사가 추가되었습니다!' : '수정되었습니다!');
       router.push(redirectPath);
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      alert('저장에 실패했습니다.');
+      alert(error?.message || '저장에 실패했습니다.');
     } finally {
       setIsSaving(false);
     }

@@ -98,6 +98,8 @@ export default function UnifiedInquiriesPage() {
     try {
       await unifiedInquiryApi.updateStatus(type, id, status);
       fetchInquiries();
+      // 사이드바 배지 숫자 즉시 갱신
+      window.dispatchEvent(new Event('badges-refresh'));
     } catch {
       alert('상태 변경에 실패했습니다.');
     }

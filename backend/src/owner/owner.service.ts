@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
@@ -129,6 +129,14 @@ export class OwnerService {
   // ── 사장님용: 매장 등록 ──
 
   async createMechanic(ownerId: number, data: any) {
+    // 카카오톡 1계정 = 정비소 1개 제한
+    const existingCount = await this.prisma.mechanic.count({
+      where: { ownerId, isActive: true },
+    });
+    if (existingCount >= 1) {
+      throw new BadRequestException('하나의 계정으로 정비소는 1개만 등록할 수 있습니다.');
+    }
+
     const mechanic = await this.prisma.mechanic.create({
       data: {
         ...data,

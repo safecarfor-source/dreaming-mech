@@ -67,12 +67,18 @@ export default function AdminLayout({ children }: Props) {
     return cleanup;
   }, []);
 
-  // 뱃지 카운트 로드 + 30초 간격 폴링
+  // 뱃지 카운트 로드 + 30초 간격 폴링 + 커스텀 이벤트 리스너
   useEffect(() => {
     if (!isHydrated || !isAuthenticated) return;
     fetchBadges();
     const interval = setInterval(fetchBadges, 30000);
-    return () => clearInterval(interval);
+    // 하위 컴포넌트에서 상태 변경 시 즉시 배지 갱신
+    const handleRefresh = () => fetchBadges();
+    window.addEventListener('badges-refresh', handleRefresh);
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('badges-refresh', handleRefresh);
+    };
   }, [isHydrated, isAuthenticated, fetchBadges]);
 
   useEffect(() => {
