@@ -28,7 +28,7 @@ import {
   type UpdateMechanicDto,
   type ReorderMechanicsDto,
 } from './schemas/mechanic.schema';
-import { PaginationDto } from '../common/dto/pagination.dto';
+// PaginationDto 제거 — forbidNonWhitelisted 충돌 방지를 위해 개별 @Query() 사용
 
 @Controller('mechanics')
 export class MechanicController {
@@ -37,14 +37,19 @@ export class MechanicController {
   // GET /mechanics?page=1&limit=20&search=검색어&location=지역&specialty=전문분야&sido=시도&sigungu=시군구
   @Get()
   findAll(
-    @Query() paginationDto: PaginationDto,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
     @Query('search') search?: string,
     @Query('location') location?: string,
     @Query('specialty') specialty?: string,
     @Query('sido') sido?: string,
     @Query('sigungu') sigungu?: string,
   ) {
-    return this.mechanicService.findAll({ ...paginationDto, search, location, specialty, sido, sigungu });
+    return this.mechanicService.findAll({
+      page: page ? parseInt(page, 10) : 1,
+      limit: limit ? parseInt(limit, 10) : 20,
+      search, location, specialty, sido, sigungu,
+    });
   }
 
   // PATCH /mechanics/reorder - 순서 변경 (반드시 /:id 보다 위에 선언)
