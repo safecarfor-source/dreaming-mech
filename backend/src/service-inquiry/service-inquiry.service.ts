@@ -319,4 +319,15 @@ export class ServiceInquiryService {
       select: { status: true },
     });
   }
+
+  async incrementShareClick(id: number) {
+    try {
+      await this.prisma.serviceInquiry.update({
+        where: { id },
+        data: { shareClickCount: { increment: 1 } },
+      });
+    } catch {
+      // 무시
+    }
+  }
 }

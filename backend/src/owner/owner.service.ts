@@ -190,6 +190,71 @@ export class OwnerService {
     return owner;
   }
 
+  // ── 사장님용: 내 정비소를 선택한 고객 문의 조회 ──
+
+  async getMyInquiries(ownerId: number) {
+    // 1. 사장님의 정비소 목록 조회
+    const mechanics = await this.prisma.mechanic.findMany({
+      where: { ownerId, isActive: true },
+      select: { id: true },
+    });
+    const mechanicIds = mechanics.map((m) => m.id);
+
+    if (mechanicIds.length === 0) return [];
+
+    // 2. 해당 정비소를 선택한 ServiceInquiry 조회
+    return this.prisma.serviceInquiry.findMany({
+      where: { mechanicId: { in: mechanicIds } },
+      include: {
+        mechanic: {
+          select: { id: true, name: true, address: true },
+        },
+        trackingLink: {
+          select: { id: true, code: true, name: true },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  // ── 사장님용: 내 문의 상세 조회 ──
+
+  async getMyInquiryDetail(ownerId: number, inquiryId: number) {
+    // 내 정비소 ID 목록
+    const mechanics = await this.prisma.mechanic.findMany({
+      where: { ownerId, isActive: true },
+      select: { id: true },
+    });
+    const mechanicIds = mechanics.map((m) => m.id);
+
+    const inquiry = await this.prisma.serviceInquiry.findFirst({
+      where: {
+        id: inquiryId,
+        mechanicId: { in: mechanicIds },
+      },
+      include: {
+        mechanic: {
+          select: { id: true, name: true, address: true },
+        },
+        trackingLink: {
+          select: { id: true, code: true, name: true, description: true },
+        },
+      },
+    });
+
+    if (!inquiry) throw new NotFoundException('문의를 찾을 수 없습니다.');
+    return inquiry;
+  }
+
+  // ── 사장님용: 공유 링크 클릭 수 증가 ──
+
+  async incrementShareClick(inquiryId: number) {
+    return this.prisma.serviceInquiry.update({
+      where: { id: inquiryId },
+      data: { shareClickCount: { increment: 1 } },
+    });
+  }
+
   // ── 사장님용: 프로필 업데이트 (전화번호 등) ──
 
   async updateProfile(ownerId: number, data: { phone?: string; businessName?: string; address?: string; name?: string }) {

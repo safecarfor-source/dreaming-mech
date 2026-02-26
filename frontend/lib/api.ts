@@ -128,6 +128,28 @@ export const ownerAuthApi = {
     api.post('/owner/reapply', data),
 };
 
+// 사장님용: 내 정비소 선택 고객 문의 API
+export const ownerInquiriesApi = {
+  getAll: () => api.get<Array<{
+    id: number;
+    name: string | null;
+    phone: string | null;
+    regionSido: string;
+    regionSigungu: string;
+    serviceType: string;
+    description: string | null;
+    vehicleNumber: string | null;
+    vehicleModel: string | null;
+    status: string;
+    sharedAt: string | null;
+    shareClickCount: number;
+    trackingCode: string | null;
+    trackingLink: { id: number; code: string; name: string; description: string | null } | null;
+    mechanic: { id: number; name: string; address: string } | null;
+    createdAt: string;
+  }>>('/owner/service-inquiries'),
+};
+
 // Upload API
 export const uploadApi = {
   uploadImage: (file: File) => {

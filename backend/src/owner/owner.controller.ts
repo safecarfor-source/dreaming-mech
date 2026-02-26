@@ -79,6 +79,21 @@ export class OwnerProfileController {
     return this.ownerService.updateProfile(req.user.sub, body);
   }
 
+  // GET /owner/service-inquiries — 내 정비소 선택 고객 문의 목록
+  @Get('service-inquiries')
+  getMyInquiries(@Request() req) {
+    return this.ownerService.getMyInquiries(req.user.sub);
+  }
+
+  // GET /owner/service-inquiries/:id — 문의 상세
+  @Get('service-inquiries/:id')
+  getMyInquiryDetail(
+    @Request() req,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return this.ownerService.getMyInquiryDetail(req.user.sub, id);
+  }
+
   @Post('business-license')
   submitBusinessLicense(
     @Request() req,

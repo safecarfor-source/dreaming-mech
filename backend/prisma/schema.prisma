@@ -385,6 +385,9 @@ model ServiceInquiry {
   // 공유 링크 만료 시간 (공유 시 자동 기록, 24시간 후 전화번호 블러)
   sharedAt        DateTime?
 
+  // 공유 링크 클릭 수 (링크가 몇 번 열렸는지)
+  shareClickCount Int @default(0)
+
   // 추적 링크 코드
   trackingCode    String?
   trackingLink    TrackingLink?          @relation(fields: [trackingCode], references: [code])

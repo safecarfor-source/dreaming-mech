@@ -54,6 +54,9 @@ export class ServiceInquiryController {
   // 상세 조회 (로그인 상태에 따라 전화번호 공개/블러)
   @Get(':id')
   async findOnePublic(@Param('id', ParseIntPipe) id: number, @Request() req) {
+    // 공유 링크 페이지 방문 시 클릭 카운트 증가 (비동기, 실패해도 무시)
+    this.serviceInquiryService.incrementShareClick(id).catch(() => {});
+
     // 쿠키에서 토큰 확인 (선택적 인증)
     const user = await this.tryGetUser(req);
 
