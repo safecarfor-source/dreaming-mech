@@ -13,6 +13,7 @@ import {
   ChevronRight,
   FileText,
   Wrench,
+  Link2,
 } from 'lucide-react';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { unifiedInquiryApi } from '@/lib/api';
@@ -234,7 +235,7 @@ export default function UnifiedInquiriesPage() {
                     </span>
                   </div>
 
-                  {/* 중간: 이름 + 전화번호 + 설명 */}
+                  {/* 중간: 이름 + 전화번호 + 유입경로 + 설명 */}
                   <div className="mb-3">
                     <div className="flex items-center gap-3 mb-1">
                       {inq.name && (
@@ -247,6 +248,12 @@ export default function UnifiedInquiriesPage() {
                         >
                           📞 {inq.phone}
                         </a>
+                      )}
+                      {inq.trackingLinkName && (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700">
+                          <Link2 size={12} />
+                          {inq.trackingLinkName}
+                        </span>
                       )}
                     </div>
                     {inq.description && (

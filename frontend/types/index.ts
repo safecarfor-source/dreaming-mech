@@ -250,6 +250,7 @@ export interface UnifiedInquiry {
   businessName?: string;
   carModel?: string;
   mechanicName?: string;
+  trackingLinkName?: string;
 }
 
 export interface UnifiedInquiryCount {
