@@ -11,6 +11,7 @@ import {
   UserCheck,
   MessageSquare,
   Star,
+  Link2,
   LogOut,
   Menu,
   X,
@@ -26,6 +27,7 @@ const menuItems = [
   { href: '/admin/owners', label: '사장님 관리', icon: UserCheck },
   { href: '/admin/unified-inquiries', label: '문의 관리', icon: MessageSquare, badgeKey: 'unified' as const },
   { href: '/admin/reviews', label: '리뷰 관리', icon: Star },
+  { href: '/admin/tracking', label: '추적 링크', icon: Link2 },
   { href: '/admin/stats', label: '통계', icon: BarChart3 },
 ];
 

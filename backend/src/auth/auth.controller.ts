@@ -52,6 +52,23 @@ export class AuthController {
     };
   }
 
+  // ── 고객 추적 코드 연결 (로그인 후 최초 유입 경로 저장) ──
+  @UseGuards(JwtAuthGuard)
+  @Patch('customer/tracking')
+  async updateCustomerTracking(
+    @Request() req,
+    @Body() body: { trackingCode: string },
+  ) {
+    const result = await this.authService.updateCustomerTracking(
+      req.user.sub,
+      body.trackingCode,
+    );
+    return {
+      success: true,
+      data: result,
+    };
+  }
+
   // ── 사장님 프로필 업데이트 ──
   @UseGuards(JwtAuthGuard)
   @Patch('owner/profile')

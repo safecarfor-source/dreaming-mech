@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { customerAuthApi, serviceInquiryApi } from '@/lib/api';
 import { useCustomerStore } from '@/lib/customer-store';
+import { getTrackingCode } from '@/lib/tracking';
 import type { ServiceType } from '@/types';
 
 interface TempInquiryData {
@@ -38,21 +39,28 @@ export default function InquiryCallbackPage() {
         const customer = profileRes.data.data;
         login(customer);
 
-        // 3. 서비스 문의 생성
+        // 3. 추적 코드가 있으면 고객에 연결
+        const trackingCode = getTrackingCode();
+        if (trackingCode) {
+          customerAuthApi.updateTracking(trackingCode).catch(() => {});
+        }
+
+        // 4. 서비스 문의 생성 (추적 코드 포함)
         await serviceInquiryApi.create({
           regionSido: tempData.regionSido,
           regionSigungu: tempData.regionSigungu,
           serviceType: tempData.serviceType,
           phone: tempData.phone,
           description: tempData.description,
+          trackingCode: trackingCode || undefined,
         });
 
-        // 4. sessionStorage 정리
+        // 5. sessionStorage 정리
         sessionStorage.removeItem('temp-inquiry-data');
 
         setStatus('success');
 
-        // 5. 메인 페이지로 이동 (완료 상태 전달)
+        // 6. 메인 페이지로 이동 (완료 상태 전달)
         setTimeout(() => {
           router.push('/?inquiry=success');
         }, 1500);

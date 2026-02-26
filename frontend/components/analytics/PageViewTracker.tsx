@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { usePathname } from 'next/navigation';
-import { analyticsApi } from '@/lib/api';
+import { analyticsApi, trackingLinkApi } from '@/lib/api';
+import { captureTrackingCode } from '@/lib/tracking';
 
 // Google Analytics gtag 타입 선언
 declare global {
@@ -13,6 +14,26 @@ declare global {
 
 export default function PageViewTracker() {
   const pathname = usePathname();
+  const refCaptured = useRef(false);
+
+  // 최초 1회만 ref 파라미터 감지 및 클릭 기록
+  useEffect(() => {
+    if (refCaptured.current) return;
+    refCaptured.current = true;
+
+    const code = captureTrackingCode();
+    if (!code) return;
+
+    const recordClick = async () => {
+      try {
+        await trackingLinkApi.recordClick(code);
+      } catch (error) {
+        console.debug('TrackingLink click recording failed:', error);
+      }
+    };
+
+    recordClick();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     // Skip admin/owner pages

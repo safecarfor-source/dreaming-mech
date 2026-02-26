@@ -255,4 +255,32 @@ export class AuthService {
 
     return customer;
   }
+
+  // ── 고객 추적 코드 연결 ──
+  // 로그인 후 최초 유입 경로 trackingCode를 저장 (이미 코드가 있으면 보존)
+  async updateCustomerTracking(customerId: number, trackingCode: string) {
+    // trackingCode가 유효한지 확인
+    const link = await this.prisma.trackingLink.findUnique({
+      where: { code: trackingCode },
+    });
+    if (!link) return { updated: false, reason: 'invalid_code' };
+
+    // 이미 trackingCode가 있으면 업데이트하지 않음 (최초 유입 경로 보존)
+    const customer = await this.prisma.customer.findUnique({
+      where: { id: customerId },
+    });
+
+    if (!customer) {
+      throw new UnauthorizedException('고객을 찾을 수 없습니다.');
+    }
+
+    if (customer.trackingCode) return { updated: false, reason: 'already_set' };
+
+    await this.prisma.customer.update({
+      where: { id: customerId },
+      data: { trackingCode },
+    });
+
+    return { updated: true };
+  }
 }
