@@ -7,6 +7,8 @@ export const CreateServiceInquirySchema = z.object({
   serviceType: z.enum(['TIRE', 'OIL', 'BRAKE', 'MAINTENANCE', 'CONSULT']),
   description: z.string().optional(),
   phone: z.string().min(10, '올바른 전화번호를 입력해주세요').max(13),
+  vehicleNumber: z.string().optional(), // 차량번호 (예: 12가3456)
+  vehicleModel: z.string().optional(),  // 차종 (예: 현대 아반떼)
 });
 
 export type CreateServiceInquiryDto = z.infer<typeof CreateServiceInquirySchema>;

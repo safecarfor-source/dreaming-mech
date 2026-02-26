@@ -61,6 +61,8 @@ function HomeContent() {
   const [phone, setPhone] = useState('');
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
+  const [vehicleNumber, setVehicleNumber] = useState('');
+  const [vehicleModel, setVehicleModel] = useState('');
   const [regionSearchQuery, setRegionSearchQuery] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
@@ -158,6 +160,8 @@ function HomeContent() {
         regionSigungu: selectedRegion.sigungu,
         serviceType: selectedService,
         phone: phone.replace(/[^\d]/g, ''),
+        vehicleNumber: vehicleNumber.trim() || undefined,
+        vehicleModel: vehicleModel.trim() || undefined,
         description: description || undefined,
       });
       setStep(4);
@@ -176,6 +180,8 @@ function HomeContent() {
     setPhone('');
     setName('');
     setDescription('');
+    setVehicleNumber('');
+    setVehicleModel('');
     setRegionSearchQuery('');
   };
 
@@ -393,12 +399,38 @@ function HomeContent() {
 
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      차량번호 (선택)
+                    </label>
+                    <input
+                      type="text"
+                      value={vehicleNumber}
+                      onChange={(e) => setVehicleNumber(e.target.value)}
+                      placeholder="예: 12가 3456"
+                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-[#7C4DFF] focus:outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      차종 (선택)
+                    </label>
+                    <input
+                      type="text"
+                      value={vehicleModel}
+                      onChange={(e) => setVehicleModel(e.target.value)}
+                      placeholder="예: 현대 아반떼, 기아 K5"
+                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-[#7C4DFF] focus:outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
                       추가 설명 (선택)
                     </label>
                     <textarea
                       value={description}
                       onChange={(e) => setDescription(e.target.value)}
-                      placeholder="예: 타이어 사이즈, 차량 모델 등"
+                      placeholder="예: 타이어 사이즈, 증상 등"
                       rows={3}
                       className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-[#7C4DFF] focus:outline-none resize-none"
                     />

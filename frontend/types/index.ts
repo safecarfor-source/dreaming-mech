@@ -216,6 +216,8 @@ export interface ServiceInquiry {
   customer?: Customer;
   name?: string;
   phone?: string;
+  vehicleNumber?: string;
+  vehicleModel?: string;
   regionSido: string;
   regionSigungu: string;
   serviceType: ServiceType;

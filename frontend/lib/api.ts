@@ -323,6 +323,8 @@ export const serviceInquiryApi = {
     serviceType: ServiceType;
     description?: string;
     phone: string;
+    vehicleNumber?: string;
+    vehicleModel?: string;
   }) => api.post<ApiResponse<ServiceInquiry>>('/service-inquiries', data),
 
   getPublic: (id: number) => api.get<ApiResponse<ServiceInquiry>>(`/service-inquiries/${id}`),

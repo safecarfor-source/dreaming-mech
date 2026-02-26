@@ -38,6 +38,8 @@ export class ServiceInquiryService {
         serviceType: dto.serviceType,
         description: dto.description,
         phone: dto.phone,
+        vehicleNumber: dto.vehicleNumber,
+        vehicleModel: dto.vehicleModel,
         kakaoOpenChatUrl,
       },
     });
@@ -62,6 +64,12 @@ export class ServiceInquiryService {
     message += `🔧 항목: ${serviceTypeKo}\n`;
     if (inquiry.name) {
       message += `👤 고객: ${inquiry.name}\n`;
+    }
+    if (inquiry.vehicleNumber || inquiry.vehicleModel) {
+      message += `🚗 차량: `;
+      if (inquiry.vehicleNumber) message += inquiry.vehicleNumber;
+      if (inquiry.vehicleModel) message += ` (${inquiry.vehicleModel})`;
+      message += `\n`;
     }
     if (inquiry.description) {
       message += `📝 ${inquiry.description}\n`;

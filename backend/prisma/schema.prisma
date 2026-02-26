@@ -326,6 +326,10 @@ model ServiceInquiry {
   serviceType   ServiceType            // 정비 항목
   description   String?   @db.Text    // 추가 설명 (선택)
 
+  // 차량 정보 (선택)
+  vehicleNumber String?                // 차량번호 (예: 12가3456)
+  vehicleModel  String?                // 차종 (예: 현대 아반떼)
+
   // 상태
   status        ServiceInquiryStatus   @default(PENDING)
 

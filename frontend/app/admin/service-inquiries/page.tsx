@@ -234,6 +234,9 @@ export default function AdminServiceInquiriesPage() {
                       서비스 항목
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                      차량정보
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                       전화번호
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
@@ -264,6 +267,24 @@ export default function AdminServiceInquiriesPage() {
                             <span>{serviceInfo.emoji}</span>
                             <span className="text-gray-900">{serviceInfo.label}</span>
                           </span>
+                        </td>
+                        <td className="px-4 py-3 text-sm">
+                          {inquiry.vehicleNumber || inquiry.vehicleModel ? (
+                            <div className="space-y-0.5">
+                              {inquiry.vehicleNumber && (
+                                <div className="text-gray-900 font-medium">
+                                  {inquiry.vehicleNumber}
+                                </div>
+                              )}
+                              {inquiry.vehicleModel && (
+                                <div className="text-gray-500 text-xs">
+                                  {inquiry.vehicleModel}
+                                </div>
+                              )}
+                            </div>
+                          ) : (
+                            <span className="text-gray-400 text-xs">미입력</span>
+                          )}
                         </td>
                         <td className="px-4 py-3 text-sm">
                           {(inquiry as any).phone || inquiry.customer?.phone ? (

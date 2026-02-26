@@ -176,7 +176,14 @@ export class UnifiedInquiryService {
         msg += `📍 ${inq.regionSido} ${inq.regionSigungu}\n`;
         msg += `🔧 ${serviceKo}`;
         if (inq.description) msg += ` - ${inq.description}`;
-        msg += `\n📞 전화번호: 회원만 확인 가능\n`;
+        msg += `\n`;
+        if ((inq as any).vehicleNumber || (inq as any).vehicleModel) {
+          msg += `🚗 차량: `;
+          if ((inq as any).vehicleNumber) msg += (inq as any).vehicleNumber;
+          if ((inq as any).vehicleModel) msg += ` (${(inq as any).vehicleModel})`;
+          msg += `\n`;
+        }
+        msg += `📞 전화번호: 회원만 확인 가능\n`;
         msg += `\n👉 지금 확인하기:\n`;
         msg += `https://dreammechaniclab.com/inquiry/service/${inq.id}\n`;
         msg += `\n⚡ 먼저 전화하는 정비사가 고객을 잡습니다\n`;
