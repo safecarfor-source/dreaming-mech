@@ -63,6 +63,7 @@ function HomeContent() {
   const [description, setDescription] = useState('');
   const [vehicleNumber, setVehicleNumber] = useState('');
   const [vehicleModel, setVehicleModel] = useState('');
+  const [privacyAgreed, setPrivacyAgreed] = useState(false);
   const [regionSearchQuery, setRegionSearchQuery] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
@@ -151,7 +152,7 @@ function HomeContent() {
 
   // Step 3: 바로 접수
   const handleSubmit = async () => {
-    if (!selectedRegion || !selectedService || !phone) return;
+    if (!selectedRegion || !selectedService || !phone || !privacyAgreed) return;
     setSubmitting(true);
     try {
       await serviceInquiryApi.create({
@@ -182,6 +183,7 @@ function HomeContent() {
     setDescription('');
     setVehicleNumber('');
     setVehicleModel('');
+    setPrivacyAgreed(false);
     setRegionSearchQuery('');
   };
 
@@ -436,9 +438,40 @@ function HomeContent() {
                     />
                   </div>
 
+                  {/* 개인정보 수집 동의 */}
+                  <div
+                    className={`rounded-xl border-2 p-4 cursor-pointer transition-all ${
+                      privacyAgreed ? 'border-[#7C4DFF] bg-purple-50' : 'border-gray-200 bg-gray-50'
+                    }`}
+                    onClick={() => setPrivacyAgreed(!privacyAgreed)}
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className={`flex-shrink-0 w-5 h-5 mt-0.5 rounded border-2 flex items-center justify-center transition-all ${
+                        privacyAgreed ? 'bg-[#7C4DFF] border-[#7C4DFF]' : 'border-gray-300 bg-white'
+                      }`}>
+                        {privacyAgreed && (
+                          <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                          </svg>
+                        )}
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold text-gray-800">
+                          개인정보 수집·이용 동의 <span className="text-red-500">(필수)</span>
+                        </p>
+                        <p className="text-xs text-gray-500 mt-1 leading-relaxed">
+                          수집 항목: 이름, 전화번호, 차량 정보<br />
+                          이용 목적: 정비사 매칭 및 상담 연결<br />
+                          보유 기간: 서비스 종료 시까지<br />
+                          <span className="text-gray-400">※ 전화번호는 근처 검증된 정비사(대구 대표님 포함)께만 제공됩니다</span>
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
                   <button
                     onClick={handleSubmit}
-                    disabled={!phone || phone.length < 12 || submitting}
+                    disabled={!phone || phone.length < 12 || !privacyAgreed || submitting}
                     className="w-full bg-[#7C4DFF] text-white px-6 py-4 rounded-xl font-bold text-lg
                       hover:bg-[#6D3FE0] transition-all disabled:opacity-50 disabled:cursor-not-allowed
                       flex items-center justify-center gap-2 shadow-lg"
