@@ -17,7 +17,7 @@ function CallbackContent() {
         const res = await ownerAuthApi.getProfile();
         login(res.data);
 
-        // 공유 링크에서 왔으면 원래 문의로 복귀
+        // 공유 링크에서 왔으면 원래 문의로 복귀 (PENDING이어도 공유 링크는 공개 페이지)
         const returnUrl = typeof window !== 'undefined'
           ? sessionStorage.getItem('mechanic_return_url')
           : null;
@@ -26,9 +26,8 @@ function CallbackContent() {
           sessionStorage.removeItem('mechanic_return_url');
           sessionStorage.setItem('mechanic_just_signed_up', 'true');
           router.replace(returnUrl);
-        } else if (status === 'REJECTED') {
-          router.replace('/owner?rejected=true');
         } else {
+          // PENDING/REJECTED/APPROVED 모두 /owner로 → OwnerLayout이 상태별 화면 처리
           router.replace('/owner');
         }
       } catch {

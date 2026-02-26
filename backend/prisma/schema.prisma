@@ -84,7 +84,7 @@ model Owner {
   naverId             String?     @unique  // 네이버 고유 ID
   kakaoId             String?     @unique  // 카카오 고유 ID
   provider            String      // "naver" | "kakao"
-  status              OwnerStatus @default(APPROVED)
+  status              OwnerStatus @default(PENDING)
   rejectionReason     String?     // 거절 사유
   businessLicenseUrl  String?     // 사업자등록증 이미지 URL
   businessName        String?     // 업체명
