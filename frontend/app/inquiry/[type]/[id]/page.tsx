@@ -20,6 +20,7 @@ import {
   Store,
   List,
   Info,
+  Clock,
 } from 'lucide-react';
 import Layout from '@/components/Layout';
 import { unifiedInquiryApi } from '@/lib/api';
@@ -61,6 +62,10 @@ interface InquiryDetail {
   businessName?: string;
   carModel?: string;
   mechanicName?: string;
+  isExpired?: boolean;
+  sharedAt?: string;
+  vehicleNumber?: string;
+  vehicleModel?: string;
 }
 
 export default function SharedInquiryPage() {
@@ -162,6 +167,22 @@ export default function SharedInquiryPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4 }}
             >
+              {/* 만료 배너 */}
+              {inquiry.isExpired && (
+                <div className="bg-red-50 border border-red-200 rounded-2xl p-5 mb-4">
+                  <div className="flex items-start gap-3">
+                    <span className="text-2xl flex-shrink-0">🔒</span>
+                    <div>
+                      <p className="font-bold text-red-700 mb-1">이 문의는 마감되었습니다</p>
+                      <p className="text-sm text-red-600">
+                        공유 후 24시간이 지나 전화번호 확인이 불가합니다.<br />
+                        새로운 문의는 카카오 단톡방에서 확인하세요.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* 헤더 카드 */}
               <div className="bg-white rounded-2xl p-6 shadow-sm mb-4">
                 <div className="flex items-center justify-between mb-4">
@@ -213,6 +234,14 @@ export default function SharedInquiryPage() {
                       <span className="text-gray-800">{inquiry.carModel}</span>
                     </div>
                   )}
+                  {(inquiry.vehicleNumber || inquiry.vehicleModel) && (
+                    <div className="flex items-center gap-3">
+                      <Car size={18} className="text-gray-400 flex-shrink-0" />
+                      <span className="text-gray-800">
+                        {inquiry.vehicleNumber}{inquiry.vehicleNumber && inquiry.vehicleModel ? ' · ' : ''}{inquiry.vehicleModel}
+                      </span>
+                    </div>
+                  )}
                   {inquiry.description && (
                     <div className="flex items-start gap-3">
                       <FileText size={18} className="text-gray-400 flex-shrink-0 mt-0.5" />
@@ -233,6 +262,23 @@ export default function SharedInquiryPage() {
                       {new Date(inquiry.createdAt).toLocaleString('ko-KR')}
                     </span>
                   </div>
+                  {inquiry.sharedAt && !inquiry.isExpired && (
+                    <div className="flex items-center gap-3">
+                      <Clock size={18} className="text-orange-400 flex-shrink-0" />
+                      <span className="text-orange-600 text-sm font-medium">
+                        {(() => {
+                          const shared = new Date(inquiry.sharedAt);
+                          const expires = new Date(shared.getTime() + 24 * 60 * 60 * 1000);
+                          const remaining = expires.getTime() - Date.now();
+                          const hours = Math.floor(remaining / (60 * 60 * 1000));
+                          const minutes = Math.floor((remaining % (60 * 60 * 1000)) / (60 * 1000));
+                          if (hours > 0) return `전화번호 확인 가능 시간: ${hours}시간 ${minutes}분 남음`;
+                          if (minutes > 0) return `전화번호 확인 가능 시간: ${minutes}분 남음`;
+                          return '곧 만료됩니다';
+                        })()}
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
 

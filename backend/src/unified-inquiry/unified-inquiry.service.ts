@@ -143,7 +143,11 @@ export class UnifiedInquiryService {
       case 'SERVICE':
         return this.prisma.serviceInquiry.update({
           where: { id },
-          data: { status: status as any },
+          data: {
+            status: status as any,
+            // 공유 상태로 변경 시 공유 시점 기록 (24시간 만료 기준)
+            ...(status === 'SHARED' ? { sharedAt: new Date() } : {}),
+          },
         });
       case 'QUOTE':
         return this.prisma.quoteRequest.update({
@@ -233,17 +237,30 @@ export class UnifiedInquiryService {
           include: { customer: { select: { nickname: true, phone: true } } },
         });
         if (!inq) throw new NotFoundException(`문의를 찾을 수 없습니다.`);
+
+        // 24시간 만료 체크 (sharedAt이 있고 24시간 초과 시)
+        const EXPIRE_HOURS = 24;
+        const sharedAt = (inq as any).sharedAt as Date | null;
+        const isExpired = sharedAt
+          ? new Date().getTime() - new Date(sharedAt).getTime() > EXPIRE_HOURS * 60 * 60 * 1000
+          : false;
+
         return {
           id: inq.id,
           type: 'SERVICE',
           name: (inq as any).name || inq.customer?.nickname || undefined,
-          phone: showPhone ? (inq.phone || inq.customer?.phone || undefined) : undefined,
+          // 만료된 경우 어드민도 전화번호 블러 처리
+          phone: (showPhone && !isExpired) ? (inq.phone || inq.customer?.phone || undefined) : undefined,
           regionSido: inq.regionSido,
           regionSigungu: inq.regionSigungu,
           serviceType: inq.serviceType,
           description: inq.description || undefined,
+          vehicleNumber: (inq as any).vehicleNumber || undefined,
+          vehicleModel: (inq as any).vehicleModel || undefined,
           status: inq.status,
           createdAt: inq.createdAt.toISOString(),
+          sharedAt: sharedAt ? sharedAt.toISOString() : undefined,
+          isExpired,
         };
       }
       case 'GENERAL': {

@@ -340,6 +340,9 @@ model ServiceInquiry {
   telegramSent    Boolean   @default(false)
   telegramSentAt  DateTime?
 
+  // 공유 링크 만료 시간 (공유 시 자동 기록, 24시간 후 전화번호 블러)
+  sharedAt        DateTime?
+
   createdAt     DateTime               @default(now())
   updatedAt     DateTime               @updatedAt
 
