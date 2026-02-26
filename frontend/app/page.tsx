@@ -81,7 +81,7 @@ function HomeContent() {
   useEffect(() => {
     if (step === 3 && selectedRegion) {
       setLoadingMechanics(true);
-      mechanicsApi.getByRegion(selectedRegion.sido, selectedRegion.sigungu)
+      mechanicsApi.getByRegion(selectedRegion.sido, '')
         .then(res => setLocalMechanics(res.data.data || []))
         .catch(() => setLocalMechanics([]))
         .finally(() => setLoadingMechanics(false));
