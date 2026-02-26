@@ -176,22 +176,20 @@ export class UnifiedInquiryService {
         });
         if (!inq) throw new Error('Not found');
         const serviceKo = SERVICE_TYPE_MAP[inq.serviceType] || inq.serviceType;
-        let msg = `🚨 [긴급] 고객 문의 접수!\n\n`;
+        let msg = `대표님~ 🙋 고객님 오셨습니다!\n\n`;
         msg += `📍 ${inq.regionSido} ${inq.regionSigungu}\n`;
         msg += `🔧 ${serviceKo}`;
         if (inq.description) msg += ` - ${inq.description}`;
         msg += `\n`;
         if ((inq as any).vehicleNumber || (inq as any).vehicleModel) {
-          msg += `🚗 차량: `;
+          msg += `🚗 `;
           if ((inq as any).vehicleNumber) msg += (inq as any).vehicleNumber;
           if ((inq as any).vehicleModel) msg += ` (${(inq as any).vehicleModel})`;
           msg += `\n`;
         }
-        msg += `📞 전화번호: 회원만 확인 가능\n`;
-        msg += `\n👉 지금 확인하기:\n`;
-        msg += `https://dreammechaniclab.com/inquiry/service/${inq.id}\n`;
-        msg += `\n⚡ 먼저 전화하는 정비사가 고객을 잡습니다\n`;
-        msg += `(카카오 3초 가입 → 바로 전화번호 확인)`;
+        msg += `\n👇 전화번호 확인하러 가기\n`;
+        msg += `https://dreammechaniclab.com/inquiry/service/${inq.id}\n\n`;
+        msg += `빠를수록 좋아요! 오늘도 화이팅~ 💪`;
         return msg;
       }
       case 'GENERAL': {

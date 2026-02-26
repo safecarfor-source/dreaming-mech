@@ -241,18 +241,23 @@ export class ServiceInquiryService {
     const inquiry = await this.findOne(id);
     const serviceTypeKo = this.getServiceTypeKorean(inquiry.serviceType);
 
-    let message = `🔔 고객 문의 도착!\n`;
+    let message = `대표님~ 🙋 고객님 오셨습니다!\n\n`;
     message += `📍 ${inquiry.regionSido} ${inquiry.regionSigungu}\n`;
-    message += `🔧 ${serviceTypeKo}\n`;
-    if (inquiry.name) {
-      message += `👤 ${inquiry.name}\n`;
+    message += `🔧 ${serviceTypeKo}`;
+    if ((inquiry as any).vehicleNumber || (inquiry as any).vehicleModel) {
+      message += ` (`;
+      if ((inquiry as any).vehicleNumber) message += (inquiry as any).vehicleNumber;
+      if ((inquiry as any).vehicleNumber && (inquiry as any).vehicleModel) message += ` / `;
+      if ((inquiry as any).vehicleModel) message += (inquiry as any).vehicleModel;
+      message += `)`;
     }
+    message += `\n`;
     if (inquiry.description) {
-      message += `📝 ${inquiry.description}\n`;
+      message += `💬 "${inquiry.description}"\n`;
     }
-    message += `\n👉 고객 연락처 확인:\n`;
-    message += `https://dreammechaniclab.com/inquiry/${inquiry.id}\n`;
-    message += `(회원 정비사만 전화번호 확인 가능)`;
+    message += `\n👇 아래 링크에서 전화번호 확인하세요!\n`;
+    message += `https://dreammechaniclab.com/inquiry/${inquiry.id}\n\n`;
+    message += `오늘도 화이팅입니다~ 💪`;
 
     return message;
   }

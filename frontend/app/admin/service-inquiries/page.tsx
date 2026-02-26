@@ -11,6 +11,7 @@ import {
   ChevronRight,
   Copy,
   Check,
+  X,
 } from 'lucide-react';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { serviceInquiryApi } from '@/lib/api';
@@ -49,6 +50,8 @@ export default function AdminServiceInquiriesPage() {
   const [loading, setLoading] = useState(true);
   const [copiedId, setCopiedId] = useState<number | null>(null);
   const [copiedMessage, setCopiedMessage] = useState<number | null>(null);
+  const [selectedInquiry, setSelectedInquiry] = useState<ServiceInquiry | null>(null);
+  const [detailLoading, setDetailLoading] = useState(false);
 
   const fetchInquiries = useCallback(async () => {
     setLoading(true);
@@ -128,6 +131,18 @@ export default function AdminServiceInquiriesPage() {
   const getStatCount = (status?: ServiceInquiryStatus) => {
     if (!status) return inquiries.length;
     return inquiries.filter((inq) => inq.status === status).length;
+  };
+
+  const handleRowClick = async (id: number) => {
+    setDetailLoading(true);
+    try {
+      const res = await serviceInquiryApi.getFull(id);
+      setSelectedInquiry(res.data.data);
+    } catch {
+      alert('상세 정보를 불러오는데 실패했습니다.');
+    } finally {
+      setDetailLoading(false);
+    }
   };
 
   return (
@@ -257,7 +272,11 @@ export default function AdminServiceInquiriesPage() {
                       emoji: '📋',
                     };
                     return (
-                      <tr key={inquiry.id} className="hover:bg-gray-50">
+                      <tr
+                        key={inquiry.id}
+                        className="hover:bg-purple-50 cursor-pointer transition-colors"
+                        onClick={() => handleRowClick(inquiry.id)}
+                      >
                         <td className="px-4 py-3 text-sm text-gray-900">#{inquiry.id}</td>
                         <td className="px-4 py-3 text-sm text-gray-900">
                           {inquiry.regionSido} {inquiry.regionSigungu}
@@ -301,7 +320,7 @@ export default function AdminServiceInquiriesPage() {
                         <td className="px-4 py-3 text-sm text-gray-500">
                           {formatDate(inquiry.createdAt)}
                         </td>
-                        <td className="px-4 py-3 text-sm">
+                        <td className="px-4 py-3 text-sm" onClick={(e) => e.stopPropagation()}>
                           <select
                             value={inquiry.status}
                             onChange={(e) =>
@@ -321,7 +340,7 @@ export default function AdminServiceInquiriesPage() {
                             ))}
                           </select>
                         </td>
-                        <td className="px-4 py-3 text-sm">
+                        <td className="px-4 py-3 text-sm" onClick={(e) => e.stopPropagation()}>
                           <div className="flex gap-2">
                             <button
                               onClick={() => handleCopyLink(inquiry.id)}
@@ -383,6 +402,152 @@ export default function AdminServiceInquiriesPage() {
           )}
         </div>
       </div>
+
+      {/* 상세보기 슬라이드업 모달 */}
+      {(selectedInquiry || detailLoading) && (
+        <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center">
+          {/* 배경 오버레이 */}
+          <div
+            className="absolute inset-0 bg-black/50"
+            onClick={() => setSelectedInquiry(null)}
+          />
+          {/* 모달 본체 */}
+          <div className="relative bg-white w-full md:max-w-lg md:rounded-2xl rounded-t-2xl max-h-[90vh] overflow-y-auto shadow-2xl">
+            {detailLoading ? (
+              <div className="p-8 text-center text-gray-400">
+                <div className="animate-pulse space-y-3">
+                  <div className="h-5 bg-gray-200 rounded w-2/3 mx-auto" />
+                  <div className="h-4 bg-gray-200 rounded w-1/2 mx-auto" />
+                </div>
+              </div>
+            ) : selectedInquiry ? (
+              <>
+                {/* 모달 헤더 */}
+                <div className="sticky top-0 bg-white border-b border-gray-100 px-6 py-4 flex items-center justify-between">
+                  <div>
+                    <p className="text-xs text-gray-400">서비스 문의</p>
+                    <h2 className="text-lg font-bold text-gray-900">#{selectedInquiry.id} 상세보기</h2>
+                  </div>
+                  <button
+                    onClick={() => setSelectedInquiry(null)}
+                    className="p-2 hover:bg-gray-100 rounded-lg"
+                  >
+                    <X size={20} className="text-gray-500" />
+                  </button>
+                </div>
+
+                {/* 모달 내용 */}
+                <div className="px-6 py-5 space-y-5">
+
+                  {/* 상태 뱃지 */}
+                  <span className={`inline-block text-sm font-medium px-3 py-1 rounded-full ${STATUS_COLORS[selectedInquiry.status]}`}>
+                    {STATUS_LABELS[selectedInquiry.status]}
+                  </span>
+
+                  {/* 핵심 정보 카드 */}
+                  <div className="bg-gray-50 rounded-xl p-4 space-y-3">
+                    {/* 지역 */}
+                    <div className="flex gap-3">
+                      <span className="text-gray-400 text-sm w-16 flex-shrink-0">📍 지역</span>
+                      <span className="text-gray-900 text-sm font-medium">
+                        {selectedInquiry.regionSido} {selectedInquiry.regionSigungu}
+                      </span>
+                    </div>
+                    {/* 서비스 항목 */}
+                    <div className="flex gap-3">
+                      <span className="text-gray-400 text-sm w-16 flex-shrink-0">🔧 항목</span>
+                      <span className="text-gray-900 text-sm font-medium">
+                        {SERVICE_TYPE_MAP[selectedInquiry.serviceType]?.emoji} {SERVICE_TYPE_MAP[selectedInquiry.serviceType]?.label || selectedInquiry.serviceType}
+                      </span>
+                    </div>
+                    {/* 차량 정보 */}
+                    {((selectedInquiry as any).vehicleNumber || (selectedInquiry as any).vehicleModel) && (
+                      <div className="flex gap-3">
+                        <span className="text-gray-400 text-sm w-16 flex-shrink-0">🚗 차량</span>
+                        <span className="text-gray-900 text-sm font-medium">
+                          {(selectedInquiry as any).vehicleNumber}
+                          {(selectedInquiry as any).vehicleNumber && (selectedInquiry as any).vehicleModel && ' / '}
+                          {(selectedInquiry as any).vehicleModel}
+                        </span>
+                      </div>
+                    )}
+                    {/* 전화번호 */}
+                    {((selectedInquiry as any).phone || selectedInquiry.customer?.phone) && (
+                      <div className="flex gap-3">
+                        <span className="text-gray-400 text-sm w-16 flex-shrink-0">📞 전화</span>
+                        <a
+                          href={`tel:${(selectedInquiry as any).phone || selectedInquiry.customer?.phone}`}
+                          className="text-purple-600 text-sm font-bold hover:underline"
+                        >
+                          {(selectedInquiry as any).phone || selectedInquiry.customer?.phone}
+                        </a>
+                      </div>
+                    )}
+                    {/* 접수일시 */}
+                    <div className="flex gap-3">
+                      <span className="text-gray-400 text-sm w-16 flex-shrink-0">🕐 접수</span>
+                      <span className="text-gray-500 text-sm">{formatDate(selectedInquiry.createdAt)}</span>
+                    </div>
+                  </div>
+
+                  {/* 고객 메모 (description) */}
+                  {(selectedInquiry as any).description && (
+                    <div>
+                      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">고객 메모</p>
+                      <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4">
+                        <p className="text-gray-800 text-sm leading-relaxed whitespace-pre-wrap">
+                          {(selectedInquiry as any).description}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 액션 버튼들 */}
+                  <div className="space-y-3 pt-2">
+                    {/* 상태 변경 */}
+                    <div>
+                      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">상태 변경</p>
+                      <div className="grid grid-cols-2 gap-2">
+                        {(Object.entries(STATUS_LABELS) as [ServiceInquiryStatus, string][]).map(([value, label]) => (
+                          <button
+                            key={value}
+                            onClick={async () => {
+                              await handleStatusChange(selectedInquiry.id, value);
+                              setSelectedInquiry({ ...selectedInquiry, status: value });
+                            }}
+                            className={`py-2 px-3 rounded-lg text-sm font-medium transition-all border-2 ${
+                              selectedInquiry.status === value
+                                ? 'border-purple-500 bg-purple-50 text-purple-700'
+                                : 'border-gray-200 text-gray-600 hover:border-gray-300'
+                            }`}
+                          >
+                            {label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* 공유 메시지 복사 */}
+                    <button
+                      onClick={async (e) => {
+                        e.stopPropagation();
+                        await handleCopyShareMessage(selectedInquiry.id);
+                      }}
+                      className={`w-full py-3 rounded-xl text-sm font-bold transition-all ${
+                        copiedMessage === selectedInquiry.id
+                          ? 'bg-green-100 text-green-700'
+                          : 'bg-[#FEE500] text-gray-800 hover:bg-[#FDD835]'
+                      }`}
+                    >
+                      {copiedMessage === selectedInquiry.id ? '✓ 복사됨!' : '📋 단톡방 공유 메시지 복사'}
+                    </button>
+                  </div>
+                </div>
+              </>
+            ) : null}
+          </div>
+        </div>
+      )}
     </AdminLayout>
   );
 }
