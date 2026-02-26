@@ -12,6 +12,7 @@ export class AnalyticsService {
     userAgent: string,
     isBot: boolean,
     referer?: string,
+    refCode?: string,
   ) {
     return await this.prisma.pageView.create({
       data: {
@@ -20,6 +21,7 @@ export class AnalyticsService {
         userAgent,
         isBot,
         referer,
+        refCode: refCode || null,
       },
     });
   }
@@ -493,5 +495,75 @@ export class AnalyticsService {
       .filter((m) => m !== null); // null 제거
 
     return result;
+  }
+
+  // 레퍼럴 코드별 통계
+  async getReferralStats(days?: number) {
+    const startDate = days
+      ? this.getKstStartDate(days - 1)
+      : new Date(0);
+
+    // 레퍼럴 코드별 페이지뷰 (봇 제외)
+    const refCodeStats = await this.prisma.$queryRaw<
+      Array<{ refCode: string; views: bigint; visitors: bigint }>
+    >`
+      SELECT
+        "refCode",
+        COUNT(*)::bigint as views,
+        COUNT(DISTINCT "ipAddress")::bigint as visitors
+      FROM "PageView"
+      WHERE "isBot" = false
+        AND "refCode" IS NOT NULL
+        AND "viewedAt" >= ${startDate}
+      GROUP BY "refCode"
+      ORDER BY views DESC
+    `;
+
+    // 레퍼럴 코드별 가입자 수
+    const refCodeSignups = await this.prisma.owner.groupBy({
+      by: ['refCode'],
+      where: {
+        refCode: { not: null },
+        createdAt: { gte: startDate },
+      },
+      _count: true,
+    });
+
+    const signupMap = new Map(
+      refCodeSignups.map((s) => [s.refCode, s._count]),
+    );
+
+    return refCodeStats.map((stat) => ({
+      refCode: stat.refCode,
+      views: Number(stat.views),
+      visitors: Number(stat.visitors),
+      signups: signupMap.get(stat.refCode) || 0,
+    }));
+  }
+
+  // 레퍼럴 코드별 일별 트렌드
+  async getReferralDailyStats(refCode: string, days: number = 30) {
+    const startDate = this.getKstStartDate(days - 1);
+
+    const dailyStats = await this.prisma.$queryRaw<
+      Array<{ date: string; views: bigint; visitors: bigint }>
+    >`
+      SELECT
+        DATE("viewedAt" AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Seoul') as date,
+        COUNT(*)::bigint as views,
+        COUNT(DISTINCT "ipAddress")::bigint as visitors
+      FROM "PageView"
+      WHERE "isBot" = false
+        AND "refCode" = ${refCode}
+        AND "viewedAt" >= ${startDate}
+      GROUP BY DATE("viewedAt" AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Seoul')
+      ORDER BY date ASC
+    `;
+
+    return dailyStats.map((stat) => ({
+      date: stat.date,
+      views: Number(stat.views),
+      visitors: Number(stat.visitors),
+    }));
   }
 }

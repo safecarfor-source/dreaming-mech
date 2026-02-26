@@ -70,8 +70,8 @@ export const mapsApi = {
 // Analytics API
 // Note: Authentication is now handled automatically via HttpOnly cookies
 export const analyticsApi = {
-  trackPageView: (path: string, referer?: string) =>
-    api.post('/analytics/pageview', { path, referer }),
+  trackPageView: (path: string, referer?: string, refCode?: string) =>
+    api.post('/analytics/pageview', { path, referer, refCode }),
   getSiteStats: (days?: number) =>
     api.get('/analytics/site-stats', buildConfig({
       params: days !== undefined ? { days } : {}
@@ -111,6 +111,14 @@ export const analyticsApi = {
         ...(options?.days && { days: options.days }),
         ...(options?.months && { months: options.months }),
       },
+    })),
+  getReferralStats: (days: number = 30) =>
+    api.get('/analytics/referral-stats', buildConfig({
+      params: { days }
+    })),
+  getReferralDailyStats: (refCode: string, days: number = 30) =>
+    api.get(`/analytics/referral-daily/${encodeURIComponent(refCode)}`, buildConfig({
+      params: { days }
     })),
 };
 

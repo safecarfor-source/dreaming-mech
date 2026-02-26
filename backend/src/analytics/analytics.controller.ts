@@ -30,6 +30,7 @@ export class AnalyticsController {
   trackPageView(
     @Body('path') path: string,
     @Body('referer') referer: string | undefined,
+    @Body('refCode') refCode: string | undefined,
     @Ip() ip: string,
     @Req() req: Request,
   ) {
@@ -42,6 +43,7 @@ export class AnalyticsController {
       userAgent,
       isBot,
       referer,
+      refCode,
     );
   }
 
@@ -185,5 +187,36 @@ export class AnalyticsController {
     months?: number,
   ) {
     return this.analyticsService.getTopMechanics(period, limit, days, months);
+  }
+
+  // GET /analytics/referral-stats - 레퍼럴 코드별 통계 (JWT 필수)
+  @Get('referral-stats')
+  @UseGuards(JwtAuthGuard)
+  getReferralStats(
+    @Query(
+      'days',
+      new DefaultValuePipe(30),
+      new ParseIntPipe({ optional: true }),
+      new RangeValidationPipe(1, 365),
+    )
+    days?: number,
+  ) {
+    return this.analyticsService.getReferralStats(days);
+  }
+
+  // GET /analytics/referral-daily/:refCode - 레퍼럴 코드 일별 트렌드 (JWT 필수)
+  @Get('referral-daily/:refCode')
+  @UseGuards(JwtAuthGuard)
+  getReferralDailyStats(
+    @Param('refCode') refCode: string,
+    @Query(
+      'days',
+      new DefaultValuePipe(30),
+      new ParseIntPipe({ optional: true }),
+      new RangeValidationPipe(1, 365),
+    )
+    days?: number,
+  ) {
+    return this.analyticsService.getReferralDailyStats(refCode, days);
   }
 }

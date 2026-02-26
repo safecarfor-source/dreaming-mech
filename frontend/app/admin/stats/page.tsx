@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import AdminLayout from '@/components/admin/AdminLayout';
-import { BarChart3, TrendingUp, Eye, MapPin, Globe, Users, Activity } from 'lucide-react';
+import { BarChart3, TrendingUp, Eye, MapPin, Globe, Users, Activity, Link2, UserPlus } from 'lucide-react';
 import { mechanicsApi, analyticsApi } from '@/lib/api';
 import { MONTHS } from '@/lib/constants';
 import type { Mechanic, TopMechanic } from '@/types';
@@ -11,7 +11,14 @@ import SiteTrafficStats from '@/components/analytics/SiteTrafficStats';
 import CountUp from '@/components/animations/CountUp';
 import AnimatedSection from '@/components/animations/AnimatedSection';
 
-type TabType = 'mechanics' | 'traffic';
+interface ReferralStat {
+  refCode: string;
+  views: number;
+  visitors: number;
+  signups: number;
+}
+
+type TabType = 'mechanics' | 'traffic' | 'referral';
 
 export default function StatsPage() {
   const [activeTab, setActiveTab] = useState<TabType>('mechanics');
@@ -25,6 +32,11 @@ export default function StatsPage() {
   const [topMechanicsData, setTopMechanicsData] = useState<TopMechanic[]>([]);
   const [topMechanicsLoading, setTopMechanicsLoading] = useState(false);
   const [topMechanicsError, setTopMechanicsError] = useState<string | null>(null);
+
+  // 레퍼럴 통계 상태
+  const [referralData, setReferralData] = useState<ReferralStat[]>([]);
+  const [referralLoading, setReferralLoading] = useState(false);
+  const [referralDays, setReferralDays] = useState(30);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -66,11 +78,26 @@ export default function StatsPage() {
     }
   };
 
+  // 레퍼럴 통계 데이터 페칭
+  const fetchReferralStats = async () => {
+    setReferralLoading(true);
+    try {
+      const response = await analyticsApi.getReferralStats(referralDays);
+      setReferralData(response.data);
+    } catch (error) {
+      console.error('레퍼럴 통계 조회 실패:', error);
+    } finally {
+      setReferralLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (activeTab === 'mechanics') {
       fetchTopMechanics();
+    } else if (activeTab === 'referral') {
+      fetchReferralStats();
     }
-  }, [topMechanicsPeriod, selectedMonth, activeTab]);
+  }, [topMechanicsPeriod, selectedMonth, activeTab, referralDays]);
 
   // 통계 계산
   const totalClicks = mechanics.reduce((sum, m) => sum + m.clickCount, 0);
@@ -128,6 +155,21 @@ export default function StatsPage() {
           >
             <Globe size={18} className="hidden sm:block" aria-hidden="true" />
             <span className="text-sm sm:text-base">사이트 트래픽</span>
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeTab === 'referral'}
+            aria-controls="referral-panel"
+            onClick={() => setActiveTab('referral')}
+            className={`flex-1 sm:flex-none px-4 sm:px-6 py-2 sm:py-3 font-semibold rounded-lg flex items-center justify-center gap-2 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-2 ${
+              activeTab === 'referral'
+                ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md'
+                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+            }`}
+          >
+            <Link2 size={18} className="hidden sm:block" aria-hidden="true" />
+            <span className="text-sm sm:text-base">링크 추적</span>
           </button>
         </motion.div>
 
@@ -440,13 +482,130 @@ export default function StatsPage() {
               </div>
             </motion.div>
           </>
-        ) : (
+        ) : activeTab === 'traffic' ? (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5 }}
           >
             <SiteTrafficStats />
+          </motion.div>
+        ) : (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5 }}
+            className="space-y-6"
+          >
+            {/* 레퍼럴 링크 안내 */}
+            <div className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-2xl p-6 border border-purple-100">
+              <h3 className="text-lg font-bold text-gray-900 mb-2 flex items-center gap-2">
+                <Link2 size={20} className="text-purple-600" />
+                링크 추적 사용법
+              </h3>
+              <p className="text-sm text-gray-600 mb-3">
+                공유 링크에 <code className="bg-white px-2 py-0.5 rounded text-purple-600 font-mono text-xs">?ref=코드명</code>을 붙이면 자동으로 추적됩니다.
+              </p>
+              <div className="bg-white rounded-lg p-3 border border-gray-200">
+                <p className="text-xs text-gray-500 mb-1">예시:</p>
+                <p className="text-sm font-mono text-gray-800 break-all">
+                  https://사이트주소/?ref=카톡단체방
+                </p>
+                <p className="text-sm font-mono text-gray-800 break-all mt-1">
+                  https://사이트주소/for-mechanics?ref=블로그홍보
+                </p>
+              </div>
+            </div>
+
+            {/* 기간 선택 */}
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-gray-700">기간:</span>
+              <div className="flex items-center bg-gray-100 rounded-lg p-1">
+                {[7, 30, 90].map((d) => (
+                  <button
+                    key={d}
+                    type="button"
+                    onClick={() => setReferralDays(d)}
+                    className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${
+                      referralDays === d
+                        ? 'bg-white text-purple-600 shadow-sm'
+                        : 'text-gray-600 hover:text-gray-900'
+                    }`}
+                  >
+                    {d}일
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* 레퍼럴 데이터 테이블 */}
+            <div className="bg-white rounded-2xl shadow-md border border-gray-200 overflow-hidden">
+              <div className="bg-gradient-to-r from-purple-50 to-indigo-50 px-6 py-5 border-b border-gray-200">
+                <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                  <Link2 className="text-purple-600" size={20} />
+                  레퍼럴 코드별 통계
+                </h2>
+                <p className="text-sm text-gray-500 mt-1">
+                  최근 {referralDays}일 기준
+                </p>
+              </div>
+              <div className="p-6">
+                {referralLoading ? (
+                  <div className="flex items-center justify-center h-40">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+                  </div>
+                ) : referralData.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center h-40">
+                    <div className="w-16 h-16 bg-gray-100 rounded-full mb-3 flex items-center justify-center">
+                      <Link2 className="text-gray-400" size={32} />
+                    </div>
+                    <p className="text-gray-500">아직 추적 데이터가 없습니다</p>
+                    <p className="text-gray-400 text-sm mt-1">링크에 ?ref=코드를 붙여서 공유해보세요</p>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="border-b border-gray-200">
+                          <th className="text-left py-3 px-4 text-sm font-semibold text-gray-600">레퍼럴 코드</th>
+                          <th className="text-right py-3 px-4 text-sm font-semibold text-gray-600">페이지뷰</th>
+                          <th className="text-right py-3 px-4 text-sm font-semibold text-gray-600">방문자(IP)</th>
+                          <th className="text-right py-3 px-4 text-sm font-semibold text-gray-600">가입</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {referralData.map((item, index) => (
+                          <tr key={item.refCode} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                            <td className="py-3 px-4">
+                              <div className="flex items-center gap-2">
+                                <div className={`w-2 h-2 rounded-full ${index === 0 ? 'bg-purple-500' : index === 1 ? 'bg-blue-500' : 'bg-gray-400'}`} />
+                                <span className="font-medium text-gray-900">{item.refCode}</span>
+                              </div>
+                            </td>
+                            <td className="py-3 px-4 text-right">
+                              <span className="font-semibold text-gray-900 tabular-nums">{item.views.toLocaleString()}</span>
+                            </td>
+                            <td className="py-3 px-4 text-right">
+                              <span className="font-semibold text-blue-600 tabular-nums">{item.visitors.toLocaleString()}</span>
+                            </td>
+                            <td className="py-3 px-4 text-right">
+                              {item.signups > 0 ? (
+                                <span className="inline-flex items-center gap-1 bg-green-50 text-green-700 px-2 py-0.5 rounded-full text-sm font-semibold">
+                                  <UserPlus size={14} />
+                                  {item.signups}
+                                </span>
+                              ) : (
+                                <span className="text-gray-400 text-sm">0</span>
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            </div>
           </motion.div>
         )}
       </div>

@@ -1,5 +1,5 @@
-import { Controller, Post, Body, Get, UseGuards, Request, Response, UsePipes, Query } from '@nestjs/common';
-import type { Response as ExpressResponse } from 'express';
+import { Controller, Post, Body, Get, UseGuards, Request, Response, UsePipes, Query, Req } from '@nestjs/common';
+import type { Request as ExpressRequest, Response as ExpressResponse } from 'express';
 import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
@@ -51,7 +51,20 @@ export class AuthController {
   // ── 네이버 소셜 로그인 ──
 
   @Get('naver')
-  naverLogin(@Response() res: ExpressResponse) {
+  naverLogin(
+    @Query('ref') ref: string | undefined,
+    @Response() res: ExpressResponse,
+  ) {
+    // 레퍼럴 코드를 쿠키에 임시 저장 (OAuth 리다이렉트 동안 유지)
+    if (ref) {
+      res.cookie('ref_code', ref, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 10 * 60 * 1000, // 10분
+        path: '/',
+      });
+    }
     const url = this.authService.getNaverLoginUrl();
     res.redirect(url);
   }
@@ -60,11 +73,16 @@ export class AuthController {
   async naverCallback(
     @Query('code') code: string,
     @Query('state') state: string,
+    @Req() req: ExpressRequest,
     @Response() res: ExpressResponse,
   ) {
     try {
-      const result = await this.authService.handleNaverCallback(code, state);
+      const refCode = req.cookies?.ref_code;
+      const result = await this.authService.handleNaverCallback(code, state, refCode);
       const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+
+      // 레퍼럴 쿠키 정리
+      res.clearCookie('ref_code', { path: '/' });
 
       res.cookie('owner_token', result.access_token, {
         httpOnly: true,
@@ -84,7 +102,20 @@ export class AuthController {
   // ── 카카오 소셜 로그인 ──
 
   @Get('kakao')
-  kakaoLogin(@Response() res: ExpressResponse) {
+  kakaoLogin(
+    @Query('ref') ref: string | undefined,
+    @Response() res: ExpressResponse,
+  ) {
+    // 레퍼럴 코드를 쿠키에 임시 저장 (OAuth 리다이렉트 동안 유지)
+    if (ref) {
+      res.cookie('ref_code', ref, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 10 * 60 * 1000, // 10분
+        path: '/',
+      });
+    }
     const url = this.authService.getKakaoLoginUrl();
     res.redirect(url);
   }
@@ -92,11 +123,16 @@ export class AuthController {
   @Get('kakao/callback')
   async kakaoCallback(
     @Query('code') code: string,
+    @Req() req: ExpressRequest,
     @Response() res: ExpressResponse,
   ) {
     try {
-      const result = await this.authService.handleKakaoCallback(code);
+      const refCode = req.cookies?.ref_code;
+      const result = await this.authService.handleKakaoCallback(code, refCode);
       const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+
+      // 레퍼럴 쿠키 정리
+      res.clearCookie('ref_code', { path: '/' });
 
       res.cookie('owner_token', result.access_token, {
         httpOnly: true,

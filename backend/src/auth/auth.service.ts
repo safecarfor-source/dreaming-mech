@@ -69,7 +69,7 @@ export class AuthService {
     return `https://nid.naver.com/oauth2.0/authorize?${params}`;
   }
 
-  async handleNaverCallback(code: string, state: string) {
+  async handleNaverCallback(code: string, state: string, refCode?: string) {
     // 1. code → access_token 교환
     const tokenRes = await axios.get('https://nid.naver.com/oauth2.0/token', {
       params: {
@@ -103,6 +103,7 @@ export class AuthService {
         name,
         profileImage: profile_image,
         provider: 'naver',
+        refCode: refCode || null,
       },
     });
 
@@ -125,7 +126,7 @@ export class AuthService {
     return `https://kauth.kakao.com/oauth/authorize?${params}`;
   }
 
-  async handleKakaoCallback(code: string) {
+  async handleKakaoCallback(code: string, refCode?: string) {
     // 1. code → access_token 교환
     const tokenRes = await axios.post(
       'https://kauth.kakao.com/oauth/token',
@@ -167,6 +168,7 @@ export class AuthService {
         name: profile.nickname,
         profileImage: profile.profile_image_url,
         provider: 'kakao',
+        refCode: refCode || null,
       },
     });
 

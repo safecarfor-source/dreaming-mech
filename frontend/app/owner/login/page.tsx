@@ -2,11 +2,16 @@
 
 import { useSearchParams } from 'next/navigation';
 import { Suspense } from 'react';
+import { getRefCode } from '@/lib/referral';
 
 function LoginContent() {
   const searchParams = useSearchParams();
   const error = searchParams.get('error');
   const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+
+  // localStorage에 저장된 레퍼럴 코드를 OAuth 로그인 URL에 전달
+  const refCode = typeof window !== 'undefined' ? getRefCode() : null;
+  const refParam = refCode ? `?ref=${encodeURIComponent(refCode)}` : '';
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
@@ -28,7 +33,7 @@ function LoginContent() {
 
         <div className="space-y-4">
           <a
-            href={`${apiUrl}/auth/naver`}
+            href={`${apiUrl}/auth/naver${refParam}`}
             className="w-full flex items-center justify-center gap-3 px-6 py-3 bg-[#03C75A] text-white font-semibold rounded-lg hover:bg-[#02b350] transition-colors"
           >
             <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
@@ -38,7 +43,7 @@ function LoginContent() {
           </a>
 
           <a
-            href={`${apiUrl}/auth/kakao`}
+            href={`${apiUrl}/auth/kakao${refParam}`}
             className="w-full flex items-center justify-center gap-3 px-6 py-3 bg-[#FEE500] text-[#191919] font-semibold rounded-lg hover:bg-[#fdd800] transition-colors"
           >
             <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">

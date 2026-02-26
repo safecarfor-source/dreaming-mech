@@ -75,11 +75,13 @@ model Owner {
   status              OwnerStatus @default(PENDING)
   businessLicenseUrl  String?     // 사업자등록증 이미지 URL
   businessName        String?     // 업체명
+  refCode             String?     // 가입 시 사용된 레퍼럴 코드
   createdAt           DateTime    @default(now())
   updatedAt           DateTime    @updatedAt
   mechanics           Mechanic[]
 
   @@index([status])
+  @@index([refCode])
 }
 
 // 관리자 모델
@@ -138,8 +140,10 @@ model PageView {
   userAgent  String?  @db.Text // User-Agent 헤더
   isBot      Boolean  @default(false) // 봇 여부
   referer    String?  // 리퍼러 URL
+  refCode    String?  // 레퍼럴 코드 (?ref=xxx)
   viewedAt   DateTime @default(now())
 
   @@index([path, viewedAt])
   @@index([isBot])
+  @@index([refCode, viewedAt])
 }
