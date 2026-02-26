@@ -118,9 +118,10 @@ export const analyticsApi = {
 
 // Owner Auth API
 export const ownerAuthApi = {
-  getProfile: () => api.get('/auth/profile'),
+  // /owner/* 경로는 JWT 전략에서 owner_token만 사용 → admin 동시 로그인 시에도 올바른 사장님 프로필 반환
+  getProfile: () => api.get('/owner/profile'),
   updateProfile: (data: { phone?: string; businessName?: string; address?: string; name?: string }) =>
-    api.patch('/auth/owner/profile', data),
+    api.patch('/owner/profile', data),
   submitBusinessLicense: (data: { businessLicenseUrl: string; businessName: string }) =>
     api.post('/owner/business-license', data),
   reapply: (data: { businessLicenseUrl: string; businessName: string }) =>

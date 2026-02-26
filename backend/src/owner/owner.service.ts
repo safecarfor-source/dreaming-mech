@@ -166,6 +166,53 @@ export class OwnerService {
     };
   }
 
+  // ── 사장님용: 프로필 조회 ──
+
+  async getProfile(ownerId: number) {
+    const owner = await this.prisma.owner.findUnique({
+      where: { id: ownerId },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        profileImage: true,
+        provider: true,
+        status: true,
+        rejectionReason: true,
+        businessLicenseUrl: true,
+        businessName: true,
+        phone: true,
+        address: true,
+        createdAt: true,
+      },
+    });
+    if (!owner) throw new NotFoundException('사장님을 찾을 수 없습니다.');
+    return owner;
+  }
+
+  // ── 사장님용: 프로필 업데이트 (전화번호 등) ──
+
+  async updateProfile(ownerId: number, data: { phone?: string; businessName?: string; address?: string; name?: string }) {
+    return this.prisma.owner.update({
+      where: { id: ownerId },
+      data: {
+        ...(data.phone !== undefined && { phone: data.phone }),
+        ...(data.businessName !== undefined && { businessName: data.businessName }),
+        ...(data.address !== undefined && { address: data.address }),
+        ...(data.name !== undefined && { name: data.name }),
+      },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        phone: true,
+        businessName: true,
+        address: true,
+        status: true,
+      },
+    });
+  }
+
   // ── 사장님용: 매장 삭제 (본인 매장만, 소프트 삭제) ──
 
   async removeMechanic(ownerId: number, mechanicId: number) {

@@ -64,6 +64,21 @@ export class AdminOwnerController {
 export class OwnerProfileController {
   constructor(private ownerService: OwnerService) {}
 
+  // GET /owner/profile — owner_token 전용 경로로 항상 올바른 사장님 프로필 반환
+  @Get('profile')
+  getProfile(@Request() req) {
+    return this.ownerService.getProfile(req.user.sub);
+  }
+
+  // PATCH /owner/profile — 전화번호 등 프로필 업데이트
+  @Patch('profile')
+  updateProfile(
+    @Request() req,
+    @Body() body: { phone?: string; businessName?: string; address?: string; name?: string },
+  ) {
+    return this.ownerService.updateProfile(req.user.sub, body);
+  }
+
   @Post('business-license')
   submitBusinessLicense(
     @Request() req,
