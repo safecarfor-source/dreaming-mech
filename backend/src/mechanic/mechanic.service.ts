@@ -51,14 +51,30 @@ export class MechanicService {
     }
 
     // sido/sigungu 필터 (정비소 선택 시 지역 기반 조회용)
-    // sido와 sigungu 중 하나라도 있으면 OR 조건으로 매칭
+    // 정식명↔약칭 매핑으로 "충청남도"↔"충남", "인천광역시"↔"인천" 등 모두 매칭
     if (sido || sigungu) {
+      const SIDO_ALIAS: Record<string, string> = {
+        '서울특별시': '서울', '부산광역시': '부산', '대구광역시': '대구',
+        '인천광역시': '인천', '광주광역시': '광주', '대전광역시': '대전',
+        '울산광역시': '울산', '세종특별자치시': '세종',
+        '경기도': '경기', '강원특별자치도': '강원', '강원도': '강원',
+        '충청북도': '충북', '충청남도': '충남',
+        '전라북도': '전북', '전북특별자치도': '전북',
+        '전라남도': '전남', '경상북도': '경북', '경상남도': '경남',
+        '제주특별자치도': '제주',
+      };
       const regionConditions: any[] = [];
       if (sigungu) {
         regionConditions.push({ location: { contains: sigungu, mode: 'insensitive' } });
       }
       if (sido) {
+        // 정식명으로 검색
         regionConditions.push({ location: { contains: sido, mode: 'insensitive' } });
+        // 약칭으로도 검색 (충청남도 → 충남)
+        const alias = SIDO_ALIAS[sido];
+        if (alias) {
+          regionConditions.push({ location: { contains: alias, mode: 'insensitive' } });
+        }
       }
       where.OR = regionConditions;
     }
