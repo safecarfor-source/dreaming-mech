@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { MapPin, Phone } from 'lucide-react';
 import type { Mechanic } from '@/types';
 import { sanitizeText, sanitizePhone } from '@/lib/sanitize';
+import { gtagEvent } from '@/lib/gtag-events';
 
 interface Props {
   mechanic: Mechanic;
@@ -12,11 +13,16 @@ interface Props {
 }
 
 export default function MechanicCard({ mechanic, onClick }: Props) {
+  const handleClick = () => {
+    gtagEvent.mechanicCardClick(mechanic.id, mechanic.name, mechanic.location || '');
+    onClick();
+  };
+
   return (
     <motion.div
       whileHover={{ y: -4 }}
       whileTap={{ scale: 0.98 }}
-      onClick={onClick}
+      onClick={handleClick}
       className="bg-white border border-gray-200 rounded-xl overflow-hidden cursor-pointer group
         shadow-sm hover:shadow-md hover:border-[#7C4DFF]/30
         transition-all duration-300"

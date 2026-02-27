@@ -15,14 +15,17 @@ import GalleryCarousel from './mechanic-detail/GalleryCarousel';
 import QuickInfoRow from './mechanic-detail/QuickInfoRow';
 import ReviewSection from './mechanic-detail/ReviewSection';
 import QuoteRequestForm from './mechanic-detail/QuoteRequestForm';
+import { gtagEvent } from '@/lib/gtag-events';
 
 export default function MechanicModal() {
   const { isOpen, mechanic, close } = useModalStore();
   const [showQuoteForm, setShowQuoteForm] = useState(false);
 
-  // 클릭수 증가
+  // 클릭수 증가 + GA 이벤트
   useEffect(() => {
     if (isOpen && mechanic) {
+      // GA4: 정비사 상세 조회
+      gtagEvent.mechanicDetailView(mechanic.id, mechanic.name, mechanic.location || '');
       mechanicsApi.incrementClick(mechanic.id).catch((error) => {
         if (error?.response?.status !== 400) {
           console.error('Failed to increment click:', error);

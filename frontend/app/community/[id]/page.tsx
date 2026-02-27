@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Layout from '@/components/Layout';
 import { communityApi } from '@/lib/api';
+import { gtagEvent } from '@/lib/gtag-events';
 import { Heart, MessageCircle, Eye, ArrowLeft, MapPin, Send } from 'lucide-react';
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -95,6 +96,7 @@ export default function CommunityPostPage() {
         content: commentText.trim(),
         parentId: replyTo || undefined,
       });
+      gtagEvent.communityCommentCreate(Number(id));
       const res = await communityApi.getPost(id);
       setPost(res.data);
       setCommentText('');
@@ -117,6 +119,7 @@ export default function CommunityPostPage() {
       const res = await communityApi.toggleLike(id);
       setLiked(res.data.liked);
       setLikeCount((prev) => res.data.liked ? prev + 1 : prev - 1);
+      if (res.data.liked) gtagEvent.communityLike('post', Number(id));
     } catch (error: unknown) {
       const err = error as { response?: { status?: number } };
       if (err.response?.status === 401) {

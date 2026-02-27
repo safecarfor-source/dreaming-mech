@@ -3,6 +3,7 @@
 import { useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useState } from 'react';
 import { Shield, Phone, Clock, ArrowRight } from 'lucide-react';
+import { gtagEvent } from '@/lib/gtag-events';
 
 function LoginContent() {
   const searchParams = useSearchParams();
@@ -72,6 +73,7 @@ function LoginContent() {
           {/* 카카오 로그인 버튼 */}
           <a
             href={`${apiUrl}/auth/kakao`}
+            onClick={() => gtagEvent.ownerLoginStart()}
             className="w-full flex items-center justify-center gap-3 px-6 py-3.5 bg-[#FEE500] text-[#191919] font-bold rounded-xl hover:bg-[#F5D800] active:scale-[0.98] transition-all shadow-sm"
           >
             <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">

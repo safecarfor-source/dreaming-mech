@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Layout from '@/components/Layout';
 import { communityApi } from '@/lib/api';
+import { gtagEvent } from '@/lib/gtag-events';
 import { ArrowLeft } from 'lucide-react';
 
 const CATEGORIES = [
@@ -29,6 +30,7 @@ export default function CommunityWritePage() {
     setSubmitting(true);
     try {
       const res = await communityApi.createPost({ title: title.trim(), content: content.trim(), category });
+      gtagEvent.communityPostCreate(category);
       router.push(`/community/${res.data.id}`);
     } catch (error: unknown) {
       const err = error as { response?: { status?: number } };

@@ -193,6 +193,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             <div>
               <p className="text-[var(--text-body)] font-semibold text-white/70 mb-3">바로가기</p>
               <nav className="space-y-2">
+                <Link href="/about" className="block text-[var(--text-caption)] text-white/40 hover:text-brand-400 transition-colors duration-[var(--duration-fast)]">
+                  플랫폼 소개
+                </Link>
                 <Link href="/#map" className="block text-[var(--text-caption)] text-white/40 hover:text-brand-400 transition-colors duration-[var(--duration-fast)]">
                   정비소 찾기
                 </Link>
