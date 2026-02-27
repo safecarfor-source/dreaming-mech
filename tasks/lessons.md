@@ -34,6 +34,21 @@
 2. **customer_token 쿠키 경로**: JwtStrategy에서 /service-inquiries 경로에서 customer_token 추출
 3. **role 기반 접근 제어**: JWT payload의 role('admin'|'owner'|'customer')로 권한 구분
 
+## 배포 & 운영 (2026-02-26 추가)
+1. **DB 컬럼 추가**: 서버에서 직접 `ALTER TABLE` 가능 (Prisma migrate 없이). 단, schema.prisma도 반드시 동기화
+2. **docker-compose 환경변수**: 새 환경변수 추가 시 `docker-compose.prod.yml`에도 반드시 추가. Dockerfile ARG도 체크
+3. **CustomEvent 패턴**: 서로 다른 컴포넌트 간 통신에 `window.dispatchEvent(new Event('이벤트명'))` 활용. 배지 갱신 등에 효과적
+
+## API 동기화 (2026-02-27 추가) ⚠️ 중요
+1. **사장님 API ↔ 관리자 API 동기화**: `mechanic.service.ts`(관리자용)에 기능 추가할 때, `owner.service.ts`(사장님용)에도 **반드시** 동일 로직 적용 체크. 02-26 프로필 버그, 02-27 영업시간 버그 모두 이 패턴
+2. **Prisma JSON 필드 처리**: `operatingHours`, `holidays` 같은 `Json` 타입 필드는 반드시 `toJsonField()` 함수 거쳐야 함. `null` → `Prisma.JsonNull` 변환 필수. 그냥 `null` 전달하면 DB 업데이트 무시됨
+3. **유틸 함수 공유**: 두 서비스가 같은 DB 모델을 다루면, `toJsonField()` 같은 유틸을 별도 파일로 분리하거나, 양쪽에 동일하게 복사
+
+## UX 원칙 (2026-02-27 추가)
+1. **관리자 정보 접근성**: 목록에서 `truncate`/`line-clamp` 사용 시 반드시 상세보기 모달 제공. 관리자는 모든 정보에 즉시 접근할 수 있어야 함
+2. **디자인 통일**: 새 페이지 만들 때 `purple-600` 대신 `#7C4DFF` 사용. Tailwind arbitrary value `[#7C4DFF]`로 통일. 유사 퍼플 혼용 금지
+3. **hover → #6B3FE0**: `#7C4DFF`의 hover 상태는 `#6B3FE0`으로 통일
+
 ---
 
-*마지막 업데이트: 2026-02-23*
+*마지막 업데이트: 2026-02-27*

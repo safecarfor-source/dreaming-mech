@@ -321,4 +321,37 @@ export class OwnerService {
       data: { isActive: false },
     });
   }
+
+  // ── 관리자용: 고객 목록 ──
+
+  async findAllCustomers() {
+    return this.prisma.customer.findMany({
+      orderBy: { createdAt: 'desc' },
+      select: {
+        id: true,
+        kakaoId: true,
+        nickname: true,
+        email: true,
+        phone: true,
+        trackingCode: true,
+        createdAt: true,
+        _count: { select: { serviceInquiries: true } },
+      },
+    });
+  }
+
+  // ── 관리자용: 고객 강제 탈퇴 ──
+
+  async deleteCustomer(id: number) {
+    const customer = await this.prisma.customer.findUnique({ where: { id } });
+    if (!customer) throw new NotFoundException('고객을 찾을 수 없습니다.');
+
+    // 관련 ServiceInquiry 먼저 삭제 (cascade)
+    await this.prisma.serviceInquiry.deleteMany({
+      where: { customerId: id },
+    });
+
+    await this.prisma.customer.delete({ where: { id } });
+    return { message: '고객이 탈퇴 처리되었습니다.' };
+  }
 }

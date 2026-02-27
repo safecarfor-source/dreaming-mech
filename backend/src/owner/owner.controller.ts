@@ -154,3 +154,23 @@ export class OwnerMechanicController {
     return this.ownerService.removeMechanic(req.user.sub, id);
   }
 }
+
+// ── 관리자용: 고객 관리 ──
+
+@Controller('admin/customers')
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles('admin')
+export class AdminCustomerController {
+  constructor(private ownerService: OwnerService) {}
+
+  @Get()
+  findAll() {
+    return this.ownerService.findAllCustomers();
+  }
+
+  @Delete(':id')
+  @HttpCode(HttpStatus.OK)
+  remove(@Param('id', ParseIntPipe) id: number) {
+    return this.ownerService.deleteCustomer(id);
+  }
+}

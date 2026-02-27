@@ -179,6 +179,12 @@ export const adminOwnerApi = {
     api.patch(`/admin/owners/${id}/reject`, { reason }),
 };
 
+// Admin Customer API (관리자용 고객 관리)
+export const adminCustomerApi = {
+  getAll: () => api.get('/admin/customers'),
+  delete: (id: number) => api.delete(`/admin/customers/${id}`),
+};
+
 // Inquiry API (문의)
 export const inquiryApi = {
   // 공개: 문의 등록
@@ -414,6 +420,19 @@ export const trackingLinkApi = {
   // 공개: 클릭 기록
   recordClick: (code: string) =>
     api.post('/tracking-links/click', { code }),
+};
+
+// Community API (커뮤니티 Q&A)
+export const communityApi = {
+  getPosts: (params?: { category?: string; page?: number; limit?: number }) =>
+    api.get('/community/posts', { params }),
+  getPost: (id: number) => api.get(`/community/posts/${id}`),
+  createPost: (data: { title: string; content: string; category: string }) =>
+    api.post('/community/posts', data),
+  createComment: (postId: number, data: { content: string; parentId?: number }) =>
+    api.post(`/community/posts/${postId}/comments`, data),
+  toggleLike: (postId: number) => api.post(`/community/posts/${postId}/like`),
+  deletePost: (id: number) => api.delete(`/community/posts/${id}`),
 };
 
 export default api;

@@ -85,6 +85,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               <Link href="/for-mechanics" className="px-4 py-2 text-[var(--text-body)] text-text-secondary hover:text-brand-500 transition-colors duration-[var(--duration-fast)] rounded-lg hover:bg-brand-50 font-medium">
                 정비사 사장님
               </Link>
+              <Link href="/community" className="px-4 py-2 text-[var(--text-body)] text-text-secondary hover:text-brand-500 transition-colors duration-[var(--duration-fast)] rounded-lg hover:bg-brand-50 font-medium">
+                정비 Q&A
+              </Link>
               <Link href="/inquiry" className="px-4 py-2 text-[var(--text-body)] text-text-secondary hover:text-brand-500 transition-colors duration-[var(--duration-fast)] rounded-lg hover:bg-brand-50 font-medium">
                 문의하기
               </Link>
@@ -136,6 +139,13 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                   className="flex items-center gap-3 px-4 py-4 text-base text-white/90 hover:text-white hover:bg-white/10 rounded-xl font-medium transition-colors"
                 >
                   정비사 사장님
+                </Link>
+                <Link
+                  href="/community"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center gap-3 px-4 py-4 text-base text-white/90 hover:text-white hover:bg-white/10 rounded-xl font-medium transition-colors"
+                >
+                  정비 Q&A
                 </Link>
                 <Link
                   href="/inquiry"

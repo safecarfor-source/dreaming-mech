@@ -162,9 +162,9 @@ export default function MechanicsPage() {
                           <td className="px-6 py-4 max-w-[250px]">
                             <div className="flex items-center gap-3 min-w-0">
                               <div className="w-10 h-10 rounded-lg bg-gray-200 overflow-hidden flex-shrink-0">
-                                {mechanic.mainImageUrl ? (
+                                {(mechanic.mainImageUrl || mechanic.galleryImages?.[0]) ? (
                                   <img
-                                    src={mechanic.mainImageUrl}
+                                    src={mechanic.mainImageUrl || mechanic.galleryImages![0]}
                                     alt={mechanic.name}
                                     className="w-full h-full object-cover"
                                   />

@@ -3,7 +3,7 @@
 > 모든 중요한 결정, 전략, 패턴을 여기에 기록.
 > 세션 시작 시 반드시 이 파일 먼저 읽을 것.
 
-*마지막 업데이트: 2026-02-26*
+*마지막 업데이트: 2026-02-27*
 
 ---
 
@@ -28,7 +28,7 @@
 |------|------|------|------|
 | Phase 1 (MVP) | 완료 | 문의 접수 + 텔레그램 알림 + 카카오 로그인 | ✅ |
 | Phase 1.5 | 완료 | 사장님 승인제 + 통합 문의 API + 공유 링크 | ✅ |
-| Phase 2 | NOW | 통합 문의 관리 UI + 유튜브→플랫폼 연결 | 진행 중 |
+| Phase 2 | NOW | 통합 문의 관리 UI + 커뮤니티 Q&A + 유튜브→플랫폼 연결 | 진행 중 |
 | Phase 3 | 1~2개월 | SEO + 정비소 상세 페이지 + 알림톡 | 대기 |
 | Phase 4 | 3개월+ | 유료화 (무료 5건/월, 기본 30만원 무제한) | 대기 |
 
@@ -68,6 +68,9 @@ Inquiry        — 기존 일반 문의 (고객/사장님 문의 폼)
 TireInquiry    — 타이어 전용 문의 (구형)
 QuoteRequest   — 견적 요청 (특정 정비소 대상)
 Review         — 한줄 리뷰
+Post           — 커뮤니티 게시글 ← Phase 2 신규 (플랜 승인, 구현 대기)
+Comment        — 커뮤니티 댓글 ← Phase 2 신규
+PostLike       — 게시글 좋아요 ← Phase 2 신규
 ClickLog       — 정비소 클릭 통계
 PageView       — 페이지뷰 로그
 SyncMessage    — 폰-컴퓨터 동기화
@@ -239,6 +242,10 @@ STEP 4: 접수 완료
 | 2026-02-26 | 문의관리 배지 실시간 갱신 (CustomEvent 패턴) | ✅ 완료·배포 |
 | 2026-02-26 | 카카오 1계정 = 정비소 1개 제한 | ✅ 완료·배포 |
 | 2026-02-26 | 전략 분석 보고서 작성 (STRATEGY.md 전쟁 타임라인 추가) | ✅ 완료 |
+| 2026-02-27 | 디자인 통일: 전체 Owner 페이지 퍼플 #7C4DFF로 통일 | ✅ 완료·배포 |
+| 2026-02-27 | 버그수정: 사장님 영업시간/휴무일 수정 미반영 (toJsonField 누락) | ✅ 완료·배포 |
+| 2026-02-27 | 문의 상세 모달: 관리자 페이지 고객 클릭→원문 전체 보기 | ✅ 완료·배포 |
+| 2026-02-27 | 커뮤니티 Q&A 플랜 수립 (친한약사 벤치마킹, 플랜 승인) | ✅ 플랜 승인 |
 
 ---
 
@@ -265,6 +272,37 @@ ALLOWED_ORIGINS              # CORS
 NEXT_PUBLIC_API_URL=http://localhost:3001
 NEXT_PUBLIC_NAVER_MAP_CLIENT_ID=cnw5tzm2de
 ```
+
+---
+
+## 🤝 커뮤니티 Q&A 설계 (2026-02-27 플랜 승인)
+
+### 벤치마크: 친한약사 앱
+- 핵심 메커니즘: "답변 = 홍보" 선순환 (정비사가 답변하면 매장이 자동 노출)
+- 양쪽 모두 글쓰기 가능 (고객 + 정비사)
+- 정비사 댓글에 매장 정보 자동 노출 (체크박스 아닌 자동)
+
+### DB 설계 (3 테이블)
+```
+Post (게시글)
+  - authorRole: CUSTOMER | OWNER (다형성)
+  - customerId? / ownerId? (역할에 따라 하나만 사용)
+  - category: REPAIR | TIRE | ENGINE_OIL | BRAKE | GENERAL
+  - title, content, viewCount, likeCount, commentCount
+
+Comment (댓글)
+  - authorRole, customerId?, ownerId?
+  - postId → Post 연결
+  - parentId? → 대댓글
+
+PostLike (좋아요)
+  - postId + authorRole + customerId/ownerId (복합 유니크)
+```
+
+### 프론트엔드 라우트
+- `/community` — 게시판 목록
+- `/community/write` — 글쓰기
+- `/community/[id]` — 게시글 상세 + 댓글
 
 ---
 

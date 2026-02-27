@@ -23,9 +23,9 @@ export default function MechanicCard({ mechanic, onClick }: Props) {
     >
       {/* 이미지 — 1:1 비율 (컴팩트) */}
       <div className="aspect-square bg-gray-100 relative overflow-hidden">
-        {mechanic.mainImageUrl ? (
+        {(mechanic.mainImageUrl || mechanic.galleryImages?.[0]) ? (
           <Image
-            src={mechanic.mainImageUrl}
+            src={mechanic.mainImageUrl || mechanic.galleryImages![0]}
             alt={sanitizeText(mechanic.name)}
             width={200}
             height={200}

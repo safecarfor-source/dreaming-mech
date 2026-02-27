@@ -113,10 +113,10 @@ export default function MechanicModal() {
             <div className="flex-1 overflow-auto">
               <div className="px-4 sm:px-5 py-4 sm:py-5 space-y-4 sm:space-y-5">
                 {/* 대표 이미지 — 16:9 비율 */}
-                {mechanic.mainImageUrl && (
+                {(mechanic.mainImageUrl || mechanic.galleryImages?.[0]) && (
                   <div className="rounded-xl overflow-hidden bg-bg-tertiary aspect-[2/1] relative">
                     <Image
-                      src={mechanic.mainImageUrl}
+                      src={mechanic.mainImageUrl || mechanic.galleryImages![0]}
                       alt={sanitizeText(mechanic.name)}
                       fill
                       className="object-cover"

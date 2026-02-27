@@ -93,6 +93,9 @@ model Owner {
   createdAt           DateTime    @default(now())
   updatedAt           DateTime    @updatedAt
   mechanics           Mechanic[]
+  posts        Post[]
+  comments     Comment[]
+  postLikes    PostLike[]
 
   @@index([status])
 }
@@ -323,6 +326,9 @@ model Customer {
   updatedAt   DateTime @updatedAt
 
   serviceInquiries ServiceInquiry[]
+  posts        Post[]
+  comments     Comment[]
+  postLikes    PostLike[]
 
   @@index([kakaoId])
   @@index([phone])
@@ -441,4 +447,87 @@ model TireInquiry {
   @@index([region])
   @@index([status])
   @@index([createdAt])
+}
+
+// ========================================
+// 커뮤니티 Q&A 모델
+// ========================================
+
+enum PostCategory {
+  REPAIR      // 정비 일반
+  TIRE        // 타이어
+  ENGINE_OIL  // 엔진오일
+  BRAKE       // 브레이크
+  GENERAL     // 자유게시판
+}
+
+enum AuthorRole {
+  CUSTOMER  // 고객
+  OWNER     // 정비사 사장님
+}
+
+model Post {
+  id           Int          @id @default(autoincrement())
+  title        String       @db.VarChar(200)
+  content      String       @db.Text
+  category     PostCategory @default(GENERAL)
+  authorRole   AuthorRole
+  customerId   Int?
+  customer     Customer?    @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  ownerId      Int?
+  owner        Owner?       @relation(fields: [ownerId], references: [id], onDelete: SetNull)
+  viewCount    Int          @default(0)
+  likeCount    Int          @default(0)
+  commentCount Int          @default(0)
+  isActive     Boolean      @default(true)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  comments     Comment[]
+  likes        PostLike[]
+
+  @@index([category, createdAt])
+  @@index([authorRole])
+  @@index([customerId])
+  @@index([ownerId])
+  @@index([isActive, createdAt])
+}
+
+model Comment {
+  id         Int        @id @default(autoincrement())
+  postId     Int
+  post       Post       @relation(fields: [postId], references: [id], onDelete: Cascade)
+  content    String     @db.Text
+  authorRole AuthorRole
+  customerId Int?
+  customer   Customer?  @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  ownerId    Int?
+  owner      Owner?     @relation(fields: [ownerId], references: [id], onDelete: SetNull)
+  parentId   Int?
+  parent     Comment?   @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies    Comment[]  @relation("CommentReplies")
+  isActive   Boolean    @default(true)
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+
+  @@index([postId, createdAt])
+  @@index([customerId])
+  @@index([ownerId])
+  @@index([parentId])
+}
+
+model PostLike {
+  id         Int        @id @default(autoincrement())
+  postId     Int
+  post       Post       @relation(fields: [postId], references: [id], onDelete: Cascade)
+  authorRole AuthorRole
+  customerId Int?
+  customer   Customer?  @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  ownerId    Int?
+  owner      Owner?     @relation(fields: [ownerId], references: [id], onDelete: SetNull)
+  createdAt  DateTime   @default(now())
+
+  @@unique([postId, customerId], name: "unique_customer_like")
+  @@unique([postId, ownerId], name: "unique_owner_like")
+  @@index([postId])
 }

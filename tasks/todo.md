@@ -60,36 +60,57 @@
 
 ---
 
-## ⏳ Phase 2: 통합 문의 관리 시스템 (진행 중)
+## ✅ Phase 2: 통합 문의 관리 시스템 (완료)
 
 ### 백엔드 통합 API ✅ 완료 (2026-02-24)
-- [x] UnifiedInquiryModule 생성
-  - `/Users/shinjeayoun/dreaming-mech/backend/src/unified-inquiry/unified-inquiry.service.ts`
-  - `/Users/shinjeayoun/dreaming-mech/backend/src/unified-inquiry/unified-inquiry.controller.ts`
-  - `/Users/shinjeayoun/dreaming-mech/backend/src/unified-inquiry/unified-inquiry.module.ts`
-- [x] app.module.ts에 모듈 등록
-- [x] 3개 테이블 통합 조회 API
-  - Inquiry (GENERAL) → 정비사 문의
-  - ServiceInquiry (SERVICE) → 고객 정비 문의
-  - QuoteRequest (QUOTE) → 견적 요청
-- [x] 빌드 검증 완료
+- [x] UnifiedInquiryModule 생성 (3개 테이블 통합 조회)
+- [x] 통합 문의 관리 UI (/admin/unified-inquiries) 완성
+- [x] 타입별/상태별 필터 + 페이지네이션 + 공유 메시지 복사
+- [x] 문의 상세 모달 (고객 클릭 시 원문 전체 보기) ✅ 2026-02-27
 
-### API 엔드포인트 (관리자 전용)
-- `GET /unified-inquiries?page=1&limit=20` — 통합 목록 조회
-- `GET /unified-inquiries/count` — 총 건수 (뱃지용)
-- `PATCH /unified-inquiries/:type/:id/status` — 상태 변경
-- `GET /unified-inquiries/:type/:id/share-message` — 공유 메시지
+### 버그 수정 이력
+- [x] 문의관리 배지 실시간 갱신 (CustomEvent 패턴) ✅ 2026-02-26
+- [x] 사장님 영업시간/휴무일 수정 미반영 (toJsonField 누락) ✅ 2026-02-27
+- [x] 디자인 통일: Owner 전체 페이지 퍼플 #7C4DFF ✅ 2026-02-27
 
-### 프론트엔드 (다음 작업)
-- [ ] /admin/inquiries — 통합 문의 관리 페이지
-- [ ] 타입별 필터 (GENERAL/SERVICE/QUOTE)
-- [ ] 상태별 필터 (PENDING/SHARED/COMPLETED)
-- [ ] 페이지네이션 (무한 스크롤)
-- [ ] 공유 메시지 복사 버튼
-- [ ] /inquiry/:id 공개 상세 페이지 — 비회원 시 전화번호 블러 처리
-- [ ] /mechanic/register — 정비사 회원가입 유도 페이지
-- [ ] 정비사 마이페이지 (/mechanic/inquiries) — 문의 목록 조회
-- [ ] 정비사 승인 시 SMS/알림톡 발송
+---
+
+## ⏳ Phase 2.5: 커뮤니티 Q&A (플랜 승인, 구현 대기)
+
+### 벤치마크: 친한약사 앱 ("답변 = 홍보" 모델)
+
+### 백엔드
+- [ ] DB 스키마: Post, Comment, PostLike 테이블 추가
+- [ ] community 모듈 (controller, service, dto)
+- [ ] API: CRUD + 좋아요 + 조회수 + 인기순/최신순 정렬
+- [ ] JwtPayload에 customer role 추가 (버그 수정)
+
+### 프론트엔드
+- [ ] /community — 게시판 목록 (카테고리 필터 + 정렬)
+- [ ] /community/write — 글쓰기 (고객 + 정비사 모두 가능)
+- [ ] /community/[id] — 게시글 상세 + 댓글/대댓글
+- [ ] 정비사 댓글에 매장 정보 자동 노출
+- [ ] 네비게이션에 커뮤니티 탭 추가
+
+### 핵심 결정사항
+- ✅ 고객 + 정비사 모두 글쓰기 가능
+- ✅ 정비사 매장 정보 자동 노출 (체크박스 없이)
+
+---
+
+## ⏳ 남은 작업 (우선순위)
+
+### P0: 유튜브 연동 작전
+- [ ] 플랫폼 소개 페이지 (/about) 제작
+- [ ] TrackingLink 생성 (?utm_source=youtube_video_01)
+
+### P1: SEO + 자연 유입
+- [ ] 메인페이지 메타태그 최적화
+- [ ] 정비소 상세 페이지 SEO (/shop/{region}-{name})
+
+### P2: 정비사 경험 고도화
+- [ ] 정비사 마이페이지 + 문의 알림
+- [ ] 카카오 알림톡 자동 발송 (SOLAPI)
 
 ---
 
@@ -135,3 +156,8 @@
 | 2026-02-23 | Phase 1 MVP 완료 (문의 퍼널 + 카카오 오픈채팅) | ✅ |
 | 2026-02-23 | 코드 테스트 11개 항목 전체 통과 | ✅ |
 | 2026-02-24 | Phase 2: 백엔드 통합 문의 API 구현 | ✅ |
+| 2026-02-26 | 긴급작전: 차량정보 + 개인정보동의 + 사장님 승인제 | ✅ |
+| 2026-02-26 | 배지 실시간 갱신 + 1계정1매장 제한 | ✅ |
+| 2026-02-26 | 전략 분석 보고서 (STRATEGY.md) | ✅ |
+| 2026-02-27 | 영업시간 버그 + 문의 모달 + 디자인 통일 | ✅ |
+| 2026-02-27 | 커뮤니티 Q&A 플랜 수립 (친한약사 벤치마킹) | ✅ 플랜 승인 |

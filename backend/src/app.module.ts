@@ -21,6 +21,7 @@ import { TireInquiryModule } from './tire-inquiry/tire-inquiry.module';
 import { ServiceInquiryModule } from './service-inquiry/service-inquiry.module';
 import { UnifiedInquiryModule } from './unified-inquiry/unified-inquiry.module';
 import { TrackingLinkModule } from './tracking-link/tracking-link.module';
+import { CommunityModule } from './community/community.module';
 
 @Module({
   imports: [
@@ -49,6 +50,7 @@ import { TrackingLinkModule } from './tracking-link/tracking-link.module';
     ServiceInquiryModule,
     UnifiedInquiryModule,
     TrackingLinkModule,
+    CommunityModule,
   ],
   controllers: [AppController],
   providers: [
