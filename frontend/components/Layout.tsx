@@ -61,35 +61,28 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               {/* 구분선 */}
               <div className="hidden md:block w-px h-5 bg-[var(--border)]" />
 
-              {/* 정비사 전용 뱃지 */}
-              <Link
-                href={isForMechanics ? '/' : '/for-mechanics'}
-                className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[var(--text-caption)] font-semibold transition-all duration-[var(--duration-normal)] ${
-                  isForMechanics
-                    ? 'bg-accent-500 text-white'
-                    : 'bg-bg-tertiary text-text-tertiary hover:bg-brand-50 hover:text-brand-500'
-                }`}
-              >
-                정비사 전용
-                <span className={`inline-block w-1.5 h-1.5 rounded-full ${
-                  isForMechanics ? 'bg-white/70' : 'bg-brand-500'
-                }`} />
-              </Link>
+              {/* 정비사 전용 뱃지 — 정비사 페이지에서만 활성 표시, 클릭 시 항상 메인으로 */}
+              {isForMechanics && (
+                <Link
+                  href="/"
+                  className="flex items-center gap-1.5 px-3 py-1 rounded-full text-[var(--text-caption)] font-semibold bg-accent-500 text-white transition-all duration-[var(--duration-normal)]"
+                >
+                  정비사 전용
+                  <span className="inline-block w-1.5 h-1.5 rounded-full bg-white/70" />
+                </Link>
+              )}
             </div>
 
             {/* 오른쪽: 데스크탑 네비게이션 */}
             <nav className="hidden md:flex items-center gap-1">
-              <Link href="/#map" className="px-4 py-2 text-[var(--text-body)] text-text-secondary hover:text-brand-500 transition-colors duration-[var(--duration-fast)] rounded-lg hover:bg-brand-50 font-medium">
-                서비스
+              <Link href="/about" className="px-4 py-2 text-[var(--text-body)] text-text-secondary hover:text-brand-500 transition-colors duration-[var(--duration-fast)] rounded-lg hover:bg-brand-50 font-medium">
+                플랫폼 소개
               </Link>
               <Link href="/for-mechanics" className="px-4 py-2 text-[var(--text-body)] text-text-secondary hover:text-brand-500 transition-colors duration-[var(--duration-fast)] rounded-lg hover:bg-brand-50 font-medium">
                 정비사 사장님
               </Link>
               <Link href="/community" className="px-4 py-2 text-[var(--text-body)] text-text-secondary hover:text-brand-500 transition-colors duration-[var(--duration-fast)] rounded-lg hover:bg-brand-50 font-medium">
                 정비 Q&A
-              </Link>
-              <Link href="/inquiry" className="px-4 py-2 text-[var(--text-body)] text-text-secondary hover:text-brand-500 transition-colors duration-[var(--duration-fast)] rounded-lg hover:bg-brand-50 font-medium">
-                문의하기
               </Link>
 
               {/* 구분선 */}
@@ -127,11 +120,11 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             <div className="flex flex-col h-full">
               <nav className="flex-1 px-6 py-6 space-y-1">
                 <Link
-                  href="/#map"
+                  href="/about"
                   onClick={() => setMobileMenuOpen(false)}
                   className="flex items-center gap-3 px-4 py-4 text-base text-white/90 hover:text-white hover:bg-white/10 rounded-xl font-medium transition-colors"
                 >
-                  서비스
+                  플랫폼 소개
                 </Link>
                 <Link
                   href="/for-mechanics"
@@ -146,13 +139,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                   className="flex items-center gap-3 px-4 py-4 text-base text-white/90 hover:text-white hover:bg-white/10 rounded-xl font-medium transition-colors"
                 >
                   정비 Q&A
-                </Link>
-                <Link
-                  href="/inquiry"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center gap-3 px-4 py-4 text-base text-white/90 hover:text-white hover:bg-white/10 rounded-xl font-medium transition-colors"
-                >
-                  문의하기
                 </Link>
               </nav>
 
@@ -196,14 +182,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 <Link href="/about" className="block text-[var(--text-caption)] text-white/40 hover:text-brand-400 transition-colors duration-[var(--duration-fast)]">
                   플랫폼 소개
                 </Link>
-                <Link href="/#map" className="block text-[var(--text-caption)] text-white/40 hover:text-brand-400 transition-colors duration-[var(--duration-fast)]">
-                  정비소 찾기
-                </Link>
                 <Link href="/for-mechanics" className="block text-[var(--text-caption)] text-white/40 hover:text-brand-400 transition-colors duration-[var(--duration-fast)]">
                   정비사 사장님
-                </Link>
-                <Link href="/inquiry" className="block text-[var(--text-caption)] text-white/40 hover:text-brand-400 transition-colors duration-[var(--duration-fast)]">
-                  문의하기
                 </Link>
                 <Link href="/owner/login" className="block text-[var(--text-caption)] text-white/40 hover:text-brand-400 transition-colors duration-[var(--duration-fast)]">
                   사장님 로그인
