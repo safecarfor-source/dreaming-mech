@@ -92,7 +92,7 @@ export default function CommunityPage() {
 
   return (
     <Layout>
-      <div className="min-h-screen bg-[#F8F7FC]">
+      <div className="min-h-screen bg-[#F8F7FC] pt-14 md:pt-16">
         {/* 헤더 */}
         <div className="bg-white border-b border-gray-200">
           <div className="container mx-auto px-4 md:px-6 py-6">

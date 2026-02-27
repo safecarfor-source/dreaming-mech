@@ -195,7 +195,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             <div>
               <p className="text-[var(--text-body)] font-semibold text-white/70 mb-3">소셜</p>
               <a
-                href="https://www.youtube.com/@dreaming-mechanic"
+                href="https://www.youtube.com/@%EA%BF%88%EA%BE%B8%EB%8A%94%EC%A0%95%EB%B9%84%EC%82%AC"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 text-[var(--text-caption)] text-white/40 hover:text-brand-400 transition-colors duration-[var(--duration-fast)]"
