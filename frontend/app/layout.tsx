@@ -125,12 +125,12 @@ export default function RootLayout({
             description:
               '유튜브 구독자 5.3만 꿈꾸는 정비사가 직접 검증한 전국 자동차 정비소 디렉토리 플랫폼',
             sameAs: [
-              'https://www.youtube.com/@dreaming-mechanic',
+              'https://www.youtube.com/@%EA%BF%88%EA%BE%B8%EB%8A%94%EC%A0%95%EB%B9%84%EC%82%AC',
             ],
           }}
         />
 
-        {/* JSON-LD: WebSite Schema + SearchAction */}
+        {/* JSON-LD: WebSite Schema */}
         <JsonLd
           data={{
             '@context': 'https://schema.org',
@@ -142,6 +142,35 @@ export default function RootLayout({
             publisher: {
               '@id': `${SITE_URL}/#organization`,
             },
+          }}
+        />
+
+        {/* JSON-LD: AutoRepair + LocalBusiness — 구글/네이버 지역 검색 노출 */}
+        <JsonLd
+          data={{
+            '@context': 'https://schema.org',
+            '@type': 'AutoRepair',
+            '@id': `${SITE_URL}/#autorepair`,
+            name: SITE_NAME,
+            url: SITE_URL,
+            logo: `${SITE_URL}/opengraph-image`,
+            description:
+              '20년 경력 정비사가 직접 검증한 전국 자동차 정비소 매칭 플랫폼. 엔진오일, 타이어, 브레이크, 종합 정비 문의를 30초 만에.',
+            areaServed: {
+              '@type': 'Country',
+              name: '대한민국',
+            },
+            serviceType: [
+              '자동차 정비소 매칭',
+              '엔진오일 교환',
+              '타이어 교체',
+              '브레이크 정비',
+              '자동차 종합 정비',
+            ],
+            priceRange: '무료 문의',
+            sameAs: [
+              'https://www.youtube.com/@%EA%BF%88%EA%BE%B8%EB%8A%94%EC%A0%95%EB%B9%84%EC%82%AC',
+            ],
           }}
         />
 
