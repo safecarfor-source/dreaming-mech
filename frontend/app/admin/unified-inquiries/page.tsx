@@ -16,6 +16,7 @@ import {
   Link2,
   X,
   Eye,
+  Trash2,
 } from 'lucide-react';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { unifiedInquiryApi } from '@/lib/api';
@@ -33,6 +34,7 @@ const TYPE_LABELS: Record<string, { label: string; color: string; icon: any }> =
   SERVICE: { label: '서비스', color: 'bg-purple-100 text-purple-700', icon: Wrench },
   GENERAL: { label: '일반', color: 'bg-blue-100 text-blue-700', icon: MessageSquare },
   QUOTE: { label: '견적', color: 'bg-amber-100 text-amber-700', icon: FileText },
+  TIRE: { label: '타이어', color: 'bg-green-100 text-green-700', icon: Wrench },
 };
 
 const STATUS_OPTIONS = [
@@ -49,7 +51,7 @@ const STATUS_COLORS: Record<string, string> = {
   COMPLETED: 'bg-gray-100 text-gray-500',
 };
 
-type FilterType = 'ALL' | 'SERVICE' | 'GENERAL' | 'QUOTE';
+type FilterType = 'ALL' | 'SERVICE' | 'GENERAL' | 'QUOTE' | 'TIRE';
 
 export default function UnifiedInquiriesPage() {
   const [inquiries, setInquiries] = useState<UnifiedInquiry[]>([]);
@@ -105,6 +107,17 @@ export default function UnifiedInquiriesPage() {
       window.dispatchEvent(new Event('badges-refresh'));
     } catch {
       alert('상태 변경에 실패했습니다.');
+    }
+  };
+
+  const handleDelete = async (type: string, id: number) => {
+    if (!confirm('이 문의를 삭제하시겠습니까? 복구할 수 없습니다.')) return;
+    try {
+      await unifiedInquiryApi.delete(type, id);
+      fetchInquiries();
+      window.dispatchEvent(new Event('badges-refresh'));
+    } catch {
+      alert('삭제에 실패했습니다.');
     }
   };
 
@@ -175,6 +188,7 @@ export default function UnifiedInquiriesPage() {
             { key: 'SERVICE' as FilterType, label: '서비스', icon: Wrench },
             { key: 'GENERAL' as FilterType, label: '일반', icon: MessageSquare },
             { key: 'QUOTE' as FilterType, label: '견적', icon: FileText },
+            { key: 'TIRE' as FilterType, label: '🛞 타이어', icon: Wrench },
           ].map((tab) => (
             <button
               key={tab.key}
@@ -323,6 +337,15 @@ export default function UnifiedInquiriesPage() {
                         전화
                       </a>
                     )}
+
+                    {/* 삭제 버튼 */}
+                    <button
+                      onClick={() => handleDelete(inq.type, inq.id)}
+                      className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-red-400 hover:bg-red-50 hover:text-red-600 rounded-lg transition-colors"
+                    >
+                      <Trash2 size={14} />
+                      삭제
+                    </button>
 
                     {/* 상태 셀렉트 */}
                     <select
@@ -487,7 +510,19 @@ export default function UnifiedInquiriesPage() {
               </div>
 
               {/* 모달 푸터 */}
-              <div className="px-6 py-4 border-t border-gray-100 flex justify-end">
+              <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-between">
+                <button
+                  onClick={() => {
+                    if (confirm('이 문의를 삭제하시겠습니까?')) {
+                      handleDelete(selectedInquiry.type, selectedInquiry.id);
+                      setSelectedInquiry(null);
+                    }
+                  }}
+                  className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-red-500 hover:bg-red-50 text-sm font-medium transition-colors"
+                >
+                  <Trash2 size={15} />
+                  삭제
+                </button>
                 <button
                   onClick={() => setSelectedInquiry(null)}
                   className="px-5 py-2 rounded-xl bg-gray-100 text-gray-600 text-sm font-medium hover:bg-gray-200 transition-colors"

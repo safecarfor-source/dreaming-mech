@@ -3,7 +3,7 @@ import { PrismaService } from '../prisma/prisma.service';
 
 export interface UnifiedInquiry {
   id: number;
-  type: 'GENERAL' | 'SERVICE' | 'QUOTE';
+  type: 'GENERAL' | 'SERVICE' | 'QUOTE' | 'TIRE';
   name?: string;
   phone?: string;
   regionSido?: string;
@@ -26,7 +26,7 @@ export class UnifiedInquiryService {
 
   async findAll(page: number = 1, limit: number = 20) {
     // 3개 테이블에서 병렬 조회
-    const [inquiries, serviceInquiries, quoteRequests] = await Promise.all([
+    const [inquiries, serviceInquiries, quoteRequests, tireInquiries] = await Promise.all([
       this.prisma.inquiry.findMany({
         orderBy: { createdAt: 'desc' },
       }),
@@ -47,6 +47,9 @@ export class UnifiedInquiryService {
             select: { id: true, name: true },
           },
         },
+        orderBy: { createdAt: 'desc' },
+      }),
+      this.prisma.tireInquiry.findMany({
         orderBy: { createdAt: 'desc' },
       }),
     ]);
@@ -103,6 +106,29 @@ export class UnifiedInquiryService {
       });
     }
 
+    // TireInquiry → TIRE
+    const TIRE_SERVICE_MAP: Record<string, string> = {
+      REPLACEMENT: '타이어 교체',
+      REPAIR: '타이어 수리',
+      BALANCE: '휠 밸런스',
+      PUNCTURE: '펑크 수리',
+      INSPECTION: '타이어 점검',
+    };
+    for (const tire of tireInquiries) {
+      unified.push({
+        id: tire.id,
+        type: 'TIRE',
+        regionSido: tire.region,
+        regionSigungu: tire.subRegion || undefined,
+        serviceType: tire.serviceType,
+        carModel: tire.carModel || undefined,
+        description: tire.description || undefined,
+        status: tire.status === 'IN_PROGRESS' ? 'CONNECTED' : tire.status === 'CANCELLED' ? 'COMPLETED' : tire.status,
+        createdAt: tire.createdAt.toISOString(),
+        shareUrl: '',  // 타이어는 공유 링크 없음
+      });
+    }
+
     // 시간순 정렬 (최신순)
     unified.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
@@ -121,17 +147,19 @@ export class UnifiedInquiryService {
   }
 
   async getCount() {
-    const [inqCount, svcCount, qrCount] = await Promise.all([
+    const [inqCount, svcCount, qrCount, tireCount] = await Promise.all([
       this.prisma.inquiry.count({ where: { isRead: false } }),
       this.prisma.serviceInquiry.count({ where: { status: 'PENDING' } }),
       this.prisma.quoteRequest.count({ where: { status: 'PENDING' } }),
+      this.prisma.tireInquiry.count({ where: { status: 'PENDING' } }),
     ]);
 
     return {
-      total: inqCount + svcCount + qrCount,
+      total: inqCount + svcCount + qrCount + tireCount,
       inquiries: inqCount,
       serviceInquiries: svcCount,
       quoteRequests: qrCount,
+      tireInquiries: tireCount,
     };
   }
 
@@ -159,6 +187,28 @@ export class UnifiedInquiryService {
           where: { id },
           data: { status: status as any },
         });
+      case 'TIRE':
+        return this.prisma.tireInquiry.update({
+          where: { id },
+          data: {
+            status: status === 'CONNECTED' ? 'IN_PROGRESS' : status === 'PENDING' ? 'PENDING' : 'COMPLETED' as any,
+          },
+        });
+      default:
+        throw new Error('Unknown type');
+    }
+  }
+
+  async delete(type: string, id: number) {
+    switch (type) {
+      case 'GENERAL':
+        return this.prisma.inquiry.delete({ where: { id } });
+      case 'SERVICE':
+        return this.prisma.serviceInquiry.delete({ where: { id } });
+      case 'QUOTE':
+        return this.prisma.quoteRequest.delete({ where: { id } });
+      case 'TIRE':
+        return this.prisma.tireInquiry.delete({ where: { id } });
       default:
         throw new Error('Unknown type');
     }

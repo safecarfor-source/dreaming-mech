@@ -396,6 +396,9 @@ export const unifiedInquiryApi = {
 
   getShareMessage: (type: string, id: number) =>
     api.get<{ message: string }>(`/unified-inquiries/${type.toLowerCase()}/${id}/share-message`),
+
+  delete: (type: string, id: number) =>
+    api.delete(`/unified-inquiries/${type.toLowerCase()}/${id}`),
 };
 
 // 추적 링크 API

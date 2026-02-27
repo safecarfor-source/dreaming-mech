@@ -238,7 +238,7 @@ export interface CustomerAuthState {
 // 통합 문의 타입
 export interface UnifiedInquiry {
   id: number;
-  type: 'GENERAL' | 'SERVICE' | 'QUOTE';
+  type: 'GENERAL' | 'SERVICE' | 'QUOTE' | 'TIRE';
   name?: string;
   phone?: string;
   regionSido?: string;

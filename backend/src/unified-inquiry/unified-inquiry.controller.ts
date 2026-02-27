@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Patch,
+  Delete,
   Param,
   Body,
   Query,
@@ -64,6 +65,20 @@ export class UnifiedInquiryController {
       throw new BadRequestException('관리자만 상태를 변경할 수 있습니다.');
     }
     return this.service.updateStatus(type.toUpperCase(), id, status);
+  }
+
+  // 문의 삭제 (관리자)
+  @Delete(':type/:id')
+  @UseGuards(JwtAuthGuard)
+  async deleteInquiry(
+    @Param('type') type: string,
+    @Param('id', ParseIntPipe) id: number,
+    @Request() req,
+  ) {
+    if (req.user.role !== 'admin') {
+      throw new BadRequestException('관리자만 삭제할 수 있습니다.');
+    }
+    return this.service.delete(type.toUpperCase(), id);
   }
 
   // 공유 메시지 (관리자)
