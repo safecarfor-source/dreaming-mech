@@ -5,7 +5,7 @@ import OwnerLayout from '@/components/owner/OwnerLayout';
 import { ownerMechanicsApi, ownerAuthApi, ownerInquiriesApi } from '@/lib/api';
 import { Mechanic, Owner } from '@/types';
 import Link from 'next/link';
-import { Plus, Store, Eye, X, ChevronRight, Clock, MapPin, Wrench, Car, Phone, User, Link2 } from 'lucide-react';
+import { Plus, Store, Eye, X, ChevronRight, Clock, MapPin, Wrench, Car, Phone, User, Link2, MessageSquare } from 'lucide-react';
 
 type OwnerInquiry = {
   id: number;
@@ -151,7 +151,7 @@ export default function OwnerDashboardPage() {
       </div>
 
       {/* 알림톡 수신 설정 */}
-      <div className="bg-white rounded-xl p-6 shadow-sm mb-6">
+      <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 mb-6">
         <div className="flex items-center gap-2 mb-4">
           <span className="text-xl">📱</span>
           <h2 className="text-lg font-bold text-gray-900">알림톡 수신 설정</h2>
@@ -193,11 +193,11 @@ export default function OwnerDashboardPage() {
       </div>
 
       {/* 통계 카드 */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-        <div className="bg-white rounded-xl p-6 shadow-sm">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-8">
+        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-purple-100 rounded-lg">
-              <Store size={20} className="text-purple-600" />
+              <Store size={20} className="text-[#7C4DFF]" />
             </div>
             <div>
               <p className="text-sm text-gray-500">등록된 매장</p>
@@ -205,7 +205,7 @@ export default function OwnerDashboardPage() {
             </div>
           </div>
         </div>
-        <div className="bg-white rounded-xl p-6 shadow-sm">
+        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-blue-100 rounded-lg">
               <Eye size={20} className="text-blue-600" />
@@ -218,19 +218,21 @@ export default function OwnerDashboardPage() {
             </div>
           </div>
         </div>
-        <div className="bg-white rounded-xl p-6 shadow-sm flex items-center justify-center">
-          <Link
-            href="/owner/mechanics/new"
-            className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
-          >
-            <Plus size={18} />
-            새 매장 등록
-          </Link>
+        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-amber-100 rounded-lg">
+              <MessageSquare size={20} className="text-amber-600" />
+            </div>
+            <div>
+              <p className="text-sm text-gray-500">고객 문의</p>
+              <p className="text-2xl font-bold">{inquiries.length}</p>
+            </div>
+          </div>
         </div>
       </div>
 
       {/* 고객 문의 */}
-      <div className="bg-white rounded-xl shadow-sm mb-8">
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 mb-8">
         <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-gray-100">
           <div className="flex items-center gap-2">
             <span className="text-xl">📋</span>
@@ -241,15 +243,15 @@ export default function OwnerDashboardPage() {
               </span>
             )}
           </div>
-          <p className="text-xs text-gray-400">내 정비소를 선택한 고객 문의만 표시됩니다</p>
+          <p className="text-xs text-gray-500">내 정비소를 선택한 고객 문의만 표시됩니다</p>
         </div>
 
         {loadingInquiries ? (
-          <div className="text-center text-gray-400 py-10">불러오는 중...</div>
+          <div className="text-center text-gray-500 py-10">불러오는 중...</div>
         ) : inquiries.length === 0 ? (
           <div className="text-center py-10">
-            <p className="text-gray-400 text-sm">아직 접수된 문의가 없습니다.</p>
-            <p className="text-gray-300 text-xs mt-1">고객이 문의 시 내 정비소를 선택하면 여기에 표시됩니다.</p>
+            <p className="text-gray-500 text-sm">아직 접수된 문의가 없습니다.</p>
+            <p className="text-gray-500 text-xs mt-1">고객이 문의 시 내 정비소를 선택하면 여기에 표시됩니다.</p>
           </div>
         ) : (
           <div className="divide-y divide-gray-50">
@@ -294,7 +296,7 @@ export default function OwnerDashboardPage() {
                       </div>
                       {/* 셋째 줄: 추가 설명 미리보기 */}
                       {inq.description && (
-                        <p className="text-xs text-gray-400 mt-1 truncate">💬 {inq.description}</p>
+                        <p className="text-xs text-gray-500 mt-1 truncate">💬 {inq.description}</p>
                       )}
                     </div>
                     <div className="flex-shrink-0 text-right">
@@ -302,9 +304,9 @@ export default function OwnerDashboardPage() {
                         {formatDateTime(inq.createdAt)}
                       </p>
                       {shareInfo && (
-                        <p className="text-xs text-gray-400 mt-0.5">클릭 {shareInfo.clickCount}회</p>
+                        <p className="text-xs text-gray-500 mt-0.5">클릭 {shareInfo.clickCount}회</p>
                       )}
-                      <ChevronRight size={14} className="text-gray-300 group-hover:text-[#7C4DFF] ml-auto mt-1 transition-colors" />
+                      <ChevronRight size={14} className="text-gray-400 group-hover:text-[#7C4DFF] ml-auto mt-1 transition-colors" />
                     </div>
                   </div>
                 </button>
@@ -453,7 +455,7 @@ export default function OwnerDashboardPage() {
               )}
 
               {/* 문의 ID */}
-              <p className="text-xs text-gray-300 text-center">문의 번호 #{selectedInquiry.id}</p>
+              <p className="text-xs text-gray-400 text-center">문의 번호 #{selectedInquiry.id}</p>
             </div>
           </div>
         </div>
@@ -464,11 +466,11 @@ export default function OwnerDashboardPage() {
         <div className="text-center text-gray-500 py-8">로딩 중...</div>
       ) : mechanics.length === 0 ? (
         <div className="bg-white rounded-xl p-12 text-center shadow-sm">
-          <Store size={48} className="mx-auto text-gray-300 mb-4" />
+          <Store size={48} className="mx-auto text-gray-400 mb-4" />
           <p className="text-gray-500 mb-4">아직 등록된 매장이 없습니다.</p>
           <Link
             href="/owner/mechanics/new"
-            className="inline-flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-[#7C4DFF] text-white rounded-lg hover:bg-[#6B3FE0] transition-colors"
           >
             <Plus size={18} />
             첫 매장 등록하기
@@ -477,18 +479,18 @@ export default function OwnerDashboardPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {mechanics.map((m) => (
-            <div key={m.id} className="bg-white rounded-xl p-6 shadow-sm">
+            <div key={m.id} className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
               <div className="flex items-start justify-between">
                 <div>
                   <h3 className="font-bold text-gray-900">{m.name}</h3>
                   <p className="text-sm text-gray-500 mt-1">{m.address}</p>
-                  <p className="text-sm text-gray-400 mt-1">
+                  <p className="text-sm text-gray-500 mt-1">
                     조회수: {m.clickCount}
                   </p>
                 </div>
                 <Link
                   href={`/owner/mechanics/${m.id}/edit`}
-                  className="text-sm text-purple-600 hover:text-purple-800"
+                  className="text-sm text-[#7C4DFF] hover:text-[#6B3FE0] transition-colors"
                 >
                   수정
                 </Link>

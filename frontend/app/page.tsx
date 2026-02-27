@@ -294,10 +294,10 @@ function HomeContent() {
                     value={regionSearchQuery}
                     onChange={(e) => setRegionSearchQuery(e.target.value)}
                     placeholder="지역명 검색 (예: 수원시, 강남구)"
-                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-[#7C4DFF] focus:outline-none"
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-200 focus:border-[#7C4DFF] outline-none transition-all"
                   />
                   {regionSearchResults.length > 0 && (
-                    <div className="absolute top-full mt-2 w-full bg-white border-2 border-gray-200 rounded-lg shadow-lg z-10 max-h-64 overflow-y-auto">
+                    <div className="absolute top-full mt-2 w-full bg-white border border-gray-200 rounded-xl shadow-xl z-10 max-h-64 overflow-y-auto">
                       {regionSearchResults.map((region, idx) => (
                         <button
                           key={idx}
@@ -318,8 +318,8 @@ function HomeContent() {
                     <button
                       key={idx}
                       onClick={() => handleRegionSelect(region)}
-                      className="px-4 py-3 border-2 border-[#7C4DFF] text-[#7C4DFF] rounded-lg
-                        hover:bg-[#7C4DFF] hover:text-white transition-all font-semibold text-sm"
+                      className="px-4 py-3 border border-[#7C4DFF]/30 text-[#7C4DFF] rounded-xl
+                        hover:bg-[#7C4DFF] hover:text-white hover:border-[#7C4DFF] transition-all font-semibold text-sm"
                     >
                       {region.display}
                     </button>
@@ -355,7 +355,7 @@ function HomeContent() {
                     <button
                       key={service.type}
                       onClick={() => handleServiceSelect(service.type)}
-                      className="p-6 border-2 border-gray-300 rounded-xl hover:border-[#7C4DFF] hover:bg-[#F5F3FF]
+                      className="p-6 border border-gray-200 rounded-xl hover:border-[#7C4DFF] hover:bg-[#F5F3FF] hover:shadow-md
                         transition-all group"
                     >
                       <div className="text-4xl mb-2">{service.icon}</div>
@@ -402,10 +402,10 @@ function HomeContent() {
                         <button
                           type="button"
                           onClick={() => setSelectedMechanicId(null)}
-                          className={`w-full text-left px-4 py-3 rounded-lg border-2 transition-all text-sm ${
+                          className={`w-full text-left px-4 py-3 rounded-lg transition-all text-sm ${
                             selectedMechanicId === null
-                              ? 'border-[#7C4DFF] bg-[#F5F3FF] text-[#7C4DFF] font-semibold'
-                              : 'border-gray-200 hover:border-gray-300 text-gray-600'
+                              ? 'border-2 border-[#7C4DFF] bg-[#F5F3FF] text-[#7C4DFF] font-semibold'
+                              : 'border border-gray-200 hover:border-gray-300 text-gray-600'
                           }`}
                         >
                           🏪 선택 안함 (가장 빠른 정비소 연결)
@@ -416,10 +416,10 @@ function HomeContent() {
                             key={mechanic.id}
                             type="button"
                             onClick={() => setSelectedMechanicId(mechanic.id)}
-                            className={`w-full text-left px-4 py-3 rounded-lg border-2 transition-all ${
+                            className={`w-full text-left px-4 py-3 rounded-lg transition-all ${
                               selectedMechanicId === mechanic.id
-                                ? 'border-[#7C4DFF] bg-[#F5F3FF]'
-                                : 'border-gray-200 hover:border-[#7C4DFF] hover:bg-[#F5F3FF]/50'
+                                ? 'border-2 border-[#7C4DFF] bg-[#F5F3FF]'
+                                : 'border border-gray-200 hover:border-[#7C4DFF] hover:bg-[#F5F3FF]/50'
                             }`}
                           >
                             <div className="flex items-start gap-2">
@@ -459,7 +459,7 @@ function HomeContent() {
                       value={name}
                       onChange={(e) => setName(e.target.value)}
                       placeholder="홍길동"
-                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-[#7C4DFF] focus:outline-none"
+                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-200 focus:border-[#7C4DFF] outline-none transition-all"
                     />
                   </div>
 
@@ -473,7 +473,7 @@ function HomeContent() {
                       onChange={handlePhoneChange}
                       placeholder="010-0000-0000"
                       maxLength={13}
-                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-[#7C4DFF] focus:outline-none"
+                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-200 focus:border-[#7C4DFF] outline-none transition-all"
                     />
                   </div>
 
@@ -486,7 +486,7 @@ function HomeContent() {
                       value={vehicleNumber}
                       onChange={(e) => setVehicleNumber(e.target.value)}
                       placeholder="예: 12가 3456"
-                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-[#7C4DFF] focus:outline-none"
+                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-200 focus:border-[#7C4DFF] outline-none transition-all"
                     />
                   </div>
 
@@ -499,7 +499,7 @@ function HomeContent() {
                       value={vehicleModel}
                       onChange={(e) => setVehicleModel(e.target.value)}
                       placeholder="예: 현대 아반떼, 기아 K5"
-                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-[#7C4DFF] focus:outline-none"
+                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-200 focus:border-[#7C4DFF] outline-none transition-all"
                     />
                   </div>
 
@@ -512,7 +512,7 @@ function HomeContent() {
                       onChange={(e) => setDescription(e.target.value)}
                       placeholder="예: 타이어 사이즈, 증상 등"
                       rows={3}
-                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-[#7C4DFF] focus:outline-none resize-none"
+                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-200 focus:border-[#7C4DFF] outline-none transition-all resize-none"
                     />
                   </div>
 

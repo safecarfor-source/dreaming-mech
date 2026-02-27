@@ -42,7 +42,7 @@ export default function OwnerMechanicsPage() {
         <h1 className="text-2xl font-bold text-gray-900">내 매장 관리</h1>
         <Link
           href="/owner/mechanics/new"
-          className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm"
+          className="flex items-center gap-2 px-4 py-2 bg-[#7C4DFF] text-white rounded-lg hover:bg-[#6B3FE0] transition-colors text-sm"
         >
           <Plus size={16} />
           매장 추가
@@ -79,7 +79,7 @@ export default function OwnerMechanicsPage() {
                     <div className="flex items-center justify-end gap-2">
                       <Link
                         href={`/owner/mechanics/${m.id}/edit`}
-                        className="p-2 text-gray-400 hover:text-purple-600 transition-colors"
+                        className="p-2 text-gray-400 hover:text-[#7C4DFF] transition-colors"
                       >
                         <Pencil size={16} />
                       </Link>

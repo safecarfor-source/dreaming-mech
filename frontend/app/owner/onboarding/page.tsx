@@ -71,7 +71,7 @@ export default function OwnerOnboardingPage() {
       {/* 헤더 */}
       <div className="bg-white border-b border-gray-100 px-4 py-4">
         <div className="max-w-lg mx-auto flex items-center gap-3">
-          <div className="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center">
+          <div className="w-8 h-8 bg-[#7C4DFF] rounded-lg flex items-center justify-center">
             <Wrench size={16} className="text-white" />
           </div>
           <span className="font-bold text-gray-900">꿈꾸는정비사</span>
@@ -84,7 +84,7 @@ export default function OwnerOnboardingPage() {
           <h1 className="text-2xl font-bold text-gray-900 mb-2">정보 등록</h1>
           <p className="text-gray-500 text-sm leading-relaxed">
             고객 문의를 받으려면 아래 정보를 입력해주세요.<br />
-            <span className="text-purple-600 font-medium">입력 후 관리자 승인</span>을 거쳐 서비스 이용이 가능합니다.
+            <span className="text-[#7C4DFF] font-medium">입력 후 관리자 승인</span>을 거쳐 서비스 이용이 가능합니다.
           </p>
         </div>
 
@@ -141,7 +141,7 @@ export default function OwnerOnboardingPage() {
           <button
             onClick={handleSubmit}
             disabled={saving}
-            className="w-full bg-purple-600 text-white py-4 rounded-xl font-bold text-base hover:bg-purple-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+            className="w-full bg-[#7C4DFF] text-white py-4 rounded-xl font-bold text-base hover:bg-[#6B3FE0] disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
           >
             {saving ? (
               '저장 중...'

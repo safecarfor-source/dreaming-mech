@@ -1,5 +1,15 @@
 import { Injectable, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+
+/**
+ * null 값을 Prisma.JsonNull로 변환 (Json? 필드용)
+ */
+function toJsonField(value: any): any {
+  if (value === null) return Prisma.JsonNull;
+  if (value === undefined) return undefined;
+  return value;
+}
 
 @Injectable()
 export class OwnerService {
@@ -137,11 +147,16 @@ export class OwnerService {
       throw new BadRequestException('하나의 계정으로 정비소는 1개만 등록할 수 있습니다.');
     }
 
+    // Json? 필드의 null 처리
+    const createData: any = { ...data };
+    if ('operatingHours' in createData) createData.operatingHours = toJsonField(createData.operatingHours);
+    if ('holidays' in createData) createData.holidays = toJsonField(createData.holidays);
+
     const mechanic = await this.prisma.mechanic.create({
       data: {
-        ...data,
+        ...createData,
         ownerId,
-        galleryImages: data.galleryImages || [],
+        galleryImages: createData.galleryImages || [],
       },
     });
 
@@ -162,9 +177,14 @@ export class OwnerService {
     if (!mechanic) throw new NotFoundException('매장을 찾을 수 없습니다.');
     if (mechanic.ownerId !== ownerId) throw new ForbiddenException('본인 매장만 수정할 수 있습니다.');
 
+    // Json? 필드의 null 처리
+    const processedData: any = { ...data };
+    if ('operatingHours' in processedData) processedData.operatingHours = toJsonField(processedData.operatingHours);
+    if ('holidays' in processedData) processedData.holidays = toJsonField(processedData.holidays);
+
     const updated = await this.prisma.mechanic.update({
       where: { id: mechanicId },
-      data,
+      data: processedData,
     });
 
     return {

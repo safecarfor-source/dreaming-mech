@@ -14,6 +14,8 @@ import {
   FileText,
   Wrench,
   Link2,
+  X,
+  Eye,
 } from 'lucide-react';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { unifiedInquiryApi } from '@/lib/api';
@@ -59,6 +61,7 @@ export default function UnifiedInquiriesPage() {
   const [loading, setLoading] = useState(true);
   const [copiedLink, setCopiedLink] = useState<string | null>(null);
   const [copiedMsg, setCopiedMsg] = useState<string | null>(null);
+  const [selectedInquiry, setSelectedInquiry] = useState<UnifiedInquiry | null>(null);
 
   const fetchInquiries = useCallback(async () => {
     setLoading(true);
@@ -241,7 +244,12 @@ export default function UnifiedInquiriesPage() {
                   <div className="mb-3">
                     <div className="flex items-center gap-3 mb-1">
                       {inq.name && (
-                        <span className="font-semibold text-gray-900">{inq.name}</span>
+                        <button
+                          onClick={() => setSelectedInquiry(inq)}
+                          className="font-semibold text-[#7C4DFF] hover:underline cursor-pointer"
+                        >
+                          {inq.name}
+                        </button>
                       )}
                       {inq.phone && (
                         <a
@@ -262,6 +270,15 @@ export default function UnifiedInquiriesPage() {
                       <p className="text-sm text-gray-600 line-clamp-2">
                         {inq.description}
                       </p>
+                    )}
+                    {inq.description && inq.description.length >= 100 && (
+                      <button
+                        onClick={() => setSelectedInquiry(inq)}
+                        className="mt-1 flex items-center gap-1 text-xs text-[#7C4DFF] hover:underline"
+                      >
+                        <Eye size={12} />
+                        자세히 보기
+                      </button>
                     )}
                     {inq.mechanicName && (
                       <p className="text-xs text-gray-500 mt-1">
@@ -351,6 +368,137 @@ export default function UnifiedInquiriesPage() {
           </div>
         )}
       </div>
+
+      {/* 문의 상세 보기 모달 */}
+      {selectedInquiry && (() => {
+        const inq = selectedInquiry;
+        const typeInfo = TYPE_LABELS[inq.type] || TYPE_LABELS.GENERAL;
+        const serviceInfo = inq.serviceType ? SERVICE_TYPE_MAP[inq.serviceType] : null;
+        return (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}
+            onClick={() => setSelectedInquiry(null)}
+          >
+            <div
+              className="bg-white rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* 모달 헤더 */}
+              <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+                <div className="flex items-center gap-2">
+                  <span className={`px-2.5 py-0.5 rounded text-xs font-semibold ${typeInfo.color}`}>
+                    {typeInfo.label}
+                  </span>
+                  {serviceInfo && (
+                    <span className="text-sm text-gray-600">
+                      {serviceInfo.emoji} {serviceInfo.label}
+                    </span>
+                  )}
+                </div>
+                <button
+                  onClick={() => setSelectedInquiry(null)}
+                  className="p-1.5 rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              {/* 모달 본문 */}
+              <div className="px-6 py-5 space-y-4">
+                {/* 고객 정보 */}
+                <div className="space-y-2">
+                  {inq.name && (
+                    <div className="flex items-center gap-3">
+                      <span className="text-base">👤</span>
+                      <span className="font-semibold text-gray-900">{inq.name}</span>
+                    </div>
+                  )}
+                  {inq.phone && (
+                    <div className="flex items-center gap-3">
+                      <span className="text-base">📞</span>
+                      <a
+                        href={`tel:${inq.phone}`}
+                        className="text-[#7C4DFF] hover:underline font-medium"
+                      >
+                        {inq.phone}
+                      </a>
+                    </div>
+                  )}
+                  {(inq.regionSido || inq.regionSigungu) && (
+                    <div className="flex items-center gap-3">
+                      <span className="text-base">📍</span>
+                      <span className="text-gray-700">
+                        {inq.regionSido} {inq.regionSigungu}
+                        {serviceInfo ? ` · ${serviceInfo.emoji} ${serviceInfo.label}` : ''}
+                      </span>
+                    </div>
+                  )}
+                  {inq.carModel && (
+                    <div className="flex items-center gap-3">
+                      <span className="text-base">🚗</span>
+                      <span className="text-gray-700">{inq.carModel}</span>
+                    </div>
+                  )}
+                  {inq.mechanicName && (
+                    <div className="flex items-center gap-3">
+                      <span className="text-base">🔧</span>
+                      <span className="text-gray-700">요청 정비소: {inq.mechanicName}</span>
+                    </div>
+                  )}
+                  {inq.trackingLinkName && (
+                    <div className="flex items-center gap-3">
+                      <span className="text-base">🔗</span>
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700">
+                        <Link2 size={12} />
+                        {inq.trackingLinkName}
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                {/* 문의 내용 구분선 */}
+                {inq.description && (
+                  <div className="border-t border-gray-100 pt-4">
+                    <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-2">
+                      문의 내용
+                    </p>
+                    <p
+                      className="text-sm text-gray-700 whitespace-pre-wrap"
+                      style={{ lineHeight: '1.7' }}
+                    >
+                      {inq.description}
+                    </p>
+                  </div>
+                )}
+
+                {/* 접수일시 */}
+                <div className="border-t border-gray-100 pt-3">
+                  <p className="text-xs text-gray-400">
+                    접수일시 · {new Date(inq.createdAt).toLocaleString('ko-KR', {
+                      year: 'numeric',
+                      month: '2-digit',
+                      day: '2-digit',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
+                  </p>
+                </div>
+              </div>
+
+              {/* 모달 푸터 */}
+              <div className="px-6 py-4 border-t border-gray-100 flex justify-end">
+                <button
+                  onClick={() => setSelectedInquiry(null)}
+                  className="px-5 py-2 rounded-xl bg-gray-100 text-gray-600 text-sm font-medium hover:bg-gray-200 transition-colors"
+                >
+                  닫기
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </AdminLayout>
   );
 }

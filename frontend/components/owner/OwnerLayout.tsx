@@ -200,7 +200,7 @@ export default function OwnerLayout({ children }: Props) {
             <button
               onClick={handleReapply}
               disabled={uploading || !licenseFile || !businessName.trim()}
-              className="w-full bg-purple-600 text-white py-3 rounded-xl font-medium hover:bg-purple-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+              className="w-full bg-[#7C4DFF] text-white py-3 rounded-xl font-medium hover:bg-[#6B3FE0] disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
             >
               {uploading ? '제출 중...' : '재신청하기'}
             </button>
@@ -250,7 +250,7 @@ export default function OwnerLayout({ children }: Props) {
               setShowReapply(true);
               setBusinessName(owner?.businessName || '');
             }}
-            className="w-full bg-purple-600 text-white py-3 rounded-xl font-medium hover:bg-purple-700 transition-colors flex items-center justify-center gap-2"
+            className="w-full bg-[#7C4DFF] text-white py-3 rounded-xl font-medium hover:bg-[#6B3FE0] transition-colors flex items-center justify-center gap-2"
           >
             <RefreshCw size={18} />
             사업자등록증 다시 제출하기
@@ -297,7 +297,7 @@ export default function OwnerLayout({ children }: Props) {
             <p className="text-gray-500 text-sm leading-relaxed mb-6">
               가입이 접수되었습니다.<br />
               관리자 확인 후 승인되며,<br />
-              <span className="text-purple-600 font-semibold">보통 24시간 이내</span>에 처리됩니다.
+              <span className="text-[#7C4DFF] font-semibold">보통 24시간 이내</span>에 처리됩니다.
             </p>
 
             {/* 승인 상태 확인 버튼 */}
@@ -384,7 +384,7 @@ export default function OwnerLayout({ children }: Props) {
         <div className="p-6">
           <div className="flex items-center justify-between mb-8">
             <h1 className="text-xl font-bold text-white">
-              <span className="text-purple-600">꿈꾸는</span>정비사
+              <span className="text-[#7C4DFF]">꿈꾸는</span>정비사
             </h1>
             <button
               onClick={() => setSidebarOpen(false)}
@@ -404,7 +404,7 @@ export default function OwnerLayout({ children }: Props) {
                   onClick={() => setSidebarOpen(false)}
                   className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${
                     isActive
-                      ? 'bg-purple-600 text-white'
+                      ? 'bg-[#7C4DFF] text-white'
                       : 'text-gray-400 hover:bg-white/5 hover:text-white'
                   }`}
                 >
