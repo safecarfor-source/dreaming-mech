@@ -147,22 +147,25 @@ export default function UnifiedInquiriesPage() {
   };
 
   const formatDate = (dateStr: string) => {
-    const now = new Date();
     const d = new Date(dateStr);
+    const now = new Date();
     const diff = now.getTime() - d.getTime();
-    const minutes = Math.floor(diff / 60000);
-    const hours = Math.floor(diff / 3600000);
     const days = Math.floor(diff / 86400000);
-
-    if (minutes < 1) return '방금 전';
-    if (minutes < 60) return `${minutes}분 전`;
-    if (hours < 24) return `${hours}시간 전`;
-    if (days < 7) return `${days}일 전`;
+    const hours = Math.floor(diff / 3600000);
 
     const year = d.getFullYear();
     const month = (d.getMonth() + 1).toString().padStart(2, '0');
     const day = d.getDate().toString().padStart(2, '0');
-    return `${year}-${month}-${day}`;
+    const h = d.getHours().toString().padStart(2, '0');
+    const m = d.getMinutes().toString().padStart(2, '0');
+    const exact = `${year}-${month}-${day} ${h}:${m}`;
+
+    // 7일 이내: 상대시간 + 정확한 날짜 둘 다 표시
+    if (hours < 1) return `방금 전 · ${exact}`;
+    if (days < 1) return `${hours}시간 전 · ${exact}`;
+    if (days < 7) return `${days}일 전 · ${exact}`;
+
+    return exact;
   };
 
   const getTypeCount = (type?: FilterType) => {
