@@ -283,6 +283,35 @@ export class OwnerService {
     });
   }
 
+  // ── 사장님용: 가입 문의 ID 기록 (최초 1회, 어떤 공유 링크로 가입했는지 추적) ──
+
+  async setSignupInquiry(ownerId: number, inquiryId: number) {
+    const owner = await this.prisma.owner.findUnique({
+      where: { id: ownerId },
+      select: { id: true, signupInquiryId: true },
+    });
+    if (!owner) throw new NotFoundException('사장님을 찾을 수 없습니다.');
+
+    // 이미 기록된 경우 덮어쓰지 않음 (최초 가입 경로만 보존)
+    if (owner.signupInquiryId !== null) {
+      return { message: '이미 가입 문의 ID가 기록되어 있습니다.', signupInquiryId: owner.signupInquiryId };
+    }
+
+    // 해당 ServiceInquiry 존재 여부 확인
+    const inquiry = await this.prisma.serviceInquiry.findUnique({
+      where: { id: inquiryId },
+      select: { id: true },
+    });
+    if (!inquiry) throw new NotFoundException('해당 문의를 찾을 수 없습니다.');
+
+    await this.prisma.owner.update({
+      where: { id: ownerId },
+      data: { signupInquiryId: inquiryId },
+    });
+
+    return { message: '가입 문의 ID가 기록되었습니다.', signupInquiryId: inquiryId };
+  }
+
   // ── 사장님용: 프로필 업데이트 (전화번호 등) ──
 
   async updateProfile(ownerId: number, data: { phone?: string; businessName?: string; address?: string; name?: string }) {

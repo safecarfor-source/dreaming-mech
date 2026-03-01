@@ -252,6 +252,10 @@ export interface UnifiedInquiry {
   carModel?: string;
   mechanicName?: string;
   trackingLinkName?: string;
+  // 공유 추적 데이터
+  shareClickCount?: number;
+  sharedAt?: string;
+  signupOwnerCount?: number;
 }
 
 export interface UnifiedInquiryCount {

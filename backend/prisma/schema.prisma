@@ -90,6 +90,7 @@ model Owner {
   businessName        String?     // 업체명
   phone               String?     // 알림톡 발송용 전화번호
   address             String?     // 매장 주소
+  signupInquiryId     Int?        // 어떤 문의 링크를 통해 가입했는지 (ServiceInquiry.id, 1회만 기록)
   createdAt           DateTime    @default(now())
   updatedAt           DateTime    @updatedAt
   mechanics           Mechanic[]
@@ -98,6 +99,7 @@ model Owner {
   postLikes    PostLike[]
 
   @@index([status])
+  @@index([signupInquiryId])
 }
 
 // 관리자 모델

@@ -126,6 +126,8 @@ export const ownerAuthApi = {
     api.post('/owner/business-license', data),
   reapply: (data: { businessLicenseUrl: string; businessName: string }) =>
     api.post('/owner/reapply', data),
+  setSignupInquiry: (inquiryId: number) =>
+    api.patch('/owner/signup-inquiry', { inquiryId }),
 };
 
 // 사장님용: 내 정비소 선택 고객 문의 API

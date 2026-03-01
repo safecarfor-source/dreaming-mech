@@ -18,6 +18,10 @@ export interface UnifiedInquiry {
   carModel?: string; // QUOTE
   mechanicName?: string; // QUOTE
   trackingLinkName?: string; // 유입 경로 (추적 링크 이름)
+  // 공유 링크 추적 정보
+  shareClickCount?: number;  // 공유 링크 클릭 수
+  sharedAt?: string;         // 공유 시점 ISO 문자열
+  signupOwnerCount?: number; // 이 문의 링크를 통해 가입한 정비사 수
 }
 
 @Injectable()
@@ -25,6 +29,18 @@ export class UnifiedInquiryService {
   constructor(private prisma: PrismaService) {}
 
   async findAll(page: number = 1, limit: number = 20) {
+    // 문의별 가입 정비사 수 집계 (signupInquiryId 기준)
+    const ownerSignups = await this.prisma.owner.groupBy({
+      by: ['signupInquiryId'],
+      _count: { id: true },
+      where: { signupInquiryId: { not: null } },
+    });
+    const signupMap = new Map(
+      ownerSignups
+        .filter((o) => o.signupInquiryId !== null)
+        .map((o) => [o.signupInquiryId as number, o._count.id]),
+    );
+
     // 3개 테이블에서 병렬 조회
     const [inquiries, serviceInquiries, quoteRequests, tireInquiries] = await Promise.all([
       this.prisma.inquiry.findMany({
@@ -87,6 +103,12 @@ export class UnifiedInquiryService {
         createdAt: svc.createdAt.toISOString(),
         shareUrl: `https://dreammechaniclab.com/inquiry/service/${svc.id}`,
         trackingLinkName: svc.trackingLink?.name || undefined,
+        // 공유 링크 추적 정보
+        shareClickCount: (svc as any).shareClickCount || 0,
+        sharedAt: (svc as any).sharedAt
+          ? (svc as any).sharedAt.toISOString()
+          : undefined,
+        signupOwnerCount: signupMap.get(svc.id) || 0,
       });
     }
 
@@ -291,12 +313,14 @@ export class UnifiedInquiryService {
         });
         if (!inq) throw new NotFoundException(`문의를 찾을 수 없습니다.`);
 
-        // 24시간 만료 체크 (sharedAt이 있고 24시간 초과 시)
+        // 만료 체크: CONNECTED/COMPLETED 상태이면 즉시 만료 + 24시간 초과 시 만료
         const EXPIRE_HOURS = 24;
         const sharedAt = (inq as any).sharedAt as Date | null;
-        const isExpired = sharedAt
+        const isExpiredByStatus = ['CONNECTED', 'COMPLETED'].includes(inq.status);
+        const isExpiredByTime = sharedAt
           ? new Date().getTime() - new Date(sharedAt).getTime() > EXPIRE_HOURS * 60 * 60 * 1000
           : false;
+        const isExpired = isExpiredByStatus || isExpiredByTime;
 
         return {
           id: inq.id,

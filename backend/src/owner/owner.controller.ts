@@ -117,6 +117,15 @@ export class OwnerProfileController {
       body.businessName,
     );
   }
+
+  // PATCH /owner/signup-inquiry — 가입 문의 ID 기록 (최초 1회만 저장, 공유 링크 추적용)
+  @Patch('signup-inquiry')
+  setSignupInquiry(
+    @Request() req,
+    @Body() body: { inquiryId: number },
+  ) {
+    return this.ownerService.setSignupInquiry(req.user.sub, body.inquiryId);
+  }
 }
 
 // ── 사장님용: 매장 관리 ──

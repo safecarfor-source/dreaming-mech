@@ -5,6 +5,16 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useOwnerStore } from '@/lib/auth';
 import { ownerAuthApi } from '@/lib/api';
 
+// 공유 링크 URL에서 문의 ID 추출 (/inquiry/service/42 → { type: 'service', id: 42 })
+function parseInquiryUrl(url: string): { type: string; id: number } | null {
+  const match = url.match(/\/inquiry\/(\w+)\/(\d+)/);
+  if (match) return { type: match[1], id: Number(match[2]) };
+  // 레거시 URL: /inquiry/42
+  const legacy = url.match(/\/inquiry\/(\d+)$/);
+  if (legacy) return { type: 'service', id: Number(legacy[1]) };
+  return null;
+}
+
 function CallbackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -25,6 +35,11 @@ function CallbackContent() {
         if (returnUrl) {
           sessionStorage.removeItem('mechanic_return_url');
           sessionStorage.setItem('mechanic_just_signed_up', 'true');
+          // 문의 링크에서 가입했으면 해당 문의 ID 연결 (추적용)
+          const inquiryInfo = parseInquiryUrl(returnUrl);
+          if (inquiryInfo) {
+            ownerAuthApi.setSignupInquiry(inquiryInfo.id).catch(() => {});
+          }
           router.replace(returnUrl);
         } else {
           // PENDING/REJECTED/APPROVED 모두 /owner로 → OwnerLayout이 상태별 화면 처리

@@ -257,6 +257,32 @@ export default function UnifiedInquiriesPage() {
                     </span>
                   </div>
 
+                  {/* 공유 추적 현황 */}
+                  {(inq.type === 'SERVICE' || inq.type === 'QUOTE' || inq.type === 'GENERAL') && (
+                    <div className="flex items-center gap-3 mb-2 text-xs">
+                      {inq.sharedAt ? (
+                        <>
+                          <span className="inline-flex items-center gap-1 text-blue-600">
+                            <Share2 size={12} />
+                            공유됨
+                          </span>
+                          <span className="inline-flex items-center gap-1 text-gray-500">
+                            <Eye size={12} />
+                            조회 {inq.shareClickCount || 0}회
+                          </span>
+                          {(inq.signupOwnerCount ?? 0) > 0 && (
+                            <span className="inline-flex items-center gap-1 text-green-600 font-semibold">
+                              <CheckCircle size={12} />
+                              가입 {inq.signupOwnerCount}명
+                            </span>
+                          )}
+                        </>
+                      ) : inq.status === 'PENDING' ? (
+                        <span className="text-amber-500">⏳ 아직 공유되지 않았습니다</span>
+                      ) : null}
+                    </div>
+                  )}
+
                   {/* 중간: 이름 + 전화번호 + 유입경로 + 설명 */}
                   <div className="mb-3">
                     <div className="flex items-center gap-3 mb-1">
