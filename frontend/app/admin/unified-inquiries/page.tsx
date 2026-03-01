@@ -139,6 +139,12 @@ export default function UnifiedInquiriesPage() {
         await navigator.clipboard.writeText(message);
         setCopiedMsg(`${inq.type}-${inq.id}`);
         setTimeout(() => setCopiedMsg(null), 2000);
+        // 대기중이면 자동으로 "공유됨" 상태로 전환 (sharedAt 기록)
+        if (inq.status === 'PENDING') {
+          await unifiedInquiryApi.updateStatus(inq.type, inq.id, 'SHARED');
+          fetchInquiries();
+          window.dispatchEvent(new Event('badges-refresh'));
+        }
       }
     } catch (error) {
       console.error('공유 메시지 복사 실패:', error);
@@ -257,29 +263,29 @@ export default function UnifiedInquiriesPage() {
                     </span>
                   </div>
 
-                  {/* 공유 추적 현황 */}
+                  {/* 공유 추적 현황 — 모든 상태에서 표시 */}
                   {(inq.type === 'SERVICE' || inq.type === 'QUOTE' || inq.type === 'GENERAL') && (
                     <div className="flex items-center gap-3 mb-2 text-xs">
                       {inq.sharedAt ? (
-                        <>
-                          <span className="inline-flex items-center gap-1 text-blue-600">
-                            <Share2 size={12} />
-                            공유됨
-                          </span>
-                          <span className="inline-flex items-center gap-1 text-gray-500">
-                            <Eye size={12} />
-                            조회 {inq.shareClickCount || 0}회
-                          </span>
-                          {(inq.signupOwnerCount ?? 0) > 0 && (
-                            <span className="inline-flex items-center gap-1 text-green-600 font-semibold">
-                              <CheckCircle size={12} />
-                              가입 {inq.signupOwnerCount}명
-                            </span>
-                          )}
-                        </>
-                      ) : inq.status === 'PENDING' ? (
-                        <span className="text-amber-500">⏳ 아직 공유되지 않았습니다</span>
-                      ) : null}
+                        <span className="inline-flex items-center gap-1 text-blue-600">
+                          <Share2 size={12} />
+                          공유됨
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 text-amber-500">
+                          ⏳ 미공유
+                        </span>
+                      )}
+                      <span className="inline-flex items-center gap-1 text-gray-500">
+                        <Eye size={12} />
+                        조회 {inq.shareClickCount || 0}회
+                      </span>
+                      {(inq.signupOwnerCount ?? 0) > 0 && (
+                        <span className="inline-flex items-center gap-1 text-green-600 font-semibold">
+                          <CheckCircle size={12} />
+                          가입 {inq.signupOwnerCount}명
+                        </span>
+                      )}
                     </div>
                   )}
 
