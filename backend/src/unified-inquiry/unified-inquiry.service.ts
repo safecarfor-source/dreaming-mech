@@ -313,20 +313,21 @@ export class UnifiedInquiryService {
         });
         if (!inq) throw new NotFoundException(`문의를 찾을 수 없습니다.`);
 
-        // 만료 체크: CONNECTED/COMPLETED 상태이면 즉시 만료 + 24시간 초과 시 만료
-        const EXPIRE_HOURS = 24;
+        // 조회 시 클릭 수 증가 (추적용)
+        await this.prisma.serviceInquiry.update({
+          where: { id },
+          data: { shareClickCount: { increment: 1 } },
+        }).catch(() => {});
+
+        // 만료 체크: CONNECTED/COMPLETED 상태일 때만 만료 (24시간 제한 없음)
+        const isExpired = ['CONNECTED', 'COMPLETED'].includes(inq.status);
         const sharedAt = (inq as any).sharedAt as Date | null;
-        const isExpiredByStatus = ['CONNECTED', 'COMPLETED'].includes(inq.status);
-        const isExpiredByTime = sharedAt
-          ? new Date().getTime() - new Date(sharedAt).getTime() > EXPIRE_HOURS * 60 * 60 * 1000
-          : false;
-        const isExpired = isExpiredByStatus || isExpiredByTime;
 
         return {
           id: inq.id,
           type: 'SERVICE',
           name: (inq as any).name || inq.customer?.nickname || undefined,
-          // 만료된 경우 어드민도 전화번호 블러 처리
+          // 만료된 경우 전화번호 블러 처리
           phone: (showPhone && !isExpired) ? (inq.phone || inq.customer?.phone || undefined) : undefined,
           regionSido: inq.regionSido,
           regionSigungu: inq.regionSigungu,
