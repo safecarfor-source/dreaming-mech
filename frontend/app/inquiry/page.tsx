@@ -44,6 +44,7 @@ function InquiryContent() {
   const [description, setDescription] = useState('');
   const [vehicleNumber, setVehicleNumber] = useState('');
   const [vehicleModel, setVehicleModel] = useState('');
+  const [dong, setDong] = useState('');
   const [privacyAgreed, setPrivacyAgreed] = useState(false);
   const [regionSearchQuery, setRegionSearchQuery] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -103,6 +104,7 @@ function InquiryContent() {
         name: name || undefined,
         regionSido: selectedRegion.sido,
         regionSigungu: selectedRegion.sigungu,
+        regionDong: dong.trim() || undefined,
         serviceType: selectedService,
         phone: phone.replace(/[^\d]/g, ''),
         vehicleNumber: vehicleNumber.trim() || undefined,
@@ -129,6 +131,7 @@ function InquiryContent() {
     setDescription('');
     setVehicleNumber('');
     setVehicleModel('');
+    setDong('');
     setPrivacyAgreed(false);
     setRegionSearchQuery('');
     setSelectedMechanicId(null);
@@ -302,6 +305,21 @@ function InquiryContent() {
                 </p>
 
                 <div className="space-y-4">
+                  {/* 동/읍/면 입력 (선택사항) */}
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      동/읍/면 <span className="text-gray-400 font-normal">(선택)</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={dong}
+                      onChange={(e) => setDong(e.target.value)}
+                      placeholder="예: 화곡동, 삼산면"
+                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-200 focus:border-[#7C4DFF] outline-none transition-all"
+                    />
+                    <p className="text-xs text-gray-400 mt-1">정확한 지역의 정비소를 연결해드립니다</p>
+                  </div>
+
                   {/* 정비소 선택 (선택사항) */}
                   {localMechanics.length > 0 && (
                     <div>
