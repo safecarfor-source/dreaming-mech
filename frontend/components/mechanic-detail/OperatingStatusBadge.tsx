@@ -19,14 +19,14 @@ function getOperatingStatus(
   const dayIndex = now.getDay();
   const dayKey = DAY_KEYS[dayIndex];
 
-  if (holidays?.type === 'weekly' && holidays.days?.includes(dayKey)) {
-    return { status: 'closed', label: '오늘 휴무' };
-  }
-
   const todaySchedule = operatingHours[dayKey];
+
+  // 운영시간이 설정되어 있지 않은 날 → 휴무
   if (!todaySchedule) {
     return { status: 'closed', label: '오늘 휴무' };
   }
+
+  // 운영시간이 설정되어 있으면 → 영업일 (holidays 무시, 운영시간이 최종 기준)
 
   const currentMinutes = now.getHours() * 60 + now.getMinutes();
   const [openH, openM] = todaySchedule.open.split(':').map(Number);
@@ -100,8 +100,6 @@ export default function OperatingStatusBadge({ operatingHours, holidays }: Props
           {['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'].map((day) => {
             const schedule = operatingHours[day];
             const isToday = day === todayKey;
-            const isHoliday = holidays?.type === 'weekly' && holidays.days?.includes(day);
-
             return (
               <div
                 key={day}
@@ -111,7 +109,7 @@ export default function OperatingStatusBadge({ operatingHours, holidays }: Props
               >
                 <span>{DAY_LABELS[day]}{isToday ? ' (오늘)' : ''}</span>
                 <span>
-                  {isHoliday || !schedule ? (
+                  {!schedule ? (
                     <span className="text-red-500">휴무</span>
                   ) : (
                     `${schedule.open} - ${schedule.close}`

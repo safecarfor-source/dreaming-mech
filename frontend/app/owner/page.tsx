@@ -54,6 +54,7 @@ export default function OwnerDashboardPage() {
         // 에러 무시 (OwnerLayout에서 인증 처리)
       } finally {
         setLoading(false);
+        setLoadingInquiries(false);
       }
     };
     fetchData();
@@ -111,15 +112,9 @@ export default function OwnerDashboardPage() {
   const getShareLinkUrl = (inquiryId: number) =>
     `https://dreammechaniclab.com/inquiry/service/${inquiryId}`;
 
-  const getShareLinkExpiry = (sharedAt: string | null) => {
-    if (!sharedAt) return null;
-    const expiry = new Date(new Date(sharedAt).getTime() + 24 * 60 * 60 * 1000);
-    return formatDateTime(expiry.toISOString());
-  };
-
-  const isShareLinkExpired = (sharedAt: string | null) => {
-    if (!sharedAt) return false;
-    return new Date().getTime() > new Date(sharedAt).getTime() + 24 * 60 * 60 * 1000;
+  // 만료 여부: 연결됨/완료 상태에서만 만료 (24시간 제한 없음)
+  const isShareLinkExpired = (status: string) => {
+    return ['CONNECTED', 'COMPLETED'].includes(status);
   };
 
   const getServiceTypeLabel = (type: string) => {
@@ -261,8 +256,7 @@ export default function OwnerDashboardPage() {
                 ? {
                     url: getShareLinkUrl(inq.id),
                     sharedAt: formatDateTime(inq.sharedAt),
-                    expiresAt: getShareLinkExpiry(inq.sharedAt),
-                    isExpired: isShareLinkExpired(inq.sharedAt),
+                    isExpired: isShareLinkExpired(inq.status),
                     clickCount: inq.shareClickCount || 0,
                   }
                 : null;
@@ -422,10 +416,10 @@ export default function OwnerDashboardPage() {
                       <p className="text-gray-400 mb-0.5">공유 시작</p>
                       <p className="font-semibold text-gray-800">{formatDateTime(selectedInquiry.sharedAt)}</p>
                     </div>
-                    <div className={`rounded-lg px-3 py-2 ${isShareLinkExpired(selectedInquiry.sharedAt) ? 'bg-red-50' : 'bg-green-50'}`}>
-                      <p className={`mb-0.5 ${isShareLinkExpired(selectedInquiry.sharedAt) ? 'text-red-400' : 'text-green-500'}`}>만료 시간</p>
-                      <p className={`font-semibold text-xs ${isShareLinkExpired(selectedInquiry.sharedAt) ? 'text-red-600' : 'text-green-700'}`}>
-                        {isShareLinkExpired(selectedInquiry.sharedAt) ? '⚠️ 만료됨' : getShareLinkExpiry(selectedInquiry.sharedAt)}
+                    <div className={`rounded-lg px-3 py-2 ${isShareLinkExpired(selectedInquiry.status) ? 'bg-red-50' : 'bg-green-50'}`}>
+                      <p className={`mb-0.5 ${isShareLinkExpired(selectedInquiry.status) ? 'text-red-400' : 'text-green-500'}`}>링크 상태</p>
+                      <p className={`font-semibold text-xs ${isShareLinkExpired(selectedInquiry.status) ? 'text-red-600' : 'text-green-700'}`}>
+                        {isShareLinkExpired(selectedInquiry.status) ? '⚠️ 만료됨 (연결 완료)' : '✅ 활성'}
                       </p>
                     </div>
                   </div>

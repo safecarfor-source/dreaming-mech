@@ -119,7 +119,7 @@ export default function DetailInfoSection({
                 onClick={() => handleDayToggle(key)}
                 className={`w-10 h-10 rounded-lg text-sm font-bold transition-colors ${
                   hours[key]
-                    ? 'bg-purple-600 text-white'
+                    ? 'bg-[#7C4DFF] text-white'
                     : 'bg-gray-100 text-gray-400'
                 }`}
               >
@@ -163,7 +163,7 @@ export default function DetailInfoSection({
               onClick={() => toggleSpecialty(specialty)}
               className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
                 (formData.specialties || []).includes(specialty)
-                  ? 'bg-purple-600 text-white'
+                  ? 'bg-[#7C4DFF] text-white'
                   : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
               }`}
             >
@@ -207,7 +207,7 @@ export default function DetailInfoSection({
               onClick={() => onFieldChange('parkingAvailable', value)}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                 formData.parkingAvailable === value
-                  ? 'bg-purple-600 text-white'
+                  ? 'bg-[#7C4DFF] text-white'
                   : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
               }`}
             >
@@ -231,7 +231,7 @@ export default function DetailInfoSection({
               onClick={() => togglePayment(method)}
               className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
                 (formData.paymentMethods || []).includes(method)
-                  ? 'bg-purple-600 text-white'
+                  ? 'bg-[#7C4DFF] text-white'
                   : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
               }`}
             >
@@ -267,10 +267,10 @@ export default function DetailInfoSection({
           type="text"
           value={holidays.description || ''}
           onChange={(e) =>
-            onFieldChange('holidays', { ...holidays, type: 'weekly' as const, description: e.target.value })
+            onFieldChange('holidays', { ...holidays, description: e.target.value })
           }
           placeholder="추가 휴무 안내 (예: 매월 첫째/셋째 토요일 휴무)"
-          className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:border-purple-600 text-sm text-gray-900"
+          className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:border-[#7C4DFF] text-sm text-gray-900"
         />
       </div>
     </div>

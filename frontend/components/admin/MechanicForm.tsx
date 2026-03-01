@@ -90,7 +90,7 @@ export default function MechanicForm({ mechanic, mode, apiBasePath, redirectPath
         <button
           type="submit"
           disabled={isSaving}
-          className="px-8 py-3 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 text-white rounded-xl font-medium focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 transition-all shadow-sm"
+          className="px-8 py-3 bg-[#7C4DFF] hover:bg-[#6B3FE8] disabled:bg-gray-400 text-white rounded-xl font-medium focus:outline-none focus:ring-2 focus:ring-[#7C4DFF]/50 focus:ring-offset-2 transition-all shadow-sm"
         >
           {isSaving ? '저장 중...' : mode === 'create' ? '추가하기' : '수정하기'}
         </button>

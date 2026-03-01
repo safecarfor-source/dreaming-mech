@@ -36,7 +36,7 @@ export default function OwnerOnboardingPage() {
     if (!name.trim()) { alert('성함을 입력해주세요.'); return; }
     if (!phone.trim()) { alert('전화번호를 입력해주세요.'); return; }
     const phoneNums = phone.replace(/[^\d]/g, '');
-    if (phoneNums.length < 10) { alert('올바른 전화번호를 입력해주세요.'); return; }
+    if (phoneNums.length !== 11) { alert('올바른 전화번호를 입력해주세요. (예: 010-1234-5678)'); return; }
     if (!address.trim()) { alert('매장 주소를 입력해주세요.'); return; }
 
     setSaving(true);
