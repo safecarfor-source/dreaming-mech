@@ -356,6 +356,7 @@ export const serviceInquiryApi = {
     name?: string;
     regionSido: string;
     regionSigungu: string;
+    regionDong?: string;
     serviceType: ServiceType;
     description?: string;
     phone: string;

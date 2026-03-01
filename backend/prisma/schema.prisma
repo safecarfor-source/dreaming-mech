@@ -368,6 +368,7 @@ model ServiceInquiry {
   // 지역 정보
   regionSido    String                 // 시/도 (예: "경기도")
   regionSigungu String                 // 시/군/구 (예: "수원시")
+  regionDong    String?                // 동/읍/면 (예: "영통동", 선택사항)
 
   // 고객 전화번호 (접수 시점 기록)
   phone         String?
@@ -409,6 +410,7 @@ model ServiceInquiry {
 
   @@index([customerId])
   @@index([regionSido, regionSigungu])
+  @@index([regionSido, regionSigungu, regionDong])
   @@index([serviceType])
   @@index([status])
   @@index([createdAt])

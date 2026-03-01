@@ -243,6 +243,7 @@ export interface UnifiedInquiry {
   phone?: string;
   regionSido?: string;
   regionSigungu?: string;
+  regionDong?: string;
   serviceType?: string;
   description?: string;
   status: string;

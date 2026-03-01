@@ -244,7 +244,7 @@ export default function UnifiedInquiriesPage() {
                       </span>
                       {inq.regionSido && (
                         <span className="text-sm text-gray-700">
-                          📍 {inq.regionSido} {inq.regionSigungu}
+                          📍 {inq.regionSido} {inq.regionSigungu}{inq.regionDong ? ` ${inq.regionDong}` : ''}
                         </span>
                       )}
                       {serviceInfo && (
@@ -487,7 +487,7 @@ export default function UnifiedInquiriesPage() {
                     <div className="flex items-center gap-3">
                       <span className="text-base">📍</span>
                       <span className="text-gray-700">
-                        {inq.regionSido} {inq.regionSigungu}
+                        {inq.regionSido} {inq.regionSigungu}{inq.regionDong ? ` ${inq.regionDong}` : ''}
                         {serviceInfo ? ` · ${serviceInfo.emoji} ${serviceInfo.label}` : ''}
                       </span>
                     </div>

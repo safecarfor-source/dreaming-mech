@@ -35,6 +35,7 @@ export class ServiceInquiryService {
         name: dto.name,
         regionSido: dto.regionSido,
         regionSigungu: dto.regionSigungu,
+        ...(dto.regionDong && { regionDong: dto.regionDong }),
         serviceType: dto.serviceType,
         description: dto.description,
         phone: dto.phone,
@@ -69,7 +70,8 @@ export class ServiceInquiryService {
   private async sendTelegramNotification(inquiry: any) {
     const serviceTypeKo = this.getServiceTypeKorean(inquiry.serviceType);
     let message = `🔔 <b>새 정비 문의</b>\n`;
-    message += `📍 지역: ${inquiry.regionSido} ${inquiry.regionSigungu}\n`;
+    const dong = (inquiry as any).regionDong;
+    message += `📍 지역: ${inquiry.regionSido} ${inquiry.regionSigungu}${dong ? ` ${dong}` : ''}\n`;
     message += `🔧 항목: ${serviceTypeKo}\n`;
     if (inquiry.name) {
       message += `👤 고객: ${inquiry.name}\n`;
@@ -293,7 +295,8 @@ export class ServiceInquiryService {
     const serviceTypeKo = this.getServiceTypeKorean(inquiry.serviceType);
 
     let message = `대표님~ 🙋 고객님 오셨습니다!\n\n`;
-    message += `📍 ${inquiry.regionSido} ${inquiry.regionSigungu}\n`;
+    const regionDong = (inquiry as any).regionDong;
+    message += `📍 ${inquiry.regionSido} ${inquiry.regionSigungu}${regionDong ? ` ${regionDong}` : ''}\n`;
     message += `🔧 ${serviceTypeKo}`;
     if ((inquiry as any).vehicleNumber || (inquiry as any).vehicleModel) {
       message += ` (`;

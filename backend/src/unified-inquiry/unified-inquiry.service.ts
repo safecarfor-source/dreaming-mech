@@ -8,6 +8,7 @@ export interface UnifiedInquiry {
   phone?: string;
   regionSido?: string;
   regionSigungu?: string;
+  regionDong?: string; // 동/읍/면
   serviceType?: string;
   description?: string;
   status: string;
@@ -97,6 +98,7 @@ export class UnifiedInquiryService {
         phone: svc.phone || svc.customer?.phone || undefined,
         regionSido: svc.regionSido,
         regionSigungu: svc.regionSigungu,
+        regionDong: (svc as any).regionDong || undefined,
         serviceType: svc.serviceType,
         description: svc.description || undefined,
         status: svc.status,
@@ -254,7 +256,8 @@ export class UnifiedInquiryService {
         if (!inq) throw new Error('Not found');
         const serviceKo = SERVICE_TYPE_MAP[inq.serviceType] || inq.serviceType;
         let msg = `대표님~ 🙋 고객님 오셨습니다!\n\n`;
-        msg += `📍 ${inq.regionSido} ${inq.regionSigungu}\n`;
+        const dong = (inq as any).regionDong;
+        msg += `📍 ${inq.regionSido} ${inq.regionSigungu}${dong ? ` ${dong}` : ''}\n`;
         msg += `🔧 ${serviceKo}`;
         if (inq.description) msg += ` - ${inq.description}`;
         msg += `\n`;
@@ -331,6 +334,7 @@ export class UnifiedInquiryService {
           phone: (showPhone && !isExpired) ? (inq.phone || inq.customer?.phone || undefined) : undefined,
           regionSido: inq.regionSido,
           regionSigungu: inq.regionSigungu,
+          regionDong: (inq as any).regionDong || undefined,
           serviceType: inq.serviceType,
           description: inq.description || undefined,
           vehicleNumber: (inq as any).vehicleNumber || undefined,
