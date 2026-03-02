@@ -89,8 +89,10 @@ export default function SharedInquiryPage() {
       try {
         const res = await unifiedInquiryApi.getPublic(type, id);
         setInquiry(res.data);
+        return res.data;
       } catch {
         setError(true);
+        return null;
       } finally {
         setLoading(false);
       }
@@ -106,17 +108,27 @@ export default function SharedInquiryPage() {
     };
 
     if (type && id && !isNaN(id)) {
-      fetchInquiry();
-      fetchStats();
-    }
+      // 가입 후 돌아왔는지 확인
+      const justSignedUp = typeof window !== 'undefined'
+        ? sessionStorage.getItem('mechanic_just_signed_up')
+        : null;
 
-    // 가입 후 돌아왔는지 확인
-    if (typeof window !== 'undefined') {
-      const justSignedUp = sessionStorage.getItem('mechanic_just_signed_up');
       if (justSignedUp) {
         setIsNewSignup(true);
         sessionStorage.removeItem('mechanic_just_signed_up');
+        // 가입 직후: 쿠키 안착 대기 후 재조회 (500ms)
+        setLoading(true);
+        setTimeout(async () => {
+          const data = await fetchInquiry();
+          // 그래도 전화번호가 안 보이면 한 번 더 시도 (1초 후)
+          if (data && !data.phone) {
+            setTimeout(() => fetchInquiry(), 1000);
+          }
+        }, 500);
+      } else {
+        fetchInquiry();
       }
+      fetchStats();
     }
   }, [type, id]);
 
