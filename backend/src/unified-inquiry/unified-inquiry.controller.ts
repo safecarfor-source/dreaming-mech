@@ -105,9 +105,10 @@ export class UnifiedInquiryController {
   ) {
     // 선택적 인증
     const user = await this.tryGetUser(req);
+    // 승인(APPROVED)은 정비소 등록 통제 목적 — 문의 조회는 가입 즉시 허용
     const showPhone = user && (
       user.role === 'admin' ||
-      (user.role === 'owner' && user.status === 'APPROVED')
+      (user.role === 'owner' && (user.status === 'APPROVED' || user.status === 'PENDING'))
     );
 
     return this.service.findOnePublic(type.toUpperCase(), id, !!showPhone);

@@ -60,11 +60,12 @@ export class ServiceInquiryController {
     // 쿠키에서 토큰 확인 (선택적 인증)
     const user = await this.tryGetUser(req);
 
-    // APPROVED Owner 또는 Admin이면 전화번호 포함
+    // APPROVED/PENDING Owner 또는 Admin이면 전화번호 포함
+    // 승인(APPROVED)은 정비소 등록 통제 목적 — 문의 조회는 가입 즉시 허용
     if (
       user &&
       (user.role === 'admin' ||
-        (user.role === 'owner' && user.status === 'APPROVED'))
+        (user.role === 'owner' && (user.status === 'APPROVED' || user.status === 'PENDING')))
     ) {
       return this.serviceInquiryService.findOne(id);
     }

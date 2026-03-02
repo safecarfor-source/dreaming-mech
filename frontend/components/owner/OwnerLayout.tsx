@@ -13,10 +13,8 @@ import {
   X,
   Image as ImageIcon,
   AlertCircle,
-  RefreshCw,
   Clock,
-  MessageCircle,
-  CheckCircle,
+  RefreshCw,
 } from 'lucide-react';
 
 interface Props {
@@ -267,105 +265,7 @@ export default function OwnerLayout({ children }: Props) {
     );
   }
 
-  // 승인 대기 상태
-  if (owner?.status === 'PENDING') {
-    const kakaoOpenChatUrl = process.env.NEXT_PUBLIC_KAKAO_OPENCHAT_URL || '';
-
-    const handleCheckStatus = async () => {
-      try {
-        const res = await ownerAuthApi.getProfile();
-        login(res.data);
-        if (res.data.status === 'APPROVED') {
-          router.replace('/owner/onboarding');
-        } else if (res.data.status === 'REJECTED') {
-          // 상태가 바뀌면 OwnerLayout이 자동으로 거절 화면 표시
-        }
-      } catch {
-        // 에러 무시
-      }
-    };
-
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-purple-50 to-white flex items-center justify-center px-4">
-        <div className="max-w-md w-full space-y-6">
-          {/* 메인 카드 */}
-          <div className="bg-white rounded-2xl shadow-lg p-8 text-center">
-            <div className="w-20 h-20 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-5">
-              <Clock size={36} className="text-amber-500" />
-            </div>
-            <h2 className="text-xl font-bold text-gray-900 mb-2">승인 대기 중</h2>
-            <p className="text-gray-500 text-sm leading-relaxed mb-6">
-              가입이 접수되었습니다.<br />
-              관리자 확인 후 승인되며,<br />
-              <span className="text-[#7C4DFF] font-semibold">보통 24시간 이내</span>에 처리됩니다.
-            </p>
-
-            {/* 승인 상태 확인 버튼 */}
-            <button
-              onClick={handleCheckStatus}
-              className="w-full bg-[#7C4DFF] text-white py-3.5 rounded-xl font-bold hover:bg-[#6B3FE0] transition-colors flex items-center justify-center gap-2"
-            >
-              <RefreshCw size={18} />
-              승인 상태 확인
-            </button>
-          </div>
-
-          {/* 빠른 승인 요청 (카카오톡) */}
-          {kakaoOpenChatUrl && (
-            <div className="bg-white rounded-2xl shadow-sm border border-amber-200 p-6">
-              <div className="flex items-start gap-3 mb-4">
-                <div className="w-10 h-10 bg-yellow-400 rounded-xl flex items-center justify-center flex-shrink-0">
-                  <MessageCircle size={20} className="text-white" />
-                </div>
-                <div>
-                  <h3 className="font-bold text-gray-900 text-sm">빠른 승인이 필요하신가요?</h3>
-                  <p className="text-xs text-gray-500 mt-0.5">카카오톡으로 직접 연락하시면 빠르게 처리해드립니다</p>
-                </div>
-              </div>
-              <a
-                href={kakaoOpenChatUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-full block text-center bg-[#FEE500] text-[#3C1E1E] py-3.5 rounded-xl font-bold hover:bg-[#F5DC00] transition-colors"
-              >
-                카카오톡으로 문의하기
-              </a>
-            </div>
-          )}
-
-          {/* 안내 사항 */}
-          <div className="bg-white rounded-2xl shadow-sm p-5">
-            <h3 className="text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
-              <CheckCircle size={16} className="text-green-500" />
-              승인 후 이용 가능한 기능
-            </h3>
-            <ul className="space-y-2 text-sm text-gray-500">
-              <li className="flex items-center gap-2">
-                <span className="w-1.5 h-1.5 bg-purple-400 rounded-full flex-shrink-0" />
-                고객 문의 확인 및 연락
-              </li>
-              <li className="flex items-center gap-2">
-                <span className="w-1.5 h-1.5 bg-purple-400 rounded-full flex-shrink-0" />
-                내 정비소 등록 및 관리
-              </li>
-              <li className="flex items-center gap-2">
-                <span className="w-1.5 h-1.5 bg-purple-400 rounded-full flex-shrink-0" />
-                대시보드에서 매장 통계 확인
-              </li>
-            </ul>
-          </div>
-
-          {/* 로그아웃 */}
-          <button
-            onClick={handleLogout}
-            className="w-full text-sm text-gray-400 hover:text-gray-600 py-2 transition-colors"
-          >
-            로그아웃
-          </button>
-        </div>
-      </div>
-    );
-  }
+  const isPending = owner?.status === 'PENDING';
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -397,6 +297,21 @@ export default function OwnerLayout({ children }: Props) {
           <nav className="space-y-2">
             {menuItems.map((item) => {
               const isActive = pathname === item.href;
+              // 정비소 등록은 APPROVED만 — PENDING은 잠금 표시
+              const isLocked = isPending && item.href === '/owner/mechanics';
+              if (isLocked) {
+                return (
+                  <div
+                    key={item.href}
+                    title="정비소 등록은 승인 후 이용 가능합니다"
+                    className="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 cursor-not-allowed opacity-50"
+                  >
+                    <item.icon size={20} />
+                    <span>{item.label}</span>
+                    <span className="ml-auto text-xs bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded">승인 후</span>
+                  </div>
+                );
+              }
               return (
                 <Link
                   key={item.href}
@@ -447,11 +362,17 @@ export default function OwnerLayout({ children }: Props) {
           >
             <Menu size={24} />
           </button>
-          <div className="text-sm text-gray-500">
+          <div className="flex items-center gap-2 text-sm text-gray-500">
             {owner?.name || '사장님'}
-            <span className="ml-2 text-xs text-purple-500 bg-purple-50 px-2 py-0.5 rounded-full">
+            <span className="text-xs text-purple-500 bg-purple-50 px-2 py-0.5 rounded-full">
               {owner?.provider === 'naver' ? '네이버' : '카카오'}
             </span>
+            {isPending && (
+              <span className="text-xs text-amber-600 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full flex items-center gap-1">
+                <Clock size={11} />
+                승인 대기
+              </span>
+            )}
           </div>
         </header>
 
