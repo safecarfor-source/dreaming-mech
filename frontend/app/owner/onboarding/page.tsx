@@ -15,6 +15,9 @@ import {
   Image as ImageIcon,
   X,
   ShieldCheck,
+  BadgeCheck,
+  Youtube,
+  Bell,
 } from 'lucide-react';
 
 export default function OwnerOnboardingPage() {
@@ -297,6 +300,111 @@ export default function OwnerOnboardingPage() {
         >
           나중에 입력하기
         </button>
+
+        {/* 미리보기 섹션 */}
+        <div className="mt-12">
+          {/* 구분선 + 헤더 */}
+          <div className="flex items-center gap-3 mb-2">
+            <div className="flex-1 h-px bg-gray-200" />
+            <span className="text-xs text-gray-400 whitespace-nowrap">승인 후 노출 예시</span>
+            <div className="flex-1 h-px bg-gray-200" />
+          </div>
+          <div className="text-center mb-6">
+            <h2 className="text-lg font-bold text-gray-900 mb-1">
+              ✨ 승인 후 이렇게 노출됩니다
+            </h2>
+            <p className="text-sm text-gray-500">실제 등록된 정비소 예시</p>
+          </div>
+
+          {/* 정비소 카드 미리보기 */}
+          <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+            {/* 상단: 그라데이션 배경 */}
+            <div className="relative h-40 bg-gradient-to-br from-[#7C4DFF] to-[#5B2DE0] flex items-center justify-center">
+              <div className="flex flex-col items-center gap-2">
+                <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm">
+                  <Wrench size={32} className="text-white" />
+                </div>
+                <span className="text-white/80 text-xs font-medium tracking-wide">정비소 대표 이미지</span>
+              </div>
+              {/* 유튜브 촬영 태그 */}
+              <div className="absolute top-3 left-3 flex items-center gap-1.5 bg-red-500 text-white text-xs font-bold px-2.5 py-1 rounded-full shadow-sm">
+                <Youtube size={11} />
+                유튜브 촬영 지원
+              </div>
+              {/* 검증 배지 */}
+              <div className="absolute top-3 right-3 flex items-center gap-1 bg-white/90 text-[#7C4DFF] text-xs font-semibold px-2.5 py-1 rounded-full shadow-sm">
+                <BadgeCheck size={13} />
+                검증된 정비소
+              </div>
+            </div>
+
+            {/* 하단: 정비소 정보 */}
+            <div className="p-5 space-y-3">
+              <div>
+                <h3 className="text-base font-bold text-gray-900 leading-snug">
+                  티스테이션 인천대공원점
+                </h3>
+                <p className="text-xs text-gray-500 mt-1 leading-relaxed">
+                  최신장비와 최고의 전문가들과 함께 25년이 넘게 운영되고 있는 인천대공원점입니다.
+                </p>
+              </div>
+
+              <div className="space-y-1.5">
+                <div className="flex items-center gap-2 text-xs text-gray-500">
+                  <MapPin size={13} className="text-[#7C4DFF] flex-shrink-0" />
+                  <span>인천광역시 남동구 수인로 3566</span>
+                </div>
+                <div className="flex items-center gap-2 text-xs text-gray-500">
+                  <Phone size={13} className="text-[#7C4DFF] flex-shrink-0" />
+                  <span>032-464-8333</span>
+                </div>
+              </div>
+
+              {/* 전문분야 태그 */}
+              <div className="flex flex-wrap gap-1.5 pt-1">
+                {['타이어', '경정비', '브레이크', '배터리', '휠얼라이먼트'].map((tag) => (
+                  <span
+                    key={tag}
+                    className="bg-[#F5F3FF] text-[#7C4DFF] px-2 py-0.5 rounded-full text-xs font-medium"
+                  >
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* 혜택 요약 */}
+          <div className="mt-6 bg-[#F5F3FF] rounded-2xl p-5 space-y-3">
+            <p className="text-xs font-semibold text-[#7C4DFF] uppercase tracking-wide">등록하면 받는 혜택</p>
+            <ul className="space-y-3">
+              <li className="flex items-start gap-3">
+                <div className="w-7 h-7 bg-white rounded-lg flex items-center justify-center flex-shrink-0 shadow-sm">
+                  <MapPin size={14} className="text-[#7C4DFF]" />
+                </div>
+                <p className="text-sm text-gray-700 leading-relaxed">
+                  지도 검색 + 지역별 목록에 사장님의 정비소가 노출됩니다
+                </p>
+              </li>
+              <li className="flex items-start gap-3">
+                <div className="w-7 h-7 bg-white rounded-lg flex items-center justify-center flex-shrink-0 shadow-sm">
+                  <Youtube size={14} className="text-red-500" />
+                </div>
+                <p className="text-sm text-gray-700 leading-relaxed">
+                  유튜브 채널(5.3만 구독)에서 정비 실력을 직접 촬영·소개합니다
+                </p>
+              </li>
+              <li className="flex items-start gap-3">
+                <div className="w-7 h-7 bg-white rounded-lg flex items-center justify-center flex-shrink-0 shadow-sm">
+                  <Bell size={14} className="text-[#7C4DFF]" />
+                </div>
+                <p className="text-sm text-gray-700 leading-relaxed">
+                  내 지역에 고객 문의가 들어오면 실시간 알림을 받습니다
+                </p>
+              </li>
+            </ul>
+          </div>
+        </div>
       </div>
     </div>
   );
