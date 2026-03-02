@@ -117,23 +117,16 @@ export class UnifiedInquiryController {
   // 선택적 인증 헬퍼
   private async tryGetUser(req: any): Promise<{ sub: number; role: string; status?: string } | null> {
     try {
-      const ownerToken = req?.cookies?.owner_token;
-      const adminToken = req?.cookies?.admin_token;
-      const token = ownerToken || adminToken;
-      const cookieKeys = req?.cookies ? Object.keys(req.cookies) : [];
-      console.log(`[tryGetUser] cookies present: [${cookieKeys.join(', ')}], owner_token: ${ownerToken ? 'YES' : 'NO'}, admin_token: ${adminToken ? 'YES' : 'NO'}`);
+      const token = req?.cookies?.owner_token || req?.cookies?.admin_token;
       if (!token) return null;
       const decoded = this.jwtService.verify(token);
       if (!decoded) return null;
-      console.log(`[tryGetUser] JWT decoded: role=${decoded.role}, sub=${decoded.sub}`);
       if (decoded.role === 'owner') {
         const owner = await this.service.getOwnerStatus(decoded.sub);
-        console.log(`[tryGetUser] owner status: ${owner?.status}`);
         return { ...decoded, status: owner?.status };
       }
       return decoded;
-    } catch (err) {
-      console.log(`[tryGetUser] error: ${err instanceof Error ? err.message : String(err)}`);
+    } catch {
       return null;
     }
   }
