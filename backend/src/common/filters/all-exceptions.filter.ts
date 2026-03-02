@@ -53,14 +53,17 @@ export class AllExceptionsFilter implements ExceptionFilter {
 
     this.logger.error(errorLog);
 
+    // 4xx 클라이언트 에러는 원래 메시지 전달, 5xx 서버 에러만 가림
+    const isClientError = status >= 400 && status < 500;
+
     response.status(status).json({
       statusCode: status,
       timestamp: new Date().toISOString(),
       path: request.url,
       message:
-        process.env.NODE_ENV === 'production'
-          ? '서버 오류가 발생했습니다'
-          : message,
+        isClientError || process.env.NODE_ENV !== 'production'
+          ? message
+          : '서버 오류가 발생했습니다',
     });
   }
 }
