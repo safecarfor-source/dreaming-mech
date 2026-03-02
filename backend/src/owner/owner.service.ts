@@ -25,7 +25,7 @@ export class OwnerService {
     const where = status ? { status: status as any } : {};
     return this.prisma.owner.findMany({
       where,
-      orderBy: { createdAt: 'desc' },
+      orderBy: { updatedAt: 'desc' },
       select: {
         id: true,
         email: true,
@@ -41,6 +41,7 @@ export class OwnerService {
         isProtected: true,
         deactivatedAt: true,
         createdAt: true,
+        updatedAt: true,
         _count: { select: { mechanics: true } },
       },
     });

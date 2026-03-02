@@ -99,6 +99,7 @@ export interface Owner {
   phone?: string;
   address?: string;
   createdAt?: string;
+  updatedAt?: string;
   deactivatedAt?: string | null;
   isProtected?: boolean;
   _count?: { mechanics: number };
