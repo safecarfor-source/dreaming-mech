@@ -42,6 +42,8 @@ interface OwnerInfo {
   rejectionReason?: string;
   businessLicenseUrl?: string;
   businessName?: string;
+  phone?: string;
+  address?: string;
 }
 
 interface OwnerAuthState {

@@ -40,18 +40,27 @@ export default function OwnerDashboardPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [mechanicsRes, profileRes, inquiriesRes] = await Promise.all([
-          ownerMechanicsApi.getAll(),
-          ownerAuthApi.getProfile(),
-          ownerInquiriesApi.getAll(),
-        ]);
-        setMechanics(mechanicsRes.data);
+        // 프로필은 반드시 필요
+        const profileRes = await ownerAuthApi.getProfile();
         setOwner(profileRes.data);
         setPhone(profileRes.data.phone || '');
-        setInquiries(inquiriesRes.data || []);
-        setLoadingInquiries(false);
+
+        // 매장 + 문의는 APPROVED만 가능 → 개별 catch로 처리 (PENDING 403 방지)
+        try {
+          const mechanicsRes = await ownerMechanicsApi.getAll();
+          setMechanics(mechanicsRes.data);
+        } catch {
+          // PENDING/REJECTED 상태면 403 → 무시
+        }
+
+        try {
+          const inquiriesRes = await ownerInquiriesApi.getAll();
+          setInquiries(inquiriesRes.data || []);
+        } catch {
+          // 무시
+        }
       } catch {
-        // 에러 무시 (OwnerLayout에서 인증 처리)
+        // 프로필 조회 실패 → OwnerLayout에서 인증 처리
       } finally {
         setLoading(false);
         setLoadingInquiries(false);

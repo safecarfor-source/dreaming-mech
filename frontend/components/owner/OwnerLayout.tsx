@@ -38,6 +38,9 @@ export default function OwnerLayout({ children }: Props) {
   // 재신청 상태 (REJECTED에서만 사용)
   const [showReapply, setShowReapply] = useState(false);
   const [businessName, setBusinessName] = useState('');
+  const [reapplyName, setReapplyName] = useState('');
+  const [reapplyPhone, setReapplyPhone] = useState('');
+  const [reapplyAddress, setReapplyAddress] = useState('');
   const [licenseFile, setLicenseFile] = useState<File | null>(null);
   const [licensePreview, setLicensePreview] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -85,8 +88,8 @@ export default function OwnerLayout({ children }: Props) {
   };
 
   const handleReapply = async () => {
-    if (!licenseFile || !businessName.trim()) {
-      setUploadError('업체명과 사업자등록증 사진을 모두 입력해주세요.');
+    if (!licenseFile || !businessName.trim() || !reapplyName.trim() || !reapplyPhone.trim() || !reapplyAddress.trim()) {
+      setUploadError('모든 항목을 입력해주세요.');
       return;
     }
 
@@ -98,10 +101,13 @@ export default function OwnerLayout({ children }: Props) {
       const uploadRes = await uploadApi.uploadImage(licenseFile);
       const imageUrl = uploadRes.data.url;
 
-      // 2. 재신청 API 호출
+      // 2. 재신청 API 호출 (기본 정보 포함)
       await ownerAuthApi.reapply({
         businessLicenseUrl: imageUrl,
         businessName: businessName.trim(),
+        name: reapplyName.trim(),
+        phone: reapplyPhone.trim(),
+        address: reapplyAddress.trim(),
       });
 
       // 3. 프로필 새로고침
@@ -140,14 +146,56 @@ export default function OwnerLayout({ children }: Props) {
               </p>
             </div>
 
+            {/* 성함 */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">성함</label>
+              <input
+                type="text"
+                value={reapplyName}
+                onChange={(e) => setReapplyName(e.target.value)}
+                placeholder="대표자 성함"
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none text-gray-900 bg-white"
+              />
+            </div>
+
             {/* 업체명 입력 */}
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">업체명</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">상호(업체명)</label>
               <input
                 type="text"
                 value={businessName}
                 onChange={(e) => setBusinessName(e.target.value)}
                 placeholder="예: 한국타이어 시흥총판"
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none text-gray-900 bg-white"
+              />
+            </div>
+
+            {/* 전화번호 */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">전화번호</label>
+              <input
+                type="tel"
+                value={reapplyPhone}
+                onChange={(e) => {
+                  const nums = e.target.value.replace(/[^\d]/g, '');
+                  if (nums.length <= 3) setReapplyPhone(nums);
+                  else if (nums.length <= 7) setReapplyPhone(`${nums.slice(0,3)}-${nums.slice(3)}`);
+                  else setReapplyPhone(`${nums.slice(0,3)}-${nums.slice(3,7)}-${nums.slice(7,11)}`);
+                }}
+                placeholder="010-0000-0000"
+                maxLength={13}
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none text-gray-900 bg-white"
+              />
+            </div>
+
+            {/* 매장 주소 */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">매장 주소</label>
+              <input
+                type="text"
+                value={reapplyAddress}
+                onChange={(e) => setReapplyAddress(e.target.value)}
+                placeholder="예: 서울시 강서구 화곡동 123-4"
                 className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none text-gray-900 bg-white"
               />
             </div>
@@ -199,7 +247,7 @@ export default function OwnerLayout({ children }: Props) {
 
             <button
               onClick={handleReapply}
-              disabled={uploading || !licenseFile || !businessName.trim()}
+              disabled={uploading || !licenseFile || !businessName.trim() || !reapplyName.trim() || !reapplyPhone.trim() || !reapplyAddress.trim()}
               className="w-full bg-[#7C4DFF] text-white py-3 rounded-xl font-medium hover:bg-[#6B3FE0] disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
             >
               {uploading ? '제출 중...' : '재신청하기'}
@@ -211,6 +259,9 @@ export default function OwnerLayout({ children }: Props) {
                 setLicenseFile(null);
                 setLicensePreview(null);
                 setBusinessName('');
+                setReapplyName('');
+                setReapplyPhone('');
+                setReapplyAddress('');
                 setUploadError('');
               }}
               className="w-full mt-3 text-sm text-gray-500 hover:text-gray-700 py-2"
@@ -249,6 +300,9 @@ export default function OwnerLayout({ children }: Props) {
             onClick={() => {
               setShowReapply(true);
               setBusinessName(owner?.businessName || '');
+              setReapplyName(owner?.name || '');
+              setReapplyPhone(owner?.phone || '');
+              setReapplyAddress(owner?.address || '');
             }}
             className="w-full bg-[#7C4DFF] text-white py-3 rounded-xl font-medium hover:bg-[#6B3FE0] transition-colors flex items-center justify-center gap-2"
           >

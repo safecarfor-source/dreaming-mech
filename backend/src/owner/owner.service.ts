@@ -99,22 +99,43 @@ export class OwnerService {
 
   // ── 사장님용: 재신청 (거절된 상태에서 사업자등록증 재제출) ──
 
-  async reapply(ownerId: number, businessLicenseUrl: string, businessName: string) {
+  async reapply(
+    ownerId: number,
+    data: {
+      businessLicenseUrl: string;
+      businessName: string;
+      name?: string;
+      phone?: string;
+      address?: string;
+    },
+  ) {
     const owner = await this.prisma.owner.findUnique({ where: { id: ownerId } });
     if (!owner) throw new NotFoundException('사장님을 찾을 수 없습니다.');
     if (owner.status !== 'REJECTED') {
       throw new ForbiddenException('거절 상태에서만 재신청할 수 있습니다.');
     }
 
-    return this.prisma.owner.update({
+    const updated = await this.prisma.owner.update({
       where: { id: ownerId },
       data: {
         status: 'PENDING',
         rejectionReason: null,
-        businessLicenseUrl,
-        businessName,
+        businessLicenseUrl: data.businessLicenseUrl,
+        businessName: data.businessName,
+        ...(data.name && { name: data.name }),
+        ...(data.phone && { phone: data.phone }),
+        ...(data.address && { address: data.address }),
       },
     });
+
+    // 텔레그램 알림 (실패해도 무시)
+    this.notificationService
+      .sendTelegramMessage(
+        `🔄 사장님 재신청\n\n👤 ${data.name || owner.name || '이름 없음'}\n🏢 ${data.businessName}\n📍 ${data.address || owner.address || '주소 없음'}\n📱 ${data.phone || owner.phone || '전화번호 없음'}\n\n👉 관리자 페이지에서 확인: https://dreammechaniclab.com/admin/owners`,
+      )
+      .catch(() => {});
+
+    return updated;
   }
 
   // ── 사장님용: 사업자등록증 제출 ──

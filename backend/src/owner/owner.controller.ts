@@ -124,13 +124,9 @@ export class OwnerProfileController {
   @Post('reapply')
   reapply(
     @Request() req,
-    @Body() body: { businessLicenseUrl: string; businessName: string },
+    @Body() body: { businessLicenseUrl: string; businessName: string; name?: string; phone?: string; address?: string },
   ) {
-    return this.ownerService.reapply(
-      req.user.sub,
-      body.businessLicenseUrl,
-      body.businessName,
-    );
+    return this.ownerService.reapply(req.user.sub, body);
   }
 
   // POST /owner/business-info — 사업자 정보 통합 제출 (이름/전화/주소/상호/사업자등록증)

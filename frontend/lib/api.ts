@@ -124,7 +124,7 @@ export const ownerAuthApi = {
     api.patch('/owner/profile', data),
   submitBusinessLicense: (data: { businessLicenseUrl: string; businessName: string }) =>
     api.post('/owner/business-license', data),
-  reapply: (data: { businessLicenseUrl: string; businessName: string }) =>
+  reapply: (data: { businessLicenseUrl: string; businessName: string; name?: string; phone?: string; address?: string }) =>
     api.post('/owner/reapply', data),
   submitBusinessInfo: (data: { name: string; phone: string; address: string; businessName: string; businessLicenseUrl: string }) =>
     api.post('/owner/business-info', data),
