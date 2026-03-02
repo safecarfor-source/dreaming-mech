@@ -126,6 +126,8 @@ export const ownerAuthApi = {
     api.post('/owner/business-license', data),
   reapply: (data: { businessLicenseUrl: string; businessName: string }) =>
     api.post('/owner/reapply', data),
+  submitBusinessInfo: (data: { name: string; phone: string; address: string; businessName: string; businessLicenseUrl: string }) =>
+    api.post('/owner/business-info', data),
   setSignupInquiry: (inquiryId: number) =>
     api.patch('/owner/signup-inquiry', { inquiryId }),
 };

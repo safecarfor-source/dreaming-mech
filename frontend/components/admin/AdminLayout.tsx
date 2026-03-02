@@ -24,11 +24,11 @@ interface Props {
 
 const menuItems = [
   { href: '/admin', label: '대시보드', icon: LayoutDashboard },
-  { href: '/admin/mechanics', label: '정비사 관리', icon: Users },
-  { href: '/admin/customers', label: '고객 현황', icon: UserCheck },
-  { href: '/admin/owners', label: '정비사 회원가입 현황', icon: Building2 },
+  { href: '/admin/mechanics', label: '정비사 관리', icon: Users, badgeKey: 'mechanics' as const },
+  { href: '/admin/customers', label: '고객 현황', icon: UserCheck, badgeKey: 'customers' as const },
+  { href: '/admin/owners', label: '정비사 회원가입 현황', icon: Building2, badgeKey: 'owners' as const },
   { href: '/admin/unified-inquiries', label: '문의 관리', icon: MessageSquare, badgeKey: 'unified' as const },
-  { href: '/admin/reviews', label: '리뷰 관리', icon: Star },
+  { href: '/admin/reviews', label: '리뷰 관리', icon: Star, badgeKey: 'reviews' as const },
   { href: '/admin/tracking', label: '추적 링크', icon: Link2 },
   { href: '/admin/stats', label: '통계', icon: BarChart3 },
 ];
@@ -39,16 +39,16 @@ export default function AdminLayout({ children }: Props) {
   const { isAuthenticated, admin, logout } = useAuthStore();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isHydrated, setIsHydrated] = useState(false);
-  const [badges, setBadges] = useState<{ unified: number }>({ unified: 0 });
+  const [badges, setBadges] = useState<Record<string, number>>({});
 
-  // 문의 건수 가져오기
+  // 배지 카운트 통합 가져오기
   const fetchBadges = useCallback(async () => {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/unified-inquiries/count`, { credentials: 'include' }).catch(() => null);
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/badges`, { credentials: 'include' }).catch(() => null);
       const data = res?.ok ? await res.json() : null;
-      setBadges({
-        unified: data?.total || 0,
-      });
+      if (data) {
+        setBadges(data);
+      }
     } catch {}
   }, []);
 

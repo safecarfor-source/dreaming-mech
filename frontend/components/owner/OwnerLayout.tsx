@@ -15,6 +15,8 @@ import {
   AlertCircle,
   Clock,
   RefreshCw,
+  ChevronRight,
+  FileText,
 } from 'lucide-react';
 
 interface Props {
@@ -266,6 +268,19 @@ export default function OwnerLayout({ children }: Props) {
   }
 
   const isPending = owner?.status === 'PENDING';
+  const needsBusinessInfo = isPending && !owner?.businessLicenseUrl;
+  const waitingApproval = isPending && !!owner?.businessLicenseUrl;
+
+  // PENDING + 사업자 미제출 → /owner/mechanics 직접 접근 시 onboarding으로 리다이렉트
+  useEffect(() => {
+    if (isPending && pathname?.startsWith('/owner/mechanics')) {
+      if (needsBusinessInfo) {
+        router.replace('/owner/onboarding');
+      } else {
+        router.replace('/owner');
+      }
+    }
+  }, [isPending, needsBusinessInfo, pathname, router]);
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -297,18 +312,33 @@ export default function OwnerLayout({ children }: Props) {
           <nav className="space-y-2">
             {menuItems.map((item) => {
               const isActive = pathname === item.href;
-              // 정비소 등록은 APPROVED만 — PENDING은 잠금 표시
-              const isLocked = isPending && item.href === '/owner/mechanics';
-              if (isLocked) {
+              // PENDING + 매장 관리: 사업자 정보 미제출이면 제출 유도, 제출 완료면 승인 대기
+              const isMechanicsMenu = isPending && item.href === '/owner/mechanics';
+              if (isMechanicsMenu) {
+                const hasSubmitted = !!owner?.businessLicenseUrl;
+                if (!hasSubmitted) {
+                  return (
+                    <Link
+                      key={item.href}
+                      href="/owner/onboarding"
+                      onClick={() => setSidebarOpen(false)}
+                      className="flex items-center gap-3 px-4 py-3 rounded-xl text-amber-400 hover:bg-amber-500/10 transition-colors"
+                    >
+                      <item.icon size={20} />
+                      <span>사업자 정보 제출</span>
+                      <span className="ml-auto text-xs bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded animate-pulse">제출 필요</span>
+                    </Link>
+                  );
+                }
                 return (
                   <div
                     key={item.href}
-                    title="정비소 등록은 승인 후 이용 가능합니다"
+                    title="관리자 승인 후 이용 가능합니다"
                     className="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 cursor-not-allowed opacity-50"
                   >
                     <item.icon size={20} />
                     <span>{item.label}</span>
-                    <span className="ml-auto text-xs bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded">승인 후</span>
+                    <span className="ml-auto text-xs bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded">승인 대기</span>
                   </div>
                 );
               }
@@ -376,7 +406,45 @@ export default function OwnerLayout({ children }: Props) {
           </div>
         </header>
 
-        <main className="p-6">{children}</main>
+        <main className={`p-6 ${needsBusinessInfo ? 'pb-24' : waitingApproval ? 'pb-20' : ''}`}>{children}</main>
+
+        {/* 플로팅 배너: 사업자 정보 미제출 */}
+        {needsBusinessInfo && pathname !== '/owner/onboarding' && (
+          <div className="fixed bottom-0 left-0 right-0 lg:left-64 z-30">
+            <div className="bg-gradient-to-r from-[#7C4DFF] to-[#6B3FE0] text-white px-4 py-3 shadow-lg">
+              <Link
+                href="/owner/onboarding"
+                className="flex items-center justify-between max-w-2xl mx-auto"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <FileText size={18} />
+                  </div>
+                  <div>
+                    <p className="font-bold text-sm">정비소 등록을 위해 사업자 정보를 제출해주세요</p>
+                    <p className="text-white/70 text-xs">사업자등록증 + 상호 + 전화번호 → 승인 후 정비소 등록 가능</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-1 bg-white/20 px-3 py-1.5 rounded-lg flex-shrink-0 ml-3">
+                  <span className="text-sm font-medium">제출하기</span>
+                  <ChevronRight size={16} />
+                </div>
+              </Link>
+            </div>
+          </div>
+        )}
+
+        {/* 플로팅 배너: 승인 대기 중 */}
+        {waitingApproval && (
+          <div className="fixed bottom-0 left-0 right-0 lg:left-64 z-30">
+            <div className="bg-amber-50 border-t border-amber-200 text-amber-800 px-4 py-3">
+              <div className="flex items-center justify-center gap-2 max-w-2xl mx-auto">
+                <Clock size={16} className="text-amber-500" />
+                <p className="text-sm font-medium">사업자 정보 검토 중입니다. 승인 후 정비소를 등록할 수 있습니다.</p>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

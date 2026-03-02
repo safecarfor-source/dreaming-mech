@@ -118,6 +118,22 @@ export class OwnerProfileController {
     );
   }
 
+  // POST /owner/business-info — 사업자 정보 통합 제출 (이름/전화/주소/상호/사업자등록증)
+  @Post('business-info')
+  submitBusinessInfo(
+    @Request() req,
+    @Body()
+    body: {
+      name: string;
+      phone: string;
+      address: string;
+      businessName: string;
+      businessLicenseUrl: string;
+    },
+  ) {
+    return this.ownerService.submitBusinessInfo(req.user.sub, body);
+  }
+
   // PATCH /owner/signup-inquiry — 가입 문의 ID 기록 (최초 1회만 저장, 공유 링크 추적용)
   @Patch('signup-inquiry')
   setSignupInquiry(
@@ -181,5 +197,19 @@ export class AdminCustomerController {
   @HttpCode(HttpStatus.OK)
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.ownerService.deleteCustomer(id);
+  }
+}
+
+// ── 관리자용: 배지 통합 조회 ──
+
+@Controller('admin/badges')
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles('admin')
+export class AdminBadgeController {
+  constructor(private ownerService: OwnerService) {}
+
+  @Get()
+  getBadges() {
+    return this.ownerService.getAdminBadges();
   }
 }

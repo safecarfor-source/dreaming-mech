@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { NotificationService } from '../notification/notification.service';
 
 /**
  * null 값을 Prisma.JsonNull로 변환 (Json? 필드용)
@@ -13,7 +14,10 @@ function toJsonField(value: any): any {
 
 @Injectable()
 export class OwnerService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private notificationService: NotificationService,
+  ) {}
 
   // ── 관리자용: 사장님 목록 ──
 
@@ -119,6 +123,44 @@ export class OwnerService {
       where: { id: ownerId },
       data: { businessLicenseUrl, businessName },
     });
+  }
+
+  // ── 사장님용: 사업자 정보 제출 (이름, 전화, 주소, 상호, 사업자등록증) ──
+
+  async submitBusinessInfo(
+    ownerId: number,
+    data: {
+      name: string;
+      phone: string;
+      address: string;
+      businessName: string;
+      businessLicenseUrl: string;
+    },
+  ) {
+    const owner = await this.prisma.owner.findUnique({ where: { id: ownerId } });
+    if (!owner) throw new NotFoundException('사장님을 찾을 수 없습니다.');
+
+    const updated = await this.prisma.owner.update({
+      where: { id: ownerId },
+      data: {
+        name: data.name,
+        phone: data.phone,
+        address: data.address,
+        businessName: data.businessName,
+        businessLicenseUrl: data.businessLicenseUrl,
+        status: 'PENDING',
+        rejectionReason: null,
+      },
+    });
+
+    // 텔레그램 알림 발송 (실패해도 무시)
+    this.notificationService
+      .sendTelegramMessage(
+        `🔔 사장님 사업자 정보 제출\n\n👤 ${data.name}\n🏢 ${data.businessName}\n📍 ${data.address}\n📱 ${data.phone}\n\n👉 관리자 페이지에서 확인: https://dreammechaniclab.com/admin/owners`,
+      )
+      .catch(() => {});
+
+    return updated;
   }
 
   // ── 사장님용: 내 매장 목록 ──
@@ -382,5 +424,41 @@ export class OwnerService {
 
     await this.prisma.customer.delete({ where: { id } });
     return { message: '고객이 탈퇴 처리되었습니다.' };
+  }
+
+  // ── 관리자용: 배지 통합 조회 ──
+
+  async getAdminBadges() {
+    const [
+      unreadInquiries,
+      pendingServiceInquiries,
+      pendingQuoteRequests,
+      pendingTireInquiries,
+      newMechanics,
+      newCustomers,
+      pendingOwners,
+      pendingReviews,
+    ] = await Promise.all([
+      this.prisma.inquiry.count({ where: { isRead: false } }),
+      this.prisma.serviceInquiry.count({ where: { status: 'PENDING' } }),
+      this.prisma.quoteRequest.count({ where: { status: 'PENDING' } }),
+      this.prisma.tireInquiry.count({ where: { status: 'PENDING' } }),
+      this.prisma.mechanic.count({
+        where: { createdAt: { gte: new Date(Date.now() - 24 * 60 * 60 * 1000) }, isActive: true },
+      }),
+      this.prisma.customer.count({
+        where: { createdAt: { gte: new Date(Date.now() - 24 * 60 * 60 * 1000) } },
+      }),
+      this.prisma.owner.count({ where: { status: 'PENDING' } }),
+      this.prisma.review.count({ where: { isApproved: false, isActive: true } }),
+    ]);
+
+    return {
+      unified: unreadInquiries + pendingServiceInquiries + pendingQuoteRequests + pendingTireInquiries,
+      mechanics: newMechanics,
+      customers: newCustomers,
+      owners: pendingOwners,
+      reviews: pendingReviews,
+    };
   }
 }
