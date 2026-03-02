@@ -98,8 +98,9 @@ export default function AdminOwnersPage() {
       setDeactivateModalOwner(null);
       setSelectedOwner(null);
       fetchOwners();
-    } catch {
-      alert('탈퇴 처리에 실패했습니다.');
+    } catch (error: any) {
+      const message = error?.response?.data?.message || '탈퇴 처리에 실패했습니다.';
+      alert(message);
     } finally {
       setDeactivating(false);
     }

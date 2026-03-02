@@ -57,6 +57,22 @@ export default function OwnerLayout({ children }: Props) {
     }
   }, [isHydrated, isAuthenticated, router]);
 
+  // PENDING + 사업자 미제출 → /owner/mechanics 직접 접근 시 onboarding으로 리다이렉트
+  // ⚠️ Hook은 조건부 return 전에 호출되어야 함 (React Hooks 규칙)
+  const isPending = owner?.status === 'PENDING';
+  const needsBusinessInfo = isPending && !owner?.businessLicenseUrl;
+  const waitingApproval = isPending && !!owner?.businessLicenseUrl;
+
+  useEffect(() => {
+    if (isPending && pathname?.startsWith('/owner/mechanics')) {
+      if (needsBusinessInfo) {
+        router.replace('/owner/onboarding');
+      } else {
+        router.replace('/owner');
+      }
+    }
+  }, [isPending, needsBusinessInfo, pathname, router]);
+
   const handleLogout = async () => {
     try {
       await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/logout`, {
@@ -320,21 +336,6 @@ export default function OwnerLayout({ children }: Props) {
       </div>
     );
   }
-
-  const isPending = owner?.status === 'PENDING';
-  const needsBusinessInfo = isPending && !owner?.businessLicenseUrl;
-  const waitingApproval = isPending && !!owner?.businessLicenseUrl;
-
-  // PENDING + 사업자 미제출 → /owner/mechanics 직접 접근 시 onboarding으로 리다이렉트
-  useEffect(() => {
-    if (isPending && pathname?.startsWith('/owner/mechanics')) {
-      if (needsBusinessInfo) {
-        router.replace('/owner/onboarding');
-      } else {
-        router.replace('/owner');
-      }
-    }
-  }, [isPending, needsBusinessInfo, pathname, router]);
 
   return (
     <div className="min-h-screen bg-gray-100">

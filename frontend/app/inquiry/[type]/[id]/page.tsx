@@ -187,7 +187,7 @@ export default function SharedInquiryPage() {
                     <div>
                       <p className="font-bold text-red-700 mb-1">이 문의는 마감되었습니다</p>
                       <p className="text-sm text-red-600">
-                        공유 후 24시간이 지나 전화번호 확인이 불가합니다.<br />
+                        공유 후 48시간이 지나 전화번호 확인이 불가합니다.<br />
                         새로운 문의는 카카오 단톡방에서 확인하세요.
                       </p>
                     </div>
@@ -280,7 +280,7 @@ export default function SharedInquiryPage() {
                       <span className="text-orange-600 text-sm font-medium">
                         {(() => {
                           const shared = new Date(inquiry.sharedAt);
-                          const expires = new Date(shared.getTime() + 24 * 60 * 60 * 1000);
+                          const expires = new Date(shared.getTime() + 48 * 60 * 60 * 1000);
                           const remaining = expires.getTime() - Date.now();
                           const hours = Math.floor(remaining / (60 * 60 * 1000));
                           const minutes = Math.floor((remaining % (60 * 60 * 1000)) / (60 * 1000));

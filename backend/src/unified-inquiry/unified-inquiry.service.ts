@@ -322,16 +322,21 @@ export class UnifiedInquiryService {
           data: { shareClickCount: { increment: 1 } },
         }).catch(() => {});
 
-        // 만료 체크: CONNECTED/COMPLETED 상태 = UI에서 만료 표시용 (전화번호 제한과 별개)
-        const isExpired = ['CONNECTED', 'COMPLETED'].includes(inq.status);
+        // 만료 체크: 상태 기반 또는 시간 기반 (48시간)
         const sharedAt = (inq as any).sharedAt as Date | null;
+        const statusExpired = ['CONNECTED', 'COMPLETED'].includes(inq.status);
+        const timeExpired = sharedAt
+          ? (Date.now() - new Date(sharedAt).getTime()) > 48 * 60 * 60 * 1000
+          : false;
+        const isExpired = statusExpired || timeExpired;
 
         return {
           id: inq.id,
           type: 'SERVICE',
           name: (inq as any).name || inq.customer?.nickname || undefined,
-          // 인증된 사용자(showPhone)에게는 만료 여부와 관계없이 전화번호 공개
-          phone: showPhone ? (inq.phone || inq.customer?.phone || undefined) : undefined,
+          // 인증된 사용자: 만료되지 않았으면 전화번호 공개, 만료되면 비공개
+          // 비인증 사용자: 항상 비공개
+          phone: (showPhone && !isExpired) ? (inq.phone || inq.customer?.phone || undefined) : undefined,
           regionSido: inq.regionSido,
           regionSigungu: inq.regionSigungu,
           regionDong: (inq as any).regionDong || undefined,
