@@ -4,9 +4,24 @@ import { useEffect, useState } from 'react';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { adminOwnerApi } from '@/lib/api';
 import { Owner } from '@/types';
-import { Check, X, Clock, UserCheck, UserX, Eye, Building2, AlertCircle, Phone, MapPin, Calendar } from 'lucide-react';
+import {
+  Check,
+  X,
+  Clock,
+  UserCheck,
+  UserX,
+  Eye,
+  Building2,
+  AlertCircle,
+  Phone,
+  MapPin,
+  Calendar,
+  Shield,
+  RotateCcw,
+  UserMinus,
+} from 'lucide-react';
 
-type FilterStatus = 'all' | 'PENDING' | 'APPROVED' | 'REJECTED';
+type FilterStatus = 'all' | 'PENDING' | 'APPROVED' | 'REJECTED' | 'DEACTIVATED';
 
 export default function AdminOwnersPage() {
   const [owners, setOwners] = useState<Owner[]>([]);
@@ -18,6 +33,10 @@ export default function AdminOwnersPage() {
   const [rejectModalOwner, setRejectModalOwner] = useState<Owner | null>(null);
   const [rejectReason, setRejectReason] = useState('');
   const [rejecting, setRejecting] = useState(false);
+
+  // 탈퇴 확인 모달 상태
+  const [deactivateModalOwner, setDeactivateModalOwner] = useState<Owner | null>(null);
+  const [deactivating, setDeactivating] = useState(false);
 
   const fetchOwners = async () => {
     try {
@@ -33,6 +52,7 @@ export default function AdminOwnersPage() {
   useEffect(() => {
     setLoading(true);
     fetchOwners();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filter]);
 
   const handleApprove = async (id: number) => {
@@ -70,6 +90,43 @@ export default function AdminOwnersPage() {
     }
   };
 
+  const handleDeactivateConfirm = async () => {
+    if (!deactivateModalOwner) return;
+    setDeactivating(true);
+    try {
+      await adminOwnerApi.deactivate(deactivateModalOwner.id);
+      setDeactivateModalOwner(null);
+      setSelectedOwner(null);
+      fetchOwners();
+    } catch {
+      alert('탈퇴 처리에 실패했습니다.');
+    } finally {
+      setDeactivating(false);
+    }
+  };
+
+  const handleReactivate = async (id: number) => {
+    if (!confirm('이 사장님을 복원하시겠습니까?')) return;
+    try {
+      await adminOwnerApi.reactivate(id);
+      setSelectedOwner(null);
+      fetchOwners();
+    } catch {
+      alert('복원에 실패했습니다.');
+    }
+  };
+
+  const handleToggleProtected = async (owner: Owner) => {
+    const action = owner.isProtected ? '보호 해제' : '보호 설정';
+    if (!confirm(`이 사장님을 ${action}하시겠습니까?`)) return;
+    try {
+      await adminOwnerApi.toggleProtected(owner.id);
+      fetchOwners();
+    } catch {
+      alert(`${action}에 실패했습니다.`);
+    }
+  };
+
   const statusBadge = (status: string) => {
     switch (status) {
       case 'PENDING':
@@ -90,6 +147,12 @@ export default function AdminOwnersPage() {
             <UserX size={11} /> 거절됨
           </span>
         );
+      case 'DEACTIVATED':
+        return (
+          <span className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold bg-gray-200 text-gray-600 rounded-full">
+            <UserMinus size={11} /> 탈퇴
+          </span>
+        );
       default:
         return null;
     }
@@ -103,7 +166,7 @@ export default function AdminOwnersPage() {
     );
   };
 
-  const formatDate = (dateStr?: string) => {
+  const formatDate = (dateStr?: string | null) => {
     if (!dateStr) return '-';
     const d = new Date(dateStr);
     const year = d.getFullYear();
@@ -114,12 +177,13 @@ export default function AdminOwnersPage() {
     return `${year}.${month}.${day} ${hours}:${mins}`;
   };
 
-  // 필터별 카운트
+  // 필터별 카운트 — 전체 조회 시에만 의미 있음
   const counts = {
     all: owners.length,
     PENDING: owners.filter(o => o.status === 'PENDING').length,
     APPROVED: owners.filter(o => o.status === 'APPROVED').length,
     REJECTED: owners.filter(o => o.status === 'REJECTED').length,
+    DEACTIVATED: owners.filter(o => o.status === 'DEACTIVATED').length,
   };
 
   return (
@@ -136,13 +200,14 @@ export default function AdminOwnersPage() {
           { value: 'PENDING', label: '대기중', count: counts.PENDING },
           { value: 'APPROVED', label: '승인됨', count: counts.APPROVED },
           { value: 'REJECTED', label: '거절됨', count: counts.REJECTED },
+          { value: 'DEACTIVATED', label: '탈퇴', count: counts.DEACTIVATED },
         ].map((tab) => (
           <button
             key={tab.value}
             onClick={() => setFilter(tab.value as FilterStatus)}
             className={`px-4 py-2 text-sm rounded-lg transition-colors flex items-center gap-1.5 ${
               filter === tab.value
-                ? 'bg-purple-600 text-white'
+                ? 'bg-[#7C4DFF] text-white'
                 : 'bg-white text-gray-600 hover:bg-gray-100'
             }`}
           >
@@ -169,7 +234,9 @@ export default function AdminOwnersPage() {
           {owners.map((owner) => (
             <div
               key={owner.id}
-              className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden"
+              className={`bg-white rounded-xl shadow-sm border overflow-hidden ${
+                owner.status === 'DEACTIVATED' ? 'border-gray-200 opacity-75' : 'border-gray-100'
+              }`}
             >
               {/* 카드 헤더 */}
               <div className="px-5 py-4 flex items-center justify-between gap-3">
@@ -182,7 +249,7 @@ export default function AdminOwnersPage() {
                       className="w-10 h-10 rounded-full flex-shrink-0 object-cover"
                     />
                   ) : (
-                    <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center text-sm font-bold text-purple-600 flex-shrink-0">
+                    <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center text-sm font-bold text-[#7C4DFF] flex-shrink-0">
                       {owner.name?.[0] || '?'}
                     </div>
                   )}
@@ -191,6 +258,10 @@ export default function AdminOwnersPage() {
                       <span className="font-bold text-gray-900 text-base">
                         {owner.name || '(이름 없음)'}
                       </span>
+                      {/* 보호 계정 방패 아이콘 */}
+                      {owner.isProtected && (
+                        <Shield size={14} className="text-[#7C4DFF]" fill="#7C4DFF" />
+                      )}
                       {statusBadge(owner.status)}
                       {providerLabel(owner.provider)}
                     </div>
@@ -203,12 +274,26 @@ export default function AdminOwnersPage() {
                   {owner.businessLicenseUrl && (
                     <button
                       onClick={() => setSelectedOwner(owner)}
-                      className="p-2 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
+                      className="p-2 text-[#7C4DFF] hover:bg-purple-50 rounded-lg transition-colors"
                       title="사업자등록증 보기"
                     >
                       <Eye size={18} />
                     </button>
                   )}
+
+                  {/* 보호 토글 — 모든 상태에서 표시 */}
+                  <button
+                    onClick={() => handleToggleProtected(owner)}
+                    className={`p-2 rounded-lg transition-colors ${
+                      owner.isProtected
+                        ? 'text-[#7C4DFF] bg-purple-50 hover:bg-purple-100'
+                        : 'text-gray-400 hover:bg-gray-100'
+                    }`}
+                    title={owner.isProtected ? '보호 해제' : '보호 설정'}
+                  >
+                    <Shield size={18} />
+                  </button>
+
                   {owner.status === 'PENDING' && (
                     <>
                       <button
@@ -227,12 +312,35 @@ export default function AdminOwnersPage() {
                       </button>
                     </>
                   )}
+
+                  {owner.status === 'APPROVED' && (
+                    <button
+                      onClick={() => setDeactivateModalOwner(owner)}
+                      className="text-sm px-3 py-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors font-medium flex items-center gap-1"
+                      title="탈퇴 처리"
+                    >
+                      <UserMinus size={15} />
+                      탈퇴
+                    </button>
+                  )}
+
                   {owner.status === 'REJECTED' && (
                     <button
                       onClick={() => handleApprove(owner.id)}
-                      className="text-sm px-3 py-1.5 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors font-medium"
+                      className="text-sm px-3 py-1.5 text-[#7C4DFF] hover:bg-purple-50 rounded-lg transition-colors font-medium"
                     >
                       재승인
+                    </button>
+                  )}
+
+                  {owner.status === 'DEACTIVATED' && (
+                    <button
+                      onClick={() => handleReactivate(owner.id)}
+                      className="text-sm px-3 py-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors font-medium flex items-center gap-1"
+                      title="복원"
+                    >
+                      <RotateCcw size={15} />
+                      복원
                     </button>
                   )}
                 </div>
@@ -256,7 +364,7 @@ export default function AdminOwnersPage() {
                     <p className="text-xs text-gray-400">전화번호</p>
                     <p className="text-xs font-medium text-gray-700">
                       {owner.phone ? (
-                        <a href={`tel:${owner.phone}`} className="text-purple-600 hover:underline">
+                        <a href={`tel:${owner.phone}`} className="text-[#7C4DFF] hover:underline">
                           {owner.phone}
                         </a>
                       ) : (
@@ -278,8 +386,8 @@ export default function AdminOwnersPage() {
                 </div>
               </div>
 
-              {/* 업체명 + 거절 사유 */}
-              {(owner.businessName || (owner.status === 'REJECTED' && owner.rejectionReason)) && (
+              {/* 업체명 + 거절 사유 + 탈퇴 일시 */}
+              {(owner.businessName || (owner.status === 'REJECTED' && owner.rejectionReason) || owner.status === 'DEACTIVATED') && (
                 <div className="px-5 py-3 border-t border-gray-100 flex flex-wrap gap-3">
                   {owner.businessName && (
                     <div className="flex items-center gap-1.5">
@@ -291,6 +399,12 @@ export default function AdminOwnersPage() {
                     <div className="flex items-center gap-1.5 text-red-500">
                       <AlertCircle size={13} />
                       <span className="text-xs">거절 사유: {owner.rejectionReason}</span>
+                    </div>
+                  )}
+                  {owner.status === 'DEACTIVATED' && owner.deactivatedAt && (
+                    <div className="flex items-center gap-1.5 text-gray-400">
+                      <Calendar size={13} />
+                      <span className="text-xs">탈퇴일시: {formatDate(owner.deactivatedAt)}</span>
                     </div>
                   )}
                 </div>
@@ -330,12 +444,17 @@ export default function AdminOwnersPage() {
                 {selectedOwner.profileImage ? (
                   <img src={selectedOwner.profileImage} alt="" className="w-14 h-14 rounded-full object-cover" />
                 ) : (
-                  <div className="w-14 h-14 rounded-full bg-purple-100 flex items-center justify-center text-xl font-bold text-purple-600">
+                  <div className="w-14 h-14 rounded-full bg-purple-100 flex items-center justify-center text-xl font-bold text-[#7C4DFF]">
                     {selectedOwner.name?.[0] || '?'}
                   </div>
                 )}
                 <div>
-                  <p className="font-bold text-gray-900 text-lg">{selectedOwner.name || '(이름 없음)'}</p>
+                  <div className="flex items-center gap-2">
+                    <p className="font-bold text-gray-900 text-lg">{selectedOwner.name || '(이름 없음)'}</p>
+                    {selectedOwner.isProtected && (
+                      <Shield size={16} className="text-[#7C4DFF]" fill="#7C4DFF" />
+                    )}
+                  </div>
                   <p className="text-sm text-gray-500">{selectedOwner.email || ''}</p>
                   <div className="flex items-center gap-2 mt-1">
                     {providerLabel(selectedOwner.provider)}
@@ -358,7 +477,7 @@ export default function AdminOwnersPage() {
                   </span>
                   <span className="text-gray-900 text-sm font-medium">
                     {selectedOwner.phone ? (
-                      <a href={`tel:${selectedOwner.phone}`} className="text-purple-600 hover:underline">
+                      <a href={`tel:${selectedOwner.phone}`} className="text-[#7C4DFF] hover:underline">
                         {selectedOwner.phone}
                       </a>
                     ) : '미입력'}
@@ -376,6 +495,14 @@ export default function AdminOwnersPage() {
                       <Building2 size={13} /> 업체명
                     </span>
                     <span className="text-gray-900 text-sm font-bold">{selectedOwner.businessName}</span>
+                  </div>
+                )}
+                {selectedOwner.status === 'DEACTIVATED' && selectedOwner.deactivatedAt && (
+                  <div className="flex gap-3">
+                    <span className="text-gray-400 text-sm w-20 flex-shrink-0 flex items-center gap-1">
+                      <UserMinus size={13} /> 탈퇴일시
+                    </span>
+                    <span className="text-red-600 text-sm font-medium">{formatDate(selectedOwner.deactivatedAt)}</span>
                   </div>
                 )}
               </div>
@@ -403,7 +530,7 @@ export default function AdminOwnersPage() {
                 </div>
               )}
 
-              {/* 승인/거절 버튼 */}
+              {/* 모달 내 액션 버튼 */}
               {selectedOwner.status === 'PENDING' && (
                 <div className="flex gap-3 pt-2">
                   <button
@@ -426,11 +553,46 @@ export default function AdminOwnersPage() {
               {selectedOwner.status === 'REJECTED' && (
                 <button
                   onClick={() => handleApprove(selectedOwner.id)}
-                  className="w-full bg-purple-600 text-white py-3 rounded-xl font-semibold hover:bg-purple-700 transition-colors"
+                  className="w-full bg-[#7C4DFF] text-white py-3 rounded-xl font-semibold hover:bg-[#6B3FEE] transition-colors"
                 >
                   재승인
                 </button>
               )}
+              {selectedOwner.status === 'APPROVED' && (
+                <button
+                  onClick={() => {
+                    setSelectedOwner(null);
+                    setDeactivateModalOwner(selectedOwner);
+                  }}
+                  className="w-full border border-red-200 text-red-600 py-3 rounded-xl font-semibold hover:bg-red-50 transition-colors flex items-center justify-center gap-2"
+                >
+                  <UserMinus size={18} /> 탈퇴 처리
+                </button>
+              )}
+              {selectedOwner.status === 'DEACTIVATED' && (
+                <button
+                  onClick={() => handleReactivate(selectedOwner.id)}
+                  className="w-full bg-blue-600 text-white py-3 rounded-xl font-semibold hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
+                >
+                  <RotateCcw size={18} /> 복원
+                </button>
+              )}
+
+              {/* 보호 토글 버튼 (모달 내) */}
+              <button
+                onClick={() => {
+                  handleToggleProtected(selectedOwner);
+                  setSelectedOwner(null);
+                }}
+                className={`w-full border py-2.5 rounded-xl font-medium text-sm transition-colors flex items-center justify-center gap-2 ${
+                  selectedOwner.isProtected
+                    ? 'border-purple-200 text-[#7C4DFF] hover:bg-purple-50'
+                    : 'border-gray-200 text-gray-500 hover:bg-gray-50'
+                }`}
+              >
+                <Shield size={16} />
+                {selectedOwner.isProtected ? '보호 해제' : '보호 설정'}
+              </button>
             </div>
           </div>
         </div>
@@ -480,6 +642,68 @@ export default function AdminOwnersPage() {
                 className="flex-1 py-2.5 bg-red-600 text-white rounded-xl text-sm font-medium hover:bg-red-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
               >
                 {rejecting ? '처리 중...' : '거절하기'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 탈퇴 확인 모달 */}
+      {deactivateModalOwner && (
+        <div
+          className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4"
+          onClick={() => !deactivating && setDeactivateModalOwner(null)}
+        >
+          <div
+            className="bg-white rounded-2xl max-w-md w-full p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <div className="w-9 h-9 rounded-full bg-red-100 flex items-center justify-center">
+                  <UserMinus size={18} className="text-red-600" />
+                </div>
+                <h3 className="text-lg font-bold text-gray-900">탈퇴 처리 확인</h3>
+              </div>
+              <button
+                onClick={() => !deactivating && setDeactivateModalOwner(null)}
+                className="text-gray-400 hover:text-gray-600"
+                disabled={deactivating}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <p className="text-sm font-semibold text-gray-700 mb-1">정말 탈퇴시키겠습니까?</p>
+            <div className="bg-gray-50 rounded-xl p-4 mb-4 space-y-1.5">
+              <p className="text-sm text-gray-700">
+                <span className="font-semibold">{deactivateModalOwner.name || '(이름 없음)'}</span>
+                {deactivateModalOwner.businessName && (
+                  <span className="text-gray-500"> ({deactivateModalOwner.businessName})</span>
+                )}
+              </p>
+              <p className="text-xs text-red-500 flex items-center gap-1">
+                <AlertCircle size={12} /> 소속 매장이 비활성화됩니다
+              </p>
+              <p className="text-xs text-gray-400 flex items-center gap-1">
+                <Check size={12} /> 데이터는 보존됩니다
+              </p>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setDeactivateModalOwner(null)}
+                disabled={deactivating}
+                className="flex-1 py-2.5 border border-gray-200 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors disabled:cursor-not-allowed"
+              >
+                취소
+              </button>
+              <button
+                onClick={handleDeactivateConfirm}
+                disabled={deactivating}
+                className="flex-1 py-2.5 bg-red-600 text-white rounded-xl text-sm font-medium hover:bg-red-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+              >
+                {deactivating ? '처리 중...' : '탈퇴 처리'}
               </button>
             </div>
           </div>

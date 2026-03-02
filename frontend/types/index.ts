@@ -92,13 +92,15 @@ export interface Owner {
   name?: string;
   profileImage?: string;
   provider: string;
-  status: 'PENDING' | 'APPROVED' | 'REJECTED';
+  status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'DEACTIVATED';
   rejectionReason?: string;
   businessLicenseUrl?: string;
   businessName?: string;
   phone?: string;
   address?: string;
   createdAt?: string;
+  deactivatedAt?: string | null;
+  isProtected?: boolean;
   _count?: { mechanics: number };
 }
 

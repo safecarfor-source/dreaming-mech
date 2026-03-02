@@ -71,9 +71,10 @@ model Mechanic {
 
 // 사장님(Owner) 모델 - 소셜 로그인으로 가입
 enum OwnerStatus {
-  PENDING   // 가입 신청 (승인 대기)
-  APPROVED  // 승인됨
-  REJECTED  // 거절됨
+  PENDING     // 가입 신청 (승인 대기)
+  APPROVED    // 승인됨
+  REJECTED    // 거절됨
+  DEACTIVATED // 탈퇴(비활성화)
 }
 
 model Owner {
@@ -91,6 +92,8 @@ model Owner {
   phone               String?     // 알림톡 발송용 전화번호
   address             String?     // 매장 주소
   signupInquiryId     Int?        // 어떤 문의 링크를 통해 가입했는지 (ServiceInquiry.id, 1회만 기록)
+  isProtected         Boolean     @default(false) // 보호 계정 (탈퇴/재가입해도 항상 APPROVED 유지)
+  deactivatedAt       DateTime?   // 탈퇴 일시
   createdAt           DateTime    @default(now())
   updatedAt           DateTime    @updatedAt
   mechanics           Mechanic[]

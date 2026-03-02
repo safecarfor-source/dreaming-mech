@@ -38,6 +38,8 @@ export class OwnerService {
         businessName: true,
         phone: true,
         address: true,
+        isProtected: true,
+        deactivatedAt: true,
         createdAt: true,
         _count: { select: { mechanics: true } },
       },
@@ -61,6 +63,8 @@ export class OwnerService {
         businessName: true,
         phone: true,
         address: true,
+        isProtected: true,
+        deactivatedAt: true,
         createdAt: true,
         _count: { select: { mechanics: true } },
       },
@@ -449,7 +453,7 @@ export class OwnerService {
       this.prisma.customer.count({
         where: { createdAt: { gte: new Date(Date.now() - 24 * 60 * 60 * 1000) } },
       }),
-      this.prisma.owner.count({ where: { status: 'PENDING' } }),
+      this.prisma.owner.count({ where: { status: 'PENDING' } }), // DEACTIVATED 제외
       this.prisma.review.count({ where: { isApproved: false, isActive: true } }),
     ]);
 
@@ -459,6 +463,94 @@ export class OwnerService {
       customers: newCustomers,
       owners: pendingOwners,
       reviews: pendingReviews,
+    };
+  }
+
+  // ── 관리자용: Owner 탈퇴 (소프트 삭제) ──
+
+  async deactivateOwner(id: number) {
+    const owner = await this.prisma.owner.findUnique({ where: { id } });
+    if (!owner) throw new NotFoundException('사장님을 찾을 수 없습니다.');
+
+    // 보호 계정은 탈퇴 불가
+    if (owner.isProtected) {
+      throw new BadRequestException('보호 계정은 탈퇴시킬 수 없습니다.');
+    }
+
+    // Owner 비활성화
+    await this.prisma.owner.update({
+      where: { id },
+      data: {
+        status: 'DEACTIVATED',
+        deactivatedAt: new Date(),
+      },
+    });
+
+    // 소속 Mechanic 전체 비활성화
+    await this.prisma.mechanic.updateMany({
+      where: { ownerId: id },
+      data: { isActive: false },
+    });
+
+    // 텔레그램 알림 (실패해도 무시)
+    this.notificationService
+      .sendTelegramMessage(
+        `⚠️ 정비사 탈퇴 처리\n\n👤 ${owner.name || '이름 없음'}\n📧 ${owner.email || '이메일 없음'}\n🆔 Owner ID: ${id}\n\n관리자에 의해 탈퇴 처리되었습니다.`,
+      )
+      .catch(() => {});
+
+    return { message: '탈퇴 처리되었습니다.' };
+  }
+
+  // ── 관리자용: Owner 복원 ──
+
+  async reactivateOwner(id: number) {
+    const owner = await this.prisma.owner.findUnique({ where: { id } });
+    if (!owner) throw new NotFoundException('사장님을 찾을 수 없습니다.');
+
+    // DEACTIVATED 상태가 아니면 복원 불필요
+    if (owner.status !== 'DEACTIVATED') {
+      throw new BadRequestException('탈퇴 상태의 계정만 복원할 수 있습니다.');
+    }
+
+    // Owner 복원 (APPROVED 상태로)
+    await this.prisma.owner.update({
+      where: { id },
+      data: {
+        status: 'APPROVED',
+        deactivatedAt: null,
+      },
+    });
+
+    // 소속 Mechanic 재활성화
+    await this.prisma.mechanic.updateMany({
+      where: { ownerId: id },
+      data: { isActive: true },
+    });
+
+    return { message: '복원되었습니다.' };
+  }
+
+  // ── 관리자용: 보호 계정 설정/해제 ──
+
+  async toggleProtected(id: number) {
+    const owner = await this.prisma.owner.findUnique({ where: { id } });
+    if (!owner) throw new NotFoundException('사장님을 찾을 수 없습니다.');
+
+    const updated = await this.prisma.owner.update({
+      where: { id },
+      data: { isProtected: !owner.isProtected },
+      select: {
+        id: true,
+        name: true,
+        isProtected: true,
+        status: true,
+      },
+    });
+
+    return {
+      ...updated,
+      message: updated.isProtected ? '보호 계정으로 설정되었습니다.' : '보호 계정이 해제되었습니다.',
     };
   }
 }

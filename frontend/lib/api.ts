@@ -181,6 +181,9 @@ export const adminOwnerApi = {
   approve: (id: number) => api.patch(`/admin/owners/${id}/approve`),
   reject: (id: number, reason?: string) =>
     api.patch(`/admin/owners/${id}/reject`, { reason }),
+  deactivate: (id: number) => api.patch(`/admin/owners/${id}/deactivate`),
+  reactivate: (id: number) => api.patch(`/admin/owners/${id}/reactivate`),
+  toggleProtected: (id: number) => api.patch(`/admin/owners/${id}/toggle-protected`),
 };
 
 // Admin Customer API (관리자용 고객 관리)

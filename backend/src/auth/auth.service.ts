@@ -100,23 +100,39 @@ export class AuthService {
     const profile = kakaoAccount.profile || {};
     console.log('카카오 사용자 정보:', { kakaoId, email: kakaoAccount.email, nickname: profile.nickname });
 
-    // 3. Owner upsert
-    const owner = await this.prisma.owner.upsert({
-      where: { kakaoId },
-      update: {
+    // 3. Owner 조회 후 신규 생성 또는 업데이트 (DEACTIVATED 재로그인 처리 포함)
+    const existing = await this.prisma.owner.findUnique({ where: { kakaoId } });
+
+    let owner;
+    if (existing) {
+      const updateData: Record<string, unknown> = {
         email: kakaoAccount.email,
         name: profile.nickname,
         profileImage: profile.profile_image_url,
-      },
-      create: {
-        kakaoId,
-        email: kakaoAccount.email,
-        name: profile.nickname,
-        profileImage: profile.profile_image_url,
-        provider: 'kakao',
-        status: 'PENDING', // 관리자 승인 대기
-      },
-    });
+      };
+
+      // DEACTIVATED 상태에서 재로그인 시: 보호 계정이면 APPROVED, 아니면 PENDING
+      if (existing.status === 'DEACTIVATED') {
+        updateData.status = existing.isProtected ? 'APPROVED' : 'PENDING';
+        updateData.deactivatedAt = null;
+      }
+
+      owner = await this.prisma.owner.update({
+        where: { kakaoId },
+        data: updateData,
+      });
+    } else {
+      owner = await this.prisma.owner.create({
+        data: {
+          kakaoId,
+          email: kakaoAccount.email,
+          name: profile.nickname,
+          profileImage: profile.profile_image_url,
+          provider: 'kakao',
+          status: 'PENDING', // 관리자 승인 대기
+        },
+      });
+    }
 
     // 4. JWT 발급
     const payload = { sub: owner.id, email: owner.email || '', role: 'owner' as const };

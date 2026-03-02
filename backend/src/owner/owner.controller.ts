@@ -55,6 +55,21 @@ export class AdminOwnerController {
   ) {
     return this.ownerService.reject(id, body.reason);
   }
+
+  @Patch(':id/deactivate')
+  deactivate(@Param('id', ParseIntPipe) id: number) {
+    return this.ownerService.deactivateOwner(id);
+  }
+
+  @Patch(':id/reactivate')
+  reactivate(@Param('id', ParseIntPipe) id: number) {
+    return this.ownerService.reactivateOwner(id);
+  }
+
+  @Patch(':id/toggle-protected')
+  toggleProtected(@Param('id', ParseIntPipe) id: number) {
+    return this.ownerService.toggleProtected(id);
+  }
 }
 
 // ── 사장님용: 사업자등록증 제출 + 재신청 ──
