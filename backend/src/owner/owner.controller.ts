@@ -16,7 +16,7 @@ import {
 import { OwnerService } from './owner.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard, Roles } from '../auth/guards/roles.guard';
-import { OwnerApprovedGuard } from '../auth/guards/owner-approved.guard';
+import { BusinessApprovedGuard } from '../auth/guards/owner-approved.guard';
 import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
 import {
   CreateMechanicSchema,
@@ -25,9 +25,9 @@ import {
   type UpdateMechanicDto,
 } from '../mechanic/schemas/mechanic.schema';
 
-// ── 관리자용: 사장님 관리 ──
+// ── 관리자용: 사용자 관리 ──
 
-@Controller('admin/owners')
+@Controller('admin/users')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles('admin')
 export class AdminOwnerController {
@@ -70,6 +70,13 @@ export class AdminOwnerController {
   toggleProtected(@Param('id', ParseIntPipe) id: number) {
     return this.ownerService.toggleProtected(id);
   }
+
+  // 사용자 강제 탈퇴 (DELETE /admin/users/:id)
+  @Delete(':id')
+  @HttpCode(HttpStatus.OK)
+  removeUser(@Param('id', ParseIntPipe) id: number) {
+    return this.ownerService.deleteCustomer(id);
+  }
 }
 
 // ── 사장님용: 사업자등록증 제출 + 재신청 ──
@@ -79,7 +86,7 @@ export class AdminOwnerController {
 export class OwnerProfileController {
   constructor(private ownerService: OwnerService) {}
 
-  // GET /owner/profile — owner_token 전용 경로로 항상 올바른 사장님 프로필 반환
+  // GET /owner/profile — user_token으로 사장님 프로필 반환
   @Get('profile')
   getProfile(@Request() req) {
     return this.ownerService.getProfile(req.user.sub);
@@ -124,7 +131,7 @@ export class OwnerProfileController {
   @Post('reapply')
   reapply(
     @Request() req,
-    @Body() body: { businessLicenseUrl: string; businessName: string; name?: string; phone?: string; address?: string },
+    @Body() body: { businessLicenseUrl: string; businessName: string; nickname?: string; phone?: string; address?: string },
   ) {
     return this.ownerService.reapply(req.user.sub, body);
   }
@@ -155,10 +162,10 @@ export class OwnerProfileController {
   }
 }
 
-// ── 사장님용: 매장 관리 ──
+// ── 사용자용: 매장 관리 ──
 
 @Controller('owner/mechanics')
-@UseGuards(JwtAuthGuard, OwnerApprovedGuard)
+@UseGuards(JwtAuthGuard, BusinessApprovedGuard)
 export class OwnerMechanicController {
   constructor(private ownerService: OwnerService) {}
 
@@ -188,26 +195,6 @@ export class OwnerMechanicController {
   @HttpCode(HttpStatus.NO_CONTENT)
   remove(@Request() req, @Param('id', ParseIntPipe) id: number) {
     return this.ownerService.removeMechanic(req.user.sub, id);
-  }
-}
-
-// ── 관리자용: 고객 관리 ──
-
-@Controller('admin/customers')
-@UseGuards(JwtAuthGuard, RolesGuard)
-@Roles('admin')
-export class AdminCustomerController {
-  constructor(private ownerService: OwnerService) {}
-
-  @Get()
-  findAll() {
-    return this.ownerService.findAllCustomers();
-  }
-
-  @Delete(':id')
-  @HttpCode(HttpStatus.OK)
-  remove(@Param('id', ParseIntPipe) id: number) {
-    return this.ownerService.deleteCustomer(id);
   }
 }
 

@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { ownerAuthApi, uploadApi } from '@/lib/api';
-import { useOwnerStore } from '@/lib/auth';
+import { userAuthApi, uploadApi } from '@/lib/api';
+import { useUserStore } from '@/lib/auth';
 import {
   CheckCircle,
   ChevronRight,
@@ -22,7 +22,7 @@ import {
 
 export default function OwnerOnboardingPage() {
   const router = useRouter();
-  const { login } = useOwnerStore();
+  const { login } = useUserStore();
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [address, setAddress] = useState('');
@@ -36,7 +36,7 @@ export default function OwnerOnboardingPage() {
 
   // 이미 프로필 정보가 있으면 채우기
   useEffect(() => {
-    ownerAuthApi.getProfile().then((res) => {
+    userAuthApi.getProfile().then((res) => {
       const profile = res.data;
       if (profile.name) setName(profile.name);
       if (profile.phone) setPhone(profile.phone);
@@ -91,7 +91,7 @@ export default function OwnerOnboardingPage() {
       }
 
       // 사업자 정보 통합 제출
-      await ownerAuthApi.submitBusinessInfo({
+      await userAuthApi.submitBusinessInfo({
         name: name.trim(),
         phone: phone.trim(),
         address: address.trim(),
@@ -100,7 +100,7 @@ export default function OwnerOnboardingPage() {
       });
 
       // 프로필 새로고침
-      const profileRes = await ownerAuthApi.getProfile();
+      const profileRes = await userAuthApi.getProfile();
       login(profileRes.data);
 
       setDone(true);

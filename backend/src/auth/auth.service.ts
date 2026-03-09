@@ -100,60 +100,58 @@ export class AuthService {
     const profile = kakaoAccount.profile || {};
     console.log('카카오 사용자 정보:', { kakaoId, email: kakaoAccount.email, nickname: profile.nickname });
 
-    // 3. Owner 조회 후 신규 생성 또는 업데이트 (DEACTIVATED 재로그인 처리 포함)
-    const existing = await this.prisma.owner.findUnique({ where: { kakaoId } });
+    // 3. User 조회 후 신규 생성 또는 업데이트
+    const existing = await this.prisma.user.findUnique({ where: { kakaoId } });
 
-    let owner;
+    let user;
     if (existing) {
       const updateData: Record<string, unknown> = {
         email: kakaoAccount.email,
-        name: profile.nickname,
+        nickname: profile.nickname,
         profileImage: profile.profile_image_url,
       };
 
-      // DEACTIVATED 상태에서 재로그인 시: 보호 계정이면 APPROVED, 아니면 PENDING
-      if (existing.status === 'DEACTIVATED') {
-        updateData.status = existing.isProtected ? 'APPROVED' : 'PENDING';
+      // DEACTIVATED(deactivatedAt이 있는) 상태에서 재로그인 시: 보호 계정이면 APPROVED, 아니면 PENDING
+      if (existing.deactivatedAt) {
+        updateData.businessStatus = existing.isProtected ? 'APPROVED' : 'PENDING';
         updateData.deactivatedAt = null;
       }
 
-      owner = await this.prisma.owner.update({
+      user = await this.prisma.user.update({
         where: { kakaoId },
         data: updateData,
       });
     } else {
-      owner = await this.prisma.owner.create({
+      user = await this.prisma.user.create({
         data: {
           kakaoId,
           email: kakaoAccount.email,
-          name: profile.nickname,
+          nickname: profile.nickname,
           profileImage: profile.profile_image_url,
-          provider: 'kakao',
-          status: 'PENDING', // 관리자 승인 대기
+          businessStatus: 'NONE', // 일반 회원으로 시작
         },
       });
     }
 
     // 4. JWT 발급
-    const payload = { sub: owner.id, email: owner.email || '', role: 'owner' as const };
+    const payload = { sub: user.id, email: user.email || '', role: 'user' as const };
     return {
       access_token: this.jwtService.sign(payload),
-      owner,
+      user,
     };
   }
 
-  // ── Owner 프로필 ──
+  // ── User 프로필 ──
 
-  async getOwnerProfile(ownerId: number) {
-    const owner = await this.prisma.owner.findUnique({
-      where: { id: ownerId },
+  async getUserProfile(userId: number) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
       select: {
         id: true,
         email: true,
-        name: true,
+        nickname: true,
         profileImage: true,
-        provider: true,
-        status: true,
+        businessStatus: true,
         rejectionReason: true,
         businessLicenseUrl: true,
         businessName: true,
@@ -163,123 +161,37 @@ export class AuthService {
       },
     });
 
-    if (!owner) {
+    if (!user) {
       throw new UnauthorizedException('사용자를 찾을 수 없습니다.');
     }
 
-    return owner;
+    return user;
   }
 
-  async updateOwnerProfile(ownerId: number, data: { phone?: string; businessName?: string; address?: string; name?: string }) {
-    return this.prisma.owner.update({
-      where: { id: ownerId },
+  async updateUserProfile(userId: number, data: { phone?: string; businessName?: string; address?: string; nickname?: string }) {
+    return this.prisma.user.update({
+      where: { id: userId },
       data: {
         ...(data.phone !== undefined && { phone: data.phone }),
         ...(data.businessName !== undefined && { businessName: data.businessName }),
         ...(data.address !== undefined && { address: data.address }),
-        ...(data.name !== undefined && { name: data.name }),
+        ...(data.nickname !== undefined && { nickname: data.nickname }),
       },
       select: {
         id: true,
         email: true,
-        name: true,
+        nickname: true,
         phone: true,
         businessName: true,
         address: true,
-        status: true,
+        businessStatus: true,
       },
     });
   }
 
-  // ── 고객 카카오 OAuth ──
-
-  getKakaoCustomerLoginUrl() {
-    const params = new URLSearchParams({
-      client_id: process.env.KAKAO_CLIENT_ID || '',
-      redirect_uri: process.env.KAKAO_CUSTOMER_CALLBACK_URL || '',
-      response_type: 'code',
-    });
-    return `https://kauth.kakao.com/oauth/authorize?${params}`;
-  }
-
-  async handleKakaoCustomerCallback(code: string) {
-    console.log('고객 카카오 콜백 시작, code:', code?.substring(0, 20) + '...');
-
-    // 1. code → access_token 교환
-    const tokenRes = await axios.post(
-      'https://kauth.kakao.com/oauth/token',
-      new URLSearchParams({
-        grant_type: 'authorization_code',
-        client_id: process.env.KAKAO_CLIENT_ID || '',
-        client_secret: process.env.KAKAO_CLIENT_SECRET || '',
-        redirect_uri: process.env.KAKAO_CUSTOMER_CALLBACK_URL || '',
-        code,
-      }).toString(),
-      { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } },
-    );
-
-    const accessToken = tokenRes.data.access_token;
-    console.log('고객 카카오 토큰 교환 결과:', accessToken ? '성공' : '실패', tokenRes.data.error || '');
-    if (!accessToken) {
-      throw new UnauthorizedException('카카오 로그인에 실패했습니다.');
-    }
-
-    // 2. access_token → 사용자 정보 조회
-    const userRes = await axios.get('https://kapi.kakao.com/v2/user/me', {
-      headers: { Authorization: `Bearer ${accessToken}` },
-    });
-
-    const kakaoId = String(userRes.data.id);
-    const kakaoAccount = userRes.data.kakao_account || {};
-    const profile = kakaoAccount.profile || {};
-    console.log('고객 카카오 사용자 정보:', { kakaoId, email: kakaoAccount.email, nickname: profile.nickname });
-
-    // 3. Customer upsert (phone은 나중에 문의 생성 시 업데이트)
-    const customer = await this.prisma.customer.upsert({
-      where: { kakaoId },
-      update: {
-        email: kakaoAccount.email,
-        nickname: profile.nickname,
-      },
-      create: {
-        kakaoId,
-        email: kakaoAccount.email,
-        nickname: profile.nickname,
-      },
-    });
-
-    // 4. JWT 발급
-    const payload = { sub: customer.id, kakaoId, role: 'customer' as const };
-    return {
-      access_token: this.jwtService.sign(payload),
-      customer,
-    };
-  }
-
-  // ── 고객 프로필 ──
-
-  async getCustomerProfile(customerId: number) {
-    const customer = await this.prisma.customer.findUnique({
-      where: { id: customerId },
-      select: {
-        id: true,
-        kakaoId: true,
-        nickname: true,
-        email: true,
-        phone: true,
-      },
-    });
-
-    if (!customer) {
-      throw new UnauthorizedException('고객을 찾을 수 없습니다.');
-    }
-
-    return customer;
-  }
-
-  // ── 고객 추적 코드 연결 ──
+  // ── 사용자 추적 코드 연결 ──
   // 로그인 후 최초 유입 경로 trackingCode를 저장 (이미 코드가 있으면 보존)
-  async updateCustomerTracking(customerId: number, trackingCode: string) {
+  async updateUserTracking(userId: number, trackingCode: string) {
     // trackingCode가 유효한지 확인
     const link = await this.prisma.trackingLink.findUnique({
       where: { code: trackingCode },
@@ -287,18 +199,18 @@ export class AuthService {
     if (!link) return { updated: false, reason: 'invalid_code' };
 
     // 이미 trackingCode가 있으면 업데이트하지 않음 (최초 유입 경로 보존)
-    const customer = await this.prisma.customer.findUnique({
-      where: { id: customerId },
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
     });
 
-    if (!customer) {
-      throw new UnauthorizedException('고객을 찾을 수 없습니다.');
+    if (!user) {
+      throw new UnauthorizedException('사용자를 찾을 수 없습니다.');
     }
 
-    if (customer.trackingCode) return { updated: false, reason: 'already_set' };
+    if (user.trackingCode) return { updated: false, reason: 'already_set' };
 
-    await this.prisma.customer.update({
-      where: { id: customerId },
+    await this.prisma.user.update({
+      where: { id: userId },
       data: { trackingCode },
     });
 

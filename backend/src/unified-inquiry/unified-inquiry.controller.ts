@@ -108,22 +108,24 @@ export class UnifiedInquiryController {
     // 승인(APPROVED)은 정비소 등록 통제 목적 — 문의 조회는 가입 즉시 허용
     const showPhone = user && (
       user.role === 'admin' ||
-      (user.role === 'owner' && (user.status === 'APPROVED' || user.status === 'PENDING'))
+      ((user.role === 'user' || user.role === 'owner') &&
+        (user.businessStatus === 'APPROVED' || user.businessStatus === 'PENDING'))
     );
 
     return this.service.findOnePublic(type.toUpperCase(), id, !!showPhone);
   }
 
   // 선택적 인증 헬퍼
-  private async tryGetUser(req: any): Promise<{ sub: number; role: string; status?: string } | null> {
+  private async tryGetUser(req: any): Promise<{ sub: number; role: string; businessStatus?: string } | null> {
     try {
-      const token = req?.cookies?.owner_token || req?.cookies?.admin_token;
+      // user_token 또는 admin_token에서 인증 정보 추출 (하위 호환: owner_token도 시도)
+      const token = req?.cookies?.user_token || req?.cookies?.owner_token || req?.cookies?.admin_token;
       if (!token) return null;
       const decoded = this.jwtService.verify(token);
       if (!decoded) return null;
-      if (decoded.role === 'owner') {
-        const owner = await this.service.getOwnerStatus(decoded.sub);
-        return { ...decoded, status: owner?.status };
+      if (decoded.role === 'user' || decoded.role === 'owner') {
+        const userData = await this.service.getOwnerStatus(decoded.sub);
+        return { ...decoded, businessStatus: userData?.businessStatus };
       }
       return decoded;
     } catch {

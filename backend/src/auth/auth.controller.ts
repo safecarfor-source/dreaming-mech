@@ -35,31 +35,20 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @Get('profile')
   async getProfile(@Request() req) {
-    if (req.user.role === 'owner') {
-      return this.authService.getOwnerProfile(req.user.sub);
+    if (req.user.role === 'user') {
+      return this.authService.getUserProfile(req.user.sub);
     }
     return this.authService.getProfile(req.user.sub);
   }
 
-  // ── 고객 프로필 조회 ──
+  // ── 사용자 추적 코드 연결 (로그인 후 최초 유입 경로 저장) ──
   @UseGuards(JwtAuthGuard)
-  @Get('customer/profile')
-  async getCustomerProfile(@Request() req) {
-    const profile = await this.authService.getCustomerProfile(req.user.sub);
-    return {
-      success: true,
-      data: profile,
-    };
-  }
-
-  // ── 고객 추적 코드 연결 (로그인 후 최초 유입 경로 저장) ──
-  @UseGuards(JwtAuthGuard)
-  @Patch('customer/tracking')
-  async updateCustomerTracking(
+  @Patch('tracking')
+  async updateUserTracking(
     @Request() req,
     @Body() body: { trackingCode: string },
   ) {
-    const result = await this.authService.updateCustomerTracking(
+    const result = await this.authService.updateUserTracking(
       req.user.sub,
       body.trackingCode,
     );
@@ -69,25 +58,27 @@ export class AuthController {
     };
   }
 
-  // ── 사장님 프로필 업데이트 ──
+  // ── 사용자 프로필 업데이트 ──
   @UseGuards(JwtAuthGuard)
-  @Patch('owner/profile')
-  async updateOwnerProfile(
+  @Patch('profile')
+  async updateUserProfile(
     @Request() req,
-    @Body() body: { phone?: string; businessName?: string },
+    @Body() body: { phone?: string; businessName?: string; nickname?: string },
   ) {
-    return this.authService.updateOwnerProfile(req.user.sub, body);
+    return this.authService.updateUserProfile(req.user.sub, body);
   }
 
   @Post('logout')
   async logout(@Response({ passthrough: true }) res: ExpressResponse) {
     res.clearCookie('admin_token', { path: '/' });
+    res.clearCookie('user_token', { path: '/' });
+    // 하위 호환: 기존 쿠키도 클리어
     res.clearCookie('owner_token', { path: '/' });
     res.clearCookie('customer_token', { path: '/' });
     return { message: 'Logged out successfully' };
   }
 
-  // ── 카카오 소셜 로그인 (정비사) ──
+  // ── 카카오 소셜 로그인 ──
 
   @Get('kakao')
   kakaoLogin(@Response() res: ExpressResponse) {
@@ -104,7 +95,7 @@ export class AuthController {
       const result = await this.authService.handleKakaoCallback(code);
       const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
 
-      res.cookie('owner_token', result.access_token, {
+      res.cookie('user_token', result.access_token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',
@@ -112,44 +103,11 @@ export class AuthController {
         path: '/',
       });
 
-      res.redirect(`${frontendUrl}/owner/callback?status=${result.owner.status}`);
+      res.redirect(`${frontendUrl}/auth/callback?businessStatus=${result.user.businessStatus}`);
     } catch (error: any) {
       console.error('카카오 로그인 에러:', error?.response?.data || error?.message || error);
       const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
-      res.redirect(`${frontendUrl}/owner/login?error=kakao_failed`);
-    }
-  }
-
-  // ── 카카오 소셜 로그인 (고객) ──
-
-  @Get('kakao/customer')
-  kakaoCustomerLogin(@Response() res: ExpressResponse) {
-    const url = this.authService.getKakaoCustomerLoginUrl();
-    res.redirect(url);
-  }
-
-  @Get('kakao/customer/callback')
-  async kakaoCustomerCallback(
-    @Query('code') code: string,
-    @Response() res: ExpressResponse,
-  ) {
-    try {
-      const result = await this.authService.handleKakaoCustomerCallback(code);
-      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
-
-      res.cookie('customer_token', result.access_token, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
-        maxAge: 24 * 60 * 60 * 1000,
-        path: '/',
-      });
-
-      res.redirect(`${frontendUrl}/inquiry/callback?success=true`);
-    } catch (error: any) {
-      console.error('고객 카카오 로그인 에러:', error?.response?.data || error?.message || error);
-      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
-      res.redirect(`${frontendUrl}/inquiry?error=kakao_failed`);
+      res.redirect(`${frontendUrl}/login?error=kakao_failed`);
     }
   }
 }

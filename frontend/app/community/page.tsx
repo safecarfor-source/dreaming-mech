@@ -33,6 +33,8 @@ interface PostItem {
   likeCount: number;
   commentCount: number;
   createdAt: string;
+  user?: { id: number; nickname?: string; businessName?: string; businessStatus?: string };
+  // 하위 호환
   customer?: { id: number; nickname?: string };
   owner?: { id: number; name?: string; businessName?: string };
 }
@@ -62,14 +64,23 @@ export default function CommunityPage() {
   }, [category]);
 
   const getAuthorName = (post: PostItem) => {
+    // 통합 user 필드 우선, 하위 호환으로 customer/owner 폴백
+    if (post.user) {
+      return post.user.businessName || post.user.nickname || '익명';
+    }
     if (post.authorRole === 'OWNER') {
       return post.owner?.businessName || post.owner?.name || '정비사';
     }
     return post.customer?.nickname || '익명';
   };
 
+  const isApprovedBusiness = (post: PostItem) => {
+    if (post.user) return post.user.businessStatus === 'APPROVED';
+    return post.authorRole === 'OWNER';
+  };
+
   const getAuthorBadge = (post: PostItem) => {
-    if (post.authorRole === 'OWNER') {
+    if (isApprovedBusiness(post)) {
       return (
         <span className="inline-block px-1.5 py-0.5 bg-[#7C4DFF]/10 text-[#7C4DFF] text-xs font-semibold rounded">
           정비사

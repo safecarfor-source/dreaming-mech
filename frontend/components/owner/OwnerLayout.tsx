@@ -3,8 +3,8 @@
 import { useEffect, useState, useRef } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { useOwnerStore } from '@/lib/auth';
-import { ownerAuthApi, uploadApi } from '@/lib/api';
+import { useUserStore } from '@/lib/auth';
+import { userAuthApi, uploadApi } from '@/lib/api';
 import {
   LayoutDashboard,
   Store,
@@ -31,7 +31,7 @@ const menuItems = [
 export default function OwnerLayout({ children }: Props) {
   const router = useRouter();
   const pathname = usePathname();
-  const { isAuthenticated, owner, logout, login } = useOwnerStore();
+  const { isAuthenticated, user, logout, login } = useUserStore();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isHydrated, setIsHydrated] = useState(false);
 
@@ -53,15 +53,14 @@ export default function OwnerLayout({ children }: Props) {
 
   useEffect(() => {
     if (isHydrated && !isAuthenticated) {
-      router.push('/owner/login');
+      router.push('/login');
     }
   }, [isHydrated, isAuthenticated, router]);
 
   // PENDING + 사업자 미제출 → /owner/mechanics 직접 접근 시 onboarding으로 리다이렉트
-  // ⚠️ Hook은 조건부 return 전에 호출되어야 함 (React Hooks 규칙)
-  const isPending = owner?.status === 'PENDING';
-  const needsBusinessInfo = isPending && !owner?.businessLicenseUrl;
-  const waitingApproval = isPending && !!owner?.businessLicenseUrl;
+  const isPending = user?.businessStatus === 'PENDING';
+  const needsBusinessInfo = isPending && !user?.businessLicenseUrl;
+  const waitingApproval = isPending && !!user?.businessLicenseUrl;
 
   useEffect(() => {
     if (isPending && pathname?.startsWith('/owner/mechanics')) {
@@ -83,7 +82,7 @@ export default function OwnerLayout({ children }: Props) {
       console.error('Logout error:', error);
     } finally {
       logout();
-      router.push('/owner/login');
+      router.push('/login');
     }
   };
 
@@ -117,8 +116,8 @@ export default function OwnerLayout({ children }: Props) {
       const uploadRes = await uploadApi.uploadImage(licenseFile);
       const imageUrl = uploadRes.data.url;
 
-      // 2. 재신청 API 호출 (기본 정보 포함)
-      await ownerAuthApi.reapply({
+      // 2. 재신청 API 호출
+      await userAuthApi.reapply({
         businessLicenseUrl: imageUrl,
         businessName: businessName.trim(),
         name: reapplyName.trim(),
@@ -127,7 +126,7 @@ export default function OwnerLayout({ children }: Props) {
       });
 
       // 3. 프로필 새로고침
-      const profileRes = await ownerAuthApi.getProfile();
+      const profileRes = await userAuthApi.getProfile();
       login(profileRes.data);
 
       setShowReapply(false);
@@ -148,7 +147,7 @@ export default function OwnerLayout({ children }: Props) {
   }
 
   // 거절 상태
-  if (owner?.status === 'REJECTED') {
+  if (user?.businessStatus === 'REJECTED') {
     // 재신청 폼
     if (showReapply) {
       return (
@@ -297,13 +296,13 @@ export default function OwnerLayout({ children }: Props) {
           <h2 className="text-xl font-bold text-gray-900 mb-2">가입이 거절되었습니다</h2>
 
           {/* 거절 사유 표시 */}
-          {owner?.rejectionReason ? (
+          {user?.rejectionReason ? (
             <div className="mt-4 mb-6 p-4 bg-red-50 rounded-xl border border-red-100 text-left">
               <div className="flex items-center gap-2 mb-2">
                 <AlertCircle size={16} className="text-red-500" />
                 <p className="text-sm text-red-600 font-medium">거절 사유</p>
               </div>
-              <p className="text-sm text-red-700">{owner.rejectionReason}</p>
+              <p className="text-sm text-red-700">{user.rejectionReason}</p>
             </div>
           ) : (
             <p className="text-gray-500 mb-6">
@@ -315,10 +314,10 @@ export default function OwnerLayout({ children }: Props) {
           <button
             onClick={() => {
               setShowReapply(true);
-              setBusinessName(owner?.businessName || '');
-              setReapplyName(owner?.name || '');
-              setReapplyPhone(owner?.phone || '');
-              setReapplyAddress(owner?.address || '');
+              setBusinessName(user?.businessName || '');
+              setReapplyName(user?.name || user?.nickname || '');
+              setReapplyPhone(user?.phone || '');
+              setReapplyAddress(user?.address || '');
             }}
             className="w-full bg-[#7C4DFF] text-white py-3 rounded-xl font-medium hover:bg-[#6B3FE0] transition-colors flex items-center justify-center gap-2"
           >
@@ -370,7 +369,7 @@ export default function OwnerLayout({ children }: Props) {
               // PENDING + 매장 관리: 사업자 정보 미제출이면 제출 유도, 제출 완료면 승인 대기
               const isMechanicsMenu = isPending && item.href === '/owner/mechanics';
               if (isMechanicsMenu) {
-                const hasSubmitted = !!owner?.businessLicenseUrl;
+                const hasSubmitted = !!user?.businessLicenseUrl;
                 if (!hasSubmitted) {
                   return (
                     <Link
@@ -418,15 +417,15 @@ export default function OwnerLayout({ children }: Props) {
 
         <div className="absolute bottom-0 left-0 right-0 p-6 border-t border-white/10">
           <div className="flex items-center gap-3 mb-3">
-            {owner?.profileImage && (
+            {user?.profileImage && (
               <img
-                src={owner.profileImage}
+                src={user.profileImage}
                 alt=""
                 className="w-8 h-8 rounded-full"
               />
             )}
             <div className="text-sm text-gray-400 truncate">
-              {owner?.name || owner?.email || '사장님'}
+              {user?.name || user?.nickname || user?.email || '사장님'}
             </div>
           </div>
           <button
@@ -448,10 +447,12 @@ export default function OwnerLayout({ children }: Props) {
             <Menu size={24} />
           </button>
           <div className="flex items-center gap-2 text-sm text-gray-500">
-            {owner?.name || '사장님'}
-            <span className="text-xs text-purple-500 bg-purple-50 px-2 py-0.5 rounded-full">
-              {owner?.provider === 'naver' ? '네이버' : '카카오'}
-            </span>
+            {user?.name || user?.nickname || '사장님'}
+            {user?.provider && (
+              <span className="text-xs text-purple-500 bg-purple-50 px-2 py-0.5 rounded-full">
+                {user.provider === 'naver' ? '네이버' : '카카오'}
+              </span>
+            )}
             {isPending && (
               <span className="text-xs text-amber-600 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full flex items-center gap-1">
                 <Clock size={11} />

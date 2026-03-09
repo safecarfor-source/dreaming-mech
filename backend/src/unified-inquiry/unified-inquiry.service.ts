@@ -31,7 +31,7 @@ export class UnifiedInquiryService {
 
   async findAll(page: number = 1, limit: number = 20) {
     // 문의별 가입 정비사 수 집계 (signupInquiryId 기준)
-    const ownerSignups = await this.prisma.owner.groupBy({
+    const ownerSignups = await this.prisma.user.groupBy({
       by: ['signupInquiryId'],
       _count: { id: true },
       where: { signupInquiryId: { not: null } },
@@ -49,7 +49,7 @@ export class UnifiedInquiryService {
       }),
       this.prisma.serviceInquiry.findMany({
         include: {
-          customer: {
+          user: {
             select: { id: true, nickname: true, phone: true },
           },
           trackingLink: {
@@ -94,8 +94,8 @@ export class UnifiedInquiryService {
       unified.push({
         id: svc.id,
         type: 'SERVICE',
-        name: (svc as any).name || svc.customer?.nickname || undefined,
-        phone: svc.phone || svc.customer?.phone || undefined,
+        name: (svc as any).name || svc.user?.nickname || undefined,
+        phone: svc.phone || svc.user?.phone || undefined,
         regionSido: svc.regionSido,
         regionSigungu: svc.regionSigungu,
         regionDong: (svc as any).regionDong || undefined,
@@ -251,7 +251,7 @@ export class UnifiedInquiryService {
       case 'SERVICE': {
         const inq = await this.prisma.serviceInquiry.findUnique({
           where: { id },
-          include: { customer: { select: { nickname: true, phone: true } } },
+          include: { user: { select: { nickname: true, phone: true } } },
         });
         if (!inq) throw new Error('Not found');
         const serviceKo = SERVICE_TYPE_MAP[inq.serviceType] || inq.serviceType;
@@ -312,7 +312,7 @@ export class UnifiedInquiryService {
       case 'SERVICE': {
         const inq = await this.prisma.serviceInquiry.findUnique({
           where: { id },
-          include: { customer: { select: { nickname: true, phone: true } } },
+          include: { user: { select: { nickname: true, phone: true } } },
         });
         if (!inq) throw new NotFoundException(`문의를 찾을 수 없습니다.`);
 
@@ -333,10 +333,10 @@ export class UnifiedInquiryService {
         return {
           id: inq.id,
           type: 'SERVICE',
-          name: (inq as any).name || inq.customer?.nickname || undefined,
+          name: (inq as any).name || inq.user?.nickname || undefined,
           // 인증된 사용자: 만료되지 않았으면 전화번호 공개, 만료되면 비공개
           // 비인증 사용자: 항상 비공개
-          phone: (showPhone && !isExpired) ? (inq.phone || inq.customer?.phone || undefined) : undefined,
+          phone: (showPhone && !isExpired) ? (inq.phone || inq.user?.phone || undefined) : undefined,
           regionSido: inq.regionSido,
           regionSigungu: inq.regionSigungu,
           regionDong: (inq as any).regionDong || undefined,
@@ -387,10 +387,10 @@ export class UnifiedInquiryService {
     }
   }
 
-  async getOwnerStatus(ownerId: number) {
-    return this.prisma.owner.findUnique({
-      where: { id: ownerId },
-      select: { status: true },
+  async getOwnerStatus(userId: number) {
+    return this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { businessStatus: true },
     });
   }
 

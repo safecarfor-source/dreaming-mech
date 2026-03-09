@@ -2,62 +2,22 @@
 
 import { useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useOwnerStore } from '@/lib/auth';
-import { ownerAuthApi } from '@/lib/api';
 
-// 공유 링크 URL에서 문의 ID 추출 (/inquiry/service/42 → { type: 'service', id: 42 })
-function parseInquiryUrl(url: string): { type: string; id: number } | null {
-  const match = url.match(/\/inquiry\/(\w+)\/(\d+)/);
-  if (match) return { type: match[1], id: Number(match[2]) };
-  // 레거시 URL: /inquiry/42
-  const legacy = url.match(/\/inquiry\/(\d+)$/);
-  if (legacy) return { type: 'service', id: Number(legacy[1]) };
-  return null;
-}
-
-function CallbackContent() {
+function RedirectContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { login } = useOwnerStore();
-  const status = searchParams.get('status');
 
   useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const res = await ownerAuthApi.getProfile();
-        login(res.data);
-
-        // 공유 링크에서 왔으면 원래 문의로 복귀 (PENDING이어도 공유 링크는 공개 페이지)
-        const returnUrl = typeof window !== 'undefined'
-          ? sessionStorage.getItem('mechanic_return_url')
-          : null;
-
-        if (returnUrl) {
-          sessionStorage.removeItem('mechanic_return_url');
-          sessionStorage.setItem('mechanic_just_signed_up', 'true');
-          // 문의 링크에서 가입했으면 해당 문의 ID 연결 (추적용)
-          const inquiryInfo = parseInquiryUrl(returnUrl);
-          if (inquiryInfo) {
-            ownerAuthApi.setSignupInquiry(inquiryInfo.id).catch(() => {});
-          }
-          router.replace(returnUrl);
-        } else {
-          // PENDING/REJECTED/APPROVED 모두 /owner로 → OwnerLayout이 상태별 화면 처리
-          router.replace('/owner');
-        }
-      } catch {
-        router.replace('/owner/login?error=profile_failed');
-      }
-    };
-
-    fetchProfile();
-  }, [login, router, status]);
+    // 쿼리파라미터 그대로 전달
+    const params = searchParams.toString();
+    router.replace(params ? `/auth/callback?${params}` : '/auth/callback');
+  }, [router, searchParams]);
 
   return (
     <div className="min-h-screen flex items-center justify-center">
       <div className="text-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4" />
-        <p className="text-gray-600">로그인 처리 중...</p>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#7C4DFF] mx-auto mb-4" />
+        <p className="text-gray-600">리다이렉트 중...</p>
       </div>
     </div>
   );
@@ -66,7 +26,7 @@ function CallbackContent() {
 export default function OwnerCallbackPage() {
   return (
     <Suspense>
-      <CallbackContent />
+      <RedirectContent />
     </Suspense>
   );
 }

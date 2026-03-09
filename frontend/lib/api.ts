@@ -15,11 +15,10 @@ api.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       if (typeof window !== 'undefined') {
-        // 해당 역할의 인증 정보만 선택적으로 삭제 (다른 스토리지는 보존)
         const path = window.location.pathname;
-        if (path.startsWith('/owner') && !path.includes('/owner/login')) {
-          localStorage.removeItem('owner-auth-storage');
-          window.location.href = '/owner/login';
+        if (path.startsWith('/owner') && !path.includes('/login')) {
+          localStorage.removeItem('user-auth-storage');
+          window.location.href = '/login';
         } else if (path.startsWith('/admin') && !path.includes('/admin/login')) {
           localStorage.removeItem('auth-storage');
           window.location.href = '/admin/login';
@@ -116,21 +115,22 @@ export const analyticsApi = {
     })),
 };
 
-// Owner Auth API
-export const ownerAuthApi = {
-  // /owner/* 경로는 JWT 전략에서 owner_token만 사용 → admin 동시 로그인 시에도 올바른 사장님 프로필 반환
-  getProfile: () => api.get('/owner/profile'),
+// User Auth API (구 ownerAuthApi 대체)
+export const userAuthApi = {
+  getProfile: () => api.get('/auth/profile'),
   updateProfile: (data: { phone?: string; businessName?: string; address?: string; name?: string }) =>
-    api.patch('/owner/profile', data),
-  submitBusinessLicense: (data: { businessLicenseUrl: string; businessName: string }) =>
-    api.post('/owner/business-license', data),
-  reapply: (data: { businessLicenseUrl: string; businessName: string; name?: string; phone?: string; address?: string }) =>
-    api.post('/owner/reapply', data),
+    api.patch('/auth/profile', data),
   submitBusinessInfo: (data: { name: string; phone: string; address: string; businessName: string; businessLicenseUrl: string }) =>
     api.post('/owner/business-info', data),
+  reapply: (data: { businessLicenseUrl: string; businessName: string; name?: string; phone?: string; address?: string }) =>
+    api.post('/owner/reapply', data),
   setSignupInquiry: (inquiryId: number) =>
     api.patch('/owner/signup-inquiry', { inquiryId }),
+  updateTracking: (trackingCode: string) => api.patch('/auth/tracking', { trackingCode }),
 };
+
+// 하위 호환: ownerAuthApi → userAuthApi alias
+export const ownerAuthApi = userAuthApi;
 
 // 사장님용: 내 정비소 선택 고객 문의 API
 export const ownerInquiriesApi = {
@@ -174,22 +174,25 @@ export const ownerMechanicsApi = {
   delete: (id: number) => api.delete(`/owner/mechanics/${id}`),
 };
 
-// Admin Owner API (관리자용 사장님 관리)
-export const adminOwnerApi = {
-  getAll: (status?: string) =>
-    api.get('/admin/owners', { params: status ? { status } : {} }),
-  approve: (id: number) => api.patch(`/admin/owners/${id}/approve`),
+// Admin User API (관리자용 통합 회원 관리)
+export const adminUserApi = {
+  getAll: (businessStatus?: string) =>
+    api.get('/admin/users', { params: businessStatus ? { businessStatus } : {} }),
+  approve: (id: number) => api.patch(`/admin/users/${id}/approve`),
   reject: (id: number, reason?: string) =>
-    api.patch(`/admin/owners/${id}/reject`, { reason }),
-  deactivate: (id: number) => api.patch(`/admin/owners/${id}/deactivate`),
-  reactivate: (id: number) => api.patch(`/admin/owners/${id}/reactivate`),
-  toggleProtected: (id: number) => api.patch(`/admin/owners/${id}/toggle-protected`),
+    api.patch(`/admin/users/${id}/reject`, { reason }),
+  deactivate: (id: number) => api.patch(`/admin/users/${id}/deactivate`),
+  reactivate: (id: number) => api.patch(`/admin/users/${id}/reactivate`),
+  toggleProtected: (id: number) => api.patch(`/admin/users/${id}/toggle-protected`),
 };
 
-// Admin Customer API (관리자용 고객 관리)
+// 하위 호환: adminOwnerApi → adminUserApi alias
+export const adminOwnerApi = adminUserApi;
+
+// 하위 호환: adminCustomerApi (통합됨, 빈 stub)
 export const adminCustomerApi = {
-  getAll: () => api.get('/admin/customers'),
-  delete: (id: number) => api.delete(`/admin/customers/${id}`),
+  getAll: () => adminUserApi.getAll(),
+  delete: (id: number) => adminUserApi.deactivate(id),
 };
 
 // Inquiry API (문의)
@@ -348,11 +351,11 @@ export const syncApi = {
   delete: (id: number) => api.delete(`/sync/${id}`),
 };
 
-// 고객 인증 API
+// 고객 인증 API (하위 호환 - userAuthApi로 통합됨)
 export const customerAuthApi = {
-  getProfile: () => api.get<ApiResponse<Customer>>('/auth/customer/profile'),
-  updatePhone: (phone: string) => api.patch<ApiResponse<Customer>>('/auth/customer/phone', { phone }),
-  updateTracking: (trackingCode: string) => api.patch('/auth/customer/tracking', { trackingCode }),
+  getProfile: () => api.get('/auth/profile'),
+  updatePhone: (phone: string) => api.patch('/auth/profile', { phone }),
+  updateTracking: (trackingCode: string) => api.patch('/auth/tracking', { trackingCode }),
 };
 
 // 서비스 문의 API

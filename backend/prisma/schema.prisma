@@ -52,9 +52,9 @@ model Mechanic {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
-  // 사장님 연결 (사장님이 직접 등록한 매장)
-  ownerId         Int?
-  owner           Owner?   @relation(fields: [ownerId], references: [id])
+  // 사용자 연결 (사장님이 직접 등록한 매장)
+  userId          Int?
+  user            User?    @relation(fields: [userId], references: [id])
 
   // 관계
   clickLogs        ClickLog[]
@@ -65,44 +65,57 @@ model Mechanic {
   // 인덱스
   @@index([location]) // 지역별 검색 최적화
   @@index([isActive])
-  @@index([ownerId])
+  @@index([userId])
   @@index([sortOrder])
 }
 
-// 사장님(Owner) 모델 - 소셜 로그인으로 가입
-enum OwnerStatus {
-  PENDING     // 가입 신청 (승인 대기)
+// ========================================
+// 👤 통합 사용자(User) 모델
+// ========================================
+
+enum BusinessStatus {
+  NONE        // 일반 회원 (사업자 등록 안 함)
+  PENDING     // 사업자 등록 신청 (승인 대기)
   APPROVED    // 승인됨
   REJECTED    // 거절됨
-  DEACTIVATED // 탈퇴(비활성화)
 }
 
-model Owner {
-  id                  Int         @id @default(autoincrement())
+model User {
+  id                  Int             @id @default(autoincrement())
+  kakaoId             String          @unique
   email               String?
-  name                String?
+  nickname            String?
   profileImage        String?
-  naverId             String?     @unique  // 네이버 고유 ID
-  kakaoId             String?     @unique  // 카카오 고유 ID
-  provider            String      // "naver" | "kakao"
-  status              OwnerStatus @default(PENDING)
-  rejectionReason     String?     // 거절 사유
-  businessLicenseUrl  String?     // 사업자등록증 이미지 URL
-  businessName        String?     // 업체명
-  phone               String?     // 알림톡 발송용 전화번호
-  address             String?     // 매장 주소
-  signupInquiryId     Int?        // 어떤 문의 링크를 통해 가입했는지 (ServiceInquiry.id, 1회만 기록)
-  isProtected         Boolean     @default(false) // 보호 계정 (탈퇴/재가입해도 항상 APPROVED 유지)
-  deactivatedAt       DateTime?   // 탈퇴 일시
-  createdAt           DateTime    @default(now())
-  updatedAt           DateTime    @updatedAt
-  mechanics           Mechanic[]
-  posts        Post[]
-  comments     Comment[]
-  postLikes    PostLike[]
+  phone               String?
 
-  @@index([status])
-  @@index([signupInquiryId])
+  // 사업자 관련 (사업자 신청 시에만 사용)
+  businessStatus      BusinessStatus  @default(NONE)
+  businessLicenseUrl  String?
+  businessName        String?
+  address             String?
+  rejectionReason     String?
+  isProtected         Boolean         @default(false)
+  deactivatedAt       DateTime?
+  signupInquiryId     Int?
+
+  // 추적
+  trackingCode        String?
+  trackingLink        TrackingLink?   @relation(fields: [trackingCode], references: [code])
+
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+
+  // 관계
+  mechanics           Mechanic[]
+  serviceInquiries    ServiceInquiry[]
+  posts               Post[]
+  comments            Comment[]
+  postLikes           PostLike[]
+
+  @@index([kakaoId])
+  @@index([businessStatus])
+  @@index([phone])
+  @@index([trackingCode])
 }
 
 // 관리자 모델
@@ -278,7 +291,7 @@ model TrackingLink {
   updatedAt   DateTime @updatedAt
 
   clicks      LinkClick[]
-  customers   Customer[]
+  users       User[]
   inquiries   ServiceInquiry[]
 
   @@index([code])
@@ -316,30 +329,6 @@ enum TireServiceType {
   INSPECTION   // 타이어 점검
 }
 
-// ========================================
-// 🚗 고객 (Customer) 모델 - Phase 1
-// ========================================
-model Customer {
-  id          Int      @id @default(autoincrement())
-  kakaoId     String   @unique  // 카카오 고유 ID
-  nickname    String?           // 카카오 닉네임
-  email       String?           // 카카오 이메일 (선택)
-  phone       String?           // 직접 입력 전화번호 (문의 생성 시 업데이트)
-  trackingCode String?          // 어떤 추적 링크를 통해 가입했는지
-  trackingLink TrackingLink?    @relation(fields: [trackingCode], references: [code])
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  serviceInquiries ServiceInquiry[]
-  posts        Post[]
-  comments     Comment[]
-  postLikes    PostLike[]
-
-  @@index([kakaoId])
-  @@index([phone])
-  @@index([trackingCode])
-}
-
 // 서비스 문의 타입
 enum ServiceType {
   TIRE         // 타이어 (교체·펑크·위치교환)
@@ -358,14 +347,14 @@ enum ServiceInquiryStatus {
 }
 
 // ========================================
-// 🔔 서비스 문의 모델 - Phase 1 핵심
+// 🔔 서비스 문의 모델
 // ========================================
 model ServiceInquiry {
   id            Int                    @id @default(autoincrement())
 
-  // 고객 정보
-  customerId    Int?
-  customer      Customer?              @relation(fields: [customerId], references: [id])
+  // 사용자 연결
+  userId        Int?
+  user          User?                  @relation(fields: [userId], references: [id])
   name          String?                // 비로그인 고객 이름
 
   // 지역 정보
@@ -411,7 +400,7 @@ model ServiceInquiry {
   createdAt     DateTime               @default(now())
   updatedAt     DateTime               @updatedAt
 
-  @@index([customerId])
+  @@index([userId])
   @@index([regionSido, regionSigungu])
   @@index([regionSido, regionSigungu, regionDong])
   @@index([serviceType])
@@ -468,21 +457,13 @@ enum PostCategory {
   GENERAL     // 자유게시판
 }
 
-enum AuthorRole {
-  CUSTOMER  // 고객
-  OWNER     // 정비사 사장님
-}
-
 model Post {
   id           Int          @id @default(autoincrement())
   title        String       @db.VarChar(200)
   content      String       @db.Text
   category     PostCategory @default(GENERAL)
-  authorRole   AuthorRole
-  customerId   Int?
-  customer     Customer?    @relation(fields: [customerId], references: [id], onDelete: SetNull)
-  ownerId      Int?
-  owner        Owner?       @relation(fields: [ownerId], references: [id], onDelete: SetNull)
+  userId       Int?
+  user         User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
   viewCount    Int          @default(0)
   likeCount    Int          @default(0)
   commentCount Int          @default(0)
@@ -494,9 +475,7 @@ model Post {
   likes        PostLike[]
 
   @@index([category, createdAt])
-  @@index([authorRole])
-  @@index([customerId])
-  @@index([ownerId])
+  @@index([userId])
   @@index([isActive, createdAt])
 }
 
@@ -505,11 +484,8 @@ model Comment {
   postId     Int
   post       Post       @relation(fields: [postId], references: [id], onDelete: Cascade)
   content    String     @db.Text
-  authorRole AuthorRole
-  customerId Int?
-  customer   Customer?  @relation(fields: [customerId], references: [id], onDelete: SetNull)
-  ownerId    Int?
-  owner      Owner?     @relation(fields: [ownerId], references: [id], onDelete: SetNull)
+  userId     Int?
+  user       User?      @relation(fields: [userId], references: [id], onDelete: SetNull)
   parentId   Int?
   parent     Comment?   @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
   replies    Comment[]  @relation("CommentReplies")
@@ -518,8 +494,7 @@ model Comment {
   updatedAt  DateTime   @updatedAt
 
   @@index([postId, createdAt])
-  @@index([customerId])
-  @@index([ownerId])
+  @@index([userId])
   @@index([parentId])
 }
 
@@ -527,14 +502,10 @@ model PostLike {
   id         Int        @id @default(autoincrement())
   postId     Int
   post       Post       @relation(fields: [postId], references: [id], onDelete: Cascade)
-  authorRole AuthorRole
-  customerId Int?
-  customer   Customer?  @relation(fields: [customerId], references: [id], onDelete: SetNull)
-  ownerId    Int?
-  owner      Owner?     @relation(fields: [ownerId], references: [id], onDelete: SetNull)
+  userId     Int?
+  user       User?      @relation(fields: [userId], references: [id], onDelete: SetNull)
   createdAt  DateTime   @default(now())
 
-  @@unique([postId, customerId], name: "unique_customer_like")
-  @@unique([postId, ownerId], name: "unique_owner_like")
+  @@unique([postId, userId])
   @@index([postId])
 }

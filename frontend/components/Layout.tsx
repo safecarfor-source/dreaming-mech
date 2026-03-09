@@ -89,10 +89,10 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               <div className="w-px h-5 bg-[var(--border)] mx-2" />
 
               <Link
-                href="/owner/login"
+                href="/login"
                 className="px-4 py-2 text-[var(--text-body)] text-brand-500 hover:bg-brand-50 transition-colors duration-[var(--duration-fast)] rounded-lg font-semibold"
               >
-                사장님 로그인
+                로그인
               </Link>
             </nav>
 
@@ -142,14 +142,14 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 </Link>
               </nav>
 
-              {/* 하단 사장님 로그인 */}
+              {/* 하단 로그인 */}
               <div className="px-6 pb-8 pt-4 border-t border-white/10">
                 <Link
-                  href="/owner/login"
+                  href="/login"
                   onClick={() => setMobileMenuOpen(false)}
                   className="block w-full text-center px-4 py-3.5 bg-[#7C4DFF] text-white rounded-xl font-semibold text-base transition-colors hover:bg-[#5B3FBF]"
                 >
-                  사장님 로그인
+                  로그인
                 </Link>
               </div>
             </div>
@@ -185,8 +185,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 <Link href="/for-mechanics" className="block text-[var(--text-caption)] text-white/40 hover:text-brand-400 transition-colors duration-[var(--duration-fast)]">
                   정비사 사장님
                 </Link>
-                <Link href="/owner/login" className="block text-[var(--text-caption)] text-white/40 hover:text-brand-400 transition-colors duration-[var(--duration-fast)]">
-                  사장님 로그인
+                <Link href="/login" className="block text-[var(--text-caption)] text-white/40 hover:text-brand-400 transition-colors duration-[var(--duration-fast)]">
+                  로그인
                 </Link>
               </nav>
             </div>

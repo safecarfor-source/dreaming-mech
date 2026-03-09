@@ -93,10 +93,10 @@ export class MechanicService {
         skip,
         take: limit,
         include: {
-          owner: {
+          user: {
             select: {
               id: true,
-              name: true,
+              nickname: true,
               businessName: true,
             },
           },
@@ -144,10 +144,10 @@ export class MechanicService {
             createdAt: true,
           },
         },
-        owner: {
+        user: {
           select: {
             id: true,
-            name: true,
+            nickname: true,
             email: true,
             businessName: true,
           },

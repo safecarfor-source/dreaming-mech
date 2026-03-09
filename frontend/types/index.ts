@@ -202,12 +202,34 @@ export interface TireInquiry {
   updatedAt: string;
 }
 
-// Phase 1 타입들
+// 통합 User 타입
+export interface User {
+  id: number;
+  email?: string;
+  nickname?: string;
+  profileImage?: string;
+  phone?: string;
+  businessStatus: 'NONE' | 'PENDING' | 'APPROVED' | 'REJECTED' | 'DEACTIVATED';
+  businessLicenseUrl?: string;
+  businessName?: string;
+  address?: string;
+  rejectionReason?: string;
+  signupInquiryId?: number;
+  provider?: string;
+  name?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  deactivatedAt?: string | null;
+  isProtected?: boolean;
+  _count?: { mechanics: number };
+}
+
+// Phase 1 타입들 (하위 호환)
 export interface Customer {
   id: number;
-  kakaoId: string;
+  kakaoId?: string;
   nickname?: string;
-  phone: string;
+  phone?: string;
   createdAt: string;
 }
 
@@ -231,6 +253,7 @@ export interface ServiceInquiry {
   createdAt: string;
 }
 
+// 하위 호환 (useUserStore로 통합됨)
 export interface CustomerAuthState {
   customer: Customer | null;
   isLoading: boolean;

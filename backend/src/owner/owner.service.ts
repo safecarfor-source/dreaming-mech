@@ -19,20 +19,19 @@ export class OwnerService {
     private notificationService: NotificationService,
   ) {}
 
-  // ── 관리자용: 사장님 목록 ──
+  // ── 관리자용: 사용자 목록 (businessStatus 필터 지원) ──
 
   async findAll(status?: string) {
-    const where = status ? { status: status as any } : {};
-    return this.prisma.owner.findMany({
+    const where = status ? { businessStatus: status as any } : {};
+    return this.prisma.user.findMany({
       where,
       orderBy: { updatedAt: 'desc' },
       select: {
         id: true,
         email: true,
-        name: true,
+        nickname: true,
         profileImage: true,
-        provider: true,
-        status: true,
+        businessStatus: true,
         rejectionReason: true,
         businessLicenseUrl: true,
         businessName: true,
@@ -47,18 +46,17 @@ export class OwnerService {
     });
   }
 
-  // ── 관리자용: 사장님 상세 ──
+  // ── 관리자용: 사용자 상세 ──
 
   async findOne(id: number) {
-    const owner = await this.prisma.owner.findUnique({
+    const user = await this.prisma.user.findUnique({
       where: { id },
       select: {
         id: true,
         email: true,
-        name: true,
+        nickname: true,
         profileImage: true,
-        provider: true,
-        status: true,
+        businessStatus: true,
         rejectionReason: true,
         businessLicenseUrl: true,
         businessName: true,
@@ -70,60 +68,60 @@ export class OwnerService {
         _count: { select: { mechanics: true } },
       },
     });
-    if (!owner) throw new NotFoundException('사장님을 찾을 수 없습니다.');
-    return owner;
+    if (!user) throw new NotFoundException('사용자를 찾을 수 없습니다.');
+    return user;
   }
 
   // ── 관리자용: 승인 ──
 
   async approve(id: number) {
-    const owner = await this.prisma.owner.findUnique({ where: { id } });
-    if (!owner) throw new NotFoundException('사장님을 찾을 수 없습니다.');
+    const user = await this.prisma.user.findUnique({ where: { id } });
+    if (!user) throw new NotFoundException('사용자를 찾을 수 없습니다.');
 
-    return this.prisma.owner.update({
+    return this.prisma.user.update({
       where: { id },
-      data: { status: 'APPROVED', rejectionReason: null },
+      data: { businessStatus: 'APPROVED', rejectionReason: null },
     });
   }
 
   // ── 관리자용: 거절 ──
 
   async reject(id: number, reason?: string) {
-    const owner = await this.prisma.owner.findUnique({ where: { id } });
-    if (!owner) throw new NotFoundException('사장님을 찾을 수 없습니다.');
+    const user = await this.prisma.user.findUnique({ where: { id } });
+    if (!user) throw new NotFoundException('사용자를 찾을 수 없습니다.');
 
-    return this.prisma.owner.update({
+    return this.prisma.user.update({
       where: { id },
-      data: { status: 'REJECTED', rejectionReason: reason || null },
+      data: { businessStatus: 'REJECTED', rejectionReason: reason || null },
     });
   }
 
-  // ── 사장님용: 재신청 (거절된 상태에서 사업자등록증 재제출) ──
+  // ── 사용자용: 재신청 (거절된 상태에서 사업자등록증 재제출) ──
 
   async reapply(
-    ownerId: number,
+    userId: number,
     data: {
       businessLicenseUrl: string;
       businessName: string;
-      name?: string;
+      nickname?: string;
       phone?: string;
       address?: string;
     },
   ) {
-    const owner = await this.prisma.owner.findUnique({ where: { id: ownerId } });
-    if (!owner) throw new NotFoundException('사장님을 찾을 수 없습니다.');
-    if (owner.status !== 'REJECTED') {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new NotFoundException('사용자를 찾을 수 없습니다.');
+    if (user.businessStatus !== 'REJECTED') {
       throw new ForbiddenException('거절 상태에서만 재신청할 수 있습니다.');
     }
 
-    const updated = await this.prisma.owner.update({
-      where: { id: ownerId },
+    const updated = await this.prisma.user.update({
+      where: { id: userId },
       data: {
-        status: 'PENDING',
+        businessStatus: 'PENDING',
         rejectionReason: null,
         businessLicenseUrl: data.businessLicenseUrl,
         businessName: data.businessName,
-        ...(data.name && { name: data.name }),
+        ...(data.nickname && { nickname: data.nickname }),
         ...(data.phone && { phone: data.phone }),
         ...(data.address && { address: data.address }),
       },
@@ -132,29 +130,29 @@ export class OwnerService {
     // 텔레그램 알림 (실패해도 무시)
     this.notificationService
       .sendTelegramMessage(
-        `🔄 사장님 재신청\n\n👤 ${data.name || owner.name || '이름 없음'}\n🏢 ${data.businessName}\n📍 ${data.address || owner.address || '주소 없음'}\n📱 ${data.phone || owner.phone || '전화번호 없음'}\n\n👉 관리자 페이지에서 확인: https://dreammechaniclab.com/admin/owners`,
+        `사용자 재신청\n\n닉네임: ${data.nickname || user.nickname || '이름 없음'}\n상호: ${data.businessName}\n주소: ${data.address || user.address || '주소 없음'}\n전화: ${data.phone || user.phone || '전화번호 없음'}\n\n관리자 페이지에서 확인: https://dreammechaniclab.com/admin/users`,
       )
       .catch(() => {});
 
     return updated;
   }
 
-  // ── 사장님용: 사업자등록증 제출 ──
+  // ── 사용자용: 사업자등록증 제출 ──
 
-  async submitBusinessLicense(ownerId: number, businessLicenseUrl: string, businessName: string) {
-    const owner = await this.prisma.owner.findUnique({ where: { id: ownerId } });
-    if (!owner) throw new NotFoundException('사장님을 찾을 수 없습니다.');
+  async submitBusinessLicense(userId: number, businessLicenseUrl: string, businessName: string) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new NotFoundException('사용자를 찾을 수 없습니다.');
 
-    return this.prisma.owner.update({
-      where: { id: ownerId },
+    return this.prisma.user.update({
+      where: { id: userId },
       data: { businessLicenseUrl, businessName },
     });
   }
 
-  // ── 사장님용: 사업자 정보 제출 (이름, 전화, 주소, 상호, 사업자등록증) ──
+  // ── 사용자용: 사업자 정보 제출 (이름, 전화, 주소, 상호, 사업자등록증) ──
 
   async submitBusinessInfo(
-    ownerId: number,
+    userId: number,
     data: {
       name: string;
       phone: string;
@@ -163,18 +161,18 @@ export class OwnerService {
       businessLicenseUrl: string;
     },
   ) {
-    const owner = await this.prisma.owner.findUnique({ where: { id: ownerId } });
-    if (!owner) throw new NotFoundException('사장님을 찾을 수 없습니다.');
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new NotFoundException('사용자를 찾을 수 없습니다.');
 
-    const updated = await this.prisma.owner.update({
-      where: { id: ownerId },
+    const updated = await this.prisma.user.update({
+      where: { id: userId },
       data: {
-        name: data.name,
+        nickname: data.name,
         phone: data.phone,
         address: data.address,
         businessName: data.businessName,
         businessLicenseUrl: data.businessLicenseUrl,
-        status: 'PENDING',
+        businessStatus: 'PENDING',
         rejectionReason: null,
       },
     });
@@ -182,18 +180,18 @@ export class OwnerService {
     // 텔레그램 알림 발송 (실패해도 무시)
     this.notificationService
       .sendTelegramMessage(
-        `🔔 사장님 사업자 정보 제출\n\n👤 ${data.name}\n🏢 ${data.businessName}\n📍 ${data.address}\n📱 ${data.phone}\n\n👉 관리자 페이지에서 확인: https://dreammechaniclab.com/admin/owners`,
+        `사장님 사업자 정보 제출\n\n닉네임: ${data.name}\n상호: ${data.businessName}\n주소: ${data.address}\n전화: ${data.phone}\n\n관리자 페이지에서 확인: https://dreammechaniclab.com/admin/users`,
       )
       .catch(() => {});
 
     return updated;
   }
 
-  // ── 사장님용: 내 매장 목록 ──
+  // ── 사용자용: 내 매장 목록 ──
 
-  async getMyMechanics(ownerId: number) {
+  async getMyMechanics(userId: number) {
     const mechanics = await this.prisma.mechanic.findMany({
-      where: { ownerId },
+      where: { userId },
       orderBy: { createdAt: 'desc' },
     });
 
@@ -204,12 +202,12 @@ export class OwnerService {
     }));
   }
 
-  // ── 사장님용: 매장 등록 ──
+  // ── 사용자용: 매장 등록 ──
 
-  async createMechanic(ownerId: number, data: any) {
+  async createMechanic(userId: number, data: any) {
     // 카카오톡 1계정 = 정비소 1개 제한
     const existingCount = await this.prisma.mechanic.count({
-      where: { ownerId, isActive: true },
+      where: { userId, isActive: true },
     });
     if (existingCount >= 1) {
       throw new BadRequestException('하나의 계정으로 정비소는 1개만 등록할 수 있습니다.');
@@ -223,7 +221,7 @@ export class OwnerService {
     const mechanic = await this.prisma.mechanic.create({
       data: {
         ...createData,
-        ownerId,
+        userId,
         galleryImages: createData.galleryImages || [],
       },
     });
@@ -235,15 +233,15 @@ export class OwnerService {
     };
   }
 
-  // ── 사장님용: 매장 수정 (본인 매장만) ──
+  // ── 사용자용: 매장 수정 (본인 매장만) ──
 
-  async updateMechanic(ownerId: number, mechanicId: number, data: any) {
+  async updateMechanic(userId: number, mechanicId: number, data: any) {
     const mechanic = await this.prisma.mechanic.findUnique({
       where: { id: mechanicId },
     });
 
     if (!mechanic) throw new NotFoundException('매장을 찾을 수 없습니다.');
-    if (mechanic.ownerId !== ownerId) throw new ForbiddenException('본인 매장만 수정할 수 있습니다.');
+    if (mechanic.userId !== userId) throw new ForbiddenException('본인 매장만 수정할 수 있습니다.');
 
     // Json? 필드의 null 처리
     const processedData: any = { ...data };
@@ -262,18 +260,17 @@ export class OwnerService {
     };
   }
 
-  // ── 사장님용: 프로필 조회 ──
+  // ── 사용자용: 프로필 조회 ──
 
-  async getProfile(ownerId: number) {
-    const owner = await this.prisma.owner.findUnique({
-      where: { id: ownerId },
+  async getProfile(userId: number) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
       select: {
         id: true,
         email: true,
-        name: true,
+        nickname: true,
         profileImage: true,
-        provider: true,
-        status: true,
+        businessStatus: true,
         rejectionReason: true,
         businessLicenseUrl: true,
         businessName: true,
@@ -282,16 +279,16 @@ export class OwnerService {
         createdAt: true,
       },
     });
-    if (!owner) throw new NotFoundException('사장님을 찾을 수 없습니다.');
-    return owner;
+    if (!user) throw new NotFoundException('사용자를 찾을 수 없습니다.');
+    return user;
   }
 
-  // ── 사장님용: 내 정비소를 선택한 고객 문의 조회 ──
+  // ── 사용자용: 내 정비소를 선택한 고객 문의 조회 ──
 
-  async getMyInquiries(ownerId: number) {
-    // 1. 사장님의 정비소 목록 조회
+  async getMyInquiries(userId: number) {
+    // 1. 사용자의 정비소 목록 조회
     const mechanics = await this.prisma.mechanic.findMany({
-      where: { ownerId, isActive: true },
+      where: { userId, isActive: true },
       select: { id: true },
     });
     const mechanicIds = mechanics.map((m) => m.id);
@@ -313,12 +310,12 @@ export class OwnerService {
     });
   }
 
-  // ── 사장님용: 내 문의 상세 조회 ──
+  // ── 사용자용: 내 문의 상세 조회 ──
 
-  async getMyInquiryDetail(ownerId: number, inquiryId: number) {
+  async getMyInquiryDetail(userId: number, inquiryId: number) {
     // 내 정비소 ID 목록
     const mechanics = await this.prisma.mechanic.findMany({
-      where: { ownerId, isActive: true },
+      where: { userId, isActive: true },
       select: { id: true },
     });
     const mechanicIds = mechanics.map((m) => m.id);
@@ -342,7 +339,7 @@ export class OwnerService {
     return inquiry;
   }
 
-  // ── 사장님용: 공유 링크 클릭 수 증가 ──
+  // ── 사용자용: 공유 링크 클릭 수 증가 ──
 
   async incrementShareClick(inquiryId: number) {
     return this.prisma.serviceInquiry.update({
@@ -351,18 +348,18 @@ export class OwnerService {
     });
   }
 
-  // ── 사장님용: 가입 문의 ID 기록 (최초 1회, 어떤 공유 링크로 가입했는지 추적) ──
+  // ── 사용자용: 가입 문의 ID 기록 (최초 1회, 어떤 공유 링크로 가입했는지 추적) ──
 
-  async setSignupInquiry(ownerId: number, inquiryId: number) {
-    const owner = await this.prisma.owner.findUnique({
-      where: { id: ownerId },
+  async setSignupInquiry(userId: number, inquiryId: number) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
       select: { id: true, signupInquiryId: true },
     });
-    if (!owner) throw new NotFoundException('사장님을 찾을 수 없습니다.');
+    if (!user) throw new NotFoundException('사용자를 찾을 수 없습니다.');
 
     // 이미 기록된 경우 덮어쓰지 않음 (최초 가입 경로만 보존)
-    if (owner.signupInquiryId !== null) {
-      return { message: '이미 가입 문의 ID가 기록되어 있습니다.', signupInquiryId: owner.signupInquiryId };
+    if (user.signupInquiryId !== null) {
+      return { message: '이미 가입 문의 ID가 기록되어 있습니다.', signupInquiryId: user.signupInquiryId };
     }
 
     // 해당 ServiceInquiry 존재 여부 확인
@@ -372,46 +369,46 @@ export class OwnerService {
     });
     if (!inquiry) throw new NotFoundException('해당 문의를 찾을 수 없습니다.');
 
-    await this.prisma.owner.update({
-      where: { id: ownerId },
+    await this.prisma.user.update({
+      where: { id: userId },
       data: { signupInquiryId: inquiryId },
     });
 
     return { message: '가입 문의 ID가 기록되었습니다.', signupInquiryId: inquiryId };
   }
 
-  // ── 사장님용: 프로필 업데이트 (전화번호 등) ──
+  // ── 사용자용: 프로필 업데이트 (전화번호 등) ──
 
-  async updateProfile(ownerId: number, data: { phone?: string; businessName?: string; address?: string; name?: string }) {
-    return this.prisma.owner.update({
-      where: { id: ownerId },
+  async updateProfile(userId: number, data: { phone?: string; businessName?: string; address?: string; nickname?: string }) {
+    return this.prisma.user.update({
+      where: { id: userId },
       data: {
         ...(data.phone !== undefined && { phone: data.phone }),
         ...(data.businessName !== undefined && { businessName: data.businessName }),
         ...(data.address !== undefined && { address: data.address }),
-        ...(data.name !== undefined && { name: data.name }),
+        ...(data.nickname !== undefined && { nickname: data.nickname }),
       },
       select: {
         id: true,
         email: true,
-        name: true,
+        nickname: true,
         phone: true,
         businessName: true,
         address: true,
-        status: true,
+        businessStatus: true,
       },
     });
   }
 
-  // ── 사장님용: 매장 삭제 (본인 매장만, 소프트 삭제) ──
+  // ── 사용자용: 매장 삭제 (본인 매장만, 소프트 삭제) ──
 
-  async removeMechanic(ownerId: number, mechanicId: number) {
+  async removeMechanic(userId: number, mechanicId: number) {
     const mechanic = await this.prisma.mechanic.findUnique({
       where: { id: mechanicId },
     });
 
     if (!mechanic) throw new NotFoundException('매장을 찾을 수 없습니다.');
-    if (mechanic.ownerId !== ownerId) throw new ForbiddenException('본인 매장만 삭제할 수 있습니다.');
+    if (mechanic.userId !== userId) throw new ForbiddenException('본인 매장만 삭제할 수 있습니다.');
 
     return this.prisma.mechanic.update({
       where: { id: mechanicId },
@@ -419,10 +416,11 @@ export class OwnerService {
     });
   }
 
-  // ── 관리자용: 고객 목록 ──
+  // ── 관리자용: 일반 사용자 목록 (businessStatus: NONE) ──
 
   async findAllCustomers() {
-    return this.prisma.customer.findMany({
+    return this.prisma.user.findMany({
+      where: { businessStatus: 'NONE' },
       orderBy: { createdAt: 'desc' },
       select: {
         id: true,
@@ -437,19 +435,19 @@ export class OwnerService {
     });
   }
 
-  // ── 관리자용: 고객 강제 탈퇴 ──
+  // ── 관리자용: 사용자 강제 탈퇴 ──
 
   async deleteCustomer(id: number) {
-    const customer = await this.prisma.customer.findUnique({ where: { id } });
-    if (!customer) throw new NotFoundException('고객을 찾을 수 없습니다.');
+    const user = await this.prisma.user.findUnique({ where: { id } });
+    if (!user) throw new NotFoundException('사용자를 찾을 수 없습니다.');
 
-    // 관련 ServiceInquiry 먼저 삭제 (cascade)
+    // 관련 ServiceInquiry 먼저 삭제
     await this.prisma.serviceInquiry.deleteMany({
-      where: { customerId: id },
+      where: { userId: id },
     });
 
-    await this.prisma.customer.delete({ where: { id } });
-    return { message: '고객이 탈퇴 처리되었습니다.' };
+    await this.prisma.user.delete({ where: { id } });
+    return { message: '사용자가 탈퇴 처리되었습니다.' };
   }
 
   // ── 관리자용: 배지 통합 조회 ──
@@ -472,10 +470,10 @@ export class OwnerService {
       this.prisma.mechanic.count({
         where: { createdAt: { gte: new Date(Date.now() - 24 * 60 * 60 * 1000) }, isActive: true },
       }),
-      this.prisma.customer.count({
-        where: { createdAt: { gte: new Date(Date.now() - 24 * 60 * 60 * 1000) } },
+      this.prisma.user.count({
+        where: { businessStatus: 'NONE', createdAt: { gte: new Date(Date.now() - 24 * 60 * 60 * 1000) } },
       }),
-      this.prisma.owner.count({ where: { status: 'PENDING' } }), // DEACTIVATED 제외
+      this.prisma.user.count({ where: { businessStatus: 'PENDING' } }),
       this.prisma.review.count({ where: { isApproved: false, isActive: true } }),
     ]);
 
@@ -488,65 +486,64 @@ export class OwnerService {
     };
   }
 
-  // ── 관리자용: Owner 탈퇴 (소프트 삭제) ──
+  // ── 관리자용: 사용자 탈퇴 (소프트 삭제) ──
 
   async deactivateOwner(id: number) {
-    const owner = await this.prisma.owner.findUnique({ where: { id } });
-    if (!owner) throw new NotFoundException('사장님을 찾을 수 없습니다.');
+    const user = await this.prisma.user.findUnique({ where: { id } });
+    if (!user) throw new NotFoundException('사용자를 찾을 수 없습니다.');
 
     // 보호 계정은 탈퇴 불가
-    if (owner.isProtected) {
+    if (user.isProtected) {
       throw new BadRequestException('보호 계정은 탈퇴시킬 수 없습니다.');
     }
 
-    // Owner 비활성화
-    await this.prisma.owner.update({
+    // 사용자 비활성화 (deactivatedAt 기록 + businessStatus 초기화)
+    await this.prisma.user.update({
       where: { id },
       data: {
-        status: 'DEACTIVATED',
         deactivatedAt: new Date(),
       },
     });
 
     // 소속 Mechanic 전체 비활성화
     await this.prisma.mechanic.updateMany({
-      where: { ownerId: id },
+      where: { userId: id },
       data: { isActive: false },
     });
 
     // 텔레그램 알림 (실패해도 무시)
     this.notificationService
       .sendTelegramMessage(
-        `⚠️ 정비사 탈퇴 처리\n\n👤 ${owner.name || '이름 없음'}\n📧 ${owner.email || '이메일 없음'}\n🆔 Owner ID: ${id}\n\n관리자에 의해 탈퇴 처리되었습니다.`,
+        `정비사 탈퇴 처리\n\n닉네임: ${user.nickname || '이름 없음'}\n이메일: ${user.email || '이메일 없음'}\nUser ID: ${id}\n\n관리자에 의해 탈퇴 처리되었습니다.`,
       )
       .catch(() => {});
 
     return { message: '탈퇴 처리되었습니다.' };
   }
 
-  // ── 관리자용: Owner 복원 ──
+  // ── 관리자용: 사용자 복원 ──
 
   async reactivateOwner(id: number) {
-    const owner = await this.prisma.owner.findUnique({ where: { id } });
-    if (!owner) throw new NotFoundException('사장님을 찾을 수 없습니다.');
+    const user = await this.prisma.user.findUnique({ where: { id } });
+    if (!user) throw new NotFoundException('사용자를 찾을 수 없습니다.');
 
-    // DEACTIVATED 상태가 아니면 복원 불필요
-    if (owner.status !== 'DEACTIVATED') {
+    // deactivatedAt이 없으면 복원 불필요
+    if (!user.deactivatedAt) {
       throw new BadRequestException('탈퇴 상태의 계정만 복원할 수 있습니다.');
     }
 
-    // Owner 복원 (APPROVED 상태로)
-    await this.prisma.owner.update({
+    // 사용자 복원 (APPROVED 상태로)
+    await this.prisma.user.update({
       where: { id },
       data: {
-        status: 'APPROVED',
+        businessStatus: 'APPROVED',
         deactivatedAt: null,
       },
     });
 
     // 소속 Mechanic 재활성화
     await this.prisma.mechanic.updateMany({
-      where: { ownerId: id },
+      where: { userId: id },
       data: { isActive: true },
     });
 
@@ -556,17 +553,17 @@ export class OwnerService {
   // ── 관리자용: 보호 계정 설정/해제 ──
 
   async toggleProtected(id: number) {
-    const owner = await this.prisma.owner.findUnique({ where: { id } });
-    if (!owner) throw new NotFoundException('사장님을 찾을 수 없습니다.');
+    const user = await this.prisma.user.findUnique({ where: { id } });
+    if (!user) throw new NotFoundException('사용자를 찾을 수 없습니다.');
 
-    const updated = await this.prisma.owner.update({
+    const updated = await this.prisma.user.update({
       where: { id },
-      data: { isProtected: !owner.isProtected },
+      data: { isProtected: !user.isProtected },
       select: {
         id: true,
-        name: true,
+        nickname: true,
         isProtected: true,
-        status: true,
+        businessStatus: true,
       },
     });
 

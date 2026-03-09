@@ -36,7 +36,7 @@ export default function CommunityWritePage() {
       const err = error as { response?: { status?: number } };
       if (err.response?.status === 401) {
         alert('로그인이 필요합니다.\n카카오 로그인 후 이용해주세요.');
-        window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/auth/kakao/customer`;
+        window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/auth/kakao`;
       } else {
         alert('게시글 등록에 실패했습니다.');
       }

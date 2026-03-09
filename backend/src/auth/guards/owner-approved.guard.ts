@@ -2,26 +2,29 @@ import { Injectable, CanActivate, ExecutionContext, ForbiddenException } from '@
 import { PrismaService } from '../../prisma/prisma.service';
 
 @Injectable()
-export class OwnerApprovedGuard implements CanActivate {
+export class BusinessApprovedGuard implements CanActivate {
   constructor(private prisma: PrismaService) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
     const user = request.user;
 
-    if (user?.role !== 'owner') {
+    if (user?.role !== 'user') {
       return false;
     }
 
-    const owner = await this.prisma.owner.findUnique({
+    const dbUser = await this.prisma.user.findUnique({
       where: { id: user.sub },
-      select: { status: true },
+      select: { businessStatus: true },
     });
 
-    if (!owner || owner.status !== 'APPROVED') {
-      throw new ForbiddenException('승인된 사장님만 이용할 수 있습니다.');
+    if (!dbUser || dbUser.businessStatus !== 'APPROVED') {
+      throw new ForbiddenException('사업자 승인이 필요합니다.');
     }
 
     return true;
   }
 }
+
+// 하위 호환을 위해 기존 이름도 export
+export { BusinessApprovedGuard as OwnerApprovedGuard };

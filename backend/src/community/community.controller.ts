@@ -48,11 +48,8 @@ export class CommunityController {
     @Request() req: { user: { sub: number; role: string } },
     @Body() body: { title: string; content: string; category: string },
   ) {
-    const role = req.user.role as 'customer' | 'owner';
-    const authorRole = role === 'customer' ? 'CUSTOMER' : ('OWNER' as const);
     return this.communityService.createPost({
       ...body,
-      authorRole,
       authorId: req.user.sub,
     });
   }
@@ -65,13 +62,10 @@ export class CommunityController {
     @Request() req: { user: { sub: number; role: string } },
     @Body() body: { content: string; parentId?: number },
   ) {
-    const role = req.user.role as 'customer' | 'owner';
-    const authorRole = role === 'customer' ? 'CUSTOMER' : ('OWNER' as const);
     return this.communityService.createComment({
       postId,
       content: body.content,
       parentId: body.parentId,
-      authorRole,
       authorId: req.user.sub,
     });
   }
@@ -84,9 +78,7 @@ export class CommunityController {
     @Param('id', ParseIntPipe) postId: number,
     @Request() req: { user: { sub: number; role: string } },
   ) {
-    const role = req.user.role as 'customer' | 'owner';
-    const authorRole = role === 'customer' ? 'CUSTOMER' : ('OWNER' as const);
-    return this.communityService.toggleLike(postId, authorRole, req.user.sub);
+    return this.communityService.toggleLike(postId, req.user.sub);
   }
 
   // 게시글 삭제 (본인만)
@@ -97,8 +89,6 @@ export class CommunityController {
     @Param('id', ParseIntPipe) postId: number,
     @Request() req: { user: { sub: number; role: string } },
   ) {
-    const role = req.user.role as 'customer' | 'owner';
-    const authorRole = role === 'customer' ? 'CUSTOMER' : ('OWNER' as const);
-    return this.communityService.deletePost(postId, authorRole, req.user.sub);
+    return this.communityService.deletePost(postId, req.user.sub);
   }
 }

@@ -9,7 +9,6 @@ import {
   Users,
   BarChart3,
   UserCheck,
-  Building2,
   MessageSquare,
   Star,
   Link2,
@@ -25,8 +24,7 @@ interface Props {
 const menuItems = [
   { href: '/admin', label: '대시보드', icon: LayoutDashboard },
   { href: '/admin/mechanics', label: '정비사 관리', icon: Users, badgeKey: 'mechanics' as const },
-  { href: '/admin/customers', label: '고객 현황', icon: UserCheck, badgeKey: 'customers' as const },
-  { href: '/admin/owners', label: '정비사 회원가입 현황', icon: Building2, badgeKey: 'owners' as const },
+  { href: '/admin/users', label: '회원 관리', icon: UserCheck, badgeKey: 'owners' as const },
   { href: '/admin/unified-inquiries', label: '문의 관리', icon: MessageSquare, badgeKey: 'unified' as const },
   { href: '/admin/reviews', label: '리뷰 관리', icon: Star, badgeKey: 'reviews' as const },
   { href: '/admin/tracking', label: '추적 링크', icon: Link2 },

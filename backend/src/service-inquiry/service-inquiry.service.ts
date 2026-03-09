@@ -112,8 +112,8 @@ export class ServiceInquiryService {
       const selectedMechanic = await this.prisma.mechanic.findUnique({
         where: { id: inquiry.mechanicId },
         include: {
-          owner: {
-            select: { id: true, phone: true, status: true },
+          user: {
+            select: { id: true, phone: true, businessStatus: true },
           },
         },
       });
@@ -123,8 +123,8 @@ export class ServiceInquiryService {
         return;
       }
 
-      // ownerId가 있으면 APPROVED 사장님만, 없으면 독립 정비소로 취급
-      if (selectedMechanic.ownerId && selectedMechanic.owner?.status !== 'APPROVED') {
+      // userId가 있으면 APPROVED 사용자만, 없으면 독립 정비소로 취급
+      if (selectedMechanic.userId && selectedMechanic.user?.businessStatus !== 'APPROVED') {
         this.logger.log(`선택 정비소(#${inquiry.mechanicId}) 사장님 미승인 — 알림톡 스킵`);
         return;
       }
@@ -155,21 +155,21 @@ export class ServiceInquiryService {
         ],
       },
       include: {
-        owner: {
+        user: {
           select: {
             id: true,
             phone: true,
-            status: true,
+            businessStatus: true,
           },
         },
       },
     });
 
-    // APPROVED된 사장님이 있는 정비소, 또는 phone이 있는 정비소만 필터
+    // APPROVED된 사용자가 있는 정비소, 또는 phone이 있는 정비소만 필터
     const targetMechanics = mechanics.filter(
       (m) =>
         m.phone && // 정비소 전화번호 있음
-        (m.owner?.status === 'APPROVED' || !m.ownerId), // 승인된 사장님 OR 독립 정비소
+        (m.user?.businessStatus === 'APPROVED' || !m.userId), // 승인된 사장님 OR 독립 정비소
     );
 
     if (targetMechanics.length === 0) {
@@ -214,7 +214,7 @@ export class ServiceInquiryService {
         skip,
         take: limit,
         include: {
-          customer: {
+          user: {
             select: {
               id: true,
               nickname: true,
@@ -240,7 +240,7 @@ export class ServiceInquiryService {
     const inquiry = await this.prisma.serviceInquiry.findUnique({
       where: { id },
       include: {
-        customer: {
+        user: {
           select: {
             id: true,
             nickname: true,
@@ -261,7 +261,7 @@ export class ServiceInquiryService {
     const inquiry = await this.prisma.serviceInquiry.findUnique({
       where: { id },
       include: {
-        customer: {
+        user: {
           select: {
             id: true,
             nickname: true,
@@ -283,7 +283,7 @@ export class ServiceInquiryService {
       where: { id },
       data: { status },
       include: {
-        customer: true,
+        user: true,
       },
     });
 
@@ -316,10 +316,10 @@ export class ServiceInquiryService {
     return message;
   }
 
-  async getOwnerStatus(ownerId: number) {
-    return this.prisma.owner.findUnique({
-      where: { id: ownerId },
-      select: { status: true },
+  async getOwnerStatus(userId: number) {
+    return this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { businessStatus: true },
     });
   }
 

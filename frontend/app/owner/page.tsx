@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import OwnerLayout from '@/components/owner/OwnerLayout';
-import { ownerMechanicsApi, ownerAuthApi, ownerInquiriesApi } from '@/lib/api';
-import { Mechanic, Owner } from '@/types';
+import { ownerMechanicsApi, userAuthApi, ownerInquiriesApi } from '@/lib/api';
+import { Mechanic, User as UserType } from '@/types';
 import Link from 'next/link';
 import { Plus, Store, Eye, X, ChevronRight, Clock, MapPin, Wrench, Car, Phone, User, Link2, MessageSquare, FileText, ArrowRight } from 'lucide-react';
 
@@ -29,7 +29,7 @@ type OwnerInquiry = {
 export default function OwnerDashboardPage() {
   const [mechanics, setMechanics] = useState<Mechanic[]>([]);
   const [loading, setLoading] = useState(true);
-  const [owner, setOwner] = useState<Owner | null>(null);
+  const [owner, setOwner] = useState<UserType | null>(null);
   const [phone, setPhone] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
@@ -41,7 +41,7 @@ export default function OwnerDashboardPage() {
     const fetchData = async () => {
       try {
         // 프로필은 반드시 필요
-        const profileRes = await ownerAuthApi.getProfile();
+        const profileRes = await userAuthApi.getProfile();
         setOwner(profileRes.data);
         setPhone(profileRes.data.phone || '');
 
@@ -96,7 +96,7 @@ export default function OwnerDashboardPage() {
 
     setIsSaving(true);
     try {
-      await ownerAuthApi.updateProfile({ phone });
+      await userAuthApi.updateProfile({ phone });
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 2000);
     } catch (error: any) {
@@ -155,7 +155,7 @@ export default function OwnerDashboardPage() {
       </div>
 
       {/* PENDING 상태: 사업자 정보 제출 유도 카드 */}
-      {owner?.status === 'PENDING' && !owner?.businessLicenseUrl && (
+      {owner?.businessStatus === 'PENDING' && !owner?.businessLicenseUrl && (
         <div className="mb-6 bg-gradient-to-r from-[#F5F3FF] to-white border-2 border-[#7C4DFF]/20 rounded-2xl p-6">
           <div className="flex items-start gap-4">
             <div className="w-12 h-12 bg-[#7C4DFF]/10 rounded-xl flex items-center justify-center flex-shrink-0">
@@ -180,7 +180,7 @@ export default function OwnerDashboardPage() {
       )}
 
       {/* PENDING 상태: 이미 제출했지만 승인 대기 중 */}
-      {owner?.status === 'PENDING' && owner?.businessLicenseUrl && (
+      {owner?.businessStatus === 'PENDING' && owner?.businessLicenseUrl && (
         <div className="mb-6 bg-amber-50 border border-amber-200 rounded-2xl p-5 flex items-center gap-4">
           <div className="w-10 h-10 bg-amber-100 rounded-xl flex items-center justify-center flex-shrink-0">
             <Clock size={20} className="text-amber-500" />

@@ -1,32 +1,4 @@
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
-import type { Customer, CustomerAuthState } from '@/types';
-
-export const useCustomerStore = create<CustomerAuthState>()(
-  persist(
-    (set) => ({
-      customer: null,
-      isLoading: false,
-      login: (customer: Customer) => set({ customer, isLoading: false }),
-      logout: () => set({ customer: null, isLoading: false }),
-    }),
-    {
-      name: 'customer-auth',
-      storage: {
-        getItem: (name) => {
-          if (typeof window === 'undefined') return null;
-          const str = sessionStorage.getItem(name);
-          return str ? JSON.parse(str) : null;
-        },
-        setItem: (name, value) => {
-          if (typeof window === 'undefined') return;
-          sessionStorage.setItem(name, JSON.stringify(value));
-        },
-        removeItem: (name) => {
-          if (typeof window === 'undefined') return;
-          sessionStorage.removeItem(name);
-        },
-      },
-    }
-  )
-);
+// 이 파일은 더 이상 사용되지 않습니다.
+// useCustomerStore → useUserStore로 통합되었습니다.
+// 하위 호환을 위해 re-export만 유지합니다.
+export { useUserStore as useCustomerStore } from '@/lib/auth';

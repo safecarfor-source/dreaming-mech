@@ -29,13 +29,19 @@ export class CommunityService {
           id: true,
           title: true,
           category: true,
-          authorRole: true,
           viewCount: true,
           likeCount: true,
           commentCount: true,
           createdAt: true,
-          customer: { select: { id: true, nickname: true } },
-          owner: { select: { id: true, name: true, businessName: true } },
+          user: {
+            select: {
+              id: true,
+              nickname: true,
+              businessName: true,
+              businessStatus: true,
+              profileImage: true,
+            },
+          },
         },
       }),
       this.prisma.post.count({ where }),
@@ -50,12 +56,12 @@ export class CommunityService {
     const post = await this.prisma.post.findFirst({
       where: { id, isActive: true },
       include: {
-        customer: { select: { id: true, nickname: true } },
-        owner: {
+        user: {
           select: {
             id: true,
-            name: true,
+            nickname: true,
             businessName: true,
+            businessStatus: true,
             profileImage: true,
             mechanics: {
               where: { isActive: true },
@@ -68,12 +74,12 @@ export class CommunityService {
           where: { isActive: true, parentId: null },
           orderBy: { createdAt: 'asc' },
           include: {
-            customer: { select: { id: true, nickname: true } },
-            owner: {
+            user: {
               select: {
                 id: true,
-                name: true,
+                nickname: true,
                 businessName: true,
+                businessStatus: true,
                 profileImage: true,
                 mechanics: {
                   where: { isActive: true },
@@ -86,12 +92,13 @@ export class CommunityService {
               where: { isActive: true },
               orderBy: { createdAt: 'asc' },
               include: {
-                customer: { select: { id: true, nickname: true } },
-                owner: {
+                user: {
                   select: {
                     id: true,
-                    name: true,
+                    nickname: true,
                     businessName: true,
+                    businessStatus: true,
+                    profileImage: true,
                     mechanics: {
                       where: { isActive: true },
                       select: { id: true, name: true, address: true },
@@ -120,17 +127,15 @@ export class CommunityService {
     title: string;
     content: string;
     category: string;
-    authorRole: 'CUSTOMER' | 'OWNER';
     authorId: number;
   }) {
-    const { authorRole, authorId, ...rest } = data;
+    const { authorId, ...rest } = data;
 
     const post = await this.prisma.post.create({
       data: {
         ...rest,
         category: rest.category as any,
-        authorRole,
-        ...(authorRole === 'CUSTOMER' ? { customerId: authorId } : { ownerId: authorId }),
+        userId: authorId,
       },
     });
 
@@ -142,11 +147,10 @@ export class CommunityService {
   async createComment(data: {
     postId: number;
     content: string;
-    authorRole: 'CUSTOMER' | 'OWNER';
     authorId: number;
     parentId?: number;
   }) {
-    const { authorRole, authorId, postId, ...rest } = data;
+    const { authorId, postId, ...rest } = data;
 
     const post = await this.prisma.post.findFirst({ where: { id: postId, isActive: true } });
     if (!post) throw new NotFoundException('게시글을 찾을 수 없습니다.');
@@ -155,16 +159,16 @@ export class CommunityService {
       data: {
         postId,
         ...rest,
-        authorRole,
-        ...(authorRole === 'CUSTOMER' ? { customerId: authorId } : { ownerId: authorId }),
+        userId: authorId,
       },
       include: {
-        customer: { select: { id: true, nickname: true } },
-        owner: {
+        user: {
           select: {
             id: true,
-            name: true,
+            nickname: true,
             businessName: true,
+            businessStatus: true,
+            profileImage: true,
             mechanics: {
               where: { isActive: true },
               select: { id: true, name: true, address: true, location: true },
@@ -183,15 +187,12 @@ export class CommunityService {
 
   // ── 좋아요 토글 ──
 
-  async toggleLike(postId: number, authorRole: 'CUSTOMER' | 'OWNER', authorId: number) {
+  async toggleLike(postId: number, authorId: number) {
     const post = await this.prisma.post.findFirst({ where: { id: postId, isActive: true } });
     if (!post) throw new NotFoundException('게시글을 찾을 수 없습니다.');
 
     const existing = await this.prisma.postLike.findFirst({
-      where: {
-        postId,
-        ...(authorRole === 'CUSTOMER' ? { customerId: authorId } : { ownerId: authorId }),
-      },
+      where: { postId, userId: authorId },
     });
 
     if (existing) {
@@ -202,8 +203,7 @@ export class CommunityService {
       await this.prisma.postLike.create({
         data: {
           postId,
-          authorRole,
-          ...(authorRole === 'CUSTOMER' ? { customerId: authorId } : { ownerId: authorId }),
+          userId: authorId,
         },
       });
       await this.prisma.post.update({ where: { id: postId }, data: { likeCount: { increment: 1 } } });
@@ -213,15 +213,13 @@ export class CommunityService {
 
   // ── 게시글 삭제 (본인만) ──
 
-  async deletePost(postId: number, authorRole: 'CUSTOMER' | 'OWNER', authorId: number) {
+  async deletePost(postId: number, authorId: number) {
     const post = await this.prisma.post.findUnique({ where: { id: postId } });
     if (!post) throw new NotFoundException('게시글을 찾을 수 없습니다.');
 
-    const isAuthor = authorRole === 'CUSTOMER'
-      ? post.customerId === authorId
-      : post.ownerId === authorId;
-
-    if (!isAuthor) throw new ForbiddenException('본인 게시글만 삭제할 수 있습니다.');
+    if (post.userId !== authorId) {
+      throw new ForbiddenException('본인 게시글만 삭제할 수 있습니다.');
+    }
 
     await this.prisma.post.delete({ where: { id: postId } });
     return { message: '삭제되었습니다.' };

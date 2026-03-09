@@ -37,7 +37,7 @@ yarn-error.log*
 Thumbs.db
 
 # Prisma
-backend/prisma/migrations/
+# backend/prisma/migrations/ — 마이그레이션은 버전 관리 필수
 
 # Misc
 *.pem

@@ -29,11 +29,21 @@ interface OwnerInfo {
   mechanics?: MechanicShop[];
 }
 
+interface UserInfo {
+  id: number;
+  nickname?: string;
+  businessName?: string;
+  businessStatus?: string;
+  mechanics?: MechanicShop[];
+}
+
 interface CommentType {
   id: number;
   content: string;
   authorRole: string;
   createdAt: string;
+  user?: UserInfo;
+  // 하위 호환
   customer?: { id: number; nickname?: string };
   owner?: OwnerInfo;
   replies?: CommentType[];
@@ -49,6 +59,8 @@ interface PostDetail {
   likeCount: number;
   commentCount: number;
   createdAt: string;
+  user?: UserInfo;
+  // 하위 호환
   customer?: { id: number; nickname?: string };
   owner?: OwnerInfo;
   comments: CommentType[];
@@ -56,6 +68,7 @@ interface PostDetail {
 
 interface AuthorInfo {
   authorRole: string;
+  user?: { nickname?: string; businessName?: string; businessStatus?: string };
   customer?: { nickname?: string };
   owner?: { name?: string; businessName?: string };
 }
@@ -105,7 +118,7 @@ export default function CommunityPostPage() {
       const err = error as { response?: { status?: number } };
       if (err.response?.status === 401) {
         alert('로그인이 필요합니다.');
-        window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/auth/kakao/customer`;
+        window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/auth/kakao`;
       } else {
         alert('댓글 등록에 실패했습니다.');
       }
@@ -124,7 +137,7 @@ export default function CommunityPostPage() {
       const err = error as { response?: { status?: number } };
       if (err.response?.status === 401) {
         alert('로그인이 필요합니다.');
-        window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/auth/kakao/customer`;
+        window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/auth/kakao`;
       }
     }
   };
@@ -140,13 +153,19 @@ export default function CommunityPostPage() {
   };
 
   const getAuthorName = (item: AuthorInfo) => {
+    if (item.user) return item.user.businessName || item.user.nickname || '익명';
     if (item.authorRole === 'OWNER') return item.owner?.businessName || item.owner?.name || '정비사';
     return item.customer?.nickname || '익명';
   };
 
-  const renderMechanicCard = (owner?: OwnerInfo) => {
-    if (!owner || !owner.mechanics || owner.mechanics.length === 0) return null;
-    const shop = owner.mechanics[0];
+  const isApprovedBusiness = (item: AuthorInfo) => {
+    if (item.user) return item.user.businessStatus === 'APPROVED';
+    return item.authorRole === 'OWNER';
+  };
+
+  const renderMechanicCard = (userOrOwner?: UserInfo | OwnerInfo) => {
+    if (!userOrOwner || !userOrOwner.mechanics || userOrOwner.mechanics.length === 0) return null;
+    const shop = userOrOwner.mechanics[0];
     return (
       <div className="mt-3 bg-[#F5F3FF] rounded-xl p-3 border border-[#7C4DFF]/20">
         <div className="flex items-center gap-2">
@@ -164,23 +183,25 @@ export default function CommunityPostPage() {
     );
   };
 
-  const renderComment = (comment: CommentType, isReply = false): React.ReactNode => (
+  const renderComment = (comment: CommentType, isReply = false): React.ReactNode => {
+    const commentIsApproved = isApprovedBusiness(comment);
+    return (
     <div key={comment.id} className={`${isReply ? 'ml-8 border-l-2 border-gray-100 pl-4' : ''}`}>
       <div className="py-4 border-b border-gray-50 last:border-0">
         <div className="flex items-center gap-2 mb-2">
           <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${
-            comment.authorRole === 'OWNER' ? 'bg-[#7C4DFF] text-white' : 'bg-gray-200 text-gray-600'
+            commentIsApproved ? 'bg-[#7C4DFF] text-white' : 'bg-gray-200 text-gray-600'
           }`}>
             {getAuthorName(comment)[0]}
           </div>
           <span className="font-semibold text-sm text-gray-900">{getAuthorName(comment)}</span>
-          {comment.authorRole === 'OWNER' && (
+          {commentIsApproved && (
             <span className="px-1.5 py-0.5 bg-[#7C4DFF]/10 text-[#7C4DFF] text-xs font-semibold rounded">정비사</span>
           )}
           <span className="text-xs text-gray-400 ml-auto">{timeAgo(comment.createdAt)}</span>
         </div>
         <p className="text-sm text-gray-700 leading-relaxed">{comment.content}</p>
-        {comment.authorRole === 'OWNER' && renderMechanicCard(comment.owner)}
+        {commentIsApproved && renderMechanicCard(comment.user || comment.owner)}
         {!isReply && (
           <button
             onClick={() => setReplyTo(replyTo === comment.id ? null : comment.id)}
@@ -212,6 +233,7 @@ export default function CommunityPostPage() {
       {comment.replies?.map((reply) => renderComment(reply, true))}
     </div>
   );
+  };
 
   if (loading) {
     return (
@@ -245,18 +267,18 @@ export default function CommunityPostPage() {
             <h1 className="text-xl md:text-2xl font-bold text-gray-900 mb-3">{post.title}</h1>
             <div className="flex items-center gap-3 text-sm text-gray-500 mb-4 pb-4 border-b border-gray-100">
               <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
-                post.authorRole === 'OWNER' ? 'bg-[#7C4DFF] text-white' : 'bg-gray-200 text-gray-600'
+                isApprovedBusiness(post) ? 'bg-[#7C4DFF] text-white' : 'bg-gray-200 text-gray-600'
               }`}>
                 {getAuthorName(post)[0]}
               </div>
               <span className="font-medium text-gray-700">{getAuthorName(post)}</span>
-              {post.authorRole === 'OWNER' && (
+              {isApprovedBusiness(post) && (
                 <span className="px-1.5 py-0.5 bg-[#7C4DFF]/10 text-[#7C4DFF] text-xs font-semibold rounded">정비사</span>
               )}
               <span className="ml-auto">{timeAgo(post.createdAt)}</span>
             </div>
             <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">{post.content}</p>
-            {post.authorRole === 'OWNER' && renderMechanicCard(post.owner)}
+            {isApprovedBusiness(post) && renderMechanicCard(post.user || post.owner)}
 
             {/* 액션 */}
             <div className="flex items-center gap-4 mt-6 pt-4 border-t border-gray-100">

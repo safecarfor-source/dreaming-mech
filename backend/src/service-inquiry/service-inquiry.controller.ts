@@ -60,12 +60,13 @@ export class ServiceInquiryController {
     // 쿠키에서 토큰 확인 (선택적 인증)
     const user = await this.tryGetUser(req);
 
-    // APPROVED/PENDING Owner 또는 Admin이면 전화번호 포함
+    // APPROVED/PENDING User(사업자) 또는 Admin이면 전화번호 포함
     // 승인(APPROVED)은 정비소 등록 통제 목적 — 문의 조회는 가입 즉시 허용
     if (
       user &&
       (user.role === 'admin' ||
-        (user.role === 'owner' && (user.status === 'APPROVED' || user.status === 'PENDING')))
+        ((user.role === 'user' || user.role === 'owner') &&
+          (user.businessStatus === 'APPROVED' || user.businessStatus === 'PENDING')))
     ) {
       return this.serviceInquiryService.findOne(id);
     }
@@ -119,21 +120,21 @@ export class ServiceInquiryController {
   // 선택적 인증 - 쿠키에서 토큰 추출 및 검증
   private async tryGetUser(
     req: any,
-  ): Promise<{ sub: number; role: string; status?: string } | null> {
+  ): Promise<{ sub: number; role: string; businessStatus?: string } | null> {
     try {
-      // owner_token 또는 admin_token에서 인증 정보 추출
-      const token = req?.cookies?.owner_token || req?.cookies?.admin_token;
+      // user_token 또는 admin_token에서 인증 정보 추출 (하위 호환: owner_token도 시도)
+      const token = req?.cookies?.user_token || req?.cookies?.owner_token || req?.cookies?.admin_token;
       if (!token) return null;
 
       const decoded = this.jwtService.verify(token);
       if (!decoded) return null;
 
-      // owner인 경우 status 확인
-      if (decoded.role === 'owner') {
-        const owner = await this.serviceInquiryService.getOwnerStatus(
+      // user인 경우 businessStatus 확인
+      if (decoded.role === 'user' || decoded.role === 'owner') {
+        const userData = await this.serviceInquiryService.getOwnerStatus(
           decoded.sub,
         );
-        return { ...decoded, status: owner?.status };
+        return { ...decoded, businessStatus: userData?.businessStatus };
       }
 
       return decoded;

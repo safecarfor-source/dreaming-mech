@@ -30,41 +30,39 @@ export const useAuthStore = create<AuthState>()(
   )
 );
 
-// ── 사장님(Owner) 인증 상태 ──
+// ── 통합 유저 인증 상태 ──
 
-interface OwnerInfo {
+export interface UserInfo {
   id: number;
   email?: string;
-  name?: string;
+  nickname?: string;
   profileImage?: string;
-  provider: string;
-  status: string;
-  rejectionReason?: string;
+  phone?: string;
+  businessStatus: 'NONE' | 'PENDING' | 'APPROVED' | 'REJECTED' | 'DEACTIVATED';
   businessLicenseUrl?: string;
   businessName?: string;
-  phone?: string;
   address?: string;
+  rejectionReason?: string;
+  signupInquiryId?: number;
+  provider?: string;
+  name?: string;
 }
 
-interface OwnerAuthState {
-  owner: OwnerInfo | null;
+interface UserAuthState {
+  user: UserInfo | null;
   isAuthenticated: boolean;
-  login: (owner: OwnerInfo) => void;
+  login: (user: UserInfo) => void;
   logout: () => void;
 }
 
-export const useOwnerStore = create<OwnerAuthState>()(
+export const useUserStore = create<UserAuthState>()(
   persist(
     (set) => ({
-      owner: null,
+      user: null,
       isAuthenticated: false,
-      login: (owner) =>
-        set({ owner, isAuthenticated: true }),
-      logout: () =>
-        set({ owner: null, isAuthenticated: false }),
+      login: (user) => set({ user, isAuthenticated: true }),
+      logout: () => set({ user: null, isAuthenticated: false }),
     }),
-    {
-      name: 'owner-auth-storage',
-    }
+    { name: 'user-auth-storage' }
   )
 );

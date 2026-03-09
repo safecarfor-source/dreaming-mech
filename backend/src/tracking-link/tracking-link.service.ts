@@ -66,7 +66,7 @@ export class TrackingLinkService {
           select: {
             clicks: true,
             inquiries: true,
-            customers: true,
+            users: true,
           },
         },
       },
@@ -82,7 +82,7 @@ export class TrackingLinkService {
 
         const totalClicks = link._count.clicks;
         const totalInquiries = link._count.inquiries;
-        const totalCustomers = link._count.customers;
+        const totalUsers = link._count.users;
         const uniqueClicks = uniqueClickGroups.length;
         const conversionRate =
           uniqueClicks > 0
@@ -94,7 +94,7 @@ export class TrackingLinkService {
           totalClicks,
           uniqueClicks,
           totalInquiries,
-          totalSignups: totalCustomers,  // Customer 가입 수
+          totalSignups: totalUsers,  // User 가입 수
           conversionRate: Math.round(conversionRate * 10) / 10,
         };
       }),
@@ -111,10 +111,10 @@ export class TrackingLinkService {
           select: {
             clicks: true,
             inquiries: true,
-            customers: true,
+            users: true,
           },
         },
-        customers: {
+        users: {
           select: {
             id: true,
             nickname: true,
