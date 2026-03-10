@@ -1,7 +1,8 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import Image from 'next/image';
 import { X, MapPin, ExternalLink, BadgeCheck } from 'lucide-react';
 import { useModalStore } from '@/lib/store';
 import { mechanicsApi } from '@/lib/api';
@@ -19,6 +20,11 @@ import { gtagEvent } from '@/lib/gtag-events';
 export default function MechanicModal() {
   const { isOpen, mechanic, close } = useModalStore();
 
+  // 뒤로가기로 모달 닫기 — history.back()이 popstate를 발생시켜 close() 호출
+  const handleClose = useCallback(() => {
+    history.back();
+  }, []);
+
   // 클릭수 증가 + GA 이벤트
   useEffect(() => {
     if (isOpen && mechanic) {
@@ -31,14 +37,27 @@ export default function MechanicModal() {
     }
   }, [isOpen, mechanic]);
 
+  // 브라우저 뒤로가기 연동
+  useEffect(() => {
+    if (isOpen) {
+      history.pushState({ mechanicModal: true }, '');
+
+      const handlePopState = () => {
+        close();
+      };
+      window.addEventListener('popstate', handlePopState);
+      return () => window.removeEventListener('popstate', handlePopState);
+    }
+  }, [isOpen, close]);
+
   // ESC 키로 닫기
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') close();
+      if (e.key === 'Escape' && isOpen) handleClose();
     };
     window.addEventListener('keydown', handleEsc);
     return () => window.removeEventListener('keydown', handleEsc);
-  }, [close]);
+  }, [handleClose, isOpen]);
 
   // 스크롤 방지
   useEffect(() => {
@@ -63,7 +82,7 @@ export default function MechanicModal() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            onClick={close}
+            onClick={handleClose}
             className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40"
           />
 
@@ -89,7 +108,7 @@ export default function MechanicModal() {
                 )}
               </div>
               <button
-                onClick={close}
+                onClick={handleClose}
                 className="p-2 bg-bg-tertiary rounded-full hover:bg-gray-200 transition-colors duration-[var(--duration-fast)] flex-shrink-0"
               >
                 <X size={20} className="text-text-secondary" />
@@ -99,6 +118,20 @@ export default function MechanicModal() {
             {/* 컨텐츠 */}
             <div className="flex-1 overflow-auto">
               <div className="px-4 sm:px-5 py-4 sm:py-5 space-y-4 sm:space-y-5">
+
+                {/* 대표 이미지 */}
+                {(mechanic.mainImageUrl || mechanic.galleryImages?.[0]) && (
+                  <div className="rounded-xl overflow-hidden bg-bg-tertiary aspect-[16/9] relative">
+                    <Image
+                      src={mechanic.mainImageUrl || mechanic.galleryImages![0]}
+                      alt={sanitizeText(mechanic.name)}
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 768px) 100vw, 480px"
+                      priority
+                    />
+                  </div>
+                )}
 
                 {/* 갤러리 */}
                 {mechanic.galleryImages && mechanic.galleryImages.length > 0 && (
