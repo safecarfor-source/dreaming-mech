@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
+import { createHmac } from 'crypto';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { NotificationService } from '../notification/notification.service';
@@ -293,10 +294,56 @@ export class OwnerService {
     return { startDate, endDate };
   }
 
-  // ── 사용자용: 월별 성과 리포트 ──
+  // ── KST 기준 ISO 주차의 월~일 범위를 UTC로 변환 ──
 
-  async getMonthlyReport(userId: number, period?: string) {
-    // period 파싱 (기본: 현재 YYYY-MM KST 기준)
+  private getKstWeekRange(year: number, week: number): {
+    startDate: Date;
+    endDate: Date;
+    weekStart: string;
+    weekEnd: string;
+  } {
+    // ISO 8601: 1월 4일은 항상 첫째 주에 포함
+    const jan4 = new Date(year, 0, 4);
+    const dayOfWeek = jan4.getDay() || 7; // 일요일=7
+    const firstMonday = new Date(jan4);
+    firstMonday.setDate(jan4.getDate() - dayOfWeek + 1); // 첫째 주 월요일
+
+    const monday = new Date(firstMonday);
+    monday.setDate(firstMonday.getDate() + (week - 1) * 7);
+
+    const sunday = new Date(monday);
+    sunday.setDate(monday.getDate() + 6);
+
+    // KST 00:00 → UTC
+    const kstStart = new Date(monday.getFullYear(), monday.getMonth(), monday.getDate(), 0, 0, 0);
+    const startDate = new Date(kstStart.getTime() - 9 * 60 * 60 * 1000);
+
+    // KST 23:59:59 → UTC
+    const kstEnd = new Date(sunday.getFullYear(), sunday.getMonth(), sunday.getDate(), 23, 59, 59);
+    const endDate = new Date(kstEnd.getTime() - 9 * 60 * 60 * 1000);
+
+    // 프론트엔드 표시용 날짜 문자열 (예: "2026-03-02")
+    const pad = (n: number) => String(n).padStart(2, '0');
+    const weekStart = `${monday.getFullYear()}-${pad(monday.getMonth() + 1)}-${pad(monday.getDate())}`;
+    const weekEnd = `${sunday.getFullYear()}-${pad(sunday.getMonth() + 1)}-${pad(sunday.getDate())}`;
+
+    return { startDate, endDate, weekStart, weekEnd };
+  }
+
+  // ── ISO 주차 계산 유틸 ──
+
+  private _getISOWeek(date: Date): { year: number; week: number } {
+    const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+    const dayNum = d.getUTCDay() || 7;
+    d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+    const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+    const week = Math.ceil(((d.getTime() - yearStart.getTime()) / 86400000 + 1) / 7);
+    return { year: d.getUTCFullYear(), week };
+  }
+
+  // ── period 파싱 유틸: "YYYY-MM" → { year, month, periodStr } (기존 유지) ──
+
+  private _parsePeriod(period?: string): { year: number; month: number; periodStr: string } {
     let year: number;
     let month: number;
 
@@ -313,35 +360,42 @@ export class OwnerService {
     }
 
     const periodStr = `${year}-${String(month).padStart(2, '0')}`;
-    const { startDate, endDate } = this.getKstMonthRange(year, month);
+    return { year, month, periodStr };
+  }
 
-    // 이전 달 범위
-    const prevMonth = month === 1 ? 12 : month - 1;
-    const prevYear = month === 1 ? year - 1 : year;
-    const { startDate: prevStartDate, endDate: prevEndDate } = this.getKstMonthRange(prevYear, prevMonth);
+  // ── period 파싱 유틸: "YYYY-Www" → { year, week, periodStr } ──
 
-    // 사용자의 활성 정비소 목록 조회
-    const mechanics = await this.prisma.mechanic.findMany({
-      where: { userId, isActive: true },
-      select: { id: true, name: true, location: true, isVerified: true },
-    });
-
-    // 정비소 없음: 빈 리포트 반환
-    if (mechanics.length === 0) {
-      return {
-        period: periodStr,
-        totals: { pageViews: 0, uniqueVisitors: 0, phoneReveals: 0, conversionRate: 0 },
-        previousMonth: { pageViews: 0, phoneReveals: 0, pageViewsDelta: 0, phoneRevealsDelta: 0 },
-        dailyViews: [],
-        regionRanking: { region: '', rank: 0, total: 0 },
-        premiumComparison: { avgPhoneReveals: 0, myPhoneReveals: 0, multiplier: 0 },
-        isPremium: false,
-      };
+  private _parseWeekPeriod(period?: string): { year: number; week: number; periodStr: string } {
+    if (period && /^\d{4}-W\d{2}$/.test(period)) {
+      const [yearStr, weekStr] = period.split('-W');
+      const year = parseInt(yearStr, 10);
+      const week = parseInt(weekStr, 10);
+      return { year, week, periodStr: period };
     }
 
-    const mechanicIds = mechanics.map((m) => m.id);
+    // KST 기준 현재 ISO 주차 계산
+    const now = new Date();
+    const kstNow = new Date(now.getTime() + 9 * 60 * 60 * 1000);
+    const { year, week } = this._getISOWeek(kstNow);
+    return { year, week, periodStr: `${year}-W${String(week).padStart(2, '0')}` };
+  }
 
-    // 이번 달 통계: 페이지뷰, 고유 방문자, 전화번호 공개 병렬 조회
+  // ── 공통 통계 쿼리: mechanicIds를 받아 리포트 데이터 반환 (주간 기준) ──
+
+  private async _generateReport(
+    mechanicIds: number[],
+    period?: string,
+    extraInfo?: { mechanicName?: string; mechanicLocation?: string },
+  ) {
+    const { year, week, periodStr } = this._parseWeekPeriod(period);
+    const { startDate, endDate, weekStart, weekEnd } = this.getKstWeekRange(year, week);
+
+    // 이전 주 범위
+    const prevWeek = week === 1 ? 52 : week - 1;
+    const prevYear = week === 1 ? year - 1 : year;
+    const { startDate: prevStartDate, endDate: prevEndDate } = this.getKstWeekRange(prevYear, prevWeek);
+
+    // 이번 주 통계: 페이지뷰, 고유 방문자, 전화번호 공개 병렬 조회
     const [pageViews, uniqueVisitorsRaw, phoneReveals] = await Promise.all([
       this.prisma.clickLog.count({
         where: {
@@ -368,11 +422,10 @@ export class OwnerService {
     ]);
 
     const uniqueVisitors = uniqueVisitorsRaw.length;
-    const conversionRate = pageViews > 0
-      ? Math.round((phoneReveals / pageViews) * 100 * 10) / 10
-      : 0;
+    const conversionRate =
+      pageViews > 0 ? Math.round((phoneReveals / pageViews) * 100 * 10) / 10 : 0;
 
-    // 이전 달 통계
+    // 이전 주 통계
     const [prevPageViews, prevPhoneReveals] = await Promise.all([
       this.prisma.clickLog.count({
         where: {
@@ -390,14 +443,20 @@ export class OwnerService {
       }),
     ]);
 
-    const pageViewsDelta = prevPageViews > 0
-      ? Math.round(((pageViews - prevPageViews) / prevPageViews) * 100)
-      : pageViews > 0 ? 100 : 0;
-    const phoneRevealsDelta = prevPhoneReveals > 0
-      ? Math.round(((phoneReveals - prevPhoneReveals) / prevPhoneReveals) * 100)
-      : phoneReveals > 0 ? 100 : 0;
+    const pageViewsDelta =
+      prevPageViews > 0
+        ? Math.round(((pageViews - prevPageViews) / prevPageViews) * 100)
+        : pageViews > 0
+          ? 100
+          : 0;
+    const phoneRevealsDelta =
+      prevPhoneReveals > 0
+        ? Math.round(((phoneReveals - prevPhoneReveals) / prevPhoneReveals) * 100)
+        : phoneReveals > 0
+          ? 100
+          : 0;
 
-    // 일별 페이지뷰 (KST 기준, raw SQL)
+    // 일별 페이지뷰 (KST 기준, raw SQL, 해당 주 7일)
     const dailyViewsRaw = await this.prisma.$queryRaw<
       Array<{ date: string; views: bigint }>
     >`
@@ -414,32 +473,40 @@ export class OwnerService {
       views: Number(d.views),
     }));
 
-    // 지역 랭킹: 내 첫 번째 정비소 location 기준
-    const myLocation = mechanics[0].location;
-    const regionMechanics = await this.prisma.mechanic.findMany({
-      where: { isActive: true, location: { contains: myLocation, mode: 'insensitive' } },
-      select: { id: true },
-    });
-    const regionMechanicIds = regionMechanics.map((m) => m.id);
+    // 지역 랭킹: extraInfo.mechanicLocation 우선, 없으면 첫 번째 정비소 조회
+    let myLocation = extraInfo?.mechanicLocation ?? '';
+    if (!myLocation && mechanicIds.length > 0) {
+      const firstMechanic = await this.prisma.mechanic.findUnique({
+        where: { id: mechanicIds[0] },
+        select: { location: true },
+      });
+      myLocation = firstMechanic?.location ?? '';
+    }
 
-    // 같은 지역 정비소별 이번 달 클릭 수 집계
-    const regionClicksRaw = await this.prisma.clickLog.groupBy({
-      by: ['mechanicId'],
-      where: {
-        mechanicId: { in: regionMechanicIds },
-        isBot: false,
-        clickedAt: { gte: startDate, lte: endDate },
-      },
-      _count: { mechanicId: true },
-      orderBy: { _count: { mechanicId: 'desc' } },
-    });
+    let rank = 0;
+    let total = 0;
+    if (myLocation) {
+      const regionMechanics = await this.prisma.mechanic.findMany({
+        where: { isActive: true, location: { contains: myLocation, mode: 'insensitive' } },
+        select: { id: true },
+      });
+      const regionMechanicIds = regionMechanics.map((m) => m.id);
 
-    const total = regionClicksRaw.length;
-    // 내 정비소가 랭킹 목록에 있는지 확인
-    const myRankIndex = regionClicksRaw.findIndex((r) =>
-      mechanicIds.includes(r.mechanicId),
-    );
-    const rank = myRankIndex === -1 ? total + 1 : myRankIndex + 1;
+      const regionClicksRaw = await this.prisma.clickLog.groupBy({
+        by: ['mechanicId'],
+        where: {
+          mechanicId: { in: regionMechanicIds },
+          isBot: false,
+          clickedAt: { gte: startDate, lte: endDate },
+        },
+        _count: { mechanicId: true },
+        orderBy: { _count: { mechanicId: 'desc' } },
+      });
+
+      total = regionClicksRaw.length;
+      const myRankIndex = regionClicksRaw.findIndex((r) => mechanicIds.includes(r.mechanicId));
+      rank = myRankIndex === -1 ? total + 1 : myRankIndex + 1;
+    }
 
     // 프리미엄(인증) 비교: 인증 정비소 평균 vs 내 정비소
     const verifiedMechanics = await this.prisma.mechanic.findMany({
@@ -457,24 +524,131 @@ export class OwnerService {
           revealedAt: { gte: startDate, lte: endDate },
         },
       });
-      avgPhoneReveals = Math.round(verifiedPhoneReveals / verifiedIds.length * 10) / 10;
+      avgPhoneReveals = Math.round((verifiedPhoneReveals / verifiedIds.length) * 10) / 10;
     }
 
-    const multiplier = avgPhoneReveals > 0
-      ? Math.round((phoneReveals / avgPhoneReveals) * 10) / 10
-      : 0;
+    const multiplier =
+      avgPhoneReveals > 0 ? Math.round((phoneReveals / avgPhoneReveals) * 10) / 10 : 0;
 
-    const isPremium = mechanics.some((m) => m.isVerified);
+    // 인증 여부: mechanicIds 중 isVerified=true 존재 확인
+    const verifiedCount = await this.prisma.mechanic.count({
+      where: { id: { in: mechanicIds }, isVerified: true },
+    });
+    const isPremium = verifiedCount > 0;
 
-    return {
+    const result: Record<string, unknown> = {
       period: periodStr,
+      weekStart,
+      weekEnd,
       totals: { pageViews, uniqueVisitors, phoneReveals, conversionRate },
-      previousMonth: { pageViews: prevPageViews, phoneReveals: prevPhoneReveals, pageViewsDelta, phoneRevealsDelta },
+      previousWeek: {
+        pageViews: prevPageViews,
+        phoneReveals: prevPhoneReveals,
+        pageViewsDelta,
+        phoneRevealsDelta,
+      },
       dailyViews,
       regionRanking: { region: myLocation, rank, total },
       premiumComparison: { avgPhoneReveals, myPhoneReveals: phoneReveals, multiplier },
       isPremium,
     };
+
+    if (extraInfo?.mechanicName !== undefined) {
+      result.mechanicName = extraInfo.mechanicName;
+    }
+    if (extraInfo?.mechanicLocation !== undefined) {
+      result.mechanicLocation = extraInfo.mechanicLocation;
+    }
+
+    return result;
+  }
+
+  // ── 사용자용: 주간 성과 리포트 ──
+
+  async getWeeklyReport(userId: number, period?: string) {
+    const { periodStr } = this._parseWeekPeriod(period);
+
+    // 사용자의 활성 정비소 목록 조회
+    const mechanics = await this.prisma.mechanic.findMany({
+      where: { userId, isActive: true },
+      select: { id: true, name: true, location: true, isVerified: true },
+    });
+
+    // 정비소 없음: 빈 리포트 반환
+    if (mechanics.length === 0) {
+      return {
+        period: periodStr,
+        weekStart: '',
+        weekEnd: '',
+        totals: { pageViews: 0, uniqueVisitors: 0, phoneReveals: 0, conversionRate: 0 },
+        previousWeek: { pageViews: 0, phoneReveals: 0, pageViewsDelta: 0, phoneRevealsDelta: 0 },
+        dailyViews: [],
+        regionRanking: { region: '', rank: 0, total: 0 },
+        premiumComparison: { avgPhoneReveals: 0, myPhoneReveals: 0, multiplier: 0 },
+        isPremium: false,
+      };
+    }
+
+    const mechanicIds = mechanics.map((m) => m.id);
+    return this._generateReport(mechanicIds, period, {
+      mechanicLocation: mechanics[0].location,
+    });
+  }
+
+  // ── 관리자용: 특정 정비소 ID 기준 주간 성과 리포트 ──
+
+  async getWeeklyReportByMechanicId(mechanicId: number, period?: string) {
+    const mechanic = await this.prisma.mechanic.findUnique({
+      where: { id: mechanicId },
+      select: { id: true, name: true, location: true },
+    });
+
+    if (!mechanic) throw new NotFoundException('정비소를 찾을 수 없습니다.');
+
+    return this._generateReport([mechanicId], period, {
+      mechanicName: mechanic.name,
+      mechanicLocation: mechanic.location,
+    });
+  }
+
+  // ── 리포트 공유 토큰 생성 (HMAC-SHA256, 30일 유효) ──
+
+  generateReportShareToken(mechanicId: number): { token: string; expiresAt: string } {
+    const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+    const payload = Buffer.from(JSON.stringify({ mechanicId, expiresAt })).toString('base64url');
+    const signature = createHmac('sha256', process.env.JWT_SECRET!)
+      .update(payload)
+      .digest('base64url');
+    return { token: `${payload}.${signature}`, expiresAt };
+  }
+
+  // ── 리포트 공유 토큰 검증 ──
+
+  verifyReportShareToken(token: string): { mechanicId: number } {
+    const dotIndex = token.lastIndexOf('.');
+    if (dotIndex === -1) throw new BadRequestException('잘못된 토큰');
+
+    const payload = token.slice(0, dotIndex);
+    const signature = token.slice(dotIndex + 1);
+
+    if (!payload || !signature) throw new BadRequestException('잘못된 토큰');
+
+    const expectedSig = createHmac('sha256', process.env.JWT_SECRET!)
+      .update(payload)
+      .digest('base64url');
+
+    if (signature !== expectedSig) throw new BadRequestException('잘못된 토큰');
+
+    let data: { mechanicId: number; expiresAt: string };
+    try {
+      data = JSON.parse(Buffer.from(payload, 'base64url').toString());
+    } catch {
+      throw new BadRequestException('잘못된 토큰');
+    }
+
+    if (new Date(data.expiresAt) < new Date()) throw new BadRequestException('만료된 링크');
+
+    return { mechanicId: data.mechanicId };
   }
 
   // ── 사용자용: 내 정비소를 선택한 고객 문의 조회 ──

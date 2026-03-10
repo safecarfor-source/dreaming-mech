@@ -443,6 +443,20 @@ export const ownerReportApi = {
     api.get('/owner/report', { params: period ? { period } : {} }),
 };
 
+// 관리자: 정비소별 리포트
+export const adminReportApi = {
+  getByMechanic: (mechanicId: number, period?: string) =>
+    api.get(`/admin/reports/mechanic/${mechanicId}`, { params: period ? { period } : {} }),
+  generateShareToken: (mechanicId: number) =>
+    api.post<{ token: string; expiresAt: string }>(`/admin/reports/mechanic/${mechanicId}/share-token`),
+};
+
+// 공개: 공유 링크 리포트
+export const publicReportApi = {
+  getByToken: (token: string, period?: string) =>
+    api.get(`/public/report/${token}`, { params: period ? { period } : {} }),
+};
+
 export const communityApi = {
   getPosts: (params?: { category?: string; page?: number; limit?: number }) =>
     api.get('/community/posts', { params }),

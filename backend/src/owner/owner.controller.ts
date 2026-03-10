@@ -101,13 +101,13 @@ export class OwnerProfileController {
     return this.ownerService.updateProfile(req.user.sub, body);
   }
 
-  // GET /owner/report?period=YYYY-MM — 월별 성과 리포트
+  // GET /owner/report?period=YYYY-Www — 주간 성과 리포트
   @Get('report')
-  getMonthlyReport(
+  getWeeklyReport(
     @Request() req,
     @Query('period') period?: string,
   ) {
-    return this.ownerService.getMonthlyReport(req.user.sub, period);
+    return this.ownerService.getWeeklyReport(req.user.sub, period);
   }
 
   // GET /owner/service-inquiries — 내 정비소 선택 고객 문의 목록
@@ -218,5 +218,48 @@ export class AdminBadgeController {
   @Get()
   getBadges() {
     return this.ownerService.getAdminBadges();
+  }
+}
+
+// ── 관리자용: 정비소별 리포트 + 공유 토큰 발급 ──
+
+@Controller('admin/reports')
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles('admin')
+export class AdminReportController {
+  constructor(private ownerService: OwnerService) {}
+
+  // GET /admin/reports/mechanic/:mechanicId?period=YYYY-Www
+  @Get('mechanic/:mechanicId')
+  getReportByMechanic(
+    @Param('mechanicId', ParseIntPipe) mechanicId: number,
+    @Query('period') period?: string,
+  ) {
+    return this.ownerService.getWeeklyReportByMechanicId(mechanicId, period);
+  }
+
+  // POST /admin/reports/mechanic/:mechanicId/share-token
+  @Post('mechanic/:mechanicId/share-token')
+  generateShareToken(
+    @Param('mechanicId', ParseIntPipe) mechanicId: number,
+  ) {
+    return this.ownerService.generateReportShareToken(mechanicId);
+  }
+}
+
+// ── 공개용: 공유 토큰으로 리포트 열람 (인증 불필요) ──
+
+@Controller('public/report')
+export class PublicReportController {
+  constructor(private ownerService: OwnerService) {}
+
+  // GET /public/report/:token?period=YYYY-Www
+  @Get(':token')
+  getReport(
+    @Param('token') token: string,
+    @Query('period') period?: string,
+  ) {
+    const { mechanicId } = this.ownerService.verifyReportShareToken(token);
+    return this.ownerService.getWeeklyReportByMechanicId(mechanicId, period);
   }
 }

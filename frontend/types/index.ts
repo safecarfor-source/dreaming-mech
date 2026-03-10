@@ -311,8 +311,10 @@ export interface TrackingLink {
   conversionRate?: number;
 }
 
-export interface OwnerMonthlyReport {
-  period: string;
+export interface OwnerWeeklyReport {
+  period: string; // "2026-W10"
+  weekStart: string; // "2026-03-02"
+  weekEnd: string; // "2026-03-08"
   totals: {
     pageViews: number;
     uniqueVisitors: number;
@@ -337,7 +339,12 @@ export interface OwnerMonthlyReport {
     multiplier: number;
   };
   isPremium: boolean;
+  mechanicName?: string;
+  mechanicLocation?: string;
 }
+
+// 하위 호환
+export type OwnerMonthlyReport = OwnerWeeklyReport;
 
 export interface TrackingLinkDetail extends TrackingLink {
   dailyClicks: { date: string; clicks: number }[];

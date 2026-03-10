@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import AdminLayout from '@/components/admin/AdminLayout';
 import OrderManagement from '@/components/admin/OrderManagement';
-import { Plus, Edit, Trash2, Eye, Search, ArrowUpDown } from 'lucide-react';
+import { Plus, Edit, Trash2, Eye, Search, ArrowUpDown, BarChart2 } from 'lucide-react';
 import { mechanicsApi } from '@/lib/api';
 import type { Mechanic } from '@/types';
 
@@ -200,6 +200,13 @@ export default function MechanicsPage() {
                           </td>
                           <td className="px-6 py-4">
                             <div className="flex items-center justify-end gap-2">
+                              <Link
+                                href={`/admin/reports/${mechanic.id}`}
+                                className="p-2 text-gray-400 hover:text-[#7C4DFF] hover:bg-purple-50 rounded-lg transition-colors"
+                                title="리포트"
+                              >
+                                <BarChart2 size={18} />
+                              </Link>
                               <Link
                                 href={`/admin/mechanics/${mechanic.id}/edit`}
                                 className="p-2 text-gray-400 hover:text-purple-600 hover:bg-purple-600/5 rounded-lg transition-colors"
