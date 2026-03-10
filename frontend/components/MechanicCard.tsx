@@ -59,29 +59,7 @@ export default function MechanicCard({ mechanic, onClick, isPremium }: Props) {
             바로 확인 &rarr;
           </span>
         </div>
-        {/* 유튜브 영상 뱃지 — 모바일 숨김 */}
-        {(mechanic.youtubeUrl || mechanic.youtubeLongUrl) && (
-          <div className="hidden md:flex absolute top-3 left-3 z-10">
-            <span
-              className="flex items-center gap-1.5 rounded-lg text-white font-semibold text-[11.5px]"
-              style={{
-                background: 'rgba(0,0,0,0.7)',
-                backdropFilter: 'blur(6px)',
-                WebkitBackdropFilter: 'blur(6px)',
-                padding: '5px 10px 5px 8px',
-              }}
-            >
-              {/* 빨간 원 + 재생 아이콘 */}
-              <span className="flex items-center justify-center flex-shrink-0 rounded-full bg-[#FF0000]"
-                style={{ width: 18, height: 18 }}>
-                <svg width="8" height="10" viewBox="0 0 8 10" fill="white">
-                  <path d="M0 0L8 5L0 10V0Z" />
-                </svg>
-              </span>
-              영상보기
-            </span>
-          </div>
-        )}
+        {/* 유튜브 영상 뱃지 — 제거됨 (전화번호 옆 CTA로 통일) */}
         {/* 프리미엄 뱃지 — 모바일 only */}
         {isPremium && (
           <div className="absolute top-2 left-2 z-10 md:hidden">

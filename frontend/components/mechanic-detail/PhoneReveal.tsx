@@ -82,10 +82,10 @@ export default function PhoneReveal({ mechanicId, mechanicName, phone, variant, 
   }
 
   // card variant
-  // 유튜브 CTA 버튼 — 모바일 only
+  // 유튜브 CTA 버튼 — 모바일+데스크톱 공통
   const youtubeCta = (youtubeUrl || youtubeLongUrl) ? (
     <button
-      className="md:hidden ml-auto flex-shrink-0"
+      className="ml-auto flex-shrink-0"
       style={{
         background: '#ff4444',
         color: '#fff',
