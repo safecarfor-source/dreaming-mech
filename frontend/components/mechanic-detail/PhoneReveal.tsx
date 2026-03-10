@@ -38,26 +38,26 @@ export default function PhoneReveal({ mechanicId, mechanicName, phone, variant, 
 
   if (variant === 'modal') {
     return (
-      <div className="bg-bg-secondary rounded-2xl p-4 sm:p-5 text-center">
-        <p className="text-xs text-text-tertiary mb-3">전화번호</p>
+      <div className="bg-bg-secondary rounded-2xl p-5 sm:p-6 text-center">
+        <Phone size={28} className="text-brand-500 mx-auto mb-2" />
+        <p className="text-sm text-text-tertiary mb-3">전화번호</p>
         {revealed ? (
           <div>
             <a
               href={`tel:${phone}`}
-              className="inline-flex items-center justify-center gap-2.5
-                text-[22px] sm:text-[26px] font-bold text-brand-500 hover:text-brand-600
+              className="inline-flex items-center justify-center gap-3
+                text-[28px] sm:text-[34px] font-bold text-brand-500 hover:text-brand-600
                 transition-colors duration-[var(--duration-fast)]"
             >
-              <Phone size={22} className="flex-shrink-0" />
               {phone}
             </a>
-            <p className="text-xs text-green-600 mt-2.5">✅ 전화번호 확인 — 클릭 기록됨!</p>
+            <p className="text-sm text-green-600 mt-3">✅ 전화번호 확인완료</p>
           </div>
         ) : (
-          <div className="relative flex items-center justify-center py-1">
+          <div className="relative flex items-center justify-center py-2">
             <span
-              style={{ filter: 'blur(10px)', transition: 'filter 0.3s ease' }}
-              className="text-[22px] sm:text-[26px] font-bold text-text-primary select-none"
+              style={{ filter: 'blur(12px)', transition: 'filter 0.3s ease' }}
+              className="text-[28px] sm:text-[34px] font-bold text-text-primary select-none"
             >
               {phone}
             </span>
@@ -65,7 +65,7 @@ export default function PhoneReveal({ mechanicId, mechanicName, phone, variant, 
               onClick={handleReveal}
               className="absolute inset-0 flex items-center justify-center"
             >
-              <span className="bg-brand-500 hover:bg-brand-600 text-white text-sm px-5 py-2.5
+              <span className="bg-brand-500 hover:bg-brand-600 text-white text-base px-6 py-3
                 rounded-full font-bold shadow-[var(--shadow-md)] whitespace-nowrap
                 transition-colors duration-[var(--duration-fast)]">
                 👆 터치하여 전화번호 확인

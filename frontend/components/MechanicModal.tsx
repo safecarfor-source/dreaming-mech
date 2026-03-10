@@ -118,13 +118,11 @@ export default function MechanicModal() {
                 </div>
 
                 {/* 주소 — 가운데 정렬, 크게 */}
-                <div className="text-center">
-                  <div className="inline-flex items-center gap-2 justify-center">
-                    <MapPin size={18} className="text-brand-500 flex-shrink-0" />
-                    <p className="text-[var(--text-h5)] text-text-primary font-semibold break-words">
-                      {sanitizeText(mechanic.address)}
-                    </p>
-                  </div>
+                <div className="flex flex-col items-center text-center px-2">
+                  <MapPin size={24} className="text-brand-500 mb-2" />
+                  <p className="text-[var(--text-h4)] sm:text-[var(--text-h3)] text-text-primary font-bold break-words leading-tight">
+                    {sanitizeText(mechanic.address)}
+                  </p>
                 </div>
 
                 {/* 전화번호 — 1개만, 크고 임팩트있게 */}
