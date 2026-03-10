@@ -15,6 +15,7 @@ export interface MechanicFormData {
   youtubeUrl: string;
   youtubeLongUrl: string;
   isActive: boolean;
+  isPremium: boolean;
   // 상세 정보
   operatingHours: OperatingHours | null;
   specialties: string[];
@@ -49,6 +50,7 @@ export function useMechanicForm({ mechanic, mode, apiBasePath = '/mechanics', re
     youtubeUrl: mechanic?.youtubeUrl || '',
     youtubeLongUrl: mechanic?.youtubeLongUrl || '',
     isActive: mechanic?.isActive ?? true,
+    isPremium: mechanic?.isPremium ?? false,
     // 상세 정보
     operatingHours: mechanic?.operatingHours || null,
     specialties: mechanic?.specialties || [],
@@ -179,6 +181,7 @@ export function useMechanicForm({ mechanic, mode, apiBasePath = '/mechanics', re
       paymentMethods: formData.paymentMethods,
       holidays: formData.holidays,
       ownerId: formData.ownerId,
+      isPremium: formData.isPremium,
     };
 
     setIsSaving(true);

@@ -39,6 +39,7 @@ export default function MechanicForm({ mechanic, mode, apiBasePath, redirectPath
         formData={formData}
         onChange={handleChange}
         onActiveChange={(isActive) => setFormData((prev) => ({ ...prev, isActive }))}
+        onPremiumChange={(isPremium) => setFormData((prev) => ({ ...prev, isPremium }))}
       />
 
       {/* 위치 정보 */}

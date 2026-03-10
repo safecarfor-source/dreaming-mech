@@ -77,6 +77,7 @@ export interface Mechanic {
   phoneRevealCount: number;
   sortOrder: number;
   isActive: boolean;
+  isPremium: boolean;  // 프리미엄 카드 노출 여부
   createdAt: string;
   updatedAt: string;
 }

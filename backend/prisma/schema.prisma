@@ -47,7 +47,8 @@ model Mechanic {
   sortOrder       Int      @default(0) // 정렬 순서 (낮을수록 먼저 표시)
 
   // 상태
-  isActive        Boolean  @default(true) // 활성화 여부
+  isActive        Boolean  @default(true)  // 활성화 여부
+  isPremium       Boolean  @default(false) // 프리미엄 카드 노출
 
   // 타임스탬프
   createdAt       DateTime @default(now())
@@ -67,6 +68,7 @@ model Mechanic {
   // 인덱스
   @@index([location]) // 지역별 검색 최적화
   @@index([isActive])
+  @@index([isPremium])
   @@index([userId])
   @@index([sortOrder])
 }

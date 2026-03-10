@@ -11,9 +11,10 @@ import PhoneReveal from './mechanic-detail/PhoneReveal';
 interface Props {
   mechanic: Mechanic;
   onClick: () => void;
+  isPremium?: boolean;
 }
 
-export default function MechanicCard({ mechanic, onClick }: Props) {
+export default function MechanicCard({ mechanic, onClick, isPremium }: Props) {
   const handleClick = () => {
     gtagEvent.mechanicCardClick(mechanic.id, mechanic.name, mechanic.location || '');
     onClick();
@@ -24,12 +25,15 @@ export default function MechanicCard({ mechanic, onClick }: Props) {
       whileHover={{ y: -4 }}
       whileTap={{ scale: 0.98 }}
       onClick={handleClick}
-      className="bg-white border border-gray-200 rounded-xl overflow-hidden cursor-pointer group
-        shadow-sm hover:shadow-md hover:border-[#7C4DFF]/30
-        transition-all duration-300"
+      className={`bg-white rounded-xl overflow-hidden cursor-pointer group transition-all duration-300 ${
+        isPremium
+          ? 'shadow-[0_2px_12px_rgba(124,92,252,0.15)] hover:shadow-md'
+          : 'border border-gray-200 shadow-sm hover:shadow-md hover:border-[#7C4DFF]/30'
+      }`}
+      style={isPremium ? { border: '1.5px solid rgba(124, 92, 252, 0.2)' } : undefined}
     >
-      {/* 이미지 — 1:1 비율 (컴팩트) */}
-      <div className="aspect-square bg-gray-100 relative overflow-hidden">
+      {/* 이미지 — 프리미엄은 16:9, 일반은 1:1 */}
+      <div className={`${isPremium ? 'aspect-video' : 'aspect-square'} bg-gray-100 relative overflow-hidden`}>
         {(mechanic.mainImageUrl || mechanic.galleryImages?.[0]) ? (
           <Image
             src={mechanic.mainImageUrl || mechanic.galleryImages![0]}
@@ -37,7 +41,7 @@ export default function MechanicCard({ mechanic, onClick }: Props) {
             width={200}
             height={200}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
-            sizes="(max-width: 640px) 33vw, (max-width: 1024px) 25vw, 16vw"
+            sizes={isPremium ? "(max-width: 768px) 100vw, 25vw" : "(max-width: 768px) 50vw, (max-width: 1024px) 25vw, 16vw"}
           />
         ) : (
           <div className="w-full h-full bg-gradient-to-br from-purple-50 to-purple-100 flex items-center justify-center">
@@ -55,9 +59,9 @@ export default function MechanicCard({ mechanic, onClick }: Props) {
             바로 확인 &rarr;
           </span>
         </div>
-        {/* 유튜브 영상 뱃지 */}
+        {/* 유튜브 영상 뱃지 — 모바일 숨김 */}
         {(mechanic.youtubeUrl || mechanic.youtubeLongUrl) && (
-          <div className="absolute top-3 left-3 z-10">
+          <div className="hidden md:flex absolute top-3 left-3 z-10">
             <span
               className="flex items-center gap-1.5 rounded-lg text-white font-semibold text-[11.5px]"
               style={{
@@ -75,6 +79,17 @@ export default function MechanicCard({ mechanic, onClick }: Props) {
                 </svg>
               </span>
               영상보기
+            </span>
+          </div>
+        )}
+        {/* 프리미엄 뱃지 — 모바일 only */}
+        {isPremium && (
+          <div className="absolute top-2 left-2 z-10 md:hidden">
+            <span
+              className="text-white text-[9px] font-bold rounded px-1.5 py-0.5"
+              style={{ background: 'linear-gradient(135deg, #7c5cfc, #a855f7)' }}
+            >
+              PREMIUM
             </span>
           </div>
         )}
@@ -99,6 +114,12 @@ export default function MechanicCard({ mechanic, onClick }: Props) {
             mechanicName={sanitizeText(mechanic.name)}
             phone={sanitizePhone(mechanic.phone)}
             variant="card"
+            youtubeUrl={mechanic.youtubeUrl}
+            youtubeLongUrl={mechanic.youtubeLongUrl}
+            onYoutubeClick={(e) => {
+              e.stopPropagation();
+              handleClick();
+            }}
           />
         </div>
       </div>

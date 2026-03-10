@@ -11,9 +11,13 @@ interface PhoneRevealProps {
   phone: string;
   variant: 'card' | 'modal';
   onReveal?: () => void;
+  // 유튜브 CTA (card variant, 모바일 only)
+  youtubeUrl?: string;
+  youtubeLongUrl?: string;
+  onYoutubeClick?: (e: React.MouseEvent) => void;
 }
 
-export default function PhoneReveal({ mechanicId, mechanicName, phone, variant, onReveal }: PhoneRevealProps) {
+export default function PhoneReveal({ mechanicId, mechanicName, phone, variant, onReveal, youtubeUrl, youtubeLongUrl, onYoutubeClick }: PhoneRevealProps) {
   const storageKey = `phone-revealed-${mechanicId}`;
   const [revealed, setRevealed] = useState(false);
 
@@ -78,6 +82,28 @@ export default function PhoneReveal({ mechanicId, mechanicName, phone, variant, 
   }
 
   // card variant
+  // 유튜브 CTA 버튼 — 모바일 only
+  const youtubeCta = (youtubeUrl || youtubeLongUrl) ? (
+    <button
+      className="md:hidden ml-auto flex-shrink-0"
+      style={{
+        background: '#ff4444',
+        color: '#fff',
+        fontSize: 9,
+        fontWeight: 600,
+        borderRadius: 4,
+        padding: '2px 8px',
+        lineHeight: '1.4',
+      }}
+      onClick={(e) => {
+        e.stopPropagation();
+        onYoutubeClick?.(e);
+      }}
+    >
+      ▶ 영상
+    </button>
+  ) : null;
+
   if (revealed) {
     return (
       <div className="flex items-center gap-1 min-w-0">
@@ -85,22 +111,26 @@ export default function PhoneReveal({ mechanicId, mechanicName, phone, variant, 
         <span className="text-[10px] sm:text-[11px] text-gray-500 line-clamp-1">
           {phone}
         </span>
+        {youtubeCta}
       </div>
     );
   }
 
   return (
-    <div
-      className="flex items-center gap-1 min-w-0"
-      onClick={(e) => {
-        e.stopPropagation();
-        handleReveal();
-      }}
-    >
-      <Phone size={10} className="text-brand-500 flex-shrink-0" />
-      <span className="text-[10px] sm:text-[11px] text-brand-500 font-medium cursor-pointer">
-        전화번호 확인
-      </span>
+    <div className="flex items-center gap-1 min-w-0">
+      <div
+        className="flex items-center gap-1 min-w-0 cursor-pointer"
+        onClick={(e) => {
+          e.stopPropagation();
+          handleReveal();
+        }}
+      >
+        <Phone size={10} className="text-brand-500 flex-shrink-0" />
+        <span className="text-[10px] sm:text-[11px] text-brand-500 font-medium">
+          전화번호 확인
+        </span>
+      </div>
+      {youtubeCta}
     </div>
   );
 }

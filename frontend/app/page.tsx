@@ -120,6 +120,16 @@ function HomeContent() {
     return getMechanicsByRegion(mechanics, selectedMechanicRegion);
   }, [mechanics, selectedMechanicRegion]);
 
+  // 모바일 프리미엄/일반 분리
+  const premiumMechanics = useMemo(
+    () => filteredMechanics.filter((m) => m.isPremium),
+    [filteredMechanics]
+  );
+  const regularMechanics = useMemo(
+    () => filteredMechanics.filter((m) => !m.isPremium),
+    [filteredMechanics]
+  );
+
   // 선택된 지역 정보
   const selectedRegionInfo = selectedMechanicRegion
     ? getRegionById(selectedMechanicRegion)
@@ -722,11 +732,20 @@ function HomeContent() {
 
           {/* 카드 그리드 */}
           {loading ? (
-            <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 md:gap-3">
-              {[...Array(6)].map((_, i) => (
-                <CardSkeleton key={i} />
-              ))}
-            </div>
+            <>
+              {/* 데스크탑 스켈레톤 */}
+              <div className="hidden md:grid md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+                {[...Array(6)].map((_, i) => (
+                  <CardSkeleton key={i} />
+                ))}
+              </div>
+              {/* 모바일 스켈레톤 */}
+              <div className="md:hidden grid grid-cols-2 gap-2">
+                {[...Array(6)].map((_, i) => (
+                  <CardSkeleton key={i} />
+                ))}
+              </div>
+            </>
           ) : error ? (
             <ErrorMessage message={error} onRetry={fetchMechanics} />
           ) : filteredMechanics.length === 0 && selectedMechanicRegion ? (
@@ -750,21 +769,75 @@ function HomeContent() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.3 }}
-                className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 md:gap-3"
               >
-                {filteredMechanics.map((mechanic, index) => (
-                  <AnimatedSection
-                    key={mechanic.id}
-                    animation="slideUp"
-                    delay={index * 0.1}
-                    duration={0.5}
-                  >
-                    <MechanicCard
-                      mechanic={mechanic}
-                      onClick={() => openModal(mechanic)}
-                    />
-                  </AnimatedSection>
-                ))}
+                {/* 데스크탑 그리드 (md 이상) — 기존 동일 */}
+                <div className="hidden md:grid md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+                  {filteredMechanics.map((mechanic, index) => (
+                    <AnimatedSection
+                      key={mechanic.id}
+                      animation="slideUp"
+                      delay={index * 0.1}
+                      duration={0.5}
+                    >
+                      <MechanicCard
+                        mechanic={mechanic}
+                        onClick={() => openModal(mechanic)}
+                      />
+                    </AnimatedSection>
+                  ))}
+                </div>
+
+                {/* 모바일 그리드 (md 미만) */}
+                <div className="md:hidden space-y-4">
+                  {/* 프리미엄 섹션 */}
+                  {premiumMechanics.length > 0 && (
+                    <div>
+                      <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2 px-0.5">
+                        Premium
+                      </p>
+                      <div className="grid grid-cols-1 gap-2">
+                        {premiumMechanics.map((mechanic, index) => (
+                          <AnimatedSection
+                            key={mechanic.id}
+                            animation="slideUp"
+                            delay={index * 0.1}
+                            duration={0.5}
+                          >
+                            <MechanicCard
+                              mechanic={mechanic}
+                              onClick={() => openModal(mechanic)}
+                              isPremium
+                            />
+                          </AnimatedSection>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 일반 매장 섹션 */}
+                  <div>
+                    {premiumMechanics.length > 0 && (
+                      <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2 px-0.5">
+                        All Shops
+                      </p>
+                    )}
+                    <div className="grid grid-cols-2 gap-2">
+                      {regularMechanics.map((mechanic, index) => (
+                        <AnimatedSection
+                          key={mechanic.id}
+                          animation="slideUp"
+                          delay={index * 0.1}
+                          duration={0.5}
+                        >
+                          <MechanicCard
+                            mechanic={mechanic}
+                            onClick={() => openModal(mechanic)}
+                          />
+                        </AnimatedSection>
+                      ))}
+                    </div>
+                  </div>
+                </div>
               </motion.div>
             </AnimatePresence>
           )}

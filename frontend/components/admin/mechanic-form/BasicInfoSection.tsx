@@ -178,15 +178,18 @@ interface BasicInfoSectionProps {
     phone: string;
     description: string;
     isActive: boolean;
+    isPremium: boolean;
   };
   onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => void;
   onActiveChange: (isActive: boolean) => void;
+  onPremiumChange: (isPremium: boolean) => void;
 }
 
 export default function BasicInfoSection({
   formData,
   onChange,
   onActiveChange,
+  onPremiumChange,
 }: BasicInfoSectionProps) {
   // location 변경을 onChange 형식에 맞게 래핑
   const handleLocationChange = (value: string) => {
@@ -264,6 +267,19 @@ export default function BasicInfoSection({
         >
           <option value="true">활성</option>
           <option value="false">비활성</option>
+        </select>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">프리미엄</label>
+        <select
+          name="isPremium"
+          value={formData.isPremium ? 'true' : 'false'}
+          onChange={(e) => onPremiumChange(e.target.value === 'true')}
+          className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:border-purple-600 text-gray-900"
+        >
+          <option value="false">일반</option>
+          <option value="true">프리미엄 (모바일 상단 대형 카드)</option>
         </select>
       </div>
     </div>
