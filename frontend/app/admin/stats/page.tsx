@@ -1,15 +1,29 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import dynamic from 'next/dynamic';
 import { motion } from 'framer-motion';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { BarChart3, TrendingUp, Eye, MapPin, Globe, Users, Activity } from 'lucide-react';
 import { mechanicsApi, analyticsApi } from '@/lib/api';
 import { MONTHS } from '@/lib/constants';
 import type { Mechanic, TopMechanic } from '@/types';
-import SiteTrafficStats from '@/components/analytics/SiteTrafficStats';
 import CountUp from '@/components/animations/CountUp';
 import AnimatedSection from '@/components/animations/AnimatedSection';
+
+// recharts 사용하는 SiteTrafficStats를 SSR 비활성화로 동적 임포트
+const SiteTrafficStats = dynamic(
+  () => import('@/components/analytics/SiteTrafficStats'),
+  { ssr: false, loading: () => (
+    <div className="flex flex-col items-center justify-center h-96">
+      <div className="relative">
+        <div className="animate-spin rounded-full h-16 w-16 border-4 border-purple-200"></div>
+        <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-purple-600 absolute top-0"></div>
+      </div>
+      <p className="text-gray-500 mt-4 font-medium">트래픽 데이터 로딩 중...</p>
+    </div>
+  )}
+);
 
 type TabType = 'mechanics' | 'traffic';
 
@@ -20,11 +34,17 @@ export default function StatsPage() {
 
   // 기간별 TOP 5 상태
   const [topMechanicsPeriod, setTopMechanicsPeriod] = useState<number | 'monthly'>(1);
-  const [selectedMonth, setSelectedMonth] = useState<number>(new Date().getMonth() + 1);
-  const [selectedYear] = useState<number>(new Date().getFullYear());
+  const [selectedMonth, setSelectedMonth] = useState<number>(1);
+  const [selectedYear, setSelectedYear] = useState<number>(2026);
   const [topMechanicsData, setTopMechanicsData] = useState<TopMechanic[]>([]);
   const [topMechanicsLoading, setTopMechanicsLoading] = useState(false);
   const [topMechanicsError, setTopMechanicsError] = useState<string | null>(null);
+
+  // 클라이언트 마운트 후 실제 날짜로 세팅 (하이드레이션 불일치 방지)
+  useEffect(() => {
+    setSelectedMonth(new Date().getMonth() + 1);
+    setSelectedYear(new Date().getFullYear());
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {

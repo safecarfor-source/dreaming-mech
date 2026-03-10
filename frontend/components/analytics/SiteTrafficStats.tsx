@@ -64,8 +64,8 @@ export default function SiteTrafficStats() {
   const [stats, setStats] = useState<SiteStats | null>(null);
   const [monthlyStats, setMonthlyStats] = useState<SiteMonthlyStats | null>(null);
   const [period, setPeriod] = useState<number | 'monthly'>(1);
-  const [selectedMonth, setSelectedMonth] = useState<number>(new Date().getMonth() + 1);
-  const [selectedYear] = useState<number>(new Date().getFullYear());
+  const [selectedMonth, setSelectedMonth] = useState<number>(() => new Date().getMonth() + 1);
+  const [selectedYear] = useState<number>(() => new Date().getFullYear());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
