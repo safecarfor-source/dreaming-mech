@@ -38,39 +38,40 @@ export default function PhoneReveal({ mechanicId, mechanicName, phone, variant, 
 
   if (variant === 'modal') {
     return (
-      <div>
-        <div className="flex items-center gap-2.5">
-          <div className="p-1 bg-bg-secondary rounded-lg flex-shrink-0">
-            <Phone size={14} className="text-text-tertiary" />
-          </div>
-          {revealed ? (
+      <div className="bg-bg-secondary rounded-2xl p-4 sm:p-5 text-center">
+        <p className="text-xs text-text-tertiary mb-3">전화번호</p>
+        {revealed ? (
+          <div>
             <a
               href={`tel:${phone}`}
-              className="text-[var(--text-body)] text-brand-500 font-medium hover:underline break-all"
+              className="inline-flex items-center justify-center gap-2.5
+                text-[22px] sm:text-[26px] font-bold text-brand-500 hover:text-brand-600
+                transition-colors duration-[var(--duration-fast)]"
             >
+              <Phone size={22} className="flex-shrink-0" />
               {phone}
             </a>
-          ) : (
-            <div className="relative">
-              <span
-                style={{ filter: 'blur(8px)', transition: 'filter 0.3s ease' }}
-                className="text-[var(--text-body)] text-brand-500 font-medium select-none"
-              >
-                {phone}
+            <p className="text-xs text-green-600 mt-2.5">✅ 전화번호 확인 — 클릭 기록됨!</p>
+          </div>
+        ) : (
+          <div className="relative flex items-center justify-center py-1">
+            <span
+              style={{ filter: 'blur(10px)', transition: 'filter 0.3s ease' }}
+              className="text-[22px] sm:text-[26px] font-bold text-text-primary select-none"
+            >
+              {phone}
+            </span>
+            <button
+              onClick={handleReveal}
+              className="absolute inset-0 flex items-center justify-center"
+            >
+              <span className="bg-brand-500 hover:bg-brand-600 text-white text-sm px-5 py-2.5
+                rounded-full font-bold shadow-[var(--shadow-md)] whitespace-nowrap
+                transition-colors duration-[var(--duration-fast)]">
+                👆 터치하여 전화번호 확인
               </span>
-              <button
-                onClick={handleReveal}
-                className="absolute inset-0 flex items-center justify-center"
-              >
-                <span className="bg-brand-500 text-white text-xs px-3 py-1 rounded-full font-medium shadow-sm whitespace-nowrap">
-                  터치하여 전화번호 확인
-                </span>
-              </button>
-            </div>
-          )}
-        </div>
-        {revealed && (
-          <p className="text-xs text-green-600 mt-1 ml-8">전화번호가 확인되었습니다</p>
+            </button>
+          </div>
         )}
       </div>
     );

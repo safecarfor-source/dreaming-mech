@@ -55,11 +55,16 @@ export default function MechanicCard({ mechanic, onClick }: Props) {
             바로 확인 &rarr;
           </span>
         </div>
-        {/* 유튜브 영상 뱃지 */}
+        {/* 유튜브 영상 뱃지 — 프리미엄 느낌 */}
         {(mechanic.youtubeUrl || mechanic.youtubeLongUrl) && (
           <div className="absolute top-1.5 left-1.5 z-10">
-            <span className="bg-red-500 text-white text-[8px] sm:text-[9px] font-bold px-1.5 py-0.5 rounded-full flex items-center gap-0.5 shadow-sm">
-              &#9654; 영상
+            <span className="bg-gradient-to-r from-red-600 to-red-500 text-white text-[9px] sm:text-[10px] font-bold
+              px-2 py-1 rounded-lg flex items-center gap-1 shadow-md
+              ring-1 ring-white/30">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" className="flex-shrink-0">
+                <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+              </svg>
+              영상
             </span>
           </div>
         )}

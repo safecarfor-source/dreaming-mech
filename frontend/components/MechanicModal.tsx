@@ -1,9 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import Image from 'next/image';
-import { X, MapPin, ExternalLink, FileText, BadgeCheck } from 'lucide-react';
+import { X, MapPin, ExternalLink, BadgeCheck } from 'lucide-react';
 import { useModalStore } from '@/lib/store';
 import { mechanicsApi } from '@/lib/api';
 import { sanitizeText, sanitizeBasicHTML, sanitizePhone } from '@/lib/sanitize';
@@ -14,47 +13,32 @@ import SpecialtyTags from './mechanic-detail/SpecialtyTags';
 import GalleryCarousel from './mechanic-detail/GalleryCarousel';
 import QuickInfoRow from './mechanic-detail/QuickInfoRow';
 import ReviewSection from './mechanic-detail/ReviewSection';
-import QuoteRequestForm from './mechanic-detail/QuoteRequestForm';
 import PhoneReveal from './mechanic-detail/PhoneReveal';
 import { gtagEvent } from '@/lib/gtag-events';
 
 export default function MechanicModal() {
   const { isOpen, mechanic, close } = useModalStore();
-  const [showQuoteForm, setShowQuoteForm] = useState(false);
-  const [phoneRevealed, setPhoneRevealed] = useState(false);
 
-  // 클릭수 증가 + GA 이벤트 + 전화번호 공개 상태 복원
+  // 클릭수 증가 + GA 이벤트
   useEffect(() => {
     if (isOpen && mechanic) {
-      // GA4: 정비사 상세 조회
       gtagEvent.mechanicDetailView(mechanic.id, mechanic.name, mechanic.location || '');
       mechanicsApi.incrementClick(mechanic.id).catch((error) => {
         if (error?.response?.status !== 400) {
           console.error('Failed to increment click:', error);
         }
       });
-      // sessionStorage에서 전화번호 공개 상태 복원
-      if (typeof window !== 'undefined') {
-        const saved = sessionStorage.getItem(`phone-revealed-${mechanic.id}`);
-        setPhoneRevealed(saved === 'true');
-      }
     }
   }, [isOpen, mechanic]);
 
   // ESC 키로 닫기
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        if (showQuoteForm) {
-          setShowQuoteForm(false);
-        } else {
-          close();
-        }
-      }
+      if (e.key === 'Escape') close();
     };
     window.addEventListener('keydown', handleEsc);
     return () => window.removeEventListener('keydown', handleEsc);
-  }, [close, showQuoteForm]);
+  }, [close]);
 
   // 스크롤 방지
   useEffect(() => {
@@ -66,13 +50,6 @@ export default function MechanicModal() {
     return () => {
       document.body.style.overflow = 'unset';
     };
-  }, [isOpen]);
-
-  // 모달 닫힐 때 견적 폼 초기화
-  useEffect(() => {
-    if (!isOpen) {
-      setShowQuoteForm(false);
-    }
   }, [isOpen]);
 
   if (!mechanic) return null;
@@ -122,19 +99,6 @@ export default function MechanicModal() {
             {/* 컨텐츠 */}
             <div className="flex-1 overflow-auto">
               <div className="px-4 sm:px-5 py-4 sm:py-5 space-y-4 sm:space-y-5">
-                {/* 대표 이미지 — 16:9 비율 */}
-                {(mechanic.mainImageUrl || mechanic.galleryImages?.[0]) && (
-                  <div className="rounded-xl overflow-hidden bg-bg-tertiary aspect-[2/1] relative">
-                    <Image
-                      src={mechanic.mainImageUrl || mechanic.galleryImages![0]}
-                      alt={sanitizeText(mechanic.name)}
-                      fill
-                      className="object-cover"
-                      sizes="(max-width: 768px) 100vw, 768px"
-                      priority
-                    />
-                  </div>
-                )}
 
                 {/* 갤러리 */}
                 {mechanic.galleryImages && mechanic.galleryImages.length > 0 && (
@@ -153,53 +117,49 @@ export default function MechanicModal() {
                   <SpecialtyTags specialties={mechanic.specialties} />
                 </div>
 
-                {/* 기본 정보 */}
-                <div className="space-y-3 sm:space-y-4">
-                  <div className="flex flex-col gap-2.5">
-                    <div className="flex items-center gap-2.5">
-                      <div className="p-1 bg-bg-secondary rounded-lg flex-shrink-0">
-                        <MapPin size={14} className="text-text-tertiary" />
-                      </div>
-                      <p className="text-[var(--text-body)] text-text-primary font-medium break-words min-w-0 flex-1">
-                        {sanitizeText(mechanic.address)}
-                      </p>
-                    </div>
-
-                    <PhoneReveal
-                      mechanicId={mechanic.id}
-                      mechanicName={mechanic.name}
-                      phone={sanitizePhone(mechanic.phone)}
-                      variant="modal"
-                      onReveal={() => setPhoneRevealed(true)}
-                    />
+                {/* 주소 — 가운데 정렬, 크게 */}
+                <div className="text-center">
+                  <div className="inline-flex items-center gap-2 justify-center">
+                    <MapPin size={18} className="text-brand-500 flex-shrink-0" />
+                    <p className="text-[var(--text-h5)] text-text-primary font-semibold break-words">
+                      {sanitizeText(mechanic.address)}
+                    </p>
                   </div>
-
-                  {/* 유튜브 롱폼 */}
-                  {mechanic.youtubeLongUrl && (
-                    <div>
-                      <h3 className="text-[var(--text-body)] md:text-[var(--text-h5)] font-bold text-text-primary mb-4">소개 영상</h3>
-                      <YouTubeEmbed url={mechanic.youtubeLongUrl} variant="long" />
-                    </div>
-                  )}
-
-                  {/* 유튜브 숏폼 */}
-                  {mechanic.youtubeUrl && (
-                    <div>
-                      <h3 className="text-[var(--text-body)] md:text-[var(--text-h5)] font-bold text-text-primary mb-4">숏폼 영상</h3>
-                      <YouTubeEmbed url={mechanic.youtubeUrl} variant="short" />
-                    </div>
-                  )}
-
-                  {/* 소개 */}
-                  {mechanic.description && (
-                    <div className="p-3 sm:p-4 bg-bg-secondary rounded-xl">
-                      <h3 className="text-[var(--text-body)] font-bold text-text-primary mb-2">소개</h3>
-                      <p className="text-[var(--text-body)] text-text-secondary leading-[1.7] break-words whitespace-pre-wrap">
-                        {sanitizeBasicHTML(mechanic.description)}
-                      </p>
-                    </div>
-                  )}
                 </div>
+
+                {/* 전화번호 — 1개만, 크고 임팩트있게 */}
+                <PhoneReveal
+                  mechanicId={mechanic.id}
+                  mechanicName={mechanic.name}
+                  phone={sanitizePhone(mechanic.phone)}
+                  variant="modal"
+                />
+
+                {/* 유튜브 영상 — 핵심 상품 영역 */}
+                {(mechanic.youtubeLongUrl || mechanic.youtubeUrl) && (
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2">
+                      <span className="text-lg">🎬</span>
+                      <h3 className="text-[var(--text-h5)] font-bold text-text-primary">영상 소개</h3>
+                    </div>
+                    {mechanic.youtubeLongUrl && (
+                      <YouTubeEmbed url={mechanic.youtubeLongUrl} variant="long" />
+                    )}
+                    {mechanic.youtubeUrl && (
+                      <YouTubeEmbed url={mechanic.youtubeUrl} variant="short" />
+                    )}
+                  </div>
+                )}
+
+                {/* 소개 */}
+                {mechanic.description && (
+                  <div className="p-3 sm:p-4 bg-bg-secondary rounded-xl">
+                    <h3 className="text-[var(--text-body)] font-bold text-text-primary mb-2">소개</h3>
+                    <p className="text-[var(--text-body)] text-text-secondary leading-[1.7] break-words whitespace-pre-wrap">
+                      {sanitizeBasicHTML(mechanic.description)}
+                    </p>
+                  </div>
+                )}
 
                 {/* 주차/결제수단 빠른 정보 */}
                 <QuickInfoRow
@@ -223,74 +183,21 @@ export default function MechanicModal() {
                   />
                 </div>
 
-                {/* 견적 요청 폼 */}
-                <AnimatePresence>
-                  {showQuoteForm && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: 'auto' }}
-                      exit={{ opacity: 0, height: 0 }}
-                      className="overflow-hidden"
-                    >
-                      <div className="p-3 sm:p-4 bg-bg-secondary rounded-2xl">
-                        <QuoteRequestForm
-                          mechanicId={mechanic.id}
-                          mechanicName={mechanic.name}
-                          onClose={() => setShowQuoteForm(false)}
-                        />
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-
-                {/* CTA 버튼 — 충분한 여백, 체계적 색상 */}
-                <div className="flex gap-3 pt-2">
-                  <a
-                    href={phoneRevealed ? `tel:${mechanic.phone}` : '#'}
-                    onClick={(e) => {
-                      if (!phoneRevealed) {
-                        e.preventDefault();
-                        setPhoneRevealed(true);
-                        if (typeof window !== 'undefined') {
-                          sessionStorage.setItem(`phone-revealed-${mechanic.id}`, 'true');
-                        }
-                        mechanicsApi.recordPhoneReveal(mechanic.id).catch(() => {});
-                        gtagEvent.mechanicPhoneReveal(mechanic.id, mechanic.name);
-                      }
-                    }}
-                    className="flex-1 bg-brand-500 hover:bg-brand-600 text-white
-                      py-2.5 sm:py-3 rounded-xl font-bold text-center text-[var(--text-caption)] md:text-[var(--text-body)]
-                      transition-colors duration-[var(--duration-normal)]
-                      shadow-[var(--shadow-sm)] hover:shadow-[var(--shadow-md)]"
-                  >
-                    {phoneRevealed ? '전화 문의' : '전화번호 확인'}
-                  </a>
-                  <button
-                    onClick={() => setShowQuoteForm(!showQuoteForm)}
-                    className={`flex-1 flex items-center justify-center gap-2
-                      py-2.5 sm:py-3 rounded-xl font-bold text-[var(--text-caption)] md:text-[var(--text-body)]
-                      transition-colors duration-[var(--duration-normal)] ${
-                      showQuoteForm
-                        ? 'bg-bg-tertiary text-text-secondary'
-                        : 'bg-accent-500 hover:bg-accent-600 text-white shadow-[var(--shadow-sm)] hover:shadow-[var(--shadow-md)]'
-                    }`}
-                  >
-                    <FileText size={16} />
-                    {showQuoteForm ? '닫기' : '견적 요청'}
-                  </button>
+                {/* CTA — 길찾기만 */}
+                <div className="pt-2">
                   <button
                     onClick={() => {
                       const url = `https://map.naver.com/v5/search/${encodeURIComponent(mechanic.address)}`;
                       window.open(url, '_blank');
                     }}
-                    className="flex items-center justify-center gap-2
-                      px-4 sm:px-5 py-2.5 sm:py-3
-                      border-2 border-[var(--border)] rounded-xl font-bold text-[var(--text-caption)] md:text-[var(--text-body)]
+                    className="w-full flex items-center justify-center gap-2
+                      py-3 sm:py-3.5
+                      border-2 border-[var(--border)] rounded-xl font-bold text-[var(--text-body)]
                       text-text-secondary hover:border-brand-500 hover:text-brand-500
                       transition-colors duration-[var(--duration-normal)]"
                   >
-                    <ExternalLink size={16} />
-                    길찾기
+                    <ExternalLink size={18} />
+                    네이버 지도에서 길찾기
                   </button>
                 </div>
               </div>
