@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
-import { X, MapPin, Phone, ExternalLink, FileText, BadgeCheck } from 'lucide-react';
+import { X, MapPin, ExternalLink, FileText, BadgeCheck } from 'lucide-react';
 import { useModalStore } from '@/lib/store';
 import { mechanicsApi } from '@/lib/api';
 import { sanitizeText, sanitizeBasicHTML, sanitizePhone } from '@/lib/sanitize';
@@ -15,13 +15,15 @@ import GalleryCarousel from './mechanic-detail/GalleryCarousel';
 import QuickInfoRow from './mechanic-detail/QuickInfoRow';
 import ReviewSection from './mechanic-detail/ReviewSection';
 import QuoteRequestForm from './mechanic-detail/QuoteRequestForm';
+import PhoneReveal from './mechanic-detail/PhoneReveal';
 import { gtagEvent } from '@/lib/gtag-events';
 
 export default function MechanicModal() {
   const { isOpen, mechanic, close } = useModalStore();
   const [showQuoteForm, setShowQuoteForm] = useState(false);
+  const [phoneRevealed, setPhoneRevealed] = useState(false);
 
-  // 클릭수 증가 + GA 이벤트
+  // 클릭수 증가 + GA 이벤트 + 전화번호 공개 상태 복원
   useEffect(() => {
     if (isOpen && mechanic) {
       // GA4: 정비사 상세 조회
@@ -31,6 +33,11 @@ export default function MechanicModal() {
           console.error('Failed to increment click:', error);
         }
       });
+      // sessionStorage에서 전화번호 공개 상태 복원
+      if (typeof window !== 'undefined') {
+        const saved = sessionStorage.getItem(`phone-revealed-${mechanic.id}`);
+        setPhoneRevealed(saved === 'true');
+      }
     }
   }, [isOpen, mechanic]);
 
@@ -158,18 +165,30 @@ export default function MechanicModal() {
                       </p>
                     </div>
 
-                    <div className="flex items-center gap-2.5">
-                      <div className="p-1 bg-bg-secondary rounded-lg flex-shrink-0">
-                        <Phone size={14} className="text-text-tertiary" />
-                      </div>
-                      <a
-                        href={`tel:${sanitizePhone(mechanic.phone)}`}
-                        className="text-[var(--text-body)] text-brand-500 font-medium hover:underline break-all"
-                      >
-                        {sanitizePhone(mechanic.phone)}
-                      </a>
-                    </div>
+                    <PhoneReveal
+                      mechanicId={mechanic.id}
+                      mechanicName={mechanic.name}
+                      phone={sanitizePhone(mechanic.phone)}
+                      variant="modal"
+                      onReveal={() => setPhoneRevealed(true)}
+                    />
                   </div>
+
+                  {/* 유튜브 롱폼 */}
+                  {mechanic.youtubeLongUrl && (
+                    <div>
+                      <h3 className="text-[var(--text-body)] md:text-[var(--text-h5)] font-bold text-text-primary mb-4">소개 영상</h3>
+                      <YouTubeEmbed url={mechanic.youtubeLongUrl} variant="long" />
+                    </div>
+                  )}
+
+                  {/* 유튜브 숏폼 */}
+                  {mechanic.youtubeUrl && (
+                    <div>
+                      <h3 className="text-[var(--text-body)] md:text-[var(--text-h5)] font-bold text-text-primary mb-4">숏폼 영상</h3>
+                      <YouTubeEmbed url={mechanic.youtubeUrl} variant="short" />
+                    </div>
+                  )}
 
                   {/* 소개 */}
                   {mechanic.description && (
@@ -204,22 +223,6 @@ export default function MechanicModal() {
                   />
                 </div>
 
-                {/* 유튜브 롱폼 */}
-                {mechanic.youtubeLongUrl && (
-                  <div>
-                    <h3 className="text-[var(--text-body)] md:text-[var(--text-h5)] font-bold text-text-primary mb-4">소개 영상</h3>
-                    <YouTubeEmbed url={mechanic.youtubeLongUrl} variant="long" />
-                  </div>
-                )}
-
-                {/* 유튜브 숏폼 */}
-                {mechanic.youtubeUrl && (
-                  <div>
-                    <h3 className="text-[var(--text-body)] md:text-[var(--text-h5)] font-bold text-text-primary mb-4">숏폼 영상</h3>
-                    <YouTubeEmbed url={mechanic.youtubeUrl} variant="short" />
-                  </div>
-                )}
-
                 {/* 견적 요청 폼 */}
                 <AnimatePresence>
                   {showQuoteForm && (
@@ -243,13 +246,24 @@ export default function MechanicModal() {
                 {/* CTA 버튼 — 충분한 여백, 체계적 색상 */}
                 <div className="flex gap-3 pt-2">
                   <a
-                    href={`tel:${mechanic.phone}`}
+                    href={phoneRevealed ? `tel:${mechanic.phone}` : '#'}
+                    onClick={(e) => {
+                      if (!phoneRevealed) {
+                        e.preventDefault();
+                        setPhoneRevealed(true);
+                        if (typeof window !== 'undefined') {
+                          sessionStorage.setItem(`phone-revealed-${mechanic.id}`, 'true');
+                        }
+                        mechanicsApi.recordPhoneReveal(mechanic.id).catch(() => {});
+                        gtagEvent.mechanicPhoneReveal(mechanic.id, mechanic.name);
+                      }
+                    }}
                     className="flex-1 bg-brand-500 hover:bg-brand-600 text-white
                       py-2.5 sm:py-3 rounded-xl font-bold text-center text-[var(--text-caption)] md:text-[var(--text-body)]
                       transition-colors duration-[var(--duration-normal)]
                       shadow-[var(--shadow-sm)] hover:shadow-[var(--shadow-md)]"
                   >
-                    전화 문의
+                    {phoneRevealed ? '전화 문의' : '전화번호 확인'}
                   </a>
                   <button
                     onClick={() => setShowQuoteForm(!showQuoteForm)}

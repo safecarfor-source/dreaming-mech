@@ -106,4 +106,18 @@ export class MechanicController {
     const isBot = req['isBot'] as boolean;
     return this.mechanicService.incrementClick(id, ip, userAgent, isBot);
   }
+
+  // POST /mechanics/:id/phone-reveal
+  @Post(':id/phone-reveal')
+  @Throttle({ default: { limit: 5, ttl: 60000 } }) // 60초에 최대 5번
+  @UseGuards(BotDetectionGuard)
+  recordPhoneReveal(
+    @Param('id', ParseIntPipe) id: number,
+    @Ip() ip: string,
+    @Req() req: Request,
+  ) {
+    const userAgent = req['userAgent'] as string;
+    const isBot = req['isBot'] as boolean;
+    return this.mechanicService.recordPhoneReveal(id, ip, userAgent, isBot);
+  }
 }

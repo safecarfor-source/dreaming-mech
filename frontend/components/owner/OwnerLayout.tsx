@@ -17,6 +17,7 @@ import {
   RefreshCw,
   ChevronRight,
   FileText,
+  BarChart2,
 } from 'lucide-react';
 
 interface Props {
@@ -25,6 +26,7 @@ interface Props {
 
 const menuItems = [
   { href: '/owner', label: '대시보드', icon: LayoutDashboard },
+  { href: '/owner/report', label: '월간 리포트', icon: BarChart2 },
   { href: '/owner/mechanics', label: '내 매장 관리', icon: Store },
 ];
 

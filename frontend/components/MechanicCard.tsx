@@ -2,10 +2,11 @@
 
 import Image from 'next/image';
 import { motion } from 'framer-motion';
-import { MapPin, Phone } from 'lucide-react';
+import { MapPin } from 'lucide-react';
 import type { Mechanic } from '@/types';
 import { sanitizeText, sanitizePhone } from '@/lib/sanitize';
 import { gtagEvent } from '@/lib/gtag-events';
+import PhoneReveal from './mechanic-detail/PhoneReveal';
 
 interface Props {
   mechanic: Mechanic;
@@ -54,6 +55,14 @@ export default function MechanicCard({ mechanic, onClick }: Props) {
             바로 확인 &rarr;
           </span>
         </div>
+        {/* 유튜브 영상 뱃지 */}
+        {(mechanic.youtubeUrl || mechanic.youtubeLongUrl) && (
+          <div className="absolute top-1.5 left-1.5 z-10">
+            <span className="bg-red-500 text-white text-[8px] sm:text-[9px] font-bold px-1.5 py-0.5 rounded-full flex items-center gap-0.5 shadow-sm">
+              &#9654; 영상
+            </span>
+          </div>
+        )}
       </div>
 
       {/* 정보 — 컴팩트 */}
@@ -70,12 +79,12 @@ export default function MechanicCard({ mechanic, onClick }: Props) {
               {sanitizeText(mechanic.location)}
             </span>
           </div>
-          <div className="flex items-center gap-1 min-w-0">
-            <Phone size={10} className="text-gray-400 flex-shrink-0" />
-            <span className="text-[10px] sm:text-[11px] text-gray-500 line-clamp-1">
-              {sanitizePhone(mechanic.phone)}
-            </span>
-          </div>
+          <PhoneReveal
+            mechanicId={mechanic.id}
+            mechanicName={sanitizeText(mechanic.name)}
+            phone={sanitizePhone(mechanic.phone)}
+            variant="card"
+          />
         </div>
       </div>
     </motion.div>

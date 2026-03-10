@@ -101,6 +101,15 @@ export class OwnerProfileController {
     return this.ownerService.updateProfile(req.user.sub, body);
   }
 
+  // GET /owner/report?period=YYYY-MM — 월별 성과 리포트
+  @Get('report')
+  getMonthlyReport(
+    @Request() req,
+    @Query('period') period?: string,
+  ) {
+    return this.ownerService.getMonthlyReport(req.user.sub, period);
+  }
+
   // GET /owner/service-inquiries — 내 정비소 선택 고객 문의 목록
   @Get('service-inquiries')
   getMyInquiries(@Request() req) {

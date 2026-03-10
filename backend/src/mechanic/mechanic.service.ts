@@ -289,6 +289,56 @@ export class MechanicService {
     });
   }
 
+  // 전화번호 공개 기록
+  async recordPhoneReveal(
+    id: number,
+    ipAddress: string,
+    userAgent: string,
+    isBot: boolean,
+  ) {
+    await this.findOne(id);
+
+    // IP 익명화: 마지막 옥텟을 0으로 대체 (예: 1.2.3.4 → 1.2.3.0)
+    const anonymizedIp = ipAddress.replace(/\.\d+$/, '.0');
+
+    return await this.prisma.$transaction(async (tx) => {
+      // 24시간 내 동일 IP 중복 체크
+      const isDuplicate = await this.cacheService.checkDuplicatePhoneReveal(
+        id,
+        anonymizedIp,
+      );
+      if (isDuplicate) {
+        return { recorded: false };
+      }
+
+      // 캐시에 기록 (24시간 TTL)
+      await this.cacheService.recordPhoneReveal(id, anonymizedIp);
+
+      // 봇이 아닌 경우에만 phoneRevealCount 증가
+      if (!isBot) {
+        await tx.mechanic.update({
+          where: { id },
+          data: {
+            phoneRevealCount: { increment: 1 },
+          },
+        });
+      }
+
+      // PhoneRevealLog 기록 (봇 여부와 관계없이 기록)
+      await tx.phoneRevealLog.create({
+        data: {
+          mechanicId: id,
+          ipAddress: anonymizedIp,
+          userAgent,
+          isBot,
+          revealedAt: new Date(),
+        },
+      });
+
+      return { recorded: true };
+    });
+  }
+
   // 정비사 순서 변경
   async reorder(orderedIds: number[]) {
     await this.prisma.$transaction(

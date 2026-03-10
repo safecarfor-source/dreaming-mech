@@ -87,6 +87,14 @@ function mechanicPhoneClick(mechanicId: number, mechanicName: string) {
   });
 }
 
+/** 전화번호 블러 해제 (전화번호 확인 클릭) */
+function mechanicPhoneReveal(mechanicId: number, mechanicName: string) {
+  gtag('event', 'mechanic_phone_reveal', {
+    mechanic_id: mechanicId,
+    mechanic_name: mechanicName,
+  });
+}
+
 // ═══════════════════════════════════════
 // 3. 사장님(Owner) 가입 이벤트
 // ═══════════════════════════════════════
@@ -214,6 +222,7 @@ export const gtagEvent = {
   mechanicCardClick,
   mechanicDetailView,
   mechanicPhoneClick,
+  mechanicPhoneReveal,
   // 사장님 가입
   ownerLoginStart,
   ownerSignupComplete,

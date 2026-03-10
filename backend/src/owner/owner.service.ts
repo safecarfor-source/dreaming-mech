@@ -283,6 +283,200 @@ export class OwnerService {
     return user;
   }
 
+  // ── KST 기준 특정 월의 시작/끝을 UTC로 변환 (analytics.service.ts 패턴 동일) ──
+
+  private getKstMonthRange(year: number, month: number): { startDate: Date; endDate: Date } {
+    const kstStart = new Date(year, month - 1, 1, 0, 0, 0);
+    const startDate = new Date(kstStart.getTime() - 9 * 60 * 60 * 1000);
+    const kstEnd = new Date(year, month, 0, 23, 59, 59);
+    const endDate = new Date(kstEnd.getTime() - 9 * 60 * 60 * 1000);
+    return { startDate, endDate };
+  }
+
+  // ── 사용자용: 월별 성과 리포트 ──
+
+  async getMonthlyReport(userId: number, period?: string) {
+    // period 파싱 (기본: 현재 YYYY-MM KST 기준)
+    let year: number;
+    let month: number;
+
+    if (period && /^\d{4}-\d{2}$/.test(period)) {
+      const [y, m] = period.split('-').map(Number);
+      year = y;
+      month = m;
+    } else {
+      // KST 기준 현재 월
+      const now = new Date();
+      const kstNow = new Date(now.getTime() + 9 * 60 * 60 * 1000);
+      year = kstNow.getFullYear();
+      month = kstNow.getMonth() + 1;
+    }
+
+    const periodStr = `${year}-${String(month).padStart(2, '0')}`;
+    const { startDate, endDate } = this.getKstMonthRange(year, month);
+
+    // 이전 달 범위
+    const prevMonth = month === 1 ? 12 : month - 1;
+    const prevYear = month === 1 ? year - 1 : year;
+    const { startDate: prevStartDate, endDate: prevEndDate } = this.getKstMonthRange(prevYear, prevMonth);
+
+    // 사용자의 활성 정비소 목록 조회
+    const mechanics = await this.prisma.mechanic.findMany({
+      where: { userId, isActive: true },
+      select: { id: true, name: true, location: true, isVerified: true },
+    });
+
+    // 정비소 없음: 빈 리포트 반환
+    if (mechanics.length === 0) {
+      return {
+        period: periodStr,
+        totals: { pageViews: 0, uniqueVisitors: 0, phoneReveals: 0, conversionRate: 0 },
+        previousMonth: { pageViews: 0, phoneReveals: 0, pageViewsDelta: 0, phoneRevealsDelta: 0 },
+        dailyViews: [],
+        regionRanking: { region: '', rank: 0, total: 0 },
+        premiumComparison: { avgPhoneReveals: 0, myPhoneReveals: 0, multiplier: 0 },
+        isPremium: false,
+      };
+    }
+
+    const mechanicIds = mechanics.map((m) => m.id);
+
+    // 이번 달 통계: 페이지뷰, 고유 방문자, 전화번호 공개 병렬 조회
+    const [pageViews, uniqueVisitorsRaw, phoneReveals] = await Promise.all([
+      this.prisma.clickLog.count({
+        where: {
+          mechanicId: { in: mechanicIds },
+          isBot: false,
+          clickedAt: { gte: startDate, lte: endDate },
+        },
+      }),
+      this.prisma.clickLog.groupBy({
+        by: ['ipAddress'],
+        where: {
+          mechanicId: { in: mechanicIds },
+          isBot: false,
+          clickedAt: { gte: startDate, lte: endDate },
+        },
+      }),
+      this.prisma.phoneRevealLog.count({
+        where: {
+          mechanicId: { in: mechanicIds },
+          isBot: false,
+          revealedAt: { gte: startDate, lte: endDate },
+        },
+      }),
+    ]);
+
+    const uniqueVisitors = uniqueVisitorsRaw.length;
+    const conversionRate = pageViews > 0
+      ? Math.round((phoneReveals / pageViews) * 100 * 10) / 10
+      : 0;
+
+    // 이전 달 통계
+    const [prevPageViews, prevPhoneReveals] = await Promise.all([
+      this.prisma.clickLog.count({
+        where: {
+          mechanicId: { in: mechanicIds },
+          isBot: false,
+          clickedAt: { gte: prevStartDate, lte: prevEndDate },
+        },
+      }),
+      this.prisma.phoneRevealLog.count({
+        where: {
+          mechanicId: { in: mechanicIds },
+          isBot: false,
+          revealedAt: { gte: prevStartDate, lte: prevEndDate },
+        },
+      }),
+    ]);
+
+    const pageViewsDelta = prevPageViews > 0
+      ? Math.round(((pageViews - prevPageViews) / prevPageViews) * 100)
+      : pageViews > 0 ? 100 : 0;
+    const phoneRevealsDelta = prevPhoneReveals > 0
+      ? Math.round(((phoneReveals - prevPhoneReveals) / prevPhoneReveals) * 100)
+      : phoneReveals > 0 ? 100 : 0;
+
+    // 일별 페이지뷰 (KST 기준, raw SQL)
+    const dailyViewsRaw = await this.prisma.$queryRaw<
+      Array<{ date: string; views: bigint }>
+    >`
+      SELECT DATE("clickedAt" AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Seoul') as date,
+        COUNT(*)::bigint as views
+      FROM "ClickLog"
+      WHERE "mechanicId" = ANY(${mechanicIds}::int[]) AND "isBot" = false
+        AND "clickedAt" >= ${startDate} AND "clickedAt" <= ${endDate}
+      GROUP BY date ORDER BY date ASC
+    `;
+
+    const dailyViews = dailyViewsRaw.map((d) => ({
+      date: String(d.date),
+      views: Number(d.views),
+    }));
+
+    // 지역 랭킹: 내 첫 번째 정비소 location 기준
+    const myLocation = mechanics[0].location;
+    const regionMechanics = await this.prisma.mechanic.findMany({
+      where: { isActive: true, location: { contains: myLocation, mode: 'insensitive' } },
+      select: { id: true },
+    });
+    const regionMechanicIds = regionMechanics.map((m) => m.id);
+
+    // 같은 지역 정비소별 이번 달 클릭 수 집계
+    const regionClicksRaw = await this.prisma.clickLog.groupBy({
+      by: ['mechanicId'],
+      where: {
+        mechanicId: { in: regionMechanicIds },
+        isBot: false,
+        clickedAt: { gte: startDate, lte: endDate },
+      },
+      _count: { mechanicId: true },
+      orderBy: { _count: { mechanicId: 'desc' } },
+    });
+
+    const total = regionClicksRaw.length;
+    // 내 정비소가 랭킹 목록에 있는지 확인
+    const myRankIndex = regionClicksRaw.findIndex((r) =>
+      mechanicIds.includes(r.mechanicId),
+    );
+    const rank = myRankIndex === -1 ? total + 1 : myRankIndex + 1;
+
+    // 프리미엄(인증) 비교: 인증 정비소 평균 vs 내 정비소
+    const verifiedMechanics = await this.prisma.mechanic.findMany({
+      where: { isVerified: true, isActive: true },
+      select: { id: true },
+    });
+    const verifiedIds = verifiedMechanics.map((m) => m.id);
+
+    let avgPhoneReveals = 0;
+    if (verifiedIds.length > 0) {
+      const verifiedPhoneReveals = await this.prisma.phoneRevealLog.count({
+        where: {
+          mechanicId: { in: verifiedIds },
+          isBot: false,
+          revealedAt: { gte: startDate, lte: endDate },
+        },
+      });
+      avgPhoneReveals = Math.round(verifiedPhoneReveals / verifiedIds.length * 10) / 10;
+    }
+
+    const multiplier = avgPhoneReveals > 0
+      ? Math.round((phoneReveals / avgPhoneReveals) * 10) / 10
+      : 0;
+
+    const isPremium = mechanics.some((m) => m.isVerified);
+
+    return {
+      period: periodStr,
+      totals: { pageViews, uniqueVisitors, phoneReveals, conversionRate },
+      previousMonth: { pageViews: prevPageViews, phoneReveals: prevPhoneReveals, pageViewsDelta, phoneRevealsDelta },
+      dailyViews,
+      regionRanking: { region: myLocation, rank, total },
+      premiumComparison: { avgPhoneReveals, myPhoneReveals: phoneReveals, multiplier },
+      isPremium,
+    };
+  }
+
   // ── 사용자용: 내 정비소를 선택한 고객 문의 조회 ──
 
   async getMyInquiries(userId: number) {

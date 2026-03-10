@@ -74,6 +74,7 @@ export interface Mechanic {
   owner?: { id: number; name?: string; email?: string; businessName?: string };
   // 기본 필드
   clickCount: number;
+  phoneRevealCount: number;
   sortOrder: number;
   isActive: boolean;
   createdAt: string;
@@ -308,6 +309,34 @@ export interface TrackingLink {
   totalInquiries?: number;
   totalSignups?: number;
   conversionRate?: number;
+}
+
+export interface OwnerMonthlyReport {
+  period: string;
+  totals: {
+    pageViews: number;
+    uniqueVisitors: number;
+    phoneReveals: number;
+    conversionRate: number;
+  };
+  previousMonth: {
+    pageViews: number;
+    phoneReveals: number;
+    pageViewsDelta: number;
+    phoneRevealsDelta: number;
+  };
+  dailyViews: Array<{ date: string; views: number }>;
+  regionRanking: {
+    region: string;
+    rank: number;
+    total: number;
+  };
+  premiumComparison: {
+    avgPhoneReveals: number;
+    myPhoneReveals: number;
+    multiplier: number;
+  };
+  isPremium: boolean;
 }
 
 export interface TrackingLinkDetail extends TrackingLink {

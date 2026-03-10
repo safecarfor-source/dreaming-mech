@@ -52,6 +52,7 @@ export const mechanicsApi = {
     api.patch<Mechanic>(`/mechanics/${id}`, data),
   delete: (id: number) => api.delete(`/mechanics/${id}`),
   incrementClick: (id: number) => api.post(`/mechanics/${id}/click`),
+  recordPhoneReveal: (id: number) => api.post(`/mechanics/${id}/phone-reveal`),
   reorder: (orderedIds: number[]) =>
     api.patch('/mechanics/reorder', { orderedIds }, buildConfig()),
   getByRegion: (sido: string, sigungu: string) =>
@@ -437,6 +438,11 @@ export const trackingLinkApi = {
 };
 
 // Community API (커뮤니티 Q&A)
+export const ownerReportApi = {
+  getMonthlyReport: (period?: string) =>
+    api.get('/owner/report', { params: period ? { period } : {} }),
+};
+
 export const communityApi = {
   getPosts: (params?: { category?: string; page?: number; limit?: number }) =>
     api.get('/community/posts', { params }),

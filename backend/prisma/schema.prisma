@@ -40,7 +40,8 @@ model Mechanic {
   kakaoOpenChatUrl  String?  // 카카오 오픈채팅 링크
 
   // 통계
-  clickCount      Int      @default(0) // 클릭 수
+  clickCount        Int      @default(0) // 클릭 수
+  phoneRevealCount  Int      @default(0) // 전화번호 공개 수
 
   // 정렬
   sortOrder       Int      @default(0) // 정렬 순서 (낮을수록 먼저 표시)
@@ -58,6 +59,7 @@ model Mechanic {
 
   // 관계
   clickLogs        ClickLog[]
+  phoneRevealLogs  PhoneRevealLog[]
   quoteRequests    QuoteRequest[]
   reviews          Review[]
   serviceInquiries ServiceInquiry[]
@@ -126,6 +128,20 @@ model Admin {
   name      String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+// 전화번호 공개 로그 모델
+model PhoneRevealLog {
+  id          Int      @id @default(autoincrement())
+  mechanicId  Int
+  mechanic    Mechanic @relation(fields: [mechanicId], references: [id], onDelete: Cascade)
+  ipAddress   String?
+  userAgent   String?  @db.Text
+  isBot       Boolean  @default(false)
+  revealedAt  DateTime @default(now())
+
+  @@index([mechanicId, revealedAt])
+  @@index([ipAddress])
 }
 
 // 클릭 로그 모델

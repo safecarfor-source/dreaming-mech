@@ -5,7 +5,7 @@ import OwnerLayout from '@/components/owner/OwnerLayout';
 import { ownerMechanicsApi, userAuthApi, ownerInquiriesApi } from '@/lib/api';
 import { Mechanic, User as UserType } from '@/types';
 import Link from 'next/link';
-import { Plus, Store, Eye, X, ChevronRight, Clock, MapPin, Wrench, Car, Phone, User, Link2, MessageSquare, FileText, ArrowRight } from 'lucide-react';
+import { Plus, Store, Eye, X, ChevronRight, Clock, MapPin, Wrench, Car, Phone, User, Link2, MessageSquare, FileText, ArrowRight, BarChart2 } from 'lucide-react';
 
 type OwnerInquiry = {
   id: number;
@@ -270,6 +270,24 @@ export default function OwnerDashboardPage() {
               <p className="text-2xl font-bold">{inquiries.length}</p>
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* 리포트 바로가기 */}
+      <div className="bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-100 rounded-xl p-4 mb-8">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-white rounded-lg shadow-sm">
+              <BarChart2 size={20} className="text-[#7C4DFF]" />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-gray-900">월간 리포트</h3>
+              <p className="text-xs text-gray-500">조회수, 전화확인, 지역순위를 확인하세요</p>
+            </div>
+          </div>
+          <Link href="/owner/report" className="text-sm font-medium text-[#7C4DFF] hover:underline">
+            자세히 보기 →
+          </Link>
         </div>
       </div>
 
