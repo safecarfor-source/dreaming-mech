@@ -322,7 +322,7 @@ export interface OwnerWeeklyReport {
     phoneReveals: number;
     conversionRate: number;
   };
-  previousMonth: {
+  previousWeek: {
     pageViews: number;
     phoneReveals: number;
     pageViewsDelta: number;

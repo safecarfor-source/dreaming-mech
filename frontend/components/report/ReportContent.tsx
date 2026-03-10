@@ -43,7 +43,7 @@ export default function ReportContent({
           icon={<Eye size={14} className="text-blue-500" />}
           label="조회수"
           value={report.totals.pageViews.toLocaleString()}
-          delta={report.previousMonth.pageViewsDelta}
+          delta={report.previousWeek.pageViewsDelta}
           colorClass="text-blue-600"
           bgClass="bg-blue-50"
         />
@@ -51,7 +51,7 @@ export default function ReportContent({
           icon={<Phone size={14} className="text-green-500" />}
           label="전화확인"
           value={report.totals.phoneReveals.toLocaleString()}
-          delta={report.previousMonth.phoneRevealsDelta}
+          delta={report.previousWeek.phoneRevealsDelta}
           colorClass="text-green-600"
           bgClass="bg-green-50"
         />

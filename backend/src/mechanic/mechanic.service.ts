@@ -175,16 +175,24 @@ export class MechanicService {
     });
     const nextOrder = (maxOrder._max.sortOrder ?? 0) + 1;
 
+    // ownerId → userId 매핑 (프론트에서 ownerId로 보냄, Prisma 스키마는 userId)
+    const rawData = createMechanicDto as Record<string, any>;
+    const ownerIdValue = rawData.ownerId;
+    delete rawData.ownerId;
+
+    const createData: any = {
+      ...rawData,
+      ...(ownerIdValue != null ? { userId: ownerIdValue } : {}),
+      galleryImages: createMechanicDto.galleryImages || [],
+      operatingHours: toJsonField(createMechanicDto.operatingHours),
+      specialties: createMechanicDto.specialties || [],
+      paymentMethods: createMechanicDto.paymentMethods || [],
+      holidays: toJsonField(createMechanicDto.holidays),
+      sortOrder: nextOrder,
+    };
+
     const mechanic = await this.prisma.mechanic.create({
-      data: {
-        ...createMechanicDto,
-        galleryImages: createMechanicDto.galleryImages || [],
-        operatingHours: toJsonField(createMechanicDto.operatingHours),
-        specialties: createMechanicDto.specialties || [],
-        paymentMethods: createMechanicDto.paymentMethods || [],
-        holidays: toJsonField(createMechanicDto.holidays),
-        sortOrder: nextOrder,
-      },
+      data: createData,
     });
 
     // Decimal 타입을 숫자로 변환
@@ -199,8 +207,15 @@ export class MechanicService {
   async update(id: number, updateMechanicDto: UpdateMechanicDto) {
     await this.findOne(id);
 
-    // Json? 필드의 null 처리
+    // ownerId → userId 매핑 (프론트에서 ownerId로 보냄, Prisma 스키마는 userId)
     const data: any = { ...updateMechanicDto };
+    if ('ownerId' in data) {
+      const ownerIdValue = data.ownerId;
+      delete data.ownerId;
+      if (ownerIdValue !== undefined) {
+        data.userId = ownerIdValue;
+      }
+    }
     if ('operatingHours' in data) data.operatingHours = toJsonField(data.operatingHours);
     if ('holidays' in data) data.holidays = toJsonField(data.holidays);
 
