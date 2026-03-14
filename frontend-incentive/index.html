@@ -852,33 +852,58 @@ function renderManager(data, el) {
   let html = '';
   if (isLoss) html += `<div class="loss-banner"><div class="loss-label">팀 최소수량 미달로 잃은 팀 보너스</div><div class="loss-amount">-${fmtWon(data.lost)}</div></div>`;
 
-  html += `<div class="stat-grid" style="grid-template-columns:1fr 1fr">
-    <div class="stat-card" style="text-align:center"><div class="label">타이어 인센티브</div><div class="value text-teal" style="font-size:22px;font-weight:700" data-countup="${data.tireIncentive}">${fmtWon(data.tireIncentive)}</div><div class="sub">타이어+얼라이: ${fmtWon(data.tireSales+data.alignmentSales)}</div></div>
-    <div class="stat-card" style="text-align:center"><div class="label">팀 보너스 (x1.5)</div><div class="value ${isLoss?'text-amber':'text-teal'}" style="font-size:22px;font-weight:700" data-countup="${data.teamBonus}">${fmtWon(data.teamBonus)}</div><div class="sub">팀 인센: ${fmtWon(data.teamIncentive)}</div></div>
-  </div>
-  <div class="stat-grid" style="grid-template-columns:1fr">
-    <div class="stat-card" style="text-align:center"><div class="label">총 인센티브</div><div class="value text-blue" style="font-size:31px" data-countup="${data.totalIncentive}">${fmtWon(data.totalIncentive)}</div><div class="sub">기본급: ${fmtWon(data.baseSalary)}</div></div>
+  // Summary cards (team style)
+  html += `<div style="display:grid;grid-template-columns:1fr;gap:10px;margin-bottom:14px">
+    <div style="background:#fff;border:1px solid #E5E7EB;border-radius:12px;padding:16px;display:flex;justify-content:space-between;align-items:center">
+      <div style="font-size:14px;font-weight:800;color:#1D9E75">타이어 인센티브</div>
+      <div style="font-size:22px;font-weight:900;color:#1D9E75" data-countup="${data.tireIncentive}">${fmtWon(data.tireIncentive)}</div>
+    </div>
+    <div style="background:#fff;border:1px solid #E5E7EB;border-radius:12px;padding:16px;display:flex;justify-content:space-between;align-items:center">
+      <div style="font-size:14px;font-weight:800;color:${isLoss?'var(--amber)':'#1D9E75'}">권중 프리미엄 (x1.5)</div>
+      <div style="font-size:22px;font-weight:900;color:${isLoss?'var(--amber)':'#1D9E75'}" data-countup="${data.teamBonus}">${fmtWon(data.teamBonus)}</div>
+    </div>
   </div>`;
+
+  // Total incentive bar
+  html += `<div style="background:var(--purple);border-radius:12px;padding:18px 20px;display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+    <span style="font-size:15px;font-weight:700;color:#fff">총 인센티브</span>
+    <span style="font-size:26px;font-weight:900;color:#fff" data-countup="${data.totalIncentive}">${fmtWon(data.totalIncentive)}</span>
+  </div>`;
+
+  // Mini bar chart (incentive breakdown)
+  const mgrBars = [
+    { label: '타이어 인센티브', value: data.tireIncentive, color: '#1D9E75' },
+    { label: '권중 프리미엄', value: data.teamBonus, color: '#378ADD' },
+  ].filter(b => b.value > 0);
+  const mgrMax = Math.max(...mgrBars.map(b => b.value), 1);
+  html += `<div class="card"><div class="card-title">인센티브 구성</div>`;
+  mgrBars.forEach(b => {
+    const pct = Math.max(10, Math.round(b.value / mgrMax * 100));
+    html += `<div style="display:flex;align-items:center;margin-bottom:8px">
+      <div style="width:100px;font-size:13px;font-weight:600;color:#333;flex-shrink:0">${b.label}</div>
+      <div style="flex:1;height:28px;background:#F3F0FF;border-radius:6px;overflow:hidden">
+        <div style="width:${pct}%;height:100%;background:${b.color};border-radius:6px;display:flex;align-items:center;justify-content:flex-end;padding-right:8px">
+          <span style="font-size:11px;font-weight:700;color:#fff;white-space:nowrap">${fmtWon(b.value)}</span>
+        </div>
+      </div>
+    </div>`;
+  });
+  html += `</div>`;
 
   html += `<div class="card"><div class="card-title">월별 인센티브 추이</div><div class="chart-wrap"><canvas id="managerChart"></canvas></div></div>`;
 
-
+  // Detail tables
   html += `<div class="card"><div class="card-title">타이어 매출</div><table class="data-table"><tbody>
-    <tr><td>타이어 매출</td><td class="num">${fmtWon(data.tireSales)}</td></tr>
-    <tr><td>얼라이먼트 매출</td><td class="num">${fmtWon(data.alignmentSales)}</td></tr>
-    <tr style="font-weight:700;border-top:2px solid var(--border)"><td>합계</td><td class="num">${fmtWon(data.tireSales+data.alignmentSales)}</td></tr>
-    <tr><td>타이어 인센티브 (0.3%)</td><td class="num text-teal font-weight:600">${fmtWon(data.tireIncentive)}</td></tr>
+    <tr style="background:#F9F5FF"><td><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#1D9E75;margin-right:6px"></span>타이어 매출</td><td class="num" style="font-weight:600">${fmtWon(data.tireSales)}</td></tr>
+    <tr style="background:#F9F5FF"><td><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#1D9E75;margin-right:6px"></span>얼라이먼트 매출</td><td class="num" style="font-weight:600">${fmtWon(data.alignmentSales)}</td></tr>
+    <tr style="font-weight:700;border-top:2px solid var(--border)"><td>매출 합계</td><td class="num">${fmtWon(data.tireSales+data.alignmentSales)}</td></tr>
+    <tr style="background:#F0FDF4"><td>타이어 인센티브 (0.3%)</td><td class="num" style="font-weight:700;color:#1D9E75">${fmtWon(data.tireIncentive)}</td></tr>
   </tbody></table></div>`;
 
   html += `<div class="card"><div class="card-title">팀 인센티브</div><table class="data-table"><tbody>
-    <tr><td>팀 인센티브</td><td class="num">${fmtWon(data.teamIncentive)}</td></tr>
-    <tr><td>권중 프리미엄 (x1.5)</td><td class="num text-teal" style="font-weight:600">${fmtWon(data.teamBonus)}</td></tr>
+    <tr style="background:#F9F5FF"><td><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#378ADD;margin-right:6px"></span>팀 인센티브</td><td class="num" style="font-weight:600">${fmtWon(data.teamIncentive)}</td></tr>
+    <tr style="background:#F0FDF4"><td>권중 프리미엄 (x1.5)</td><td class="num" style="font-weight:700;color:#1D9E75">${fmtWon(data.teamBonus)}</td></tr>
   </tbody></table></div>`;
-
-  html += `<div style="background:var(--purple);border-radius:12px;padding:16px;display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-    <span style="font-size:15px;font-weight:700;color:#fff">총 인센티브</span>
-    <span style="font-size:24px;font-weight:900;color:#fff">${fmtWon(data.totalIncentive)}</span>
-  </div>`;
 
   el.innerHTML = html;
   runCountUp(el);
@@ -937,16 +962,28 @@ function renderDirector(data, el) {
     <div style="display:flex;justify-content:space-between;margin-top:6px;font-size:12px;color:var(--text-light)"><span>0</span><span>${fmtWon(data.breakeven)}</span></div>
   </div>`;
 
-  html += `<div class="stat-grid">
-    <div class="stat-card"><div class="label">전체 매출</div><div class="value text-blue">${fmtWon(data.totalRevenue)}</div></div>
-    <div class="stat-card"><div class="label">매출 인센티브 (0.6%)</div><div class="value text-teal">${fmtWon(data.revenueIncentive)}</div></div>
-    <div class="stat-card stat-grid-full"><div class="label">총 인센티브</div><div class="value text-purple">${fmtWon(data.totalIncentive)}</div></div>
+  // Summary cards (team style)
+  html += `<div style="display:grid;grid-template-columns:1fr;gap:10px;margin-bottom:14px">
+    <div style="background:#fff;border:1px solid #E5E7EB;border-radius:12px;padding:16px;display:flex;justify-content:space-between;align-items:center">
+      <div style="font-size:14px;font-weight:800;color:#378ADD">전체 매출</div>
+      <div style="font-size:22px;font-weight:900;color:#378ADD" data-countup="${data.totalRevenue}">${fmtWon(data.totalRevenue)}</div>
+    </div>
+    <div style="background:#fff;border:1px solid #E5E7EB;border-radius:12px;padding:16px;display:flex;justify-content:space-between;align-items:center">
+      <div style="font-size:14px;font-weight:800;color:#1D9E75">매출 인센티브 (0.6%)</div>
+      <div style="font-size:22px;font-weight:900;color:#1D9E75" data-countup="${data.revenueIncentive}">${fmtWon(data.revenueIncentive)}</div>
+    </div>
+  </div>`;
+
+  // Total incentive bar
+  html += `<div style="background:#1D9E75;border-radius:12px;padding:18px 20px;display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+    <span style="font-size:15px;font-weight:700;color:#fff">총 인센티브</span>
+    <span style="font-size:26px;font-weight:900;color:#fff" data-countup="${data.totalIncentive}">${fmtWon(data.totalIncentive)}</span>
   </div>`;
 
   html += `<div class="card"><div class="card-title">월별 매출 추이</div><div class="chart-wrap"><canvas id="directorChart"></canvas></div></div>`;
 
-
   el.innerHTML = html;
+  runCountUp(el);
 
   if (directorMonthlyData && directorMonthlyData.length > 0) {
     if (chartInstances.director) chartInstances.director.destroy();
