@@ -23,13 +23,9 @@ export class SalesTargetController {
     @Param('year', ParseIntPipe) year: number,
     @Param('month', ParseIntPipe) month: number,
     @Body() body: {
-      lyTotal: number;
-      lyDays: number;
-      tysSales: number;
-      tyElapsed: number;
-      tyRemain: number;
-      customPct1?: number;
-      customPct2?: number;
+      lyDays?: number;
+      tyElapsed?: number;
+      tyRemain?: number;
     },
   ) {
     return this.salesTargetService.upsert(year, month, body);
