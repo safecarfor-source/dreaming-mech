@@ -44,6 +44,7 @@ export class TeamService {
       prevMonth: prevMonth ? {
         month: prevMonth,
         incentive: prevIncentive,
+        items: prevData || {},
       } : null,
     };
   }
@@ -159,6 +160,15 @@ export class TeamService {
     const result: Record<string, { sales: number; qty: number }> = {};
     for (const row of rows) {
       result[row.itemKey] = { sales: row.sales, qty: row.qty };
+    }
+    return result;
+  }
+
+  async getTargetsOnly(month: string) {
+    const rows = await this.prisma.incentiveTarget.findMany({ where: { month } });
+    const result: Record<string, number> = {};
+    for (const row of rows) {
+      result[row.itemKey] = row.minQty;
     }
     return result;
   }
