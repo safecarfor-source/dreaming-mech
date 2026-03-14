@@ -109,7 +109,7 @@ export class TeamService {
     return { month, weeks };
   }
 
-  // 최근 N개월 품목별 수량
+  // 최근 N개월 품목별 수량 + 전체 월별 최소수량 타겟
   async getItemQtyHistory(count = 5) {
     const months = await this.prisma.incentiveData.findMany({
       select: { month: true },
@@ -118,16 +118,25 @@ export class TeamService {
       take: count,
     });
 
-    const result: Array<{ month: string; items: Record<string, number> }> = [];
+    const history: Array<{ month: string; items: Record<string, number> }> = [];
     for (const { month } of months.reverse()) {
       const data = await this.getMonthData(month);
       const items: Record<string, number> = {};
       for (const [key, val] of Object.entries(data)) {
         items[key] = val.qty;
       }
-      result.push({ month, items });
+      history.push({ month, items });
     }
-    return result;
+
+    // 전체 월별 최소수량 타겟도 함께 반환
+    const allTargets = await this.prisma.incentiveTarget.findMany();
+    const targetsByMonth: Record<string, Record<string, number>> = {};
+    for (const t of allTargets) {
+      if (!targetsByMonth[t.month]) targetsByMonth[t.month] = {};
+      targetsByMonth[t.month][t.itemKey] = t.minQty;
+    }
+
+    return { history, targets: targetsByMonth };
   }
 
   // 목표 설정

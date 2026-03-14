@@ -5,37 +5,25 @@ import { PrismaService } from '../../prisma/prisma.service';
 export class SalesTargetService {
   constructor(private prisma: PrismaService) {}
 
-  // 한국 공휴일 (양력 고정 + 대체공휴일은 연도별 하드코딩)
+  // 쉬는 날: 1월1일, 설, 추석만 (나머지는 모두 영업)
   private getKoreanHolidays(year: number): Set<string> {
     const holidays = new Set<string>();
     const add = (m: number, d: number) => {
       holidays.add(`${year}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`);
     };
 
-    // 양력 고정 공휴일
-    add(1, 1);   // 신정
-    add(3, 1);   // 삼일절
-    add(5, 5);   // 어린이날
-    add(6, 6);   // 현충일
-    add(8, 15);  // 광복절
-    add(10, 3);  // 개천절
-    add(10, 9);  // 한글날
-    add(12, 25); // 크리스마스
+    add(1, 1); // 신정
 
     // 설/추석 (음력이라 연도별 하드코딩)
     if (year === 2025) {
       add(1, 28); add(1, 29); add(1, 30); // 설
       add(10, 5); add(10, 6); add(10, 7); // 추석
-      add(5, 6);  // 대체공휴일 (어린이날)
     } else if (year === 2026) {
       add(2, 16); add(2, 17); add(2, 18); // 설
       add(9, 24); add(9, 25); add(9, 26); // 추석
-      add(3, 2);  // 삼일절 대체
-      add(5, 25); // 부처님오신날
-      add(6, 8);  // 현충일 대체
     } else if (year === 2027) {
-      add(2, 5); add(2, 6); add(2, 7); add(2, 8); // 설 + 대체
-      add(9, 14); add(9, 15); add(9, 16);          // 추석
+      add(2, 5); add(2, 6); add(2, 7); // 설
+      add(9, 14); add(9, 15); add(9, 16); // 추석
     }
 
     return holidays;
