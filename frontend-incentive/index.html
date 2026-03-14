@@ -1070,20 +1070,13 @@ async function loadAdminPanel() {
 
     // Min qty settings
     html += `<div class="admin-section"><h3>팀 인센티브 — 항목별 최소수량</h3>
-      <div style="margin-bottom:12px">
-        <label style="font-size:13px;color:var(--text-muted);margin-right:8px">대상 월:</label>
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+        <label style="font-size:13px;color:var(--text-muted)">대상 월:</label>
         <input type="month" id="minQtyMonth" style="padding:6px 12px;border:1px solid var(--border);border-radius:8px;font-family:Pretendard">
       </div>
-      <div id="minQtyGrid" style="display:grid;grid-template-columns:1fr 1fr;gap:8px">`;
-    Object.entries(ITEM_LABELS).forEach(([key, label]) => {
-      html += `<div class="config-row" style="margin-bottom:0"><span class="config-label" style="flex:1;font-size:13px">${label}</span>
-        <input type="number" min="0" value="0" id="minqty-${key}" style="width:70px">
-      </div>`;
-    });
-    html += `</div>
+      <div id="qtyHistoryTable"><div class="loading"><div class="spinner"></div></div></div>
       <button class="btn-save" style="margin-top:12px;width:100%" onclick="saveMinQty()">최소수량 저장</button>
       <div id="minQtyResult" style="margin-top:8px"></div>
-      <div id="qtyHistoryTable" style="margin-top:16px"><div class="loading"><div class="spinner"></div></div></div>
     </div>`;
 
     html += `<div class="admin-section"><h3>극동 엑셀 업로드</h3>
@@ -1169,13 +1162,14 @@ async function loadQtyHistory() {
   if (!el) return;
   try {
     const data = await api('/team/item-qty-history');
-    if (!data || data.length === 0) { el.innerHTML = '<p style="font-size:13px;color:var(--text-muted)">데이터 없음</p>'; return; }
-    const months = data.map(d => d.month);
+    const months = data && data.length > 0 ? data.map(d => d.month) : [];
     const itemKeys = Object.keys(ITEM_LABELS);
-    let h = `<div style="font-size:14px;font-weight:700;margin-bottom:8px">최근 ${months.length}개월 품목별 수량</div>`;
-    h += `<div style="overflow-x:auto"><table class="data-table" style="font-size:12px"><thead><tr><th>품목</th>`;
-    months.forEach(m => { h += `<th class="num">${m}</th>`; });
-    h += `</tr></thead><tbody>`;
+    let h = `<div style="overflow-x:auto"><table class="data-table" style="font-size:12px"><thead><tr><th>품목</th>`;
+    months.forEach(m => {
+      const short = m.replace(/^20/, '').replace('-', '년 ') + '월';
+      h += `<th class="num">${short}</th>`;
+    });
+    h += `<th class="num" style="background:#F3F0FF;color:#7C3AED;font-weight:700">최소수량</th></tr></thead><tbody>`;
     itemKeys.forEach(key => {
       h += `<tr><td style="font-weight:600;white-space:nowrap">${ITEM_LABELS[key]}</td>`;
       months.forEach(m => {
@@ -1183,6 +1177,7 @@ async function loadQtyHistory() {
         const qty = md && md.items[key] ? md.items[key] : 0;
         h += `<td class="num" style="${qty > 0 ? 'font-weight:600;color:#7C3AED' : 'color:#ccc'}">${qty}</td>`;
       });
+      h += `<td class="num" style="background:#F9F5FF"><input type="number" min="0" value="0" id="minqty-${key}" style="width:55px;text-align:center;border:1px solid #D4B4FE;border-radius:6px;padding:4px;font-size:13px;font-weight:600;font-family:Pretendard"></td>`;
       h += '</tr>';
     });
     h += '</tbody></table></div>';
