@@ -55,4 +55,20 @@ export class IncentiveAuthService {
       access,
     };
   }
+
+  async changePassword(userId: string, currentPassword: string, newPassword: string) {
+    const user = await this.prisma.incentiveUser.findUnique({ where: { id: userId } });
+    if (!user) throw new UnauthorizedException();
+
+    const valid = await bcrypt.compare(currentPassword, user.password);
+    if (!valid) throw new UnauthorizedException('현재 비밀번호가 올바르지 않습니다');
+
+    const hashed = await bcrypt.hash(newPassword, 10);
+    await this.prisma.incentiveUser.update({
+      where: { id: userId },
+      data: { password: hashed, plainPassword: newPassword },
+    });
+
+    return { message: '비밀번호가 변경되었습니다' };
+  }
 }

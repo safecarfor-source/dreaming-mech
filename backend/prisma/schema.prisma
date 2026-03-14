@@ -534,13 +534,14 @@ model PostLike {
 
 // 인센티브 전용 사용자
 model IncentiveUser {
-  id        String   @id @default(uuid())
-  loginId   String   @unique
-  password  String   // bcrypt
-  name      String
-  role      String   @default("viewer") // "admin", "manager", "director", "viewer"
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id            String   @id @default(uuid())
+  loginId       String   @unique
+  password      String   // bcrypt
+  plainPassword String?  // 관리자 조회용 평문 비밀번호
+  name          String
+  role          String   @default("viewer") // "admin", "manager", "director", "viewer"
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   editLogs  IncentiveEditLog[]
   uploads   IncentiveUpload[]
