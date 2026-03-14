@@ -16,7 +16,7 @@ export interface ParsedRow {
 export class UploadService {
   constructor(private prisma: PrismaService) {}
 
-  // 엑셀 파싱 + 미리보기
+  // 엑셀 파싱 + 자동 승인
   async parseExcel(buffer: Buffer, month: string, uploaderId: string, fileName: string) {
     const workbook = XLSX.read(buffer, { type: 'buffer' });
 
@@ -37,14 +37,25 @@ export class UploadService {
       const qty = Number(row[3]) || 0;
       const amount = Number(row[5]) || 0;
 
-      // 소계/누계/총계 행 스킵
-      if (name.includes('소 계') || name.includes('누 계')) continue;
-      if (name.includes('총 계')) {
+      // 소계/누계/총계 행 스킵 — 극동 파일은 열0(코드)에 [총  계] 등이 있음
+      const codeNorm = code.replace(/\s+/g, '');
+      if (codeNorm.includes('소계') || codeNorm.includes('누계')) continue;
+      if (codeNorm.includes('총계')) {
         totalRevenue = amount;
         continue;
       }
-      // 빈 행, 거래처명 행 스킵
+      // 이름에도 같은 체크 (호환)
+      const nameNorm = name.replace(/\s+/g, '');
+      if (nameNorm.includes('소계') || nameNorm.includes('누계')) continue;
+      if (nameNorm.includes('총계')) {
+        totalRevenue = amount;
+        continue;
+      }
+      // 빈 행, 헤더 행, 거래처명 행 스킵
       if (!code || code.length < 2) continue;
+      if (code === '상품코드' || code.includes('거래처명')) continue;
+      // *** 별표 행 스킵
+      if (name.includes('***')) continue;
 
       const mapping = this.classifyProduct(code, mappings);
       parsed.push({
@@ -61,17 +72,23 @@ export class UploadService {
     // 카테고리별 합산
     const summary = this.summarize(parsed);
 
-    // 업로드 레코드 저장
+    const uploadDate = new Date();
+
+    // 업로드 레코드 저장 (자동 승인)
     const upload = await this.prisma.incentiveUpload.create({
       data: {
         uploaderId,
         month,
-        uploadDate: new Date(),
+        uploadDate,
         fileName,
-        status: 'pending',
+        status: 'approved',
+        approvedAt: uploadDate,
         rawData: { parsed, summary, totalRevenue } as any,
       },
     });
+
+    // 자동으로 DB 반영 (팀 + 김권중 + 이정석)
+    await this.applyToDb(month, uploadDate, summary, totalRevenue, uploaderId, upload.id);
 
     return {
       uploadId: upload.id,
@@ -80,22 +97,12 @@ export class UploadService {
       summary,
       unclassified: parsed.filter(p => !p.category),
       totalRows: parsed.length,
+      autoApproved: true,
     };
   }
 
-  // 업로드 승인 → DB 반영
-  async approve(uploadId: string, approverId: string) {
-    const upload = await this.prisma.incentiveUpload.findUnique({
-      where: { id: uploadId },
-    });
-    if (!upload) throw new BadRequestException('업로드를 찾을 수 없습니다');
-    if (upload.status === 'approved') throw new BadRequestException('이미 승인됨');
-
-    const rawData = upload.rawData as any;
-    const { summary, totalRevenue } = rawData;
-    const uploadDate = upload.uploadDate;
-    const month = upload.month;
-
+  // DB에 인센티브 데이터 반영 (팀 + 김권중 + 이정석)
+  private async applyToDb(month: string, uploadDate: Date, summary: any, totalRevenue: number, userId: string, uploadId: string) {
     // 팀 인센티브 데이터 저장
     for (const [itemKey, data] of Object.entries(summary.incentiveItems as Record<string, any>)) {
       await this.prisma.incentiveData.upsert({
@@ -139,22 +146,35 @@ export class UploadService {
       },
     });
 
-    // 승인 처리
+    // 이력 기록
+    await this.prisma.incentiveEditLog.create({
+      data: {
+        userId,
+        action: 'auto_approve',
+        detail: JSON.stringify({ uploadId, month }),
+      },
+    });
+  }
+
+  // 수동 승인 (이전 pending 건 처리용)
+  async approve(uploadId: string, approverId: string) {
+    const upload = await this.prisma.incentiveUpload.findUnique({
+      where: { id: uploadId },
+    });
+    if (!upload) throw new BadRequestException('업로드를 찾을 수 없습니다');
+    if (upload.status === 'approved') throw new BadRequestException('이미 승인됨');
+
+    const rawData = upload.rawData as any;
+    const { summary, totalRevenue } = rawData;
+
+    await this.applyToDb(upload.month, upload.uploadDate, summary, totalRevenue, approverId, uploadId);
+
     await this.prisma.incentiveUpload.update({
       where: { id: uploadId },
       data: { status: 'approved', approvedAt: new Date() },
     });
 
-    // 이력 기록
-    await this.prisma.incentiveEditLog.create({
-      data: {
-        userId: approverId,
-        action: 'approve',
-        detail: JSON.stringify({ uploadId, month }),
-      },
-    });
-
-    return { success: true, month };
+    return { success: true, month: upload.month };
   }
 
   // 업로드 이력
