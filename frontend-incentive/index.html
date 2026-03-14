@@ -681,15 +681,28 @@ function renderTeam(data, el) {
     html += `<div class="loss-banner"><div class="loss-label">최소수량 미달로 잃은 금액</div><div class="loss-amount">-${fmtWon(inc.lost)}</div></div>`;
   }
 
-  // Stat cards (2-col grid)
-  html += `<div class="stat-grid">
-    <div class="stat-card"><div class="label">이번 달 인센티브</div><div class="value ${isLoss?'text-amber':'text-purple'}">${fmtWon(inc.actual)}</div>${isLoss?`<div class="sub">감액 전: ${fmtWon(inc.calculated)}</div>`:''}</div>
-    <div class="stat-card"><div class="label">감액률</div><div class="value ${isLoss?'text-red':'text-green'}">${isLoss?'50%':'0%'}</div><div class="sub">${isLoss?'최소수량 미달':'정상 지급'}</div></div>`;
-  if (data.prevMonth) {
-    const diff = inc.actual - (data.prevMonth.incentive || 0);
-    html += `<div class="stat-card stat-grid-full"><div class="label">전월 대비</div><div class="value ${diff>=0?'text-green':'text-red'}">${diff>=0?'+':''}${fmtWon(diff)}</div><div class="sub">${data.prevMonth.month}: ${fmtWon(data.prevMonth.incentive)}</div></div>`;
+  // Prev month arrow
+  const teamPrevInc2 = data.prevMonth ? (data.prevMonth.incentive || 0) : null;
+  const teamDiff2 = teamPrevInc2 !== null ? inc.actual - teamPrevInc2 : null;
+
+  // Top: 전월 대비 with arrow (full width)
+  if (teamDiff2 !== null) {
+    html += `<div class="stat-grid" style="grid-template-columns:1fr">
+      <div class="stat-card" style="text-align:center">
+        <div class="label">전월 대비</div>
+        <div style="font-size:31px;font-weight:900;color:${teamDiff2>=0?'var(--green)':'var(--red)'}">
+          ${teamDiff2>=0?'▲':'▼'} ${fmtWon(Math.abs(teamDiff2))}
+        </div>
+        <div class="sub">${data.prevMonth.month}: ${fmtWon(teamPrevInc2)}</div>
+      </div>
+    </div>`;
   }
-  html += '</div>';
+
+  // Below: 이번 달 인센티브 + 감액률 (centered, 10% bigger)
+  html += `<div class="stat-grid">
+    <div class="stat-card" style="text-align:center"><div class="label">이번 달 인센티브</div><div class="value ${isLoss?'text-amber':'text-purple'}" style="font-size:31px">${fmtWon(inc.actual)}</div>${isLoss?`<div class="sub">감액 전: ${fmtWon(inc.calculated)}</div>`:''}</div>
+    <div class="stat-card" style="text-align:center"><div class="label">감액률</div><div class="value ${isLoss?'text-red':'text-green'}" style="font-size:31px">${isLoss?'50%':'0%'}</div><div class="sub">${isLoss?'최소수량 미달':'정상 지급'}</div></div>
+  </div>`;
 
   // CHART
   html += `<div class="card"><div class="card-title">월별 인센티브 추이</div><div class="chart-wrap"><canvas id="teamChart"></canvas></div></div>`;
@@ -730,10 +743,14 @@ function renderTeam(data, el) {
     else zeroItems.push(item);
   }
 
+  // Prev month diff
+  const teamPrevInc = data.prevMonth ? (data.prevMonth.incentive || 0) : null;
+  const teamDiff = teamPrevInc !== null ? totalInc - teamPrevInc : null;
+
   // Summary cards (2 cards, full width each)
   html += `<div style="display:grid;grid-template-columns:1fr;gap:10px;margin-bottom:14px;max-width:480px">
     <div style="background:#fff;border:1px solid #E5E7EB;border-radius:12px;padding:16px;display:flex;justify-content:space-between;align-items:center">
-      <div style="font-size:14px;font-weight:800;color:#7C3AED">총 인센티브</div>
+      <div><div style="font-size:14px;font-weight:800;color:#7C3AED">총 인센티브</div>${teamDiff !== null ? `<div style="font-size:12px;margin-top:4px;color:${teamDiff>=0?'#16A34A':'#DC2626'};font-weight:600">${teamDiff>=0?'▲':'▼'} ${fmtWon(Math.abs(teamDiff))} <span style="color:#999;font-weight:400">전월비</span></div>`:''}</div>
       <div style="font-size:22px;font-weight:900;color:#7C3AED" data-countup="${totalInc}">${fmtWon(totalInc)}</div>
     </div>
     <div style="background:#fff;border:1px solid #E5E7EB;border-radius:12px;padding:16px;display:flex;justify-content:space-between;align-items:center">
@@ -852,6 +869,13 @@ function renderManager(data, el) {
   let html = '';
   if (isLoss) html += `<div class="loss-banner"><div class="loss-label">팀 최소수량 미달로 잃은 팀 보너스</div><div class="loss-amount">-${fmtWon(data.lost)}</div></div>`;
 
+  // Prev month calculation from managerMonthlyData
+  let mgrPrevDiff = null;
+  if (managerMonthlyData && managerMonthlyData.length >= 2) {
+    const curIdx = managerMonthlyData.findIndex(m => m.month === data.month);
+    if (curIdx > 0) mgrPrevDiff = data.totalIncentive - managerMonthlyData[curIdx - 1].totalIncentive;
+  }
+
   // Summary cards (team style)
   html += `<div style="display:grid;grid-template-columns:1fr;gap:10px;margin-bottom:14px">
     <div style="background:#fff;border:1px solid #E5E7EB;border-radius:12px;padding:16px;display:flex;justify-content:space-between;align-items:center">
@@ -864,9 +888,9 @@ function renderManager(data, el) {
     </div>
   </div>`;
 
-  // Total incentive bar
+  // Total incentive bar with arrow
   html += `<div style="background:var(--purple);border-radius:12px;padding:18px 20px;display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
-    <span style="font-size:15px;font-weight:700;color:#fff">총 인센티브</span>
+    <div><div style="font-size:15px;font-weight:700;color:#fff">총 인센티브</div>${mgrPrevDiff !== null ? `<div style="font-size:12px;margin-top:4px;color:${mgrPrevDiff>=0?'#86EFAC':'#FCA5A5'};font-weight:600">${mgrPrevDiff>=0?'▲':'▼'} ${fmtWon(Math.abs(mgrPrevDiff))} 전월비</div>`:''}</div>
     <span style="font-size:26px;font-weight:900;color:#fff" data-countup="${data.totalIncentive}">${fmtWon(data.totalIncentive)}</span>
   </div>`;
 
@@ -948,6 +972,13 @@ async function loadDirectorData() {
 }
 
 function renderDirector(data, el) {
+  // Prev month calculation
+  let dirPrevDiff = null;
+  if (directorMonthlyData && directorMonthlyData.length >= 2) {
+    const curIdx = directorMonthlyData.findIndex(m => m.month === data.month);
+    if (curIdx > 0) dirPrevDiff = data.totalIncentive - directorMonthlyData[curIdx - 1].totalIncentive;
+  }
+
   let html = '';
   if (!data.aboveBreakeven) {
     html += `<div class="loss-banner"><div class="loss-label">손익분기점 미달 (목표: ${fmtWon(data.breakeven)})</div><div class="loss-amount">-${fmtWon(data.shortfall)} 부족</div></div>`;
@@ -974,9 +1005,9 @@ function renderDirector(data, el) {
     </div>
   </div>`;
 
-  // Total incentive bar
+  // Total incentive bar with arrow
   html += `<div style="background:#1D9E75;border-radius:12px;padding:18px 20px;display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
-    <span style="font-size:15px;font-weight:700;color:#fff">총 인센티브</span>
+    <div><div style="font-size:15px;font-weight:700;color:#fff">총 인센티브</div>${dirPrevDiff !== null ? `<div style="font-size:12px;margin-top:4px;color:${dirPrevDiff>=0?'#86EFAC':'#FCA5A5'};font-weight:600">${dirPrevDiff>=0?'▲':'▼'} ${fmtWon(Math.abs(dirPrevDiff))} 전월비</div>`:''}</div>
     <span style="font-size:26px;font-weight:900;color:#fff" data-countup="${data.totalIncentive}">${fmtWon(data.totalIncentive)}</span>
   </div>`;
 
