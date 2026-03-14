@@ -36,8 +36,8 @@ export class IncentiveService {
 
   // 데이터 저장 (upsert — 없으면 생성, 있으면 수정)
   async save(dto: SaveIncentiveDto) {
-    const operations = Object.entries(dto.items).map(([itemKey, data]) =>
-      this.prisma.incentive.upsert({
+    for (const [itemKey, data] of Object.entries(dto.items)) {
+      await this.prisma.incentive.upsert({
         where: { month_itemKey: { month: dto.month, itemKey } },
         create: {
           month: dto.month,
@@ -49,38 +49,33 @@ export class IncentiveService {
           sales: data.sales || 0,
           qty: data.qty || 0,
         },
-      }),
-    );
-
-    await this.prisma.$transaction(operations);
+      });
+    }
     return { success: true, month: dto.month };
   }
 
   // 전체 데이터 일괄 저장 (초기 데이터 이관용)
   async saveAll(data: Record<string, Record<string, { sales: number; qty: number }>>) {
-    const operations = [];
+    let count = 0;
     for (const [month, items] of Object.entries(data)) {
       for (const [itemKey, values] of Object.entries(items)) {
-        operations.push(
-          this.prisma.incentive.upsert({
-            where: { month_itemKey: { month, itemKey } },
-            create: {
-              month,
-              itemKey,
-              sales: values.sales || 0,
-              qty: values.qty || 0,
-            },
-            update: {
-              sales: values.sales || 0,
-              qty: values.qty || 0,
-            },
-          }),
-        );
+        await this.prisma.incentive.upsert({
+          where: { month_itemKey: { month, itemKey } },
+          create: {
+            month,
+            itemKey,
+            sales: values.sales || 0,
+            qty: values.qty || 0,
+          },
+          update: {
+            sales: values.sales || 0,
+            qty: values.qty || 0,
+          },
+        });
+        count++;
       }
     }
-
-    await this.prisma.$transaction(operations);
-    return { success: true, count: operations.length };
+    return { success: true, count };
   }
 
   // 월 삭제
