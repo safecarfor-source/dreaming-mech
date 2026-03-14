@@ -17,7 +17,7 @@ export class UploadService {
   constructor(private prisma: PrismaService) {}
 
   // 엑셀 파싱 + 자동 승인
-  async parseExcel(buffer: Buffer, month: string, uploaderId: string, fileName: string) {
+  async parseExcel(buffer: Buffer, month: string, uploaderId: string, fileName: string, dataDate?: string) {
     const workbook = XLSX.read(buffer, { type: 'buffer' });
 
     // 시트 찾기
@@ -72,7 +72,8 @@ export class UploadService {
     // 카테고리별 합산
     const summary = this.summarize(parsed);
 
-    const uploadDate = new Date();
+    // dataDate가 있으면 사용자가 선택한 날짜, 없으면 현재 시각
+    const uploadDate = dataDate ? new Date(dataDate + 'T00:00:00+09:00') : new Date();
 
     // 업로드 레코드 저장 (자동 승인)
     const upload = await this.prisma.incentiveUpload.create({
@@ -82,8 +83,8 @@ export class UploadService {
         uploadDate,
         fileName,
         status: 'approved',
-        approvedAt: uploadDate,
-        rawData: { parsed, summary, totalRevenue } as any,
+        approvedAt: new Date(),
+        rawData: { parsed, summary, totalRevenue, dataDate: dataDate || null } as any,
       },
     });
 

@@ -17,13 +17,14 @@ export class UploadController {
   upload(
     @UploadedFile() file: Express.Multer.File,
     @Body('month') month: string,
+    @Body('dataDate') dataDate: string,
     @Request() req: any,
   ) {
     // 모든 인증된 사용자 업로드 가능
     if (!['admin', 'manager', 'director', 'viewer'].includes(req.user.role)) {
       throw new ForbiddenException('업로드 권한이 없습니다');
     }
-    return this.uploadService.parseExcel(file.buffer, month, req.user.userId, file.originalname);
+    return this.uploadService.parseExcel(file.buffer, month, req.user.userId, file.originalname, dataDate);
   }
 
   @Post('approve/:id')
