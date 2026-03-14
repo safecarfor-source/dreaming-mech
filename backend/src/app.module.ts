@@ -22,6 +22,7 @@ import { ServiceInquiryModule } from './service-inquiry/service-inquiry.module';
 import { UnifiedInquiryModule } from './unified-inquiry/unified-inquiry.module';
 import { TrackingLinkModule } from './tracking-link/tracking-link.module';
 import { CommunityModule } from './community/community.module';
+import { IncentiveModule } from './incentive/incentive.module';
 
 @Module({
   imports: [
@@ -51,6 +52,7 @@ import { CommunityModule } from './community/community.module';
     UnifiedInquiryModule,
     TrackingLinkModule,
     CommunityModule,
+    IncentiveModule,
   ],
   controllers: [AppController],
   providers: [
