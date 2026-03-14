@@ -746,17 +746,17 @@ function renderTeam(data, el) {
     </div>
   </div>`;
 
-  // Mini bar chart (active items only, sorted by sales desc)
-  const sortedActive = [...activeItems].sort((a,b) => b.sales - a.sales);
-  const maxSales = sortedActive.length > 0 ? sortedActive[0].sales : 1;
-  html += `<div class="card" style="max-width:480px"><div class="card-title">품목별 매출</div>`;
+  // Mini bar chart (active items only, sorted by incentive desc)
+  const sortedActive = [...activeItems].sort((a,b) => b.inc - a.inc);
+  const maxInc = sortedActive.length > 0 ? sortedActive[0].inc : 1;
+  html += `<div class="card" style="max-width:480px"><div class="card-title">품목별 인센티브</div>`;
   sortedActive.forEach(item => {
-    const pct = Math.max(8, Math.round(item.sales / maxSales * 100));
+    const pct = Math.max(8, Math.round(item.inc / maxInc * 100));
     html += `<div style="display:flex;align-items:center;margin-bottom:8px">
       <div style="width:80px;font-size:13px;font-weight:600;color:#333;flex-shrink:0">${item.label}</div>
       <div style="flex:1;position:relative;height:28px;background:#F3F0FF;border-radius:6px;overflow:hidden">
         <div style="width:${pct}%;height:100%;background:linear-gradient(90deg,#7C3AED,#A78BFA);border-radius:6px;display:flex;align-items:center;justify-content:flex-end;padding-right:8px">
-          <span style="font-size:11px;font-weight:700;color:#fff;white-space:nowrap">${fmtWon(item.sales)}</span>
+          <span style="font-size:11px;font-weight:700;color:#fff;white-space:nowrap">${fmtWon(item.inc)}</span>
         </div>
       </div>
     </div>`;
