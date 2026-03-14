@@ -852,12 +852,12 @@ function renderManager(data, el) {
   let html = '';
   if (isLoss) html += `<div class="loss-banner"><div class="loss-label">팀 최소수량 미달로 잃은 팀 보너스</div><div class="loss-amount">-${fmtWon(data.lost)}</div></div>`;
 
-  html += `<div class="stat-grid" style="grid-template-columns:1fr">
-    <div class="stat-card"><div class="label">총 인센티브</div><div class="value text-blue" data-countup="${data.totalIncentive}">${fmtWon(data.totalIncentive)}</div><div class="sub">기본급: ${fmtWon(data.baseSalary)}</div></div>
+  html += `<div class="stat-grid" style="grid-template-columns:1fr 1fr">
+    <div class="stat-card" style="text-align:center"><div class="label">타이어 인센티브</div><div class="value text-teal" style="font-size:22px;font-weight:700" data-countup="${data.tireIncentive}">${fmtWon(data.tireIncentive)}</div><div class="sub">타이어+얼라이: ${fmtWon(data.tireSales+data.alignmentSales)}</div></div>
+    <div class="stat-card" style="text-align:center"><div class="label">팀 보너스 (x1.5)</div><div class="value ${isLoss?'text-amber':'text-teal'}" style="font-size:22px;font-weight:700" data-countup="${data.teamBonus}">${fmtWon(data.teamBonus)}</div><div class="sub">팀 인센: ${fmtWon(data.teamIncentive)}</div></div>
   </div>
-  <div class="stat-grid" style="grid-template-columns:1fr 1fr">
-    <div class="stat-card"><div class="label">타이어 인센티브</div><div class="value text-teal" style="font-size:20px;font-weight:700" data-countup="${data.tireIncentive}">${fmtWon(data.tireIncentive)}</div><div class="sub">타이어+얼라이: ${fmtWon(data.tireSales+data.alignmentSales)}</div></div>
-    <div class="stat-card"><div class="label">팀 보너스 (x1.5)</div><div class="value ${isLoss?'text-amber':'text-teal'}" style="font-size:20px;font-weight:700" data-countup="${data.teamBonus}">${fmtWon(data.teamBonus)}</div><div class="sub">팀 인센: ${fmtWon(data.teamIncentive)}</div></div>
+  <div class="stat-grid" style="grid-template-columns:1fr">
+    <div class="stat-card" style="text-align:center"><div class="label">총 인센티브</div><div class="value text-blue" style="font-size:31px" data-countup="${data.totalIncentive}">${fmtWon(data.totalIncentive)}</div><div class="sub">기본급: ${fmtWon(data.baseSalary)}</div></div>
   </div>`;
 
   html += `<div class="card"><div class="card-title">월별 인센티브 추이</div><div class="chart-wrap"><canvas id="managerChart"></canvas></div></div>`;
