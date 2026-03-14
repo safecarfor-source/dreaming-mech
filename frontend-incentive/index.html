@@ -5,68 +5,60 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>인센티브 현황판 - 꿈꾸는 정비사</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
-
 :root {
-  --bg: #f5f5f0;
+  --bg: #F5F5F5;
   --card: #ffffff;
-  --text: #2c2c2a;
-  --text-muted: #888780;
-  --text-light: #b4b2a9;
-  --border: #e8e6df;
+  --text: #222222;
+  --text-muted: #888888;
+  --text-light: #AAAAAA;
+  --border: #EEEEEE;
   --purple: #7C3AED;
-  --purple-light: #EEEDFE;
+  --purple-light: #F3F0FF;
   --teal: #1D9E75;
   --teal-light: #E1F5EE;
-  --coral: #D85A30;
-  --coral-light: #FAECE7;
   --blue: #378ADD;
   --blue-light: #E6F1FB;
   --amber: #BA7517;
   --amber-light: #FAEEDA;
-  --red: #E24B4A;
-  --red-light: #FCEBEB;
-  --green: #639922;
-  --green-light: #EAF3DE;
-  --shadow: 0 2px 8px rgba(0,0,0,0.06);
+  --red: #EF4444;
+  --red-light: #FEF2F2;
+  --green: #22C55E;
+  --green-light: #F0FDF4;
+  --shadow: 0 1px 3px rgba(0,0,0,0.08);
+  --shadow-md: 0 2px 8px rgba(0,0,0,0.08);
 }
 
 * { margin:0; padding:0; box-sizing:border-box; }
 body {
-  font-family: 'Noto Sans KR', sans-serif;
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
   background: var(--bg);
   color: var(--text);
   min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
 }
 
 /* --- Login --- */
 .login-page {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 100vh;
-  padding: 24px;
+  display: flex; justify-content: center; align-items: center;
+  min-height: 100vh; padding: 24px; background: var(--bg);
 }
 .login-box {
-  background: var(--card);
-  border-radius: 16px;
-  padding: 48px 40px;
-  width: 100%;
-  max-width: 400px;
-  box-shadow: var(--shadow);
-  text-align: center;
+  background: var(--card); border-radius: 16px; padding: 48px 32px;
+  width: 100%; max-width: 400px; box-shadow: var(--shadow-md); text-align: center;
 }
-.login-box h1 { font-size: 24px; font-weight: 700; margin-bottom: 8px; }
+.login-box h1 { font-size: 22px; font-weight: 800; margin-bottom: 6px; }
 .login-box .subtitle { color: var(--text-muted); font-size: 14px; margin-bottom: 32px; }
 .login-box input {
-  width: 100%; padding: 14px 16px; border: 1px solid var(--border); border-radius: 10px;
+  width: 100%; padding: 14px 16px; border: 1px solid var(--border); border-radius: 12px;
   font-size: 15px; font-family: inherit; margin-bottom: 12px; outline: none; transition: border-color 0.2s;
+  background: #FAFAFA;
 }
-.login-box input:focus { border-color: var(--purple); }
+.login-box input:focus { border-color: var(--purple); background: #fff; }
 .login-box button {
-  width: 100%; padding: 14px; background: var(--purple); color: #fff; border: none; border-radius: 10px;
-  font-size: 16px; font-weight: 600; font-family: inherit; cursor: pointer; margin-top: 8px; transition: opacity 0.2s;
+  width: 100%; padding: 14px; background: var(--purple); color: #fff; border: none; border-radius: 12px;
+  font-size: 16px; font-weight: 700; font-family: inherit; cursor: pointer; margin-top: 8px; transition: opacity 0.2s;
 }
 .login-box button:hover { opacity: 0.9; }
 .login-error { color: var(--red); font-size: 13px; margin-top: 12px; min-height: 20px; }
@@ -74,48 +66,76 @@ body {
 /* --- App Shell --- */
 .app { display: none; }
 .app.active { display: block; }
+
+/* --- Top Bar --- */
 .top-bar {
-  display: flex; justify-content: space-between; align-items: center; padding: 16px 24px;
+  display: flex; justify-content: space-between; align-items: center; padding: 14px 20px;
   background: var(--card); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100;
 }
-.top-bar .logo { font-size: 18px; font-weight: 700; color: var(--purple); }
-.top-bar .user-info { display: flex; align-items: center; gap: 12px; font-size: 14px; color: var(--text-muted); }
+.top-bar .logo { font-size: 18px; font-weight: 800; color: var(--purple); }
+.top-bar .user-info { display: flex; align-items: center; gap: 10px; font-size: 14px; }
 .top-bar .user-info .name { font-weight: 600; color: var(--text); }
 .top-bar .user-info .role-badge { padding: 3px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; }
 .role-admin { background: var(--purple-light); color: var(--purple); }
 .role-manager { background: var(--blue-light); color: var(--blue); }
 .role-director { background: var(--teal-light); color: var(--teal); }
 .role-viewer { background: #f0f0ec; color: var(--text-muted); }
-.btn-logout {
+.btn-outline {
   padding: 6px 14px; background: none; border: 1px solid var(--border); border-radius: 8px;
-  font-size: 13px; font-family: inherit; cursor: pointer; color: var(--text-muted);
+  font-size: 13px; font-family: inherit; cursor: pointer; color: var(--text-muted); white-space: nowrap;
 }
-.btn-logout:hover { background: var(--red-light); color: var(--red); border-color: var(--red); }
+.btn-outline:hover { background: var(--red-light); color: var(--red); border-color: var(--red); }
+
+/* Hamburger */
+.hamburger {
+  display: none; background: none; border: none; font-size: 24px; cursor: pointer; padding: 4px 8px;
+  color: var(--text); line-height: 1;
+}
+.mobile-dropdown {
+  display: none; position: absolute; top: 100%; right: 16px; background: var(--card);
+  border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.12); padding: 8px 0; min-width: 180px; z-index: 200;
+}
+.mobile-dropdown.open { display: block; }
+.mobile-dropdown button {
+  display: block; width: 100%; text-align: left; padding: 12px 20px; background: none; border: none;
+  font-size: 14px; font-family: inherit; cursor: pointer; color: var(--text);
+}
+.mobile-dropdown button:hover { background: #f5f5f5; }
+.mobile-dropdown .dd-info {
+  padding: 12px 20px; font-size: 13px; color: var(--text-muted); border-bottom: 1px solid var(--border);
+}
 
 /* --- Tabs --- */
-.tab-bar { display: flex; gap: 0; background: var(--card); border-bottom: 1px solid var(--border); padding: 0 24px; overflow-x: auto; }
+.tab-bar {
+  display: flex; gap: 0; background: var(--card); border-bottom: 1px solid var(--border);
+  padding: 0 20px; overflow-x: auto; -webkit-overflow-scrolling: touch;
+}
+.tab-bar::-webkit-scrollbar { display: none; }
 .tab-btn {
-  padding: 14px 24px; font-size: 14px; font-weight: 500; font-family: inherit; color: var(--text-muted);
-  background: none; border: none; border-bottom: 3px solid transparent; cursor: pointer; white-space: nowrap; transition: all 0.2s;
+  padding: 14px 20px; font-size: 14px; font-weight: 500; font-family: inherit; color: var(--text-muted);
+  background: none; border: none; border-bottom: 2px solid transparent; cursor: pointer; white-space: nowrap; transition: all 0.2s;
 }
 .tab-btn:hover { color: var(--text); }
 .tab-btn.active { color: var(--purple); border-bottom-color: var(--purple); font-weight: 700; }
 
 /* --- Content --- */
-.content { padding: 24px; max-width: 1200px; margin: 0 auto; }
+.content { padding: 20px; max-width: 1200px; margin: 0 auto; }
 .tab-content { display: none; }
 .tab-content.active { display: block; }
 
 /* --- Cards --- */
-.card { background: var(--card); border-radius: 12px; padding: 24px; box-shadow: var(--shadow); margin-bottom: 20px; }
-.card-title { font-size: 14px; font-weight: 600; color: var(--text-muted); margin-bottom: 16px; text-transform: uppercase; letter-spacing: 0.5px; }
+.card { background: var(--card); border-radius: 16px; padding: 20px; box-shadow: var(--shadow); margin-bottom: 12px; }
+.card-title { font-size: 14px; font-weight: 600; color: var(--text-muted); margin-bottom: 16px; }
 
-/* --- Stat Grid --- */
-.stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 20px; }
-.stat-card { background: var(--card); border-radius: 12px; padding: 20px; box-shadow: var(--shadow); text-align: center; }
-.stat-card .label { font-size: 12px; font-weight: 500; color: var(--text-muted); margin-bottom: 8px; }
-.stat-card .value { font-size: 28px; font-weight: 700; }
-.stat-card .sub { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+/* --- Stat Grid (YouTube Studio style) --- */
+.stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+.stat-grid-full { grid-column: 1 / -1; }
+.stat-card {
+  background: var(--card); border-radius: 16px; padding: 20px; box-shadow: var(--shadow); text-align: left;
+}
+.stat-card .label { font-size: 13px; font-weight: 500; color: var(--text-muted); margin-bottom: 4px; }
+.stat-card .value { font-size: 28px; font-weight: 800; letter-spacing: -0.5px; }
+.stat-card .sub { font-size: 12px; color: var(--text-light); margin-top: 4px; }
 .text-purple { color: var(--purple); }
 .text-teal { color: var(--teal); }
 .text-red { color: var(--red); }
@@ -124,16 +144,38 @@ body {
 .text-green { color: var(--green); }
 
 /* --- Loss/OK Banner --- */
-.loss-banner { background: var(--red-light); border: 2px solid var(--red); border-radius: 12px; padding: 20px 24px; text-align: center; margin-bottom: 20px; }
-.loss-banner .loss-label { font-size: 13px; font-weight: 600; color: var(--red); margin-bottom: 6px; }
-.loss-banner .loss-amount { font-size: 32px; font-weight: 700; color: var(--red); }
-.ok-banner { background: var(--green-light); border: 2px solid var(--green); border-radius: 12px; padding: 20px 24px; text-align: center; margin-bottom: 20px; }
+.loss-banner { background: var(--red-light); border: 2px solid var(--red); border-radius: 16px; padding: 20px; text-align: center; margin-bottom: 12px; }
+.loss-banner .loss-label { font-size: 13px; font-weight: 600; color: var(--red); margin-bottom: 4px; }
+.loss-banner .loss-amount { font-size: 28px; font-weight: 800; color: var(--red); }
+.ok-banner { background: var(--green-light); border: 2px solid var(--green); border-radius: 16px; padding: 20px; text-align: center; margin-bottom: 12px; }
 .ok-banner .ok-label { font-size: 13px; font-weight: 600; color: var(--green); }
-.ok-banner .ok-amount { font-size: 32px; font-weight: 700; color: var(--green); }
+.ok-banner .ok-amount { font-size: 28px; font-weight: 800; color: var(--green); }
 
-/* --- Table --- */
+/* --- Item Cards (mobile) --- */
+.item-card-list { display: none; }
+.item-card {
+  background: var(--card); border-radius: 12px; padding: 16px; box-shadow: var(--shadow); margin-bottom: 8px;
+}
+.item-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.item-card-name { font-size: 16px; font-weight: 600; color: var(--text); }
+.item-card-rate { font-size: 13px; color: var(--text-muted); }
+.item-card-mid { font-size: 14px; color: #666; margin-bottom: 8px; }
+.item-card-bottom { display: flex; justify-content: space-between; align-items: center; }
+.item-card-inc-label { font-size: 13px; color: var(--text-muted); }
+.item-card-inc-value { font-size: 20px; font-weight: 700; color: var(--purple); }
+.item-card.inactive { background: #FAFAFA; }
+.item-card.inactive .item-card-inc-value { color: #CCCCCC; }
+.zero-toggle {
+  display: block; width: 100%; text-align: center; padding: 12px; font-size: 13px; color: var(--text-muted);
+  background: none; border: 1px dashed var(--border); border-radius: 10px; cursor: pointer; font-family: inherit;
+  margin-bottom: 8px;
+}
+.zero-toggle:hover { background: #fafafa; }
+
+/* --- Table (desktop) --- */
+.desktop-table { display: block; }
 .data-table { width: 100%; border-collapse: collapse; font-size: 14px; }
-.data-table th { text-align: left; padding: 10px 12px; font-weight: 600; font-size: 12px; color: var(--text-muted); border-bottom: 2px solid var(--border); text-transform: uppercase; }
+.data-table th { text-align: left; padding: 10px 12px; font-weight: 600; font-size: 12px; color: var(--text-muted); border-bottom: 2px solid var(--border); }
 .data-table td { padding: 10px 12px; border-bottom: 1px solid var(--border); }
 .data-table tr:last-child td { border-bottom: none; }
 .data-table .num { text-align: right; font-variant-numeric: tabular-nums; }
@@ -144,13 +186,27 @@ body {
 .progress-wrap { height: 8px; background: #eee; border-radius: 4px; overflow: hidden; margin-top: 6px; }
 .progress-bar { height: 100%; border-radius: 4px; transition: width 0.6s ease; }
 
-/* --- Chart (Stock Style) --- */
-.chart-wrap { position: relative; height: 320px; margin-top: 8px; }
+/* --- Chart --- */
+.chart-wrap { position: relative; height: 320px; min-height: 200px; margin-top: 8px; }
 .chart-wrap canvas { width: 100% !important; }
 
+/* --- Summary Footer --- */
+.summary-footer {
+  background: var(--purple); border-radius: 16px; padding: 16px 20px; margin-bottom: 12px;
+  display: flex; justify-content: space-between; align-items: center; color: #fff;
+}
+.summary-footer .sf-item { text-align: center; flex: 1; }
+.summary-footer .sf-label { font-size: 12px; opacity: 0.8; margin-bottom: 2px; }
+.summary-footer .sf-value { font-size: 18px; font-weight: 700; }
+.summary-footer .sf-divider { width: 1px; height: 32px; background: rgba(255,255,255,0.25); }
+
 /* --- Month Selector --- */
-.month-sel { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
-.month-sel select { padding: 8px 14px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; font-family: inherit; background: var(--card); cursor: pointer; }
+.month-sel { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+.month-sel label { font-size: 14px; font-weight: 600; color: var(--text-muted); }
+.month-sel select {
+  padding: 8px 14px; border: 1px solid var(--border); border-radius: 10px; font-size: 14px;
+  font-family: inherit; background: var(--card); cursor: pointer; box-shadow: var(--shadow);
+}
 
 /* --- Admin --- */
 .admin-section { margin-bottom: 32px; }
@@ -159,38 +215,68 @@ body {
 .config-row:last-child { border-bottom: none; }
 .config-row .config-label { font-size: 14px; flex: 1; }
 .config-row input { width: 120px; padding: 6px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 14px; text-align: right; font-family: inherit; }
-.btn-save { padding: 6px 16px; background: var(--purple); color: #fff; border: none; border-radius: 6px; font-size: 13px; font-family: inherit; cursor: pointer; margin-left: 8px; }
+.btn-save { padding: 6px 16px; background: var(--purple); color: #fff; border: none; border-radius: 8px; font-size: 13px; font-family: inherit; cursor: pointer; margin-left: 8px; }
 .btn-save:hover { opacity: 0.9; }
 
 /* --- Upload --- */
-.upload-area { border: 2px dashed var(--border); border-radius: 12px; padding: 40px; text-align: center; cursor: pointer; transition: border-color 0.2s; }
+.upload-area { border: 2px dashed var(--border); border-radius: 16px; padding: 40px; text-align: center; cursor: pointer; transition: border-color 0.2s; }
 .upload-area:hover { border-color: var(--purple); }
 .upload-area input { display: none; }
 .upload-area .upload-icon { font-size: 40px; color: var(--text-light); margin-bottom: 12px; }
 .upload-area .upload-text { font-size: 14px; color: var(--text-muted); }
-.upload-compact { border: 2px dashed var(--border); border-radius: 10px; padding: 20px; text-align: center; cursor: pointer; margin-bottom: 20px; transition: border-color 0.2s; }
-.upload-compact:hover { border-color: var(--blue); }
+.upload-compact { border: 2px dashed var(--border); border-radius: 12px; padding: 20px; text-align: center; cursor: pointer; margin-bottom: 12px; transition: border-color 0.2s; }
+.upload-compact:hover { border-color: var(--purple); }
 .upload-compact input { display: none; }
-
-/* --- Responsive --- */
-@media (max-width: 768px) {
-  .content { padding: 16px; }
-  .stat-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
-  .stat-card .value { font-size: 22px; }
-  .loss-banner .loss-amount, .ok-banner .ok-amount { font-size: 24px; }
-  .top-bar { padding: 12px 16px; }
-  .tab-btn { padding: 12px 16px; font-size: 13px; }
-}
-@media (max-width: 480px) {
-  .stat-grid { grid-template-columns: 1fr 1fr; }
-  .stat-card { padding: 14px; }
-  .stat-card .value { font-size: 20px; }
-}
 
 /* --- Loading --- */
 .loading { text-align: center; padding: 60px; color: var(--text-muted); font-size: 14px; }
 .spinner { width: 32px; height: 32px; border: 3px solid var(--border); border-top-color: var(--purple); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 12px; }
 @keyframes spin { to { transform: rotate(360deg); } }
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
+  .content { padding: 16px; }
+
+  /* Top bar: hamburger */
+  .top-bar .user-info .name,
+  .top-bar .user-info .role-badge,
+  .top-bar .user-info .btn-outline { display: none; }
+  .hamburger { display: block; }
+
+  /* Tabs */
+  .tab-bar { padding: 0 16px; }
+  .tab-btn { padding: 12px 16px; font-size: 13px; }
+
+  /* Stat cards */
+  .stat-card .value { font-size: 24px; }
+  .stat-card { padding: 16px; }
+
+  /* Loss banner */
+  .loss-banner .loss-amount, .ok-banner .ok-amount { font-size: 24px; }
+
+  /* Chart */
+  .chart-wrap { height: 240px; }
+  .card { padding: 16px; border-radius: 12px; }
+
+  /* Item cards: show on mobile, hide table */
+  .item-card-list { display: block; }
+  .desktop-table { display: none; }
+
+  /* Summary footer */
+  .summary-footer .sf-value { font-size: 16px; }
+}
+
+@media (max-width: 480px) {
+  .stat-card .value { font-size: 22px; }
+  .stat-card { padding: 14px; }
+  .chart-wrap { height: 200px; }
+  .content { padding: 12px; }
+  .stat-grid { gap: 8px; }
+}
+
+@media (min-width: 769px) {
+  .stat-grid { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+}
 </style>
 </head>
 <body>
@@ -214,22 +300,28 @@ body {
     <div class="user-info">
       <span class="name" id="userName"></span>
       <span class="role-badge" id="userRole"></span>
-      <button class="btn-logout" onclick="showChangePw()" style="border-color:var(--blue);color:var(--blue)">비밀번호 변경</button>
-      <button class="btn-logout" onclick="doLogout()">로그아웃</button>
+      <button class="btn-outline" onclick="showChangePw()" style="border-color:var(--blue);color:var(--blue)">비밀번호 변경</button>
+      <button class="btn-outline" onclick="doLogout()">로그아웃</button>
+      <button class="hamburger" id="hamburgerBtn" onclick="toggleMobileMenu()">☰</button>
+    </div>
+    <div class="mobile-dropdown" id="mobileMenu">
+      <div class="dd-info" id="ddUserInfo"></div>
+      <button onclick="showChangePw();closeMobileMenu()">비밀번호 변경</button>
+      <button onclick="doLogout()">로그아웃</button>
     </div>
   </div>
 
   <!-- Password Change Modal -->
   <div id="pwModal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.4);z-index:999;justify-content:center;align-items:center">
-    <div style="background:var(--card);border-radius:16px;padding:32px;width:100%;max-width:380px;box-shadow:0 8px 32px rgba(0,0,0,0.15)">
+    <div style="background:var(--card);border-radius:16px;padding:32px;width:100%;max-width:380px;box-shadow:0 8px 32px rgba(0,0,0,0.15);margin:16px">
       <h3 style="margin-bottom:20px;font-size:18px">비밀번호 변경</h3>
-      <input type="password" id="pwCurrent" placeholder="현재 비밀번호" style="width:100%;padding:12px;border:1px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit;margin-bottom:10px">
-      <input type="password" id="pwNew" placeholder="새 비밀번호" style="width:100%;padding:12px;border:1px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit;margin-bottom:10px">
-      <input type="password" id="pwConfirm" placeholder="새 비밀번호 확인" style="width:100%;padding:12px;border:1px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit;margin-bottom:16px">
+      <input type="password" id="pwCurrent" placeholder="현재 비밀번호" style="width:100%;padding:12px;border:1px solid var(--border);border-radius:10px;font-size:14px;font-family:inherit;margin-bottom:10px;background:#FAFAFA">
+      <input type="password" id="pwNew" placeholder="새 비밀번호" style="width:100%;padding:12px;border:1px solid var(--border);border-radius:10px;font-size:14px;font-family:inherit;margin-bottom:10px;background:#FAFAFA">
+      <input type="password" id="pwConfirm" placeholder="새 비밀번호 확인" style="width:100%;padding:12px;border:1px solid var(--border);border-radius:10px;font-size:14px;font-family:inherit;margin-bottom:16px;background:#FAFAFA">
       <div id="pwError" style="color:var(--red);font-size:13px;min-height:20px;margin-bottom:8px"></div>
       <div style="display:flex;gap:10px">
-        <button onclick="closePwModal()" style="flex:1;padding:12px;background:none;border:1px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit;cursor:pointer">취소</button>
-        <button onclick="doChangePw()" style="flex:1;padding:12px;background:var(--purple);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;font-family:inherit;cursor:pointer">변경</button>
+        <button onclick="closePwModal()" style="flex:1;padding:12px;background:none;border:1px solid var(--border);border-radius:10px;font-size:14px;font-family:inherit;cursor:pointer">취소</button>
+        <button onclick="doChangePw()" style="flex:1;padding:12px;background:var(--purple);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer">변경</button>
       </div>
     </div>
   </div>
@@ -273,6 +365,7 @@ let chartInstances = {};
 function fmt(n) { if (n == null) return '-'; return Math.round(n).toLocaleString('ko-KR'); }
 function fmtWon(n) { if (n == null) return '-'; return fmt(n) + '원'; }
 function fmtMan(n) { if (n == null) return '-'; return (n / 10000).toFixed(0) + '만'; }
+function isMobile() { return window.innerWidth <= 768; }
 
 async function api(path, opts = {}) {
   const res = await fetch(API + path, {
@@ -283,6 +376,17 @@ async function api(path, opts = {}) {
   if (!res.ok) throw new Error('API 오류: ' + res.status);
   return res.json();
 }
+
+// ===== Mobile Menu =====
+function toggleMobileMenu() {
+  document.getElementById('mobileMenu').classList.toggle('open');
+}
+function closeMobileMenu() {
+  document.getElementById('mobileMenu').classList.remove('open');
+}
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.hamburger') && !e.target.closest('.mobile-dropdown')) closeMobileMenu();
+});
 
 // ===== Stock Chart Helper =====
 function createStockChart(canvasId, labels, dataArr, options = {}) {
@@ -297,18 +401,14 @@ function createStockChart(canvasId, labels, dataArr, options = {}) {
   const yFormat = options.yFormat || (v => fmt(v));
   const tipFormat = options.tipFormat || (v => fmtWon(v));
 
-  // Gradient fill
   const grad = ctx2d.createLinearGradient(0, 0, 0, 320);
-  grad.addColorStop(0, mainColor + '40');
-  grad.addColorStop(0.7, mainColor + '08');
+  grad.addColorStop(0, mainColor + '1A');
   grad.addColorStop(1, mainColor + '00');
 
-  // Point colors (green/red per segment)
   const pointColors = hasNeg
     ? dataArr.map((v, i) => hasNeg(i) ? negColor : mainColor)
     : dataArr.map(() => mainColor);
 
-  // Segment coloring
   const segmentBorder = hasNeg ? {
     borderColor: (ctx) => {
       const i = ctx.p0DataIndex;
@@ -323,9 +423,9 @@ function createStockChart(canvasId, labels, dataArr, options = {}) {
     backgroundColor: grad,
     fill: true,
     tension: 0,
-    borderWidth: 3,
-    pointRadius: 6,
-    pointHoverRadius: 9,
+    borderWidth: 2.5,
+    pointRadius: 5,
+    pointHoverRadius: 8,
     pointBackgroundColor: pointColors,
     pointBorderColor: '#fff',
     pointBorderWidth: 2,
@@ -333,7 +433,6 @@ function createStockChart(canvasId, labels, dataArr, options = {}) {
     segment: segmentBorder,
   }];
 
-  // Reference line plugin
   const refPlugin = refLine ? {
     id: 'refLine',
     beforeDraw(chart) {
@@ -345,12 +444,11 @@ function createStockChart(canvasId, labels, dataArr, options = {}) {
       ctx.beginPath();
       ctx.setLineDash([6, 4]);
       ctx.strokeStyle = refLine.color || '#E24B4A';
-      ctx.lineWidth = 2;
+      ctx.lineWidth = 1.5;
       ctx.moveTo(chartArea.left, y);
       ctx.lineTo(chartArea.right, y);
       ctx.stroke();
-      // Label
-      ctx.font = '11px "Noto Sans KR"';
+      ctx.font = '11px Pretendard';
       ctx.fillStyle = refLine.color || '#E24B4A';
       ctx.textAlign = 'right';
       ctx.fillText(refLine.label || '', chartArea.right - 4, y - 6);
@@ -358,7 +456,6 @@ function createStockChart(canvasId, labels, dataArr, options = {}) {
     }
   } : null;
 
-  // Crosshair plugin
   const crosshairPlugin = {
     id: 'crosshair',
     afterDraw(chart) {
@@ -368,7 +465,7 @@ function createStockChart(canvasId, labels, dataArr, options = {}) {
         ctx.save();
         ctx.beginPath();
         ctx.setLineDash([3, 3]);
-        ctx.strokeStyle = '#b4b2a9';
+        ctx.strokeStyle = '#ccc';
         ctx.lineWidth = 1;
         ctx.moveTo(x, chartArea.top);
         ctx.lineTo(x, chartArea.bottom);
@@ -392,10 +489,10 @@ function createStockChart(canvasId, labels, dataArr, options = {}) {
       plugins: {
         legend: { display: false },
         tooltip: {
-          backgroundColor: 'rgba(44,44,42,0.92)',
-          titleFont: { size: 13, weight: '600' },
-          bodyFont: { size: 14 },
-          padding: 14,
+          backgroundColor: 'rgba(34,34,34,0.92)',
+          titleFont: { size: 13, weight: '600', family: 'Pretendard' },
+          bodyFont: { size: 14, family: 'Pretendard' },
+          padding: 12,
           cornerRadius: 10,
           displayColors: false,
           callbacks: {
@@ -407,15 +504,15 @@ function createStockChart(canvasId, labels, dataArr, options = {}) {
       scales: {
         x: {
           grid: { display: false },
-          ticks: { font: { size: 12 }, color: '#888780' },
+          ticks: { font: { size: 11, family: 'Pretendard' }, color: '#aaa' },
         },
         y: {
-          grid: { color: '#f0efe8', drawBorder: false },
+          grid: { color: '#f0f0f0', drawBorder: false },
           border: { display: false },
-          ticks: { font: { size: 11 }, color: '#b4b2a9', callback: yFormat },
+          ticks: { font: { size: 11, family: 'Pretendard' }, color: '#bbb', callback: yFormat },
         },
       },
-      animation: { duration: 800, easing: 'easeOutQuart' },
+      animation: { duration: 600, easing: 'easeOutQuart' },
     },
   });
 }
@@ -454,10 +551,19 @@ async function initApp() {
   document.getElementById('loginPage').style.display = 'none';
   document.getElementById('app').classList.add('active');
   document.getElementById('userName').textContent = currentUser.name;
-  const roleMap = { admin: '관리자', manager: '매니저', director: '부장', viewer: '공용' };
+  const roleMap = { admin: '관리자', manager: '매니저', director: '부장', viewer: '' };
   const roleEl = document.getElementById('userRole');
   roleEl.textContent = roleMap[currentUser.role] || currentUser.role;
   roleEl.className = 'role-badge role-' + currentUser.role;
+  // Mobile dropdown info
+  const ddInfo = document.getElementById('ddUserInfo');
+  if (currentUser.role === 'viewer') {
+    roleEl.style.display = 'none';
+    document.getElementById('userName').textContent = '';
+    ddInfo.textContent = '공용 계정';
+  } else {
+    ddInfo.textContent = currentUser.name + ' · ' + (roleMap[currentUser.role] || currentUser.role);
+  }
   buildTabs();
 }
 
@@ -538,27 +644,26 @@ function renderTeam(data, el) {
     html += `<div class="loss-banner"><div class="loss-label">최소수량 미달로 잃은 금액</div><div class="loss-amount">-${fmtWon(inc.lost)}</div></div>`;
   }
 
-  // Stat cards
+  // Stat cards (2-col grid)
   html += `<div class="stat-grid">
     <div class="stat-card"><div class="label">이번 달 인센티브</div><div class="value ${isLoss?'text-amber':'text-purple'}">${fmtWon(inc.actual)}</div>${isLoss?`<div class="sub">감액 전: ${fmtWon(inc.calculated)}</div>`:''}</div>
     <div class="stat-card"><div class="label">감액률</div><div class="value ${isLoss?'text-red':'text-green'}">${isLoss?'50%':'0%'}</div><div class="sub">${isLoss?'최소수량 미달':'정상 지급'}</div></div>`;
   if (data.prevMonth) {
     const diff = inc.actual - (data.prevMonth.incentive || 0);
-    html += `<div class="stat-card"><div class="label">전월 대비</div><div class="value ${diff>=0?'text-teal':'text-red'}">${diff>=0?'+':''}${fmtWon(diff)}</div><div class="sub">${data.prevMonth.month}: ${fmtWon(data.prevMonth.incentive)}</div></div>`;
+    html += `<div class="stat-card stat-grid-full"><div class="label">전월 대비</div><div class="value ${diff>=0?'text-green':'text-red'}">${diff>=0?'+':''}${fmtWon(diff)}</div><div class="sub">${data.prevMonth.month}: ${fmtWon(data.prevMonth.incentive)}</div></div>`;
   }
   html += '</div>';
 
-  // CHART (2nd section - right after stats)
+  // CHART
   html += `<div class="card"><div class="card-title">월별 인센티브 추이</div><div class="chart-wrap"><canvas id="teamChart"></canvas></div></div>`;
 
-  // Upload area for viewer (shared account)
+  // Upload area for viewer
   if (currentUser.role === 'viewer') {
     html += `<div class="upload-compact" onclick="document.getElementById('viewerExcelFile').click()">
       <span style="font-size:14px;color:var(--purple);font-weight:600">📄 극동 엑셀 업로드</span>
       <span style="font-size:12px;color:var(--text-muted);margin-left:8px">(.xlsx 파일 선택)</span>
       <input type="file" id="viewerExcelFile" accept=".xlsx,.xls" onchange="uploadExcel(this)">
-    </div>
-    <div id="viewerUploadResult"></div>`;
+    </div><div id="viewerUploadResult"></div>`;
   }
 
   // Min qty check
@@ -574,33 +679,80 @@ function renderTeam(data, el) {
     html += '</tbody></table></div>';
   }
 
-  // Detail table
-  html += `<div class="card"><div class="card-title">품목별 매출 & 인센티브</div>
-    <table class="data-table"><thead><tr><th>품목</th><th class="num">매출</th><th class="num">수량</th><th class="num">배율</th><th class="num">인센티브</th></tr></thead><tbody>`;
+  // Build items data
   let totalSales=0, totalInc=0;
+  const activeItems = [];
+  const zeroItems = [];
   for (const [key,val] of Object.entries(data.items)) {
-    const rate=ITEM_RATES[key]||0; const itemInc=Math.round(val.sales*rate/100); totalSales+=val.sales; totalInc+=itemInc;
-    html += `<tr><td>${ITEM_LABELS[key]||key}</td><td class="num">${fmtWon(val.sales)}</td><td class="num">${val.qty}</td><td class="num">${rate}%</td><td class="num text-purple">${fmtWon(itemInc)}</td></tr>`;
+    const rate = ITEM_RATES[key]||0;
+    const itemInc = Math.round(val.sales*rate/100);
+    totalSales += val.sales;
+    totalInc += itemInc;
+    const item = { key, label: ITEM_LABELS[key]||key, sales: val.sales, qty: val.qty, rate, inc: itemInc };
+    if (val.sales > 0) activeItems.push(item);
+    else zeroItems.push(item);
   }
-  html += `<tr style="font-weight:700;border-top:2px solid var(--border)"><td>합계</td><td class="num">${fmtWon(totalSales)}</td><td></td><td></td><td class="num text-purple">${fmtWon(totalInc)}</td></tr></tbody></table></div>`;
+
+  // Mobile: Card list
+  html += `<div class="item-card-list">`;
+  activeItems.forEach(item => {
+    html += `<div class="item-card">
+      <div class="item-card-header"><span class="item-card-name">${item.label}</span><span class="item-card-rate">${item.rate}%</span></div>
+      <div class="item-card-mid">매출 ${fmtWon(item.sales)} · 수량 ${item.qty}건</div>
+      <div class="item-card-bottom"><span class="item-card-inc-label">인센티브</span><span class="item-card-inc-value">${fmtWon(item.inc)}</span></div>
+    </div>`;
+  });
+  if (zeroItems.length > 0) {
+    html += `<button class="zero-toggle" onclick="toggleZeroItems(this)">매출 없는 품목 ${zeroItems.length}개 보기</button>`;
+    html += `<div class="zero-items" style="display:none">`;
+    zeroItems.forEach(item => {
+      html += `<div class="item-card inactive">
+        <div class="item-card-header"><span class="item-card-name">${item.label}</span><span class="item-card-rate">${item.rate}%</span></div>
+        <div class="item-card-mid">매출 0원 · 수량 0건</div>
+        <div class="item-card-bottom"><span class="item-card-inc-label">인센티브</span><span class="item-card-inc-value">0원</span></div>
+      </div>`;
+    });
+    html += '</div>';
+  }
+  html += '</div>';
+
+  // Desktop: Table
+  html += `<div class="desktop-table"><div class="card"><div class="card-title">품목별 매출 & 인센티브</div>
+    <table class="data-table"><thead><tr><th>품목</th><th class="num">매출</th><th class="num">수량</th><th class="num">배율</th><th class="num">인센티브</th></tr></thead><tbody>`;
+  [...activeItems, ...zeroItems].forEach(item => {
+    html += `<tr><td>${item.label}</td><td class="num">${fmtWon(item.sales)}</td><td class="num">${item.qty}</td><td class="num">${item.rate}%</td><td class="num text-purple">${fmtWon(item.inc)}</td></tr>`;
+  });
+  html += `<tr style="font-weight:700;border-top:2px solid var(--border)"><td>합계</td><td class="num">${fmtWon(totalSales)}</td><td></td><td></td><td class="num text-purple">${fmtWon(totalInc)}</td></tr></tbody></table></div></div>`;
+
+  // Summary footer
+  html += `<div class="summary-footer">
+    <div class="sf-item"><div class="sf-label">총 매출</div><div class="sf-value">${fmtWon(totalSales)}</div></div>
+    <div class="sf-divider"></div>
+    <div class="sf-item"><div class="sf-label">총 인센티브</div><div class="sf-value">${fmtWon(totalInc)}</div></div>
+  </div>`;
 
   el.innerHTML = html;
 
-  // Render stock chart
+  // Render chart
   if (teamMonthlyData && teamMonthlyData.length > 0) {
     if (chartInstances.team) chartInstances.team.destroy();
     chartInstances.team = createStockChart('teamChart',
       teamMonthlyData.map(m => m.month),
       teamMonthlyData.map(m => m.incentive),
-      {
-        color: '#7C3AED',
-        negColor: '#E24B4A',
-        negCheck: (i) => teamMonthlyData[i] && teamMonthlyData[i].penalized,
-        yFormat: v => fmtMan(v),
-        tipFormat: v => fmtWon(v),
-        label: '인센티브',
-      }
+      { color: '#7C3AED', negColor: '#E24B4A', negCheck: (i) => teamMonthlyData[i] && teamMonthlyData[i].penalized, yFormat: v => fmtMan(v), tipFormat: v => fmtWon(v), label: '인센티브' }
     );
+  }
+}
+
+function toggleZeroItems(btn) {
+  const container = btn.nextElementSibling;
+  if (container.style.display === 'none') {
+    container.style.display = 'block';
+    btn.textContent = '매출 없는 품목 접기';
+  } else {
+    container.style.display = 'none';
+    const count = container.querySelectorAll('.item-card').length;
+    btn.textContent = '매출 없는 품목 ' + count + '개 보기';
   }
 }
 
@@ -645,20 +797,16 @@ function renderManager(data, el) {
     <div class="stat-card"><div class="label">팀 보너스 (x1.5)</div><div class="value ${isLoss?'text-amber':'text-teal'}">${fmtWon(data.teamBonus)}</div><div class="sub">팀 인센: ${fmtWon(data.teamIncentive)}</div></div>
   </div>`;
 
-  // CHART (2nd section)
   html += `<div class="card"><div class="card-title">월별 인센티브 추이</div><div class="chart-wrap"><canvas id="managerChart"></canvas></div></div>`;
 
-  // Excel upload for manager
   if (['manager','admin'].includes(currentUser.role)) {
     html += `<div class="upload-compact" onclick="document.getElementById('mgrExcelFile').click()">
       <span style="font-size:14px;color:var(--blue);font-weight:600">📄 극동 엑셀 업로드</span>
       <span style="font-size:12px;color:var(--text-muted);margin-left:8px">(.xlsx 파일 선택)</span>
       <input type="file" id="mgrExcelFile" accept=".xlsx,.xls" onchange="uploadExcel(this)">
-    </div>
-    <div id="mgrUploadResult"></div>`;
+    </div><div id="mgrUploadResult"></div>`;
   }
 
-  // Detail table
   html += `<div class="card"><div class="card-title">매출 상세</div><table class="data-table"><tbody>
     <tr><td>타이어 매출</td><td class="num">${fmtWon(data.tireSales)}</td></tr>
     <tr><td>얼라이먼트 매출</td><td class="num">${fmtWon(data.alignmentSales)}</td></tr>
@@ -719,32 +867,28 @@ function renderDirector(data, el) {
   }
 
   const bevenPct = Math.min(100, Math.round(data.totalRevenue / data.breakeven * 100));
-  html += `<div class="card" style="margin-bottom:20px">
+  html += `<div class="card" style="margin-bottom:12px">
     <div style="display:flex;justify-content:space-between;margin-bottom:8px"><span style="font-size:13px;color:var(--text-muted)">손익분기 달성률</span><span style="font-size:13px;font-weight:700;color:${bevenPct>=100?'var(--green)':'var(--red)'}">${bevenPct}%</span></div>
-    <div class="progress-wrap" style="height:12px"><div class="progress-bar" style="width:${bevenPct}%;background:${bevenPct>=100?'var(--green)':'var(--red)'}"></div></div>
+    <div class="progress-wrap" style="height:10px"><div class="progress-bar" style="width:${bevenPct}%;background:${bevenPct>=100?'var(--green)':'var(--red)'}"></div></div>
     <div style="display:flex;justify-content:space-between;margin-top:6px;font-size:12px;color:var(--text-light)"><span>0</span><span>${fmtWon(data.breakeven)}</span></div>
   </div>`;
 
   html += `<div class="stat-grid">
     <div class="stat-card"><div class="label">전체 매출</div><div class="value text-blue">${fmtWon(data.totalRevenue)}</div></div>
     <div class="stat-card"><div class="label">매출 인센티브 (0.6%)</div><div class="value text-teal">${fmtWon(data.revenueIncentive)}</div></div>
-    <div class="stat-card"><div class="label">총 인센티브</div><div class="value text-purple">${fmtWon(data.totalIncentive)}</div></div>
+    <div class="stat-card stat-grid-full"><div class="label">총 인센티브</div><div class="value text-purple">${fmtWon(data.totalIncentive)}</div></div>
   </div>`;
 
-  // CHART (2nd section - with breakeven reference line)
   html += `<div class="card"><div class="card-title">월별 매출 추이</div><div class="chart-wrap"><canvas id="directorChart"></canvas></div></div>`;
 
-  // Excel upload for director
   if (['director','admin'].includes(currentUser.role)) {
     html += `<div class="upload-compact" onclick="document.getElementById('dirExcelFile').click()">
       <span style="font-size:14px;color:var(--teal);font-weight:600">📄 극동 엑셀 업로드</span>
       <span style="font-size:12px;color:var(--text-muted);margin-left:8px">(.xlsx 파일 선택)</span>
       <input type="file" id="dirExcelFile" accept=".xlsx,.xls" onchange="uploadExcel(this)">
-    </div>
-    <div id="dirUploadResult"></div>`;
+    </div><div id="dirUploadResult"></div>`;
   }
 
-  // Extras table
   html += `<div class="card"><div class="card-title">추가 인센티브 항목</div>
     <table class="data-table"><thead><tr><th>항목</th><th class="num">매출</th><th class="num">인센티브</th></tr></thead><tbody>
     <tr><td>와이퍼 (0.3%)</td><td class="num">${fmtWon(data.extras.wiper.sales)}</td><td class="num text-teal">${fmtWon(data.extras.wiper.incentive)}</td></tr>
@@ -760,13 +904,10 @@ function renderDirector(data, el) {
       directorMonthlyData.map(m => m.month),
       directorMonthlyData.map(m => m.totalRevenue),
       {
-        color: '#1D9E75',
-        negColor: '#E24B4A',
+        color: '#1D9E75', negColor: '#E24B4A',
         negCheck: (i) => directorMonthlyData[i] && !directorMonthlyData[i].aboveBreakeven,
         refLine: { value: data.breakeven, label: '손익분기 ' + (data.breakeven/1e8).toFixed(1) + '억', color: '#E24B4A' },
-        yFormat: v => (v/1e8).toFixed(1) + '억',
-        tipFormat: v => fmtWon(v),
-        label: '매출',
+        yFormat: v => (v/1e8).toFixed(1) + '억', tipFormat: v => fmtWon(v), label: '매출',
       }
     );
   }
@@ -790,7 +931,7 @@ async function loadAdminPanel() {
 
     try {
       const users = await api('/users');
-      const roleLabels = {admin:'관리자',manager:'매니저',director:'부장',viewer:'기사'};
+      const roleLabels = {admin:'관리자',manager:'매니저',director:'부장',viewer:'공용'};
       html += `<div class="admin-section"><h3>계정 관리</h3><table class="data-table"><thead><tr><th>이름</th><th>아이디</th><th>비밀번호</th><th>역할</th><th>작업</th></tr></thead><tbody>`;
       users.forEach(u => {
         html += `<tr><td>${u.name}</td>
@@ -829,12 +970,9 @@ async function saveConfig(key) {
 async function uploadExcel(input) {
   const file = input.files[0];
   if (!file) return;
-
-  // Find closest result container
   let resultEl = input.closest('.upload-area, .upload-compact')?.nextElementSibling;
   if (!resultEl) resultEl = document.getElementById('uploadResult');
   if (resultEl) resultEl.innerHTML = '<div class="loading"><div class="spinner"></div>업로드 중...</div>';
-
   const formData = new FormData();
   formData.append('file', file);
   try {
@@ -880,7 +1018,6 @@ async function loadUploadHistory() {
   } catch { el.innerHTML = '<p style="color:var(--text-muted);font-size:13px">이력 로드 실패</p>'; }
 }
 
-// ===== Admin Reset Password =====
 async function adminResetPw(userId, name) {
   const newPw = prompt(name + '의 새 비밀번호를 입력하세요:');
   if (!newPw) return;
@@ -891,7 +1028,6 @@ async function adminResetPw(userId, name) {
   } catch (e) { alert('변경 실패: ' + e.message); }
 }
 
-// ===== Password Change =====
 function showChangePw() {
   document.getElementById('pwModal').style.display = 'flex';
   document.getElementById('pwCurrent').value = '';
@@ -915,11 +1051,9 @@ async function doChangePw() {
   } catch (e) { err.textContent = e.message.includes('401') ? '현재 비밀번호가 올바르지 않습니다' : '변경 실패'; }
 }
 
-// ===== Enter key login =====
 document.getElementById('loginPw').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
 document.getElementById('loginId').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('loginPw').focus(); });
 
-// ===== Auto-login =====
 if (token) { initApp(); }
 </script>
 </body>
