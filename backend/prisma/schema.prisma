@@ -637,6 +637,22 @@ model MonthlySalesTarget {
   @@unique([year, month])
 }
 
+// 김권중(매니저) 매출 목표 — 타이어+얼라이먼트
+model ManagerMonthlySalesTarget {
+  id         String   @id @default(cuid())
+  year       Int
+  month      Int
+  lyTotal    BigInt   // 작년 동월 타이어+얼라이먼트 총매출
+  lyDays     Int      // 작년 영업일수
+  tysSales   BigInt   // 올해 누적매출
+  tyElapsed  Int      // 경과 영업일
+  tyRemain   Int      // 남은 영업일
+  updatedAt  DateTime @updatedAt
+  createdAt  DateTime @default(now())
+
+  @@unique([year, month], name: "year_month")
+}
+
 // 상품코드 매핑
 model ProductCodeMapping {
   id          String  @id @default(uuid())

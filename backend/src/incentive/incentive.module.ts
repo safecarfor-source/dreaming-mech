@@ -14,6 +14,8 @@ import { TeamService } from './team/team.service';
 // Manager
 import { ManagerController } from './manager/manager.controller';
 import { ManagerService } from './manager/manager.service';
+import { ManagerSalesTargetController } from './manager/manager-sales-target.controller';
+import { ManagerSalesTargetService } from './manager/manager-sales-target.service';
 
 // Director
 import { DirectorController } from './director/director.controller';
@@ -43,6 +45,7 @@ import { LogsController } from './logs/logs.controller';
     IncentiveAuthController,
     TeamController,
     ManagerController,
+    ManagerSalesTargetController,
     DirectorController,
     SalesTargetController,
     UploadController,
@@ -56,6 +59,7 @@ import { LogsController } from './logs/logs.controller';
     IncentiveJwtStrategy,
     TeamService,
     ManagerService,
+    ManagerSalesTargetService,
     DirectorService,
     SalesTargetService,
     UploadService,
