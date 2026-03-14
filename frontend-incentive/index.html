@@ -367,6 +367,33 @@ function fmtWon(n) { if (n == null) return '-'; return fmt(n) + '원'; }
 function fmtMan(n) { if (n == null) return '-'; return (n / 10000).toFixed(0) + '만'; }
 function isMobile() { return window.innerWidth <= 768; }
 
+function runCountUp(container) {
+  const els = (container || document).querySelectorAll('[data-countup]');
+  els.forEach(el => {
+    const target = parseInt(el.getAttribute('data-countup')) || 0;
+    const duration = 2000;
+    const fps = 30;
+    const totalFrames = Math.round(duration / (1000 / fps));
+    let frame = 0;
+    const start = performance.now();
+    const isWon = el.textContent.includes('원');
+    function tick() {
+      frame++;
+      const progress = Math.min(frame / totalFrames, 1);
+      const ease = 1 - Math.pow(1 - progress, 3);
+      if (progress < 1) {
+        const jitter = Math.round(target * (0.5 + Math.random() * 1.5));
+        const blend = Math.round(jitter * (1 - ease) + target * ease);
+        el.textContent = isWon ? fmtWon(blend) : fmt(blend);
+        requestAnimationFrame(tick);
+      } else {
+        el.textContent = isWon ? fmtWon(target) : fmt(target);
+      }
+    }
+    requestAnimationFrame(tick);
+  });
+}
+
 async function api(path, opts = {}) {
   const res = await fetch(API + path, {
     ...opts,
@@ -707,7 +734,7 @@ function renderTeam(data, el) {
   html += `<div class="item-card-list">`;
   activeItems.forEach(item => {
     html += `<div class="item-card">
-      <div class="item-card-header"><span class="item-card-name">${item.label}</span><span class="item-card-rate">${item.rate}%</span></div>
+      <div class="item-card-header"><span class="item-card-name">${item.label}</span><span class="item-card-rate"></span></div>
       <div class="item-card-mid">매출 ${fmtWon(item.sales)} · 수량 ${item.qty}건</div>
       <div class="item-card-bottom"><span class="item-card-inc-label">인센티브</span><span class="item-card-inc-value">${fmtWon(item.inc)}</span></div>
     </div>`;
@@ -717,7 +744,7 @@ function renderTeam(data, el) {
     html += `<div class="zero-items" style="display:none">`;
     zeroItems.forEach(item => {
       html += `<div class="item-card inactive">
-        <div class="item-card-header"><span class="item-card-name">${item.label}</span><span class="item-card-rate">${item.rate}%</span></div>
+        <div class="item-card-header"><span class="item-card-name">${item.label}</span><span class="item-card-rate"></span></div>
         <div class="item-card-mid">매출 0원 · 수량 0건</div>
         <div class="item-card-bottom"><span class="item-card-inc-label">인센티브</span><span class="item-card-inc-value">0원</span></div>
       </div>`;
@@ -728,11 +755,11 @@ function renderTeam(data, el) {
 
   // Desktop: Table
   html += `<div class="desktop-table"><div class="card"><div class="card-title">품목별 매출 & 인센티브</div>
-    <table class="data-table"><thead><tr><th>품목</th><th class="num">매출</th><th class="num">수량</th><th class="num">배율</th><th class="num">인센티브</th></tr></thead><tbody>`;
+    <table class="data-table"><thead><tr><th>품목</th><th class="num">매출</th><th class="num">수량</th><th class="num">인센티브</th></tr></thead><tbody>`;
   [...activeItems, ...zeroItems].forEach(item => {
-    html += `<tr><td>${item.label}</td><td class="num">${fmtWon(item.sales)}</td><td class="num">${item.qty}</td><td class="num">${item.rate}%</td><td class="num text-purple">${fmtWon(item.inc)}</td></tr>`;
+    html += `<tr><td>${item.label}</td><td class="num">${fmtWon(item.sales)}</td><td class="num">${item.qty}</td><td class="num text-purple">${fmtWon(item.inc)}</td></tr>`;
   });
-  html += `<tr style="font-weight:700;border-top:2px solid var(--border)"><td>합계</td><td class="num">${fmtWon(totalSales)}</td><td></td><td></td><td class="num text-purple">${fmtWon(totalInc)}</td></tr></tbody></table></div></div>`;
+  html += `<tr style="font-weight:700;border-top:2px solid var(--border)"><td>합계</td><td class="num">${fmtWon(totalSales)}</td><td></td><td class="num text-purple">${fmtWon(totalInc)}</td></tr></tbody></table></div></div>`;
 
   // Summary footer
   html += `<div class="summary-footer">
@@ -800,22 +827,16 @@ function renderManager(data, el) {
   let html = '';
   if (isLoss) html += `<div class="loss-banner"><div class="loss-label">팀 최소수량 미달로 잃은 팀 보너스</div><div class="loss-amount">-${fmtWon(data.lost)}</div></div>`;
 
-  html += `<div class="stat-grid">
-    <div class="stat-card"><div class="label">총 인센티브</div><div class="value text-blue">${fmtWon(data.totalIncentive)}</div><div class="sub">기본급: ${fmtWon(data.baseSalary)}</div></div>
-    <div class="stat-card"><div class="label">총 급여</div><div class="value text-purple">${fmtWon(data.totalSalary)}</div><div class="sub">기본급 + 인센티브</div></div>
-    <div class="stat-card"><div class="label">타이어 인센티브</div><div class="value text-teal">${fmtWon(data.tireIncentive)}</div><div class="sub">타이어+얼라이: ${fmtWon(data.tireSales+data.alignmentSales)}</div></div>
-    <div class="stat-card"><div class="label">팀 보너스 (x1.5)</div><div class="value ${isLoss?'text-amber':'text-teal'}">${fmtWon(data.teamBonus)}</div><div class="sub">팀 인센: ${fmtWon(data.teamIncentive)}</div></div>
+  html += `<div class="stat-grid" style="grid-template-columns:1fr">
+    <div class="stat-card"><div class="label">총 인센티브</div><div class="value text-blue" data-countup="${data.totalIncentive}">${fmtWon(data.totalIncentive)}</div><div class="sub">기본급: ${fmtWon(data.baseSalary)}</div></div>
+  </div>
+  <div class="stat-grid" style="grid-template-columns:1fr 1fr">
+    <div class="stat-card"><div class="label">타이어 인센티브</div><div class="value text-teal" style="font-size:20px;font-weight:700" data-countup="${data.tireIncentive}">${fmtWon(data.tireIncentive)}</div><div class="sub">타이어+얼라이: ${fmtWon(data.tireSales+data.alignmentSales)}</div></div>
+    <div class="stat-card"><div class="label">팀 보너스 (x1.5)</div><div class="value ${isLoss?'text-amber':'text-teal'}" style="font-size:20px;font-weight:700" data-countup="${data.teamBonus}">${fmtWon(data.teamBonus)}</div><div class="sub">팀 인센: ${fmtWon(data.teamIncentive)}</div></div>
   </div>`;
 
   html += `<div class="card"><div class="card-title">월별 인센티브 추이</div><div class="chart-wrap"><canvas id="managerChart"></canvas></div></div>`;
 
-  if (['manager','admin'].includes(currentUser.role)) {
-    html += `<div class="upload-compact" onclick="document.getElementById('mgrExcelFile').click()">
-      <span style="font-size:14px;color:var(--blue);font-weight:600">📄 극동 엑셀 업로드</span>
-      <span style="font-size:12px;color:var(--text-muted);margin-left:8px">(.xlsx 파일 선택)</span>
-      <input type="file" id="mgrExcelFile" accept=".xlsx,.xls" onchange="uploadExcel(this)">
-    </div><div id="mgrUploadResult"></div>`;
-  }
 
   html += `<div class="card"><div class="card-title">매출 상세</div><table class="data-table"><tbody>
     <tr><td>타이어 매출</td><td class="num">${fmtWon(data.tireSales)}</td></tr>
@@ -828,6 +849,7 @@ function renderManager(data, el) {
   </tbody></table></div>`;
 
   el.innerHTML = html;
+  runCountUp(el);
 
   if (managerMonthlyData && managerMonthlyData.length > 0) {
     if (chartInstances.manager) chartInstances.manager.destroy();
@@ -891,20 +913,6 @@ function renderDirector(data, el) {
 
   html += `<div class="card"><div class="card-title">월별 매출 추이</div><div class="chart-wrap"><canvas id="directorChart"></canvas></div></div>`;
 
-  if (['director','admin'].includes(currentUser.role)) {
-    html += `<div class="upload-compact" onclick="document.getElementById('dirExcelFile').click()">
-      <span style="font-size:14px;color:var(--teal);font-weight:600">📄 극동 엑셀 업로드</span>
-      <span style="font-size:12px;color:var(--text-muted);margin-left:8px">(.xlsx 파일 선택)</span>
-      <input type="file" id="dirExcelFile" accept=".xlsx,.xls" onchange="uploadExcel(this)">
-    </div><div id="dirUploadResult"></div>`;
-  }
-
-  html += `<div class="card"><div class="card-title">추가 인센티브 항목</div>
-    <table class="data-table"><thead><tr><th>항목</th><th class="num">매출</th><th class="num">인센티브</th></tr></thead><tbody>
-    <tr><td>와이퍼 (0.3%)</td><td class="num">${fmtWon(data.extras.wiper.sales)}</td><td class="num text-teal">${fmtWon(data.extras.wiper.incentive)}</td></tr>
-    <tr><td>밧데리 (0.5%)</td><td class="num">${fmtWon(data.extras.battery.sales)}</td><td class="num text-teal">${fmtWon(data.extras.battery.incentive)}</td></tr>
-    <tr><td>에어컨필터 (1.0%)</td><td class="num">${fmtWon(data.extras.acFilter.sales)}</td><td class="num text-teal">${fmtWon(data.extras.acFilter.incentive)}</td></tr>
-  </tbody></table></div>`;
 
   el.innerHTML = html;
 
