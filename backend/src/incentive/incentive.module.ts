@@ -18,6 +18,8 @@ import { ManagerService } from './manager/manager.service';
 // Director
 import { DirectorController } from './director/director.controller';
 import { DirectorService } from './director/director.service';
+import { SalesTargetController } from './director/sales-target.controller';
+import { SalesTargetService } from './director/sales-target.service';
 
 // Upload
 import { UploadController } from './upload/upload.controller';
@@ -42,6 +44,7 @@ import { LogsController } from './logs/logs.controller';
     TeamController,
     ManagerController,
     DirectorController,
+    SalesTargetController,
     UploadController,
     MappingController,
     ConfigController,
@@ -54,6 +57,7 @@ import { LogsController } from './logs/logs.controller';
     TeamService,
     ManagerService,
     DirectorService,
+    SalesTargetService,
     UploadService,
   ],
 })

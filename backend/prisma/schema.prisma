@@ -619,6 +619,24 @@ model DirectorIncentiveData {
   @@unique([month, uploadDate])
 }
 
+// 월별 매출 목표 (매출 성장률 인센티브 대시보드)
+model MonthlySalesTarget {
+  id         String   @id @default(cuid())
+  year       Int
+  month      Int
+  lyTotal    BigInt   // 작년 동월 총매출
+  lyDays     Int      // 작년 영업일수
+  tysSales   BigInt   // 올해 누적매출
+  tyElapsed  Int      // 경과 영업일
+  tyRemain   Int      // 남은 영업일
+  customPct1 Float    @default(10)
+  customPct2 Float    @default(15)
+  updatedAt  DateTime @updatedAt
+  createdAt  DateTime @default(now())
+
+  @@unique([year, month])
+}
+
 // 상품코드 매핑
 model ProductCodeMapping {
   id          String  @id @default(uuid())
