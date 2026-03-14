@@ -1008,6 +1008,7 @@ async function loadAdminPanel() {
     html += `</div>
       <button class="btn-save" style="margin-top:12px;width:100%" onclick="saveMinQty()">최소수량 저장</button>
       <div id="minQtyResult" style="margin-top:8px"></div>
+      <div id="qtyHistoryTable" style="margin-top:16px"><div class="loading"><div class="spinner"></div></div></div>
     </div>`;
 
     html += `<div class="admin-section"><h3>극동 엑셀 업로드</h3>
@@ -1022,6 +1023,7 @@ async function loadAdminPanel() {
     const now = new Date();
     document.getElementById('minQtyMonth').value = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0');
     loadUploadHistory();
+    loadQtyHistory();
   } catch (e) { el.innerHTML = '<p style="color:var(--red)">관리자 패널 로드 실패</p>'; }
 }
 
@@ -1085,6 +1087,32 @@ async function saveMinQty() {
   } catch (e) {
     if (resultEl) resultEl.innerHTML = `<span style="color:var(--red);font-size:13px">${e.message}</span>`;
   }
+}
+
+async function loadQtyHistory() {
+  const el = document.getElementById('qtyHistoryTable');
+  if (!el) return;
+  try {
+    const data = await api('/team/item-qty-history');
+    if (!data || data.length === 0) { el.innerHTML = '<p style="font-size:13px;color:var(--text-muted)">데이터 없음</p>'; return; }
+    const months = data.map(d => d.month);
+    const itemKeys = Object.keys(ITEM_LABELS);
+    let h = `<div style="font-size:14px;font-weight:700;margin-bottom:8px">최근 ${months.length}개월 품목별 수량</div>`;
+    h += `<div style="overflow-x:auto"><table class="data-table" style="font-size:12px"><thead><tr><th>품목</th>`;
+    months.forEach(m => { h += `<th class="num">${m}</th>`; });
+    h += `</tr></thead><tbody>`;
+    itemKeys.forEach(key => {
+      h += `<tr><td style="font-weight:600;white-space:nowrap">${ITEM_LABELS[key]}</td>`;
+      months.forEach(m => {
+        const md = data.find(d => d.month === m);
+        const qty = md && md.items[key] ? md.items[key] : 0;
+        h += `<td class="num" style="${qty > 0 ? 'font-weight:600;color:#7C3AED' : 'color:#ccc'}">${qty}</td>`;
+      });
+      h += '</tr>';
+    });
+    h += '</tbody></table></div>';
+    el.innerHTML = h;
+  } catch (e) { el.innerHTML = '<p style="font-size:13px;color:var(--red)">수량 이력 로드 실패</p>'; }
 }
 
 async function loadUploadHistory() {

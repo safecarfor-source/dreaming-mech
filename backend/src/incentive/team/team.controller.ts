@@ -28,6 +28,11 @@ export class TeamController {
     return this.teamService.getCurrent(month);
   }
 
+  @Get('item-qty-history')
+  getItemQtyHistory() {
+    return this.teamService.getItemQtyHistory(5);
+  }
+
   @Post('targets')
   @UseGuards(RolesGuard)
   @Roles('admin')

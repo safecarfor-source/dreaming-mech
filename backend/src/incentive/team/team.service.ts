@@ -108,6 +108,27 @@ export class TeamService {
     return { month, weeks };
   }
 
+  // 최근 N개월 품목별 수량
+  async getItemQtyHistory(count = 5) {
+    const months = await this.prisma.incentiveData.findMany({
+      select: { month: true },
+      distinct: ['month'],
+      orderBy: { month: 'desc' },
+      take: count,
+    });
+
+    const result: Array<{ month: string; items: Record<string, number> }> = [];
+    for (const { month } of months.reverse()) {
+      const data = await this.getMonthData(month);
+      const items: Record<string, number> = {};
+      for (const [key, val] of Object.entries(data)) {
+        items[key] = val.qty;
+      }
+      result.push({ month, items });
+    }
+    return result;
+  }
+
   // 목표 설정
   async setTargets(month: string, targets: Record<string, number>) {
     for (const [itemKey, minQty] of Object.entries(targets)) {
