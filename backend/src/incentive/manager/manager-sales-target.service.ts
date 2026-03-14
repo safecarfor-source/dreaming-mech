@@ -48,18 +48,25 @@ export class ManagerSalesTargetService {
     return count;
   }
 
+  // 지난달 연/월 계산
+  private prevMonth(year: number, month: number): { year: number; month: number } {
+    if (month === 1) return { year: year - 1, month: 12 };
+    return { year, month: month - 1 };
+  }
+
   async get(year: number, month: number) {
-    // 1) 올해 해당월 타이어+얼라이먼트 매출 (ManagerIncentiveData)
+    // 1) 이번달 타이어+얼라이먼트 매출
     const thisMonthStr = this.toMonthStr(year, month);
     const thisData = await this.prisma.managerIncentiveData.findFirst({
       where: { month: thisMonthStr },
       orderBy: { uploadDate: 'desc' },
     });
 
-    // 2) 작년 동월 매출 (ManagerIncentiveData)
-    const lastYearStr = this.toMonthStr(year - 1, month);
-    const lastYearData = await this.prisma.managerIncentiveData.findFirst({
-      where: { month: lastYearStr },
+    // 2) 지난달 매출 (작년이 아니라 전월)
+    const prev = this.prevMonth(year, month);
+    const prevMonthStr = this.toMonthStr(prev.year, prev.month);
+    const prevData = await this.prisma.managerIncentiveData.findFirst({
+      where: { month: prevMonthStr },
       orderBy: { uploadDate: 'desc' },
     });
 
@@ -67,7 +74,7 @@ export class ManagerSalesTargetService {
     const now = new Date();
     const isCurrentMonth = year === now.getFullYear() && month === now.getMonth() + 1;
     const totalBusinessDays = this.countBusinessDays(year, month);
-    const lastYearBusinessDays = this.countBusinessDays(year - 1, month);
+    const prevBusinessDays = this.countBusinessDays(prev.year, prev.month);
 
     let tyElapsed: number;
     let tyRemain: number;
@@ -89,9 +96,9 @@ export class ManagerSalesTargetService {
 
     // 타이어+얼라이먼트 합산
     const tysSales = thisData ? Math.round(thisData.tireSales + thisData.alignmentSales) : null;
-    const lyTotal = lastYearData ? Math.round(lastYearData.tireSales + lastYearData.alignmentSales) : null;
+    const prevTotal = prevData ? Math.round(prevData.tireSales + prevData.alignmentSales) : null;
 
-    // ManagerMonthlySalesTarget에 관리자 오버라이드 있으면 영업일수 반영
+    // 오버라이드
     const override = await this.prisma.managerMonthlySalesTarget.findUnique({
       where: { year_month: { year, month } },
     });
@@ -99,17 +106,21 @@ export class ManagerSalesTargetService {
     return {
       year,
       month,
-      lyTotal: lyTotal,
-      lyDays: override?.lyDays ?? lastYearBusinessDays,
+      // 비교 대상: 지난달
+      prevTotal: prevTotal,
+      prevDays: override?.lyDays ?? prevBusinessDays,
+      prevYear: prev.year,
+      prevMonth: prev.month,
+      // 이번달
       tysSales: tysSales,
       tyElapsed: override?.tyElapsed ?? tyElapsed,
       tyRemain: override?.tyRemain ?? tyRemain,
       totalBusinessDays,
-      // 세부 매출 정보 (카드 표시용)
+      // 세부 매출
       tireSales: thisData ? Math.round(thisData.tireSales) : null,
       alignmentSales: thisData ? Math.round(thisData.alignmentSales) : null,
-      lyTireSales: lastYearData ? Math.round(lastYearData.tireSales) : null,
-      lyAlignmentSales: lastYearData ? Math.round(lastYearData.alignmentSales) : null,
+      prevTireSales: prevData ? Math.round(prevData.tireSales) : null,
+      prevAlignmentSales: prevData ? Math.round(prevData.alignmentSales) : null,
       autoPopulated: true,
     };
   }
@@ -124,13 +135,14 @@ export class ManagerSalesTargetService {
       where: { month: thisMonthStr },
       orderBy: { uploadDate: 'desc' },
     });
-    const lastYearStr = this.toMonthStr(year - 1, month);
-    const lastYearData = await this.prisma.managerIncentiveData.findFirst({
-      where: { month: lastYearStr },
+    const prev = this.prevMonth(year, month);
+    const prevMonthStr = this.toMonthStr(prev.year, prev.month);
+    const prevData = await this.prisma.managerIncentiveData.findFirst({
+      where: { month: prevMonthStr },
       orderBy: { uploadDate: 'desc' },
     });
 
-    const lyTotal = lastYearData ? Math.round(lastYearData.tireSales + lastYearData.alignmentSales) : 0;
+    const prevTotal = prevData ? Math.round(prevData.tireSales + prevData.alignmentSales) : 0;
     const tysSales = thisData ? Math.round(thisData.tireSales + thisData.alignmentSales) : 0;
 
     const record = await this.prisma.managerMonthlySalesTarget.upsert({
@@ -138,14 +150,14 @@ export class ManagerSalesTargetService {
       create: {
         year,
         month,
-        lyTotal: BigInt(lyTotal),
-        lyDays: data.lyDays ?? this.countBusinessDays(year - 1, month),
+        lyTotal: BigInt(prevTotal),
+        lyDays: data.lyDays ?? this.countBusinessDays(prev.year, prev.month),
         tysSales: BigInt(tysSales),
         tyElapsed: data.tyElapsed ?? 0,
         tyRemain: data.tyRemain ?? 0,
       },
       update: {
-        lyTotal: BigInt(lyTotal),
+        lyTotal: BigInt(prevTotal),
         tysSales: BigInt(tysSales),
         ...(data.lyDays !== undefined && { lyDays: data.lyDays }),
         ...(data.tyElapsed !== undefined && { tyElapsed: data.tyElapsed }),
@@ -157,8 +169,8 @@ export class ManagerSalesTargetService {
       id: record.id,
       year: record.year,
       month: record.month,
-      lyTotal: Number(record.lyTotal),
-      lyDays: record.lyDays,
+      prevTotal: Number(record.lyTotal),
+      prevDays: record.lyDays,
       tysSales: Number(record.tysSales),
       tyElapsed: record.tyElapsed,
       tyRemain: record.tyRemain,
