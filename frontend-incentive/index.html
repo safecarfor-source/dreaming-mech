@@ -510,6 +510,16 @@ function createStockChart(canvasId, labels, dataArr, options = {}) {
           grid: { color: '#f0f0f0', drawBorder: false },
           border: { display: false },
           ticks: { font: { size: 11, family: 'Pretendard' }, color: '#bbb', callback: yFormat },
+          ...(() => {
+            const nums = dataArr.filter(v => v !== null && v !== undefined);
+            if (nums.length < 2) return {};
+            const dMin = Math.min(...nums);
+            const dMax = Math.max(...nums);
+            const range = dMax - dMin;
+            if (range === 0) return {};
+            const pad = range * 0.05;
+            return { min: Math.floor(dMin - pad), max: Math.ceil(dMax + pad) };
+          })(),
         },
       },
       animation: { duration: 600, easing: 'easeOutQuart' },
