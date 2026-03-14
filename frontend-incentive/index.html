@@ -863,15 +863,22 @@ function renderManager(data, el) {
   html += `<div class="card"><div class="card-title">월별 인센티브 추이</div><div class="chart-wrap"><canvas id="managerChart"></canvas></div></div>`;
 
 
-  html += `<div class="card"><div class="card-title">매출 상세</div><table class="data-table"><tbody>
+  html += `<div class="card"><div class="card-title">타이어 매출</div><table class="data-table"><tbody>
     <tr><td>타이어 매출</td><td class="num">${fmtWon(data.tireSales)}</td></tr>
     <tr><td>얼라이먼트 매출</td><td class="num">${fmtWon(data.alignmentSales)}</td></tr>
     <tr style="font-weight:700;border-top:2px solid var(--border)"><td>합계</td><td class="num">${fmtWon(data.tireSales+data.alignmentSales)}</td></tr>
-    <tr><td>타이어 인센티브 (0.3%)</td><td class="num text-teal">${fmtWon(data.tireIncentive)}</td></tr>
-    <tr><td>팀 인센티브</td><td class="num">${fmtWon(data.teamIncentive)}</td></tr>
-    <tr><td>팀 보너스 (x1.5)</td><td class="num text-teal">${fmtWon(data.teamBonus)}</td></tr>
-    <tr style="font-weight:700;border-top:2px solid var(--border)"><td>총 인센티브</td><td class="num text-purple">${fmtWon(data.totalIncentive)}</td></tr>
+    <tr><td>타이어 인센티브 (0.3%)</td><td class="num text-teal font-weight:600">${fmtWon(data.tireIncentive)}</td></tr>
   </tbody></table></div>`;
+
+  html += `<div class="card"><div class="card-title">팀 인센티브</div><table class="data-table"><tbody>
+    <tr><td>팀 인센티브</td><td class="num">${fmtWon(data.teamIncentive)}</td></tr>
+    <tr><td>권중 프리미엄 (x1.5)</td><td class="num text-teal" style="font-weight:600">${fmtWon(data.teamBonus)}</td></tr>
+  </tbody></table></div>`;
+
+  html += `<div style="background:var(--purple);border-radius:12px;padding:16px;display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+    <span style="font-size:15px;font-weight:700;color:#fff">총 인센티브</span>
+    <span style="font-size:24px;font-weight:900;color:#fff">${fmtWon(data.totalIncentive)}</span>
+  </div>`;
 
   el.innerHTML = html;
   runCountUp(el);
