@@ -72,8 +72,13 @@ export class UploadService {
     // 카테고리별 합산
     const summary = this.summarize(parsed);
 
-    // dataDate가 있으면 사용자가 선택한 날짜, 없으면 현재 시각
-    const uploadDate = dataDate ? new Date(dataDate + 'T00:00:00+09:00') : new Date();
+    // uploadDate는 항상 현재 시각 (최신 데이터 판별용), dataDate는 참고용 메타데이터
+    const uploadDate = new Date();
+
+    // 해당 월의 기존 데이터 모두 삭제 후 새로 입력 (깔끔한 덮어쓰기)
+    await this.prisma.incentiveData.deleteMany({ where: { month } });
+    await this.prisma.managerIncentiveData.deleteMany({ where: { month } });
+    await this.prisma.directorIncentiveData.deleteMany({ where: { month } });
 
     // 업로드 레코드 저장 (자동 승인)
     const upload = await this.prisma.incentiveUpload.create({
@@ -83,12 +88,12 @@ export class UploadService {
         uploadDate,
         fileName,
         status: 'approved',
-        approvedAt: new Date(),
+        approvedAt: uploadDate,
         rawData: { parsed, summary, totalRevenue, dataDate: dataDate || null } as any,
       },
     });
 
-    // 자동으로 DB 반영 (팀 + 김권중 + 이정석)
+    // DB 반영 (팀 + 김권중 + 이정석)
     await this.applyToDb(month, uploadDate, summary, totalRevenue, uploaderId, upload.id);
 
     return {
