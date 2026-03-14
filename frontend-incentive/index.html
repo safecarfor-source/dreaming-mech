@@ -322,7 +322,7 @@ function createStockChart(canvasId, labels, dataArr, options = {}) {
     borderColor: hasNeg ? pointColors : mainColor,
     backgroundColor: grad,
     fill: true,
-    tension: 0.35,
+    tension: 0,
     borderWidth: 3,
     pointRadius: 6,
     pointHoverRadius: 9,
@@ -454,7 +454,7 @@ async function initApp() {
   document.getElementById('loginPage').style.display = 'none';
   document.getElementById('app').classList.add('active');
   document.getElementById('userName').textContent = currentUser.name;
-  const roleMap = { admin: '관리자', manager: '매니저', director: '부장', viewer: '기사' };
+  const roleMap = { admin: '관리자', manager: '매니저', director: '부장', viewer: '공용' };
   const roleEl = document.getElementById('userRole');
   roleEl.textContent = roleMap[currentUser.role] || currentUser.role;
   roleEl.className = 'role-badge role-' + currentUser.role;
@@ -550,6 +550,16 @@ function renderTeam(data, el) {
 
   // CHART (2nd section - right after stats)
   html += `<div class="card"><div class="card-title">월별 인센티브 추이</div><div class="chart-wrap"><canvas id="teamChart"></canvas></div></div>`;
+
+  // Upload area for viewer (shared account)
+  if (currentUser.role === 'viewer') {
+    html += `<div class="upload-compact" onclick="document.getElementById('viewerExcelFile').click()">
+      <span style="font-size:14px;color:var(--purple);font-weight:600">📄 극동 엑셀 업로드</span>
+      <span style="font-size:12px;color:var(--text-muted);margin-left:8px">(.xlsx 파일 선택)</span>
+      <input type="file" id="viewerExcelFile" accept=".xlsx,.xls" onchange="uploadExcel(this)">
+    </div>
+    <div id="viewerUploadResult"></div>`;
+  }
 
   // Min qty check
   if (data.minQtyCheck && data.minQtyCheck.items.length > 0) {

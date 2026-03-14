@@ -19,8 +19,8 @@ export class UploadController {
     @Body('month') month: string,
     @Request() req: any,
   ) {
-    // manager, director, admin만 업로드 가능
-    if (!['admin', 'manager', 'director'].includes(req.user.role)) {
+    // manager, director, admin, viewer 업로드 가능
+    if (!['admin', 'manager', 'director', 'viewer'].includes(req.user.role)) {
       throw new ForbiddenException('업로드 권한이 없습니다');
     }
     return this.uploadService.parseExcel(file.buffer, month, req.user.userId, file.originalname);
