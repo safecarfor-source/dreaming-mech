@@ -532,15 +532,122 @@ model PostLike {
 // 💰 인센티브 현황판 모델
 // ========================================
 
-model Incentive {
-  id        Int      @id @default(autoincrement())
-  month     String   // "26년 3월"
-  itemKey   String   // "brake_oil", "lining" 등
-  sales     Float    @default(0) // 매출액
-  qty       Int      @default(0) // 수량
+// 인센티브 전용 사용자
+model IncentiveUser {
+  id        String   @id @default(uuid())
+  loginId   String   @unique
+  password  String   // bcrypt
+  name      String
+  role      String   @default("viewer") // "admin", "manager", "director", "viewer"
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  editLogs  IncentiveEditLog[]
+  uploads   IncentiveUpload[]
+}
+
+// 극동 엑셀 업로드 이력
+model IncentiveUpload {
+  id          String   @id @default(uuid())
+  uploaderId  String
+  uploader    IncentiveUser @relation(fields: [uploaderId], references: [id])
+  month       String          // "26년 3월"
+  uploadDate  DateTime        // 업로드 날짜 (주간 집계용)
+  fileName    String
+  status      String   @default("pending") // "pending", "approved", "rejected"
+  approvedAt  DateTime?
+  rawData     Json?           // 파싱된 원본 데이터
+  createdAt   DateTime @default(now())
+
+  @@index([month])
+  @@index([status])
+}
+
+// 팀 인센티브 데이터
+model IncentiveData {
+  id         String   @id @default(uuid())
+  month      String          // "26년 3월"
+  uploadDate DateTime        // 이 데이터가 입력된 날짜 (주간 추이용)
+  itemKey    String          // "brake_oil" 등
+  sales      Float    @default(0)
+  qty        Int      @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([month, uploadDate, itemKey])
+  @@index([month])
+}
+
+// 품목별 최소수량 목표
+model IncentiveTarget {
+  id      String @id @default(uuid())
+  month   String
+  itemKey String
+  minQty  Int    @default(0)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@unique([month, itemKey])
-  @@index([month])
+}
+
+// 김권중(매니저) 인센티브 데이터
+model ManagerIncentiveData {
+  id             String   @id @default(uuid())
+  month          String
+  uploadDate     DateTime
+  tireSales      Float    @default(0)
+  alignmentSales Float    @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@unique([month, uploadDate])
+}
+
+// 이정석(부장) 인센티브 데이터
+model DirectorIncentiveData {
+  id            String   @id @default(uuid())
+  month         String
+  uploadDate    DateTime
+  totalRevenue  Float    @default(0)
+  wiperSales    Float    @default(0)
+  batterySales  Float    @default(0)
+  acFilterSales Float    @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([month, uploadDate])
+}
+
+// 상품코드 매핑
+model ProductCodeMapping {
+  id          String  @id @default(uuid())
+  code        String  @unique
+  isPrefix    Boolean @default(false)
+  category    String            // "tire", "brake_oil", "lining" 등
+  label       String            // 표시명
+  isIncentive Boolean @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// 인센티브 설정
+model IncentiveConfig {
+  id    String @id @default(uuid())
+  key   String @unique
+  value Float
+  label String
+  updatedAt DateTime @updatedAt
+}
+
+// 수정 이력
+model IncentiveEditLog {
+  id        String   @id @default(uuid())
+  userId    String
+  user      IncentiveUser @relation(fields: [userId], references: [id])
+  action    String          // "upload", "approve", "edit_mapping" 등
+  detail    String   @db.Text
+  editedAt  DateTime @default(now())
+
+  @@index([userId])
+  @@index([editedAt])
 }
