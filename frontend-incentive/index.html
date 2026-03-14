@@ -771,18 +771,13 @@ function renderTeam(data, el) {
       <div class="item-card-bottom"><span class="item-card-inc-label">인센티브</span><span class="item-card-inc-value" style="color:#7C3AED;font-weight:700">${fmtWon(item.inc)}</span></div>
     </div>`;
   });
-  if (zeroItems.length > 0) {
-    html += `<button class="zero-toggle" onclick="toggleZeroItems(this)">매출 없는 품목 ${zeroItems.length}개 보기</button>`;
-    html += `<div class="zero-items" style="display:none">`;
-    zeroItems.forEach(item => {
-      html += `<div class="item-card" style="opacity:0.4">
-        <div class="item-card-header"><span class="item-card-name">${item.label}</span></div>
-        <div class="item-card-mid">매출 0원 · 수량 0건</div>
-        <div class="item-card-bottom"><span class="item-card-inc-label">인센티브</span><span class="item-card-inc-value" style="color:#999">0원</span></div>
-      </div>`;
-    });
-    html += '</div>';
-  }
+  zeroItems.forEach(item => {
+    html += `<div class="item-card" style="opacity:0.4">
+      <div class="item-card-header"><span class="item-card-name">${item.label}</span></div>
+      <div class="item-card-mid">매출 0원 · 수량 0건</div>
+      <div class="item-card-bottom"><span class="item-card-inc-label">인센티브</span><span class="item-card-inc-value" style="color:#999">0원</span></div>
+    </div>`;
+  });
   html += '</div>';
 
   // Desktop: Table (sorted by sales desc)
