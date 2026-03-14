@@ -730,45 +730,79 @@ function renderTeam(data, el) {
     else zeroItems.push(item);
   }
 
+  // Summary cards
+  html += `<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px;max-width:480px">
+    <div style="background:#fff;border:1px solid #E5E7EB;border-radius:12px;padding:14px;text-align:center">
+      <div style="font-size:12px;color:#888;margin-bottom:4px">총 인센티브</div>
+      <div style="font-size:20px;font-weight:800;color:#7C3AED" data-countup="${totalInc}">${fmtWon(totalInc)}</div>
+    </div>
+    <div style="background:#fff;border:1px solid #E5E7EB;border-radius:12px;padding:14px;text-align:center">
+      <div style="font-size:12px;color:#888;margin-bottom:4px">활성 품목</div>
+      <div style="font-size:20px;font-weight:800;color:#1D9E75">${activeItems.length}개</div>
+    </div>
+    <div style="background:#fff;border:1px solid #E5E7EB;border-radius:12px;padding:14px;text-align:center">
+      <div style="font-size:12px;color:#888;margin-bottom:4px">총 매출</div>
+      <div style="font-size:20px;font-weight:800;color:#378ADD" data-countup="${totalSales}">${fmtWon(totalSales)}</div>
+    </div>
+  </div>`;
+
+  // Mini bar chart (active items only, sorted by sales desc)
+  const sortedActive = [...activeItems].sort((a,b) => b.sales - a.sales);
+  const maxSales = sortedActive.length > 0 ? sortedActive[0].sales : 1;
+  html += `<div class="card" style="max-width:480px"><div class="card-title">품목별 매출</div>`;
+  sortedActive.forEach(item => {
+    const pct = Math.max(8, Math.round(item.sales / maxSales * 100));
+    html += `<div style="display:flex;align-items:center;margin-bottom:8px">
+      <div style="width:80px;font-size:13px;font-weight:600;color:#333;flex-shrink:0">${item.label}</div>
+      <div style="flex:1;position:relative;height:28px;background:#F3F0FF;border-radius:6px;overflow:hidden">
+        <div style="width:${pct}%;height:100%;background:linear-gradient(90deg,#7C3AED,#A78BFA);border-radius:6px;display:flex;align-items:center;justify-content:flex-end;padding-right:8px">
+          <span style="font-size:11px;font-weight:700;color:#fff;white-space:nowrap">${fmtWon(item.sales)}</span>
+        </div>
+      </div>
+    </div>`;
+  });
+  html += `</div>`;
+
+  // All items sorted by sales desc
+  const allItemsSorted = [...sortedActive, ...zeroItems];
+
   // Mobile: Card list
-  html += `<div class="item-card-list">`;
-  activeItems.forEach(item => {
-    html += `<div class="item-card">
-      <div class="item-card-header"><span class="item-card-name">${item.label}</span><span class="item-card-rate"></span></div>
+  html += `<div class="item-card-list" style="max-width:480px">`;
+  sortedActive.forEach(item => {
+    html += `<div class="item-card" style="background:#F9F5FF">
+      <div class="item-card-header"><span class="item-card-name" style="font-weight:700"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#7C3AED;margin-right:6px"></span>${item.label}</span></div>
       <div class="item-card-mid">매출 ${fmtWon(item.sales)} · 수량 ${item.qty}건</div>
-      <div class="item-card-bottom"><span class="item-card-inc-label">인센티브</span><span class="item-card-inc-value">${fmtWon(item.inc)}</span></div>
+      <div class="item-card-bottom"><span class="item-card-inc-label">인센티브</span><span class="item-card-inc-value" style="color:#7C3AED;font-weight:700">${fmtWon(item.inc)}</span></div>
     </div>`;
   });
   if (zeroItems.length > 0) {
     html += `<button class="zero-toggle" onclick="toggleZeroItems(this)">매출 없는 품목 ${zeroItems.length}개 보기</button>`;
     html += `<div class="zero-items" style="display:none">`;
     zeroItems.forEach(item => {
-      html += `<div class="item-card inactive">
-        <div class="item-card-header"><span class="item-card-name">${item.label}</span><span class="item-card-rate"></span></div>
+      html += `<div class="item-card" style="opacity:0.4">
+        <div class="item-card-header"><span class="item-card-name">${item.label}</span></div>
         <div class="item-card-mid">매출 0원 · 수량 0건</div>
-        <div class="item-card-bottom"><span class="item-card-inc-label">인센티브</span><span class="item-card-inc-value">0원</span></div>
+        <div class="item-card-bottom"><span class="item-card-inc-label">인센티브</span><span class="item-card-inc-value" style="color:#999">0원</span></div>
       </div>`;
     });
     html += '</div>';
   }
   html += '</div>';
 
-  // Desktop: Table
-  html += `<div class="desktop-table"><div class="card"><div class="card-title">품목별 매출 & 인센티브</div>
+  // Desktop: Table (sorted by sales desc)
+  html += `<div class="desktop-table" style="max-width:480px"><div class="card"><div class="card-title">품목별 매출 & 인센티브</div>
     <table class="data-table"><thead><tr><th>품목</th><th class="num">매출</th><th class="num">수량</th><th class="num">인센티브</th></tr></thead><tbody>`;
-  [...activeItems, ...zeroItems].forEach(item => {
-    html += `<tr><td>${item.label}</td><td class="num">${fmtWon(item.sales)}</td><td class="num">${item.qty}</td><td class="num text-purple">${fmtWon(item.inc)}</td></tr>`;
+  allItemsSorted.forEach(item => {
+    const hasS = item.sales > 0;
+    html += `<tr style="${hasS?'background:#F9F5FF;font-weight:600':'opacity:0.4'}">
+      <td>${hasS?'<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#7C3AED;margin-right:6px"></span>':''}${item.label}</td>
+      <td class="num">${fmtWon(item.sales)}</td><td class="num">${item.qty}</td>
+      <td class="num" style="font-weight:700;color:${hasS?'#7C3AED':'#999'}">${fmtWon(item.inc)}</td></tr>`;
   });
-  html += `<tr style="font-weight:700;border-top:2px solid var(--border)"><td>합계</td><td class="num">${fmtWon(totalSales)}</td><td></td><td class="num text-purple">${fmtWon(totalInc)}</td></tr></tbody></table></div></div>`;
-
-  // Summary footer
-  html += `<div class="summary-footer">
-    <div class="sf-item"><div class="sf-label">총 매출</div><div class="sf-value">${fmtWon(totalSales)}</div></div>
-    <div class="sf-divider"></div>
-    <div class="sf-item"><div class="sf-label">총 인센티브</div><div class="sf-value">${fmtWon(totalInc)}</div></div>
-  </div>`;
+  html += `<tr style="font-weight:700;border-top:2px solid var(--border)"><td>합계</td><td class="num">${fmtWon(totalSales)}</td><td></td><td class="num" style="color:#7C3AED">${fmtWon(totalInc)}</td></tr></tbody></table></div></div>`;
 
   el.innerHTML = html;
+  runCountUp(el);
 
   // Render chart
   if (teamMonthlyData && teamMonthlyData.length > 0) {
@@ -939,13 +973,20 @@ async function loadAdminPanel() {
     const configs = await api('/config');
     let html = '';
 
-    html += `<div class="admin-section"><h3>인센티브 설정값</h3>`;
-    configs.forEach(c => {
-      html += `<div class="config-row"><span class="config-label">${c.label||c.key}</span>
-        <input type="number" step="any" value="${c.value}" id="cfg-${c.key}">
-        <button class="btn-save" onclick="saveConfig('${c.key}')">저장</button></div>`;
-    });
-    html += '</div>';
+    const hiddenKeys = ['director_acfilter_rate','director_battery_rate','director_wiper_rate'];
+    const directorConfigs = configs.filter(c => c.key.startsWith('director_') && !hiddenKeys.includes(c.key));
+    const managerConfigs = configs.filter(c => c.key.startsWith('manager_'));
+    const otherConfigs = configs.filter(c => !c.key.startsWith('director_') && !c.key.startsWith('manager_') && !hiddenKeys.includes(c.key));
+
+    const renderCfg = (list) => list.map(c => `<div class="config-row"><span class="config-label">${c.label||c.key}</span>
+      <input type="number" step="any" value="${c.value}" id="cfg-${c.key}">
+      <button class="btn-save" onclick="saveConfig('${c.key}')">저장</button></div>`).join('');
+
+    html += `<div class="admin-section"><h3>이정석 부장 — 인센티브 설정</h3>${renderCfg(directorConfigs)}</div>`;
+    html += `<div class="admin-section"><h3>김권중 매니저 — 인센티브 설정</h3>${renderCfg(managerConfigs)}</div>`;
+    if (otherConfigs.length > 0) {
+      html += `<div class="admin-section"><h3>공통 설정</h3>${renderCfg(otherConfigs)}</div>`;
+    }
 
     try {
       const users = await api('/users');
@@ -961,6 +1002,23 @@ async function loadAdminPanel() {
       html += '</tbody></table></div>';
     } catch (e) { html += '<p style="color:var(--red);margin-bottom:20px">계정 목록 로드 실패</p>'; }
 
+    // Min qty settings
+    html += `<div class="admin-section"><h3>팀 인센티브 — 항목별 최소수량</h3>
+      <div style="margin-bottom:12px">
+        <label style="font-size:13px;color:var(--text-muted);margin-right:8px">대상 월:</label>
+        <input type="month" id="minQtyMonth" style="padding:6px 12px;border:1px solid var(--border);border-radius:8px;font-family:Pretendard">
+      </div>
+      <div id="minQtyGrid" style="display:grid;grid-template-columns:1fr 1fr;gap:8px">`;
+    Object.entries(ITEM_LABELS).forEach(([key, label]) => {
+      html += `<div class="config-row" style="margin-bottom:0"><span class="config-label" style="flex:1;font-size:13px">${label}</span>
+        <input type="number" min="0" value="0" id="minqty-${key}" style="width:70px">
+      </div>`;
+    });
+    html += `</div>
+      <button class="btn-save" style="margin-top:12px;width:100%" onclick="saveMinQty()">최소수량 저장</button>
+      <div id="minQtyResult" style="margin-top:8px"></div>
+    </div>`;
+
     html += `<div class="admin-section"><h3>극동 엑셀 업로드</h3>
       <div class="upload-area" onclick="document.getElementById('excelFile').click()">
         <div class="upload-icon">📄</div><div class="upload-text">극동 매출 엑셀 파일을 선택하세요 (.xlsx)</div>
@@ -970,6 +1028,8 @@ async function loadAdminPanel() {
     html += `<div class="admin-section"><h3>업로드 이력</h3><div id="uploadHistory"><div class="loading"><div class="spinner"></div></div></div></div>`;
 
     el.innerHTML = html;
+    const now = new Date();
+    document.getElementById('minQtyMonth').value = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0');
     loadUploadHistory();
   } catch (e) { el.innerHTML = '<p style="color:var(--red)">관리자 패널 로드 실패</p>'; }
 }
@@ -1016,6 +1076,24 @@ async function approveUpload(id) {
     teamMonthlyData = null; managerMonthlyData = null; directorMonthlyData = null;
     loadUploadHistory();
   } catch (e) { alert('승인 실패: ' + e.message); }
+}
+
+async function saveMinQty() {
+  const month = document.getElementById('minQtyMonth').value;
+  if (!month) { alert('대상 월을 선택하세요'); return; }
+  const targets = {};
+  Object.keys(ITEM_LABELS).forEach(key => {
+    const input = document.getElementById('minqty-' + key);
+    if (input) targets[key] = parseInt(input.value) || 0;
+  });
+  const resultEl = document.getElementById('minQtyResult');
+  try {
+    await api('/team/targets', { method: 'POST', body: JSON.stringify({ month, targets }) });
+    if (resultEl) resultEl.innerHTML = '<span style="color:var(--green);font-size:13px;font-weight:600">저장 완료</span>';
+    teamMonthlyData = null;
+  } catch (e) {
+    if (resultEl) resultEl.innerHTML = `<span style="color:var(--red);font-size:13px">${e.message}</span>`;
+  }
 }
 
 async function loadUploadHistory() {
