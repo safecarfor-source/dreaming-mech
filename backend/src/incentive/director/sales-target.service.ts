@@ -154,6 +154,12 @@ export class SalesTargetService {
       },
     });
 
+    // 김권중 영업일수도 동기화 (같은 영업일수 공유)
+    await this.syncManagerBusinessDays(year, month, {
+      tyElapsed: record.tyElapsed,
+      tyRemain: record.tyRemain,
+    });
+
     return {
       id: record.id,
       year: record.year,
@@ -164,6 +170,34 @@ export class SalesTargetService {
       tyElapsed: record.tyElapsed,
       tyRemain: record.tyRemain,
     };
+  }
+
+  // 김권중 영업일수 동기화
+  private async syncManagerBusinessDays(year: number, month: number, data: { tyElapsed: number; tyRemain: number }) {
+    try {
+      const existing = await this.prisma.managerMonthlySalesTarget.findUnique({
+        where: { year_month: { year, month } },
+      });
+      if (existing) {
+        await this.prisma.managerMonthlySalesTarget.update({
+          where: { year_month: { year, month } },
+          data: { tyElapsed: data.tyElapsed, tyRemain: data.tyRemain },
+        });
+      } else {
+        await this.prisma.managerMonthlySalesTarget.create({
+          data: {
+            year, month,
+            lyTotal: BigInt(0),
+            lyDays: this.countBusinessDays(year, month === 1 ? 12 : month - 1),
+            tysSales: BigInt(0),
+            tyElapsed: data.tyElapsed,
+            tyRemain: data.tyRemain,
+          },
+        });
+      }
+    } catch (e) {
+      // 동기화 실패해도 메인 저장은 유지
+    }
   }
 
   // "26년 3월" 형태로 변환

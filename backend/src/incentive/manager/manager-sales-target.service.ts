@@ -165,6 +165,12 @@ export class ManagerSalesTargetService {
       },
     });
 
+    // 이정석 영업일수도 동기화 (같은 영업일수 공유)
+    await this.syncDirectorBusinessDays(year, month, {
+      tyElapsed: record.tyElapsed,
+      tyRemain: record.tyRemain,
+    });
+
     return {
       id: record.id,
       year: record.year,
@@ -175,6 +181,36 @@ export class ManagerSalesTargetService {
       tyElapsed: record.tyElapsed,
       tyRemain: record.tyRemain,
     };
+  }
+
+  // 이정석 영업일수 동기화
+  private async syncDirectorBusinessDays(year: number, month: number, data: { tyElapsed: number; tyRemain: number }) {
+    try {
+      const existing = await this.prisma.monthlySalesTarget.findUnique({
+        where: { year_month: { year, month } },
+      });
+      if (existing) {
+        await this.prisma.monthlySalesTarget.update({
+          where: { year_month: { year, month } },
+          data: { tyElapsed: data.tyElapsed, tyRemain: data.tyRemain },
+        });
+      } else {
+        await this.prisma.monthlySalesTarget.create({
+          data: {
+            year, month,
+            lyTotal: BigInt(0),
+            lyDays: this.countBusinessDays(year - 1, month),
+            tysSales: BigInt(0),
+            tyElapsed: data.tyElapsed,
+            tyRemain: data.tyRemain,
+            customPct1: 10,
+            customPct2: 15,
+          },
+        });
+      }
+    } catch (e) {
+      // 동기화 실패해도 메인 저장은 유지
+    }
   }
 
   private toMonthStr(year: number, month: number): string {
