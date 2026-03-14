@@ -1,0 +1,1207 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>인센티브 현황판 - 꿈꾸는 정비사</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
+
+:root {
+  --bg: #f5f5f0;
+  --card: #ffffff;
+  --text: #2c2c2a;
+  --text-muted: #888780;
+  --text-light: #b4b2a9;
+  --border: #e8e6df;
+  --purple: #7C3AED;
+  --purple-light: #EEEDFE;
+  --teal: #1D9E75;
+  --teal-light: #E1F5EE;
+  --coral: #D85A30;
+  --coral-light: #FAECE7;
+  --blue: #378ADD;
+  --blue-light: #E6F1FB;
+  --amber: #BA7517;
+  --amber-light: #FAEEDA;
+  --red: #E24B4A;
+  --red-light: #FCEBEB;
+  --green: #639922;
+  --green-light: #EAF3DE;
+  --shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family: 'Noto Sans KR', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+}
+
+/* --- Login --- */
+.login-page {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  padding: 24px;
+}
+.login-box {
+  background: var(--card);
+  border-radius: 16px;
+  padding: 48px 40px;
+  width: 100%;
+  max-width: 400px;
+  box-shadow: var(--shadow);
+  text-align: center;
+}
+.login-box h1 {
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+.login-box .subtitle {
+  color: var(--text-muted);
+  font-size: 14px;
+  margin-bottom: 32px;
+}
+.login-box input {
+  width: 100%;
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-size: 15px;
+  font-family: inherit;
+  margin-bottom: 12px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.login-box input:focus { border-color: var(--purple); }
+.login-box button {
+  width: 100%;
+  padding: 14px;
+  background: var(--purple);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  margin-top: 8px;
+  transition: opacity 0.2s;
+}
+.login-box button:hover { opacity: 0.9; }
+.login-error {
+  color: var(--red);
+  font-size: 13px;
+  margin-top: 12px;
+  min-height: 20px;
+}
+
+/* --- App Shell --- */
+.app { display: none; }
+.app.active { display: block; }
+.top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+  background: var(--card);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.top-bar .logo {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--purple);
+}
+.top-bar .user-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 14px;
+  color: var(--text-muted);
+}
+.top-bar .user-info .name { font-weight: 600; color: var(--text); }
+.top-bar .user-info .role-badge {
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.role-admin { background: var(--purple-light); color: var(--purple); }
+.role-manager { background: var(--blue-light); color: var(--blue); }
+.role-director { background: var(--teal-light); color: var(--teal); }
+.role-viewer { background: #f0f0ec; color: var(--text-muted); }
+.btn-logout {
+  padding: 6px 14px;
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 13px;
+  font-family: inherit;
+  cursor: pointer;
+  color: var(--text-muted);
+}
+.btn-logout:hover { background: var(--red-light); color: var(--red); border-color: var(--red); }
+
+/* --- Tabs --- */
+.tab-bar {
+  display: flex;
+  gap: 0;
+  background: var(--card);
+  border-bottom: 1px solid var(--border);
+  padding: 0 24px;
+  overflow-x: auto;
+}
+.tab-btn {
+  padding: 14px 24px;
+  font-size: 14px;
+  font-weight: 500;
+  font-family: inherit;
+  color: var(--text-muted);
+  background: none;
+  border: none;
+  border-bottom: 3px solid transparent;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s;
+}
+.tab-btn:hover { color: var(--text); }
+.tab-btn.active { color: var(--purple); border-bottom-color: var(--purple); font-weight: 700; }
+
+/* --- Content --- */
+.content { padding: 24px; max-width: 1200px; margin: 0 auto; }
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+/* --- Cards --- */
+.card {
+  background: var(--card);
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: var(--shadow);
+  margin-bottom: 20px;
+}
+.card-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 16px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* --- Stat Grid --- */
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 20px;
+}
+.stat-card {
+  background: var(--card);
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: var(--shadow);
+  text-align: center;
+}
+.stat-card .label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+.stat-card .value {
+  font-size: 28px;
+  font-weight: 700;
+}
+.stat-card .sub {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+.text-purple { color: var(--purple); }
+.text-teal { color: var(--teal); }
+.text-red { color: var(--red); }
+.text-blue { color: var(--blue); }
+.text-amber { color: var(--amber); }
+.text-green { color: var(--green); }
+
+/* --- Loss Banner --- */
+.loss-banner {
+  background: var(--red-light);
+  border: 2px solid var(--red);
+  border-radius: 12px;
+  padding: 20px 24px;
+  text-align: center;
+  margin-bottom: 20px;
+}
+.loss-banner .loss-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--red);
+  margin-bottom: 6px;
+}
+.loss-banner .loss-amount {
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--red);
+}
+.ok-banner {
+  background: var(--green-light);
+  border: 2px solid var(--green);
+  border-radius: 12px;
+  padding: 20px 24px;
+  text-align: center;
+  margin-bottom: 20px;
+}
+.ok-banner .ok-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--green);
+}
+.ok-banner .ok-amount {
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--green);
+}
+
+/* --- Table --- */
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+.data-table th {
+  text-align: left;
+  padding: 10px 12px;
+  font-weight: 600;
+  font-size: 12px;
+  color: var(--text-muted);
+  border-bottom: 2px solid var(--border);
+  text-transform: uppercase;
+}
+.data-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+}
+.data-table tr:last-child td { border-bottom: none; }
+.data-table .num { text-align: right; font-variant-numeric: tabular-nums; }
+.data-table .met { color: var(--green); font-weight: 600; }
+.data-table .unmet { color: var(--red); font-weight: 600; }
+
+/* --- Progress bar --- */
+.progress-wrap {
+  height: 8px;
+  background: #eee;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-top: 6px;
+}
+.progress-bar {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.6s ease;
+}
+
+/* --- Chart --- */
+.chart-wrap { position: relative; height: 300px; margin-top: 16px; }
+.chart-wrap canvas { width: 100% !important; }
+
+/* --- Month Selector --- */
+.month-sel {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.month-sel select {
+  padding: 8px 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+  background: var(--card);
+  cursor: pointer;
+}
+
+/* --- Admin --- */
+.admin-section { margin-bottom: 32px; }
+.admin-section h3 {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--purple);
+}
+.config-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+.config-row:last-child { border-bottom: none; }
+.config-row .config-label { font-size: 14px; flex: 1; }
+.config-row input {
+  width: 120px;
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 14px;
+  text-align: right;
+  font-family: inherit;
+}
+.btn-save {
+  padding: 6px 16px;
+  background: var(--purple);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-family: inherit;
+  cursor: pointer;
+  margin-left: 8px;
+}
+.btn-save:hover { opacity: 0.9; }
+
+/* --- Upload --- */
+.upload-area {
+  border: 2px dashed var(--border);
+  border-radius: 12px;
+  padding: 40px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+.upload-area:hover { border-color: var(--purple); }
+.upload-area input { display: none; }
+.upload-area .upload-icon { font-size: 40px; color: var(--text-light); margin-bottom: 12px; }
+.upload-area .upload-text { font-size: 14px; color: var(--text-muted); }
+
+/* --- Responsive --- */
+@media (max-width: 768px) {
+  .content { padding: 16px; }
+  .stat-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .stat-card .value { font-size: 22px; }
+  .loss-banner .loss-amount, .ok-banner .ok-amount { font-size: 24px; }
+  .top-bar { padding: 12px 16px; }
+  .tab-btn { padding: 12px 16px; font-size: 13px; }
+}
+@media (max-width: 480px) {
+  .stat-grid { grid-template-columns: 1fr 1fr; }
+  .stat-card { padding: 14px; }
+  .stat-card .value { font-size: 20px; }
+}
+
+/* --- Loading --- */
+.loading {
+  text-align: center;
+  padding: 60px;
+  color: var(--text-muted);
+  font-size: 14px;
+}
+.spinner {
+  width: 32px; height: 32px;
+  border: 3px solid var(--border);
+  border-top-color: var(--purple);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin: 0 auto 12px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<!-- ===== LOGIN ===== -->
+<div id="loginPage" class="login-page">
+  <div class="login-box">
+    <h1>인센티브 현황판</h1>
+    <p class="subtitle">꿈꾸는 정비사</p>
+    <input type="text" id="loginId" placeholder="아이디" autocomplete="username">
+    <input type="password" id="loginPw" placeholder="비밀번호" autocomplete="current-password">
+    <button onclick="doLogin()">로그인</button>
+    <div class="login-error" id="loginError"></div>
+  </div>
+</div>
+
+<!-- ===== APP ===== -->
+<div id="app" class="app">
+  <!-- Top Bar -->
+  <div class="top-bar">
+    <span class="logo">인센티브 현황판</span>
+    <div class="user-info">
+      <span class="name" id="userName"></span>
+      <span class="role-badge" id="userRole"></span>
+      <button class="btn-logout" onclick="doLogout()">로그아웃</button>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tab-bar" id="tabBar"></div>
+
+  <!-- Content -->
+  <div class="content">
+    <!-- Team Tab -->
+    <div class="tab-content" id="tab-team">
+      <div class="month-sel">
+        <label>조회 월:</label>
+        <select id="teamMonthSel" onchange="loadTeamData()"></select>
+      </div>
+      <div id="teamContent"><div class="loading"><div class="spinner"></div>로딩 중...</div></div>
+    </div>
+
+    <!-- Manager Tab -->
+    <div class="tab-content" id="tab-manager">
+      <div class="month-sel">
+        <label>조회 월:</label>
+        <select id="managerMonthSel" onchange="loadManagerData()"></select>
+      </div>
+      <div id="managerContent"><div class="loading"><div class="spinner"></div>로딩 중...</div></div>
+    </div>
+
+    <!-- Director Tab -->
+    <div class="tab-content" id="tab-director">
+      <div class="month-sel">
+        <label>조회 월:</label>
+        <select id="directorMonthSel" onchange="loadDirectorData()"></select>
+      </div>
+      <div id="directorContent"><div class="loading"><div class="spinner"></div>로딩 중...</div></div>
+    </div>
+
+    <!-- Admin Tab -->
+    <div class="tab-content" id="tab-admin">
+      <div id="adminContent"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = '/api/incentive';
+let token = localStorage.getItem('inc_token');
+let currentUser = null;
+let chartInstances = {};
+
+// ===== Utility =====
+function fmt(n) {
+  if (n == null) return '-';
+  return Math.round(n).toLocaleString('ko-KR');
+}
+function fmtWon(n) {
+  if (n == null) return '-';
+  return fmt(n) + '원';
+}
+function pct(a, b) {
+  if (!b) return '0%';
+  return Math.round(a / b * 100) + '%';
+}
+
+async function api(path, opts = {}) {
+  const res = await fetch(API + path, {
+    ...opts,
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + token,
+      ...opts.headers,
+    },
+  });
+  if (res.status === 401) { doLogout(); throw new Error('인증 만료'); }
+  if (!res.ok) throw new Error('API 오류: ' + res.status);
+  return res.json();
+}
+
+// ===== Auth =====
+async function doLogin() {
+  const loginId = document.getElementById('loginId').value.trim();
+  const pw = document.getElementById('loginPw').value;
+  const errEl = document.getElementById('loginError');
+  errEl.textContent = '';
+
+  if (!loginId || !pw) { errEl.textContent = '아이디와 비밀번호를 입력하세요'; return; }
+
+  try {
+    const res = await fetch(API + '/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ loginId, password: pw }),
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      errEl.textContent = data.message || '로그인 실패';
+      return;
+    }
+    const data = await res.json();
+    token = data.token;
+    localStorage.setItem('inc_token', token);
+    await initApp();
+  } catch (e) {
+    errEl.textContent = '서버 연결 실패';
+  }
+}
+
+function doLogout() {
+  token = null;
+  currentUser = null;
+  localStorage.removeItem('inc_token');
+  document.getElementById('app').classList.remove('active');
+  document.getElementById('loginPage').style.display = 'flex';
+  document.getElementById('loginId').value = '';
+  document.getElementById('loginPw').value = '';
+}
+
+// ===== Init =====
+async function initApp() {
+  try {
+    currentUser = await api('/auth/me');
+  } catch {
+    doLogout();
+    return;
+  }
+
+  document.getElementById('loginPage').style.display = 'none';
+  document.getElementById('app').classList.add('active');
+  document.getElementById('userName').textContent = currentUser.name;
+
+  const roleMap = { admin: '관리자', manager: '매니저', director: '부장', viewer: '기사' };
+  const roleEl = document.getElementById('userRole');
+  roleEl.textContent = roleMap[currentUser.role] || currentUser.role;
+  roleEl.className = 'role-badge role-' + currentUser.role;
+
+  buildTabs();
+}
+
+function buildTabs() {
+  const bar = document.getElementById('tabBar');
+  bar.innerHTML = '';
+
+  const tabs = [{ id: 'team', label: '팀 인센티브' }];
+  if (currentUser.access.includes('manager')) tabs.push({ id: 'manager', label: '김권중' });
+  if (currentUser.access.includes('director')) tabs.push({ id: 'director', label: '이정석' });
+  if (currentUser.access.includes('admin')) tabs.push({ id: 'admin', label: '관리자' });
+
+  tabs.forEach((t, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'tab-btn' + (i === 0 ? ' active' : '');
+    btn.textContent = t.label;
+    btn.onclick = () => switchTab(t.id, btn);
+    bar.appendChild(btn);
+  });
+
+  switchTab(tabs[0].id, bar.querySelector('.tab-btn'));
+}
+
+function switchTab(tabId, btn) {
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab-' + tabId).classList.add('active');
+  if (btn) btn.classList.add('active');
+
+  if (tabId === 'team') loadTeamInit();
+  else if (tabId === 'manager') loadManagerInit();
+  else if (tabId === 'director') loadDirectorInit();
+  else if (tabId === 'admin') loadAdminPanel();
+}
+
+// ===== TEAM =====
+let teamMonthlyData = null;
+
+async function loadTeamInit() {
+  if (teamMonthlyData) return;
+  try {
+    teamMonthlyData = await api('/team/monthly');
+    const sel = document.getElementById('teamMonthSel');
+    sel.innerHTML = '';
+    teamMonthlyData.forEach((m, i) => {
+      const opt = document.createElement('option');
+      opt.value = m.month;
+      opt.textContent = m.month;
+      if (i === teamMonthlyData.length - 1) opt.selected = true;
+      sel.appendChild(opt);
+    });
+    loadTeamData();
+  } catch (e) {
+    document.getElementById('teamContent').innerHTML = '<p style="color:var(--red)">데이터 로드 실패</p>';
+  }
+}
+
+async function loadTeamData() {
+  const month = document.getElementById('teamMonthSel').value;
+  if (!month) return;
+  const el = document.getElementById('teamContent');
+  el.innerHTML = '<div class="loading"><div class="spinner"></div>로딩 중...</div>';
+
+  try {
+    const data = await api('/team/current?month=' + encodeURIComponent(month));
+    renderTeam(data, el);
+  } catch (e) {
+    el.innerHTML = '<p style="color:var(--red)">데이터 로드 실패</p>';
+  }
+}
+
+const ITEM_LABELS = {
+  brake_oil: '브레이크오일', lining: '라이닝', mission_oil: '미션오일',
+  diff_oil: '데후오일', wiper: '와이퍼', battery: '밧데리',
+  ac_filter: '에어컨필터', guardian_h3: '가디안H3', guardian_h5: '가디안H5', guardian_h7: '가디안H7',
+};
+const ITEM_RATES = {
+  brake_oil: 2.8, lining: 1.4, mission_oil: 2.8, diff_oil: 1.0,
+  wiper: 0.3, battery: 0.5, ac_filter: 1.0,
+  guardian_h3: 2.0, guardian_h5: 2.0, guardian_h7: 2.0,
+};
+
+function renderTeam(data, el) {
+  const inc = data.incentive;
+  const isLoss = inc.lost > 0;
+
+  let html = '';
+
+  // Layer 1: 핵심 금액
+  if (isLoss) {
+    html += `<div class="loss-banner">
+      <div class="loss-label">최소수량 미달로 잃은 금액</div>
+      <div class="loss-amount">-${fmtWon(inc.lost)}</div>
+    </div>`;
+  }
+
+  html += `<div class="stat-grid">
+    <div class="stat-card">
+      <div class="label">이번 달 인센티브</div>
+      <div class="value ${isLoss ? 'text-amber' : 'text-purple'}">${fmtWon(inc.actual)}</div>
+      ${isLoss ? `<div class="sub">감액 전: ${fmtWon(inc.calculated)}</div>` : ''}
+    </div>
+    <div class="stat-card">
+      <div class="label">감액률</div>
+      <div class="value ${isLoss ? 'text-red' : 'text-green'}">${isLoss ? '50%' : '0%'}</div>
+      <div class="sub">${isLoss ? '최소수량 미달' : '정상 지급'}</div>
+    </div>`;
+
+  if (data.prevMonth) {
+    const diff = inc.actual - (data.prevMonth.incentive || 0);
+    html += `<div class="stat-card">
+      <div class="label">전월 대비</div>
+      <div class="value ${diff >= 0 ? 'text-teal' : 'text-red'}">${diff >= 0 ? '+' : ''}${fmtWon(diff)}</div>
+      <div class="sub">${data.prevMonth.month}: ${fmtWon(data.prevMonth.incentive)}</div>
+    </div>`;
+  }
+  html += '</div>';
+
+  // Layer 2: 최소수량 체크
+  if (data.minQtyCheck && data.minQtyCheck.items.length > 0) {
+    html += `<div class="card">
+      <div class="card-title">최소수량 달성 현황 (${data.minQtyCheck.metCount}/${data.minQtyCheck.totalCount})</div>
+      <table class="data-table"><thead><tr>
+        <th>항목</th><th class="num">현재</th><th class="num">목표</th><th class="num">달성</th><th class="num">잔여</th>
+      </tr></thead><tbody>`;
+    data.minQtyCheck.items.forEach(item => {
+      const p = item.target > 0 ? Math.min(100, Math.round(item.current / item.target * 100)) : 100;
+      html += `<tr>
+        <td>${ITEM_LABELS[item.itemKey] || item.itemKey}</td>
+        <td class="num">${item.current}</td>
+        <td class="num">${item.target}</td>
+        <td class="num ${item.met ? 'met' : 'unmet'}">${item.met ? '달성' : '미달'}</td>
+        <td class="num ${item.met ? '' : 'unmet'}">${item.met ? '-' : item.remaining}</td>
+      </tr>
+      <tr><td colspan="5" style="padding:2px 12px 8px">
+        <div class="progress-wrap"><div class="progress-bar" style="width:${p}%;background:${item.met ? 'var(--green)' : 'var(--red)'}"></div></div>
+      </td></tr>`;
+    });
+    html += '</tbody></table></div>';
+  }
+
+  // Layer 3: 품목별 상세
+  html += `<div class="card">
+    <div class="card-title">품목별 매출 & 인센티브</div>
+    <table class="data-table"><thead><tr>
+      <th>품목</th><th class="num">매출</th><th class="num">수량</th><th class="num">배율</th><th class="num">인센티브</th>
+    </tr></thead><tbody>`;
+
+  let totalSales = 0, totalInc = 0;
+  for (const [key, val] of Object.entries(data.items)) {
+    const rate = ITEM_RATES[key] || 0;
+    const itemInc = Math.round(val.sales * rate / 100);
+    totalSales += val.sales;
+    totalInc += itemInc;
+    html += `<tr>
+      <td>${ITEM_LABELS[key] || key}</td>
+      <td class="num">${fmtWon(val.sales)}</td>
+      <td class="num">${val.qty}</td>
+      <td class="num">${rate}%</td>
+      <td class="num text-purple">${fmtWon(itemInc)}</td>
+    </tr>`;
+  }
+  html += `<tr style="font-weight:700;border-top:2px solid var(--border)">
+    <td>합계</td><td class="num">${fmtWon(totalSales)}</td><td></td><td></td>
+    <td class="num text-purple">${fmtWon(totalInc)}</td>
+  </tr>`;
+  html += '</tbody></table></div>';
+
+  // Chart: monthly trend
+  html += `<div class="card">
+    <div class="card-title">월별 인센티브 추이</div>
+    <div class="chart-wrap"><canvas id="teamChart"></canvas></div>
+  </div>`;
+
+  el.innerHTML = html;
+
+  // Render chart
+  if (teamMonthlyData && teamMonthlyData.length > 0) {
+    if (chartInstances.team) chartInstances.team.destroy();
+    const ctx = document.getElementById('teamChart');
+    if (ctx) {
+      chartInstances.team = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: teamMonthlyData.map(m => m.month),
+          datasets: [{
+            label: '인센티브',
+            data: teamMonthlyData.map(m => m.incentive),
+            backgroundColor: teamMonthlyData.map(m => m.penalized ? 'rgba(226,75,74,0.7)' : 'rgba(124,58,237,0.7)'),
+            borderRadius: 6,
+          }],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: { callbacks: { label: ctx => fmtWon(ctx.raw) } },
+          },
+          scales: {
+            y: { ticks: { callback: v => fmt(v) } },
+          },
+        },
+      });
+    }
+  }
+}
+
+// ===== MANAGER =====
+let managerMonthlyData = null;
+
+async function loadManagerInit() {
+  if (managerMonthlyData) return;
+  try {
+    managerMonthlyData = await api('/manager/monthly');
+    const sel = document.getElementById('managerMonthSel');
+    sel.innerHTML = '';
+    managerMonthlyData.forEach((m, i) => {
+      const opt = document.createElement('option');
+      opt.value = m.month;
+      opt.textContent = m.month;
+      if (i === managerMonthlyData.length - 1) opt.selected = true;
+      sel.appendChild(opt);
+    });
+    loadManagerData();
+  } catch (e) {
+    document.getElementById('managerContent').innerHTML = '<p style="color:var(--red)">데이터 로드 실패</p>';
+  }
+}
+
+async function loadManagerData() {
+  const month = document.getElementById('managerMonthSel').value;
+  if (!month) return;
+  const el = document.getElementById('managerContent');
+  el.innerHTML = '<div class="loading"><div class="spinner"></div>로딩 중...</div>';
+
+  try {
+    const data = await api('/manager/current?month=' + encodeURIComponent(month));
+    renderManager(data, el);
+  } catch (e) {
+    el.innerHTML = '<p style="color:var(--red)">데이터 로드 실패</p>';
+  }
+}
+
+function renderManager(data, el) {
+  const isLoss = data.lost > 0;
+
+  let html = '';
+  if (isLoss) {
+    html += `<div class="loss-banner">
+      <div class="loss-label">팀 최소수량 미달로 잃은 팀 보너스</div>
+      <div class="loss-amount">-${fmtWon(data.lost)}</div>
+    </div>`;
+  }
+
+  html += `<div class="stat-grid">
+    <div class="stat-card">
+      <div class="label">총 인센티브</div>
+      <div class="value text-blue">${fmtWon(data.totalIncentive)}</div>
+      <div class="sub">기본급: ${fmtWon(data.baseSalary)}</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">총 급여</div>
+      <div class="value text-purple">${fmtWon(data.totalSalary)}</div>
+      <div class="sub">기본급 + 인센티브</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">타이어 인센티브</div>
+      <div class="value text-teal">${fmtWon(data.tireIncentive)}</div>
+      <div class="sub">타이어+얼라이: ${fmtWon(data.tireSales + data.alignmentSales)}</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">팀 보너스 (x1.5)</div>
+      <div class="value ${isLoss ? 'text-amber' : 'text-teal'}">${fmtWon(data.teamBonus)}</div>
+      <div class="sub">팀 인센: ${fmtWon(data.teamIncentive)}</div>
+    </div>
+  </div>`;
+
+  // 상세 breakdown
+  html += `<div class="card">
+    <div class="card-title">매출 상세</div>
+    <table class="data-table"><tbody>
+      <tr><td>타이어 매출</td><td class="num">${fmtWon(data.tireSales)}</td></tr>
+      <tr><td>얼라이먼트 매출</td><td class="num">${fmtWon(data.alignmentSales)}</td></tr>
+      <tr style="font-weight:700;border-top:2px solid var(--border)">
+        <td>합계</td><td class="num">${fmtWon(data.tireSales + data.alignmentSales)}</td>
+      </tr>
+      <tr><td>타이어 인센티브 (0.3%)</td><td class="num text-teal">${fmtWon(data.tireIncentive)}</td></tr>
+      <tr><td>팀 인센티브</td><td class="num">${fmtWon(data.teamIncentive)}</td></tr>
+      <tr><td>팀 보너스 (x1.5)</td><td class="num text-teal">${fmtWon(data.teamBonus)}</td></tr>
+      <tr style="font-weight:700;border-top:2px solid var(--border)">
+        <td>총 인센티브</td><td class="num text-purple">${fmtWon(data.totalIncentive)}</td>
+      </tr>
+    </tbody></table>
+  </div>`;
+
+  // Monthly chart
+  html += `<div class="card">
+    <div class="card-title">월별 인센티브 추이</div>
+    <div class="chart-wrap"><canvas id="managerChart"></canvas></div>
+  </div>`;
+
+  el.innerHTML = html;
+
+  if (managerMonthlyData && managerMonthlyData.length > 0) {
+    if (chartInstances.manager) chartInstances.manager.destroy();
+    const ctx = document.getElementById('managerChart');
+    if (ctx) {
+      chartInstances.manager = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: managerMonthlyData.map(m => m.month),
+          datasets: [{
+            label: '인센티브',
+            data: managerMonthlyData.map(m => m.totalIncentive),
+            backgroundColor: 'rgba(55,138,221,0.7)',
+            borderRadius: 6,
+          }],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: { callbacks: { label: ctx => fmtWon(ctx.raw) } },
+          },
+          scales: {
+            y: { ticks: { callback: v => fmt(v) } },
+          },
+        },
+      });
+    }
+  }
+}
+
+// ===== DIRECTOR =====
+let directorMonthlyData = null;
+
+async function loadDirectorInit() {
+  if (directorMonthlyData) return;
+  try {
+    directorMonthlyData = await api('/director/monthly');
+    const sel = document.getElementById('directorMonthSel');
+    sel.innerHTML = '';
+    directorMonthlyData.forEach((m, i) => {
+      const opt = document.createElement('option');
+      opt.value = m.month;
+      opt.textContent = m.month;
+      if (i === directorMonthlyData.length - 1) opt.selected = true;
+      sel.appendChild(opt);
+    });
+    loadDirectorData();
+  } catch (e) {
+    document.getElementById('directorContent').innerHTML = '<p style="color:var(--red)">데이터 로드 실패</p>';
+  }
+}
+
+async function loadDirectorData() {
+  const month = document.getElementById('directorMonthSel').value;
+  if (!month) return;
+  const el = document.getElementById('directorContent');
+  el.innerHTML = '<div class="loading"><div class="spinner"></div>로딩 중...</div>';
+
+  try {
+    const data = await api('/director/current?month=' + encodeURIComponent(month));
+    renderDirector(data, el);
+  } catch (e) {
+    el.innerHTML = '<p style="color:var(--red)">데이터 로드 실패</p>';
+  }
+}
+
+function renderDirector(data, el) {
+  let html = '';
+
+  // Breakeven check
+  if (!data.aboveBreakeven) {
+    html += `<div class="loss-banner">
+      <div class="loss-label">손익분기점 미달 (목표: ${fmtWon(data.breakeven)})</div>
+      <div class="loss-amount">-${fmtWon(data.shortfall)} 부족</div>
+    </div>`;
+  } else {
+    html += `<div class="ok-banner">
+      <div class="ok-label">손익분기점 달성</div>
+      <div class="ok-amount">${fmtWon(data.totalRevenue)}</div>
+    </div>`;
+  }
+
+  // Breakeven progress
+  const bevenPct = Math.min(100, Math.round(data.totalRevenue / data.breakeven * 100));
+  html += `<div class="card" style="margin-bottom:20px">
+    <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+      <span style="font-size:13px;color:var(--text-muted)">손익분기 달성률</span>
+      <span style="font-size:13px;font-weight:700;color:${bevenPct >= 100 ? 'var(--green)' : 'var(--red)'}">${bevenPct}%</span>
+    </div>
+    <div class="progress-wrap" style="height:12px">
+      <div class="progress-bar" style="width:${bevenPct}%;background:${bevenPct >= 100 ? 'var(--green)' : 'var(--red)'}"></div>
+    </div>
+    <div style="display:flex;justify-content:space-between;margin-top:6px;font-size:12px;color:var(--text-light)">
+      <span>0</span><span>${fmtWon(data.breakeven)}</span>
+    </div>
+  </div>`;
+
+  html += `<div class="stat-grid">
+    <div class="stat-card">
+      <div class="label">전체 매출</div>
+      <div class="value text-blue">${fmtWon(data.totalRevenue)}</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">매출 인센티브 (0.6%)</div>
+      <div class="value text-teal">${fmtWon(data.revenueIncentive)}</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">총 인센티브</div>
+      <div class="value text-purple">${fmtWon(data.totalIncentive)}</div>
+    </div>
+  </div>`;
+
+  // Extras
+  html += `<div class="card">
+    <div class="card-title">추가 인센티브 항목</div>
+    <table class="data-table"><thead><tr>
+      <th>항목</th><th class="num">매출</th><th class="num">인센티브</th>
+    </tr></thead><tbody>
+      <tr><td>와이퍼 (0.3%)</td><td class="num">${fmtWon(data.extras.wiper.sales)}</td><td class="num text-teal">${fmtWon(data.extras.wiper.incentive)}</td></tr>
+      <tr><td>밧데리 (0.5%)</td><td class="num">${fmtWon(data.extras.battery.sales)}</td><td class="num text-teal">${fmtWon(data.extras.battery.incentive)}</td></tr>
+      <tr><td>에어컨필터 (1.0%)</td><td class="num">${fmtWon(data.extras.acFilter.sales)}</td><td class="num text-teal">${fmtWon(data.extras.acFilter.incentive)}</td></tr>
+    </tbody></table>
+  </div>`;
+
+  // Monthly chart
+  html += `<div class="card">
+    <div class="card-title">월별 매출 & 손익분기</div>
+    <div class="chart-wrap"><canvas id="directorChart"></canvas></div>
+  </div>`;
+
+  el.innerHTML = html;
+
+  if (directorMonthlyData && directorMonthlyData.length > 0) {
+    if (chartInstances.director) chartInstances.director.destroy();
+    const ctx = document.getElementById('directorChart');
+    if (ctx) {
+      chartInstances.director = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: directorMonthlyData.map(m => m.month),
+          datasets: [
+            {
+              label: '매출',
+              data: directorMonthlyData.map(m => m.totalRevenue),
+              backgroundColor: directorMonthlyData.map(m => m.aboveBreakeven ? 'rgba(29,158,117,0.7)' : 'rgba(226,75,74,0.7)'),
+              borderRadius: 6,
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: { callbacks: { label: ctx => fmtWon(ctx.raw) } },
+            annotation: undefined,
+          },
+          scales: {
+            y: { ticks: { callback: v => (v/1e8).toFixed(1) + '억' } },
+          },
+        },
+      });
+    }
+  }
+}
+
+// ===== ADMIN =====
+async function loadAdminPanel() {
+  const el = document.getElementById('adminContent');
+  el.innerHTML = '<div class="loading"><div class="spinner"></div>로딩 중...</div>';
+
+  try {
+    const configs = await api('/config');
+
+    let html = '';
+
+    // Config section
+    html += `<div class="admin-section"><h3>인센티브 설정값</h3>`;
+    configs.forEach(c => {
+      const isPercent = c.key.includes('rate') || c.key.includes('multiplier') || c.key.includes('penalty');
+      const displayVal = isPercent ? c.value : c.value;
+      html += `<div class="config-row">
+        <span class="config-label">${c.label || c.key}</span>
+        <input type="number" step="any" value="${displayVal}" id="cfg-${c.key}">
+        <button class="btn-save" onclick="saveConfig('${c.key}')">저장</button>
+      </div>`;
+    });
+    html += '</div>';
+
+    // Upload section
+    html += `<div class="admin-section"><h3>극동 엑셀 업로드</h3>
+      <div class="upload-area" onclick="document.getElementById('excelFile').click()">
+        <div class="upload-icon">📄</div>
+        <div class="upload-text">극동 매출 엑셀 파일을 선택하세요 (.xlsx)</div>
+        <input type="file" id="excelFile" accept=".xlsx,.xls" onchange="uploadExcel(this)">
+      </div>
+      <div id="uploadResult" style="margin-top:16px"></div>
+    </div>`;
+
+    // Upload History
+    html += `<div class="admin-section"><h3>업로드 이력</h3>
+      <div id="uploadHistory"><div class="loading"><div class="spinner"></div></div></div>
+    </div>`;
+
+    el.innerHTML = html;
+
+    // Load history
+    loadUploadHistory();
+  } catch (e) {
+    el.innerHTML = '<p style="color:var(--red)">관리자 패널 로드 실패</p>';
+  }
+}
+
+async function saveConfig(key) {
+  const input = document.getElementById('cfg-' + key);
+  const value = parseFloat(input.value);
+  if (isNaN(value)) { alert('올바른 숫자를 입력하세요'); return; }
+
+  try {
+    await api('/config/' + key, {
+      method: 'PUT',
+      body: JSON.stringify({ value }),
+    });
+    alert('저장 완료');
+    // Reset cached data so next tab switch reloads
+    teamMonthlyData = null;
+    managerMonthlyData = null;
+    directorMonthlyData = null;
+  } catch (e) {
+    alert('저장 실패: ' + e.message);
+  }
+}
+
+async function uploadExcel(input) {
+  const file = input.files[0];
+  if (!file) return;
+
+  const resultEl = document.getElementById('uploadResult');
+  resultEl.innerHTML = '<div class="loading"><div class="spinner"></div>업로드 중...</div>';
+
+  const formData = new FormData();
+  formData.append('file', file);
+
+  try {
+    const res = await fetch(API + '/upload', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + token },
+      body: formData,
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || '업로드 실패');
+
+    resultEl.innerHTML = `<div class="card" style="background:var(--green-light)">
+      <p style="color:var(--green);font-weight:600">업로드 성공</p>
+      <p style="font-size:13px;margin-top:8px">업로드 ID: ${data.id || '-'}</p>
+      <p style="font-size:13px">상태: ${data.status || 'pending'}</p>
+      ${data.status === 'pending' ? `<button class="btn-save" style="margin-top:12px" onclick="approveUpload('${data.id}')">승인 (데이터 반영)</button>` : ''}
+    </div>`;
+
+    // Reset cached data
+    teamMonthlyData = null;
+    managerMonthlyData = null;
+    directorMonthlyData = null;
+    loadUploadHistory();
+  } catch (e) {
+    resultEl.innerHTML = `<div class="card" style="background:var(--red-light)">
+      <p style="color:var(--red);font-weight:600">업로드 실패</p>
+      <p style="font-size:13px;margin-top:8px">${e.message}</p>
+    </div>`;
+  }
+  input.value = '';
+}
+
+async function approveUpload(id) {
+  try {
+    await api('/upload/approve/' + id, { method: 'POST' });
+    alert('승인 완료. 데이터가 반영되었습니다.');
+    teamMonthlyData = null;
+    managerMonthlyData = null;
+    directorMonthlyData = null;
+    loadUploadHistory();
+  } catch (e) {
+    alert('승인 실패: ' + e.message);
+  }
+}
+
+async function loadUploadHistory() {
+  const el = document.getElementById('uploadHistory');
+  if (!el) return;
+  try {
+    const history = await api('/upload/history');
+    if (!history || history.length === 0) {
+      el.innerHTML = '<p style="color:var(--text-muted);font-size:13px">업로드 이력 없음</p>';
+      return;
+    }
+    let html = '<table class="data-table"><thead><tr><th>날짜</th><th>파일</th><th>월</th><th>상태</th><th>작업</th></tr></thead><tbody>';
+    history.forEach(h => {
+      const date = new Date(h.uploadedAt).toLocaleString('ko-KR');
+      html += `<tr>
+        <td style="font-size:12px">${date}</td>
+        <td style="font-size:12px">${h.fileName || '-'}</td>
+        <td>${h.month || '-'}</td>
+        <td><span style="color:${h.status === 'approved' ? 'var(--green)' : 'var(--amber)'}">${h.status === 'approved' ? '승인됨' : '대기중'}</span></td>
+        <td>${h.status === 'pending' ? `<button class="btn-save" onclick="approveUpload('${h.id}')">승인</button>` : '-'}</td>
+      </tr>`;
+    });
+    html += '</tbody></table>';
+    el.innerHTML = html;
+  } catch {
+    el.innerHTML = '<p style="color:var(--text-muted);font-size:13px">이력 로드 실패</p>';
+  }
+}
+
+// ===== Enter key login =====
+document.getElementById('loginPw').addEventListener('keydown', e => {
+  if (e.key === 'Enter') doLogin();
+});
+document.getElementById('loginId').addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('loginPw').focus();
+});
+
+// ===== Auto-login =====
+if (token) { initApp(); }
+</script>
+</body>
+</html>
