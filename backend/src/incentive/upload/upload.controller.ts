@@ -19,7 +19,7 @@ export class UploadController {
     @Body('month') month: string,
     @Request() req: any,
   ) {
-    // manager, director, admin, viewer 업로드 가능
+    // 모든 인증된 사용자 업로드 가능
     if (!['admin', 'manager', 'director', 'viewer'].includes(req.user.role)) {
       throw new ForbiddenException('업로드 권한이 없습니다');
     }
