@@ -50,7 +50,7 @@ export class ManagerService {
       orderBy: { month: 'asc' },
     });
 
-    const result = [];
+    const result: any[] = [];
     for (const { month } of months) {
       const data = await this.getCurrent(month);
       if (data) result.push(data);

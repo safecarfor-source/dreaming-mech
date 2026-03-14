@@ -2,7 +2,7 @@ import { Injectable, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import * as XLSX from 'xlsx';
 
-interface ParsedRow {
+export interface ParsedRow {
   productCode: string;
   productName: string;
   qty: number;

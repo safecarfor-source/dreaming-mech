@@ -56,7 +56,7 @@ export class TeamService {
       orderBy: { month: 'asc' },
     });
 
-    const result = [];
+    const result: any[] = [];
     for (const { month } of months) {
       const data = await this.getMonthData(month);
       const targets = await this.getTargets(month);
