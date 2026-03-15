@@ -7,6 +7,12 @@
       "runtimeArgs": ["run", "dev"],
       "port": 3000,
       "cwd": "/Users/shinjeayoun/dreaming-mech/frontend"
+    },
+    {
+      "name": "incentive",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["/tmp/proxy-server.js"],
+      "port": 8888
     }
   ]
 }
