@@ -955,7 +955,7 @@ async function loadTeamData() {
   el.innerHTML = '<div class="loading"><div class="spinner"></div>로딩 중...</div>';
   try {
     const data = await api('/team/current?month=' + encodeURIComponent(month));
-    renderTeam(data, el);
+    renderTeam(data, el, month);
   } catch (e) { console.error('loadTeamData error:', e); el.innerHTML = '<p style="color:var(--red)">데이터 로드 실패</p>'; }
 }
 
@@ -969,7 +969,7 @@ const ITEM_RATES = {
   wiper:0.3, battery:0.5, ac_filter:1.0, guardian_h3:2.0, guardian_h5:2.0, guardian_h7:2.0,
 };
 
-function renderTeam(data, el) {
+function renderTeam(data, el, monthStr) {
   const inc = data.incentive;
   const isLoss = inc.lost > 0;
 
@@ -1018,15 +1018,18 @@ function renderTeam(data, el) {
   }
   html += `</div>`;
 
-  // Box 2.5: 이번 달 매출 예측
-  if (prevTotalSales > 0 && totalSales > 0) {
+  // Box 2.5: 이번 달 매출 예측 (작년 동월 대비)
+  const teamMonthNum = parseInt((monthStr || '').replace(/.*?(\d+)월.*/, '$1')) || (new Date().getMonth() + 1);
+  const lyTeamTotal = LAST_YEAR_REVENUE[teamMonthNum] || 0;
+
+  if (lyTeamTotal > 0 && totalSales > 0) {
     const now = new Date();
     const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
     const elapsed = now.getDate();
     const dailyAvg = elapsed > 0 ? Math.round(totalSales / elapsed) : 0;
     const teamProjected = Math.round(dailyAvg * daysInMonth);
-    const teamGrowth = prevTotalSales > 0 ? ((teamProjected - prevTotalSales) / prevTotalSales * 100) : 0;
-    const teamProgressPct = Math.min((totalSales / prevTotalSales * 100), 150).toFixed(1);
+    const teamGrowth = ((teamProjected - lyTeamTotal) / lyTeamTotal * 100);
+    const teamProgressPct = Math.min((totalSales / lyTeamTotal * 100), 150).toFixed(1);
     const teamTimePct = (elapsed / daysInMonth * 100).toFixed(0);
     const teamBarWidth = Math.min(parseFloat(teamProgressPct), 100);
     const teamIsAhead = parseFloat(teamProgressPct) >= parseFloat(teamTimePct);
@@ -1035,7 +1038,7 @@ function renderTeam(data, el) {
       <div class="nc-box-title">이번 달 매출 예측</div>
       <div style="margin-bottom:12px">
         <div style="display:flex;justify-content:space-between;font-size:11px;color:#666;margin-bottom:4px">
-          <span>전월 대비 진행률</span>
+          <span>작년 대비 진행률</span>
           <span style="font-weight:700;color:${teamIsAhead ? '#10B981' : '#EF4444'}">${teamProgressPct}%</span>
         </div>
         <div style="height:12px;background:#eee;border-radius:8px;overflow:hidden;position:relative">
@@ -1043,14 +1046,14 @@ function renderTeam(data, el) {
         </div>
         <div style="display:flex;justify-content:space-between;font-size:10px;color:#999;margin-top:2px">
           <span>현재 ${fmtBigWon(totalSales)}</span>
-          <span>전월 ${fmtBigWon(prevTotalSales)}</span>
+          <span>작년 ${fmtBigWon(lyTeamTotal)}</span>
         </div>
       </div>
       <div style="background:#F9FAFB;border-radius:12px;padding:16px;text-align:center">
         <div style="font-size:11px;color:#666;margin-bottom:4px">현재 페이스(일평균 ${fmtMan(dailyAvg)}) 유지 시</div>
         <div style="font-size:24px;font-weight:900;color:#000">${fmtBigWon(teamProjected)}</div>
         <div style="font-size:13px;font-weight:700;color:${teamGrowth >= 0 ? '#10B981' : '#EF4444'};margin-top:2px">
-          전월 대비 ${teamGrowth >= 0 ? '+' : ''}${teamGrowth.toFixed(1)}%
+          작년 대비 ${teamGrowth >= 0 ? '+' : ''}${teamGrowth.toFixed(1)}%
         </div>
       </div>
       <div style="text-align:center;margin-top:10px;font-size:12px;color:${teamIsAhead ? '#10B981' : '#EF4444'};font-weight:600">
