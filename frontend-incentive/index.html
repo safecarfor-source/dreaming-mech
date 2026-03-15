@@ -998,10 +998,11 @@ function renderTeam(data, el) {
   const itemOrder = configCache ? getItemOrder(configCache) : {};
   const allItems = [...activeItems, ...zeroItems].sort((a,b) => (itemOrder[a.key] ?? 99) - (itemOrder[b.key] ?? 99));
 
-  let html = `<div class="nc-wrap">`;
+  // 전월 총매출 계산
+  let prevTotalSales = 0;
+  for (const [key, val] of Object.entries(prevItems)) { prevTotalSales += val.sales || 0; }
 
-  // 이름
-  html += `<div class="nc-name">팀</div>`;
+  let html = `<div class="nc-wrap">`;
 
   // Box 1: 그래프
   html += `<div class="nc-box">
@@ -1017,6 +1018,47 @@ function renderTeam(data, el) {
     html += `<div class="nc-sub-text">감액 전 ${fmtWon(inc.calculated)} / 감액 -${fmtWon(inc.lost)}</div>`;
   }
   html += `</div>`;
+
+  // Box 2.5: 이번 달 매출 예측
+  if (prevTotalSales > 0 && totalSales > 0) {
+    const now = new Date();
+    const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+    const elapsed = now.getDate();
+    const dailyAvg = elapsed > 0 ? Math.round(totalSales / elapsed) : 0;
+    const teamProjected = Math.round(dailyAvg * daysInMonth);
+    const teamGrowth = prevTotalSales > 0 ? ((teamProjected - prevTotalSales) / prevTotalSales * 100) : 0;
+    const teamProgressPct = Math.min((totalSales / prevTotalSales * 100), 150).toFixed(1);
+    const teamTimePct = (elapsed / daysInMonth * 100).toFixed(0);
+    const teamBarWidth = Math.min(parseFloat(teamProgressPct), 100);
+    const teamIsAhead = parseFloat(teamProgressPct) >= parseFloat(teamTimePct);
+
+    html += `<div class="nc-box">
+      <div class="nc-box-title">이번 달 매출 예측</div>
+      <div style="margin-bottom:12px">
+        <div style="display:flex;justify-content:space-between;font-size:11px;color:#666;margin-bottom:4px">
+          <span>전월 대비 진행률</span>
+          <span style="font-weight:700;color:${teamIsAhead ? '#10B981' : '#EF4444'}">${teamProgressPct}%</span>
+        </div>
+        <div style="height:12px;background:#eee;border-radius:8px;overflow:hidden;position:relative">
+          <div style="height:100%;width:${teamBarWidth}%;background:${teamIsAhead ? 'linear-gradient(90deg,#3EA6FF,#10B981)' : 'linear-gradient(90deg,#3EA6FF,#EF4444)'};border-radius:8px;transition:width 0.5s"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:#999;margin-top:2px">
+          <span>현재 ${fmtBigWon(totalSales)}</span>
+          <span>전월 ${fmtBigWon(prevTotalSales)}</span>
+        </div>
+      </div>
+      <div style="background:#F9FAFB;border-radius:12px;padding:16px;text-align:center">
+        <div style="font-size:11px;color:#666;margin-bottom:4px">현재 페이스(일평균 ${fmtMan(dailyAvg)}) 유지 시</div>
+        <div style="font-size:24px;font-weight:900;color:#000">${fmtBigWon(teamProjected)}</div>
+        <div style="font-size:13px;font-weight:700;color:${teamGrowth >= 0 ? '#10B981' : '#EF4444'};margin-top:2px">
+          전월 대비 ${teamGrowth >= 0 ? '+' : ''}${teamGrowth.toFixed(1)}%
+        </div>
+      </div>
+      <div style="text-align:center;margin-top:10px;font-size:12px;color:${teamIsAhead ? '#10B981' : '#EF4444'};font-weight:600">
+        ${teamIsAhead ? '👍 시간 대비 앞서가는 중!' : '⚡ 페이스업 필요!'}
+      </div>
+    </div>`;
+  }
 
   // Box 3: 최소수량 달성/미달 | 목표달성
   html += `<div class="nc-box" style="padding:0">
@@ -1034,25 +1076,41 @@ function renderTeam(data, el) {
     </div>
   </div>`;
 
-  // Box 4: 최소수량 항목 체크리스트
+  // Box 4: 이 달의 목표 (최소수량 항목 바 그래프)
   if (mqc.items.length > 0) {
     html += `<div class="nc-box">
-      <div class="nc-box-title">최소수량 항목</div>`;
+      <div class="nc-box-title">이 달의 목표</div>`;
     const sorted = [...mqc.items].sort((a,b) => a.met - b.met);
-    sorted.forEach(item => {
-      const status = item.met ? '달성' : '미달';
-      html += `<div class="nc-check">
-        <span>${ITEM_LABELS[item.itemKey]||item.itemKey}</span>
-        <span class="nc-check-status">${item.current}/${item.target} ${status}</span>
+    sorted.forEach(mqi => {
+      const matchItem = allItems.find(i => i.key === mqi.itemKey);
+      const itemSales = matchItem ? matchItem.sales : 0;
+      const pct = mqi.target > 0 ? Math.round(mqi.current / mqi.target * 100) : 0;
+      const barColor = mqi.met ? '#10B981' : '#3EA6FF';
+      const statusText = mqi.met ? '달성' : `${mqi.target - mqi.current}개 남음`;
+      html += `<div class="nc-bar-item">
+        <div class="nc-bar-head">
+          <span class="nc-bar-name">${ITEM_LABELS[mqi.itemKey]||mqi.itemKey} (${mqi.current}/${mqi.target})</span>
+          <span class="nc-bar-val">${fmtWon(itemSales)}</span>
+        </div>
+        <div class="nc-bar-track">
+          <div class="nc-bar-fill" style="width:${Math.min(pct, 100)}%;background:${barColor}"></div>
+          <div class="nc-bar-target" style="left:100%"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-top:2px">
+          <span style="font-size:10px;color:${mqi.met ? '#10B981' : '#EF4444'};font-weight:600">${statusText}</span>
+          <span style="font-size:10px;color:#999">${pct}%</span>
+        </div>
       </div>`;
     });
     html += `</div>`;
   }
 
-  // Box 5: 지난달 대비 바 그래프
+  // Box 5: 지난달 대비 바 그래프 (최소수량 품목 제외)
+  const mqKeys = new Set(mqc.items.map(i => i.itemKey));
+  const nonMqItems = allItems.filter(item => !mqKeys.has(item.key));
   html += `<div class="nc-box">
     <div class="nc-box-title">지난달 대비</div>`;
-  allItems.forEach(item => {
+  nonMqItems.forEach(item => {
     const pi = prevItems[item.key];
     const prevSales = pi ? pi.sales : 0;
     const prevQty = pi ? pi.qty : 0;
@@ -1443,7 +1501,6 @@ function renderManagerSalesTarget(data, el, year, month, teamData) {
       </div>
       <div style="height:12px;background:#eee;border-radius:8px;overflow:hidden;position:relative">
         <div style="height:100%;width:${mgrBarWidth}%;background:${mgrIsAhead ? 'linear-gradient(90deg,#3EA6FF,#10B981)' : 'linear-gradient(90deg,#3EA6FF,#EF4444)'};border-radius:8px;transition:width 0.5s"></div>
-        <div style="position:absolute;top:0;bottom:0;left:${mgrTimePct}%;width:2px;background:#000;opacity:0.3" title="시간 경과 ${mgrTimePct}%"></div>
       </div>
       <div style="display:flex;justify-content:space-between;font-size:10px;color:#999;margin-top:2px">
         <span>현재 ${fmtBigWon(tysSales)}</span>
@@ -1739,7 +1796,6 @@ function renderSalesTargetDashboard(data, el, year, month) {
       </div>
       <div style="height:12px;background:#eee;border-radius:8px;overflow:hidden;position:relative">
         <div style="height:100%;width:${barWidth}%;background:${isAhead ? 'linear-gradient(90deg,#3EA6FF,#10B981)' : 'linear-gradient(90deg,#3EA6FF,#EF4444)'};border-radius:8px;transition:width 0.5s"></div>
-        <div style="position:absolute;top:0;bottom:0;left:${timePct}%;width:2px;background:#000;opacity:0.3" title="시간 경과 ${timePct}%"></div>
       </div>
       <div style="display:flex;justify-content:space-between;font-size:10px;color:#999;margin-top:2px">
         <span>현재 ${fmtBigWon(tysSales)}</span>
@@ -1961,8 +2017,8 @@ async function loadSettlement() {
       <div class="card-title" style="margin-bottom:12px">기사 (${mechNames.length}명)</div>
       <table class="data-table"><thead><tr><th>이름</th><th class="num">인센티브</th><th class="num">감액</th><th class="num">지급액</th></tr></thead><tbody>`;
 
-    const perPerson = teamInc.calculated ? Math.round(teamInc.calculated / mechNames.length) : 0;
-    const perActual = teamInc.actual ? Math.round(teamInc.actual / mechNames.length) : 0;
+    const perPerson = teamInc.calculated || 0;
+    const perActual = teamInc.actual || 0;
     const perLost = perPerson - perActual;
 
     mechNames.forEach(m => {
@@ -1976,15 +2032,15 @@ async function loadSettlement() {
 
     html += `<tr style="font-weight:700;border-top:2px solid var(--border)">
       <td>소계</td>
-      <td class="num">${fmtWon(teamInc.calculated || 0)}</td>
-      <td class="num" style="color:var(--red)">${isLoss ? '-' + fmtWon(teamInc.lost || 0) : '-'}</td>
-      <td class="num" style="color:var(--accent)">${fmtWon(teamInc.actual || 0)}</td>
+      <td class="num">${fmtWon(perPerson * mechNames.length)}</td>
+      <td class="num" style="color:var(--red)">${isLoss ? '-' + fmtWon(perLost * mechNames.length) : '-'}</td>
+      <td class="num" style="color:var(--accent)">${fmtWon(perActual * mechNames.length)}</td>
     </tr></tbody></table>
     ${isLoss ? `<div style="margin-top:8px;padding:8px 12px;background:#FEF2F2;border-radius:8px;font-size:12px;color:var(--red);font-weight:600">⚠️ 최소수량 미달로 50% 감액 적용</div>` : ''}
     </div>`;
 
     // === 전체 합산 ===
-    const totalPay = dirTotalPay + (mgrData?.totalIncentive || 0) + (teamInc.actual || 0);
+    const totalPay = dirTotalPay + (mgrData?.totalIncentive || 0) + (perActual * mechNames.length);
     html += `<div class="card" style="border:2px solid #3EA6FF;margin-bottom:12px">
       <div style="display:flex;justify-content:space-between;align-items:center">
         <div>
@@ -1996,7 +2052,7 @@ async function loadSettlement() {
       <div style="margin-top:12px;border-top:1px solid var(--border);padding-top:12px">
         <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px"><span style="color:var(--text-muted)">이정석 부장</span><span style="font-weight:600">${fmtWon(dirTotalPay)}</span></div>
         <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px"><span style="color:var(--text-muted)">김권중 매니저</span><span style="font-weight:600">${fmtWon(mgrData?.totalIncentive || 0)}</span></div>
-        <div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--text-muted)">기사 ${mechNames.length}명</span><span style="font-weight:600">${fmtWon(teamInc.actual || 0)}</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--text-muted)">기사 ${mechNames.length}명</span><span style="font-weight:600">${fmtWon(perActual * mechNames.length)}</span></div>
       </div>
     </div>`;
 
