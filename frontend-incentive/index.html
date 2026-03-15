@@ -1485,7 +1485,7 @@ function renderManagerSalesTarget(data, el, year, month, teamData) {
     </table>
   </div>`;
 
-  // Box 3: 이번 달 매출 예측
+  // Box 3: 당월 타이어 매출 예측
   const mgrProjected = Math.round(tyAvg * totalBizDays);
   const mgrGrowth = prevTotal > 0 ? ((mgrProjected - prevTotal) / prevTotal * 100) : 0;
   const mgrProgressPct = prevTotal > 0 ? Math.min((tysSales / prevTotal * 100), 150).toFixed(1) : 0;
@@ -1495,7 +1495,7 @@ function renderManagerSalesTarget(data, el, year, month, teamData) {
   const mgrProjIncentive = Math.round(mgrProjected * 0.003);
 
   html += `<div class="nc-box">
-    <div class="nc-box-title">이번 달 매출 예측</div>
+    <div class="nc-box-title">당월 타이어 매출 예측</div>
     <div style="margin-bottom:12px">
       <div style="display:flex;justify-content:space-between;font-size:11px;color:#666;margin-bottom:4px">
         <span>전월 대비 진행률</span>
