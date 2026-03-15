@@ -1425,23 +1425,41 @@ function renderManagerSalesTarget(data, el, year, month, teamData) {
     </table>
   </div>`;
 
-  // Box 3: 전월대비 타이어 - 매출 | 영업일 | 일평균
+  // Box 3: 이번 달 매출 예측
+  const mgrProjected = Math.round(tyAvg * totalBizDays);
+  const mgrGrowth = prevTotal > 0 ? ((mgrProjected - prevTotal) / prevTotal * 100) : 0;
+  const mgrProgressPct = prevTotal > 0 ? Math.min((tysSales / prevTotal * 100), 150).toFixed(1) : 0;
+  const mgrTimePct = (tyElapsed / totalBizDays * 100).toFixed(0);
+  const mgrBarWidth = Math.min(parseFloat(mgrProgressPct), 100);
+  const mgrIsAhead = parseFloat(mgrProgressPct) >= parseFloat(mgrTimePct);
+  const mgrProjIncentive = Math.round(mgrProjected * 0.003);
+
   html += `<div class="nc-box">
-    <div class="nc-box-title">전월대비 타이어</div>
-    <div class="nc-data-row-header">
-      <span></span><span>매출</span><span>영업일</span><span>일평균</span>
+    <div class="nc-box-title">이번 달 매출 예측</div>
+    <div style="margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:#666;margin-bottom:4px">
+        <span>전월 대비 진행률</span>
+        <span style="font-weight:700;color:${mgrIsAhead ? '#10B981' : '#EF4444'}">${mgrProgressPct}%</span>
+      </div>
+      <div style="height:12px;background:#eee;border-radius:8px;overflow:hidden;position:relative">
+        <div style="height:100%;width:${mgrBarWidth}%;background:${mgrIsAhead ? 'linear-gradient(90deg,#3EA6FF,#10B981)' : 'linear-gradient(90deg,#3EA6FF,#EF4444)'};border-radius:8px;transition:width 0.5s"></div>
+        <div style="position:absolute;top:0;bottom:0;left:${mgrTimePct}%;width:2px;background:#000;opacity:0.3" title="시간 경과 ${mgrTimePct}%"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:10px;color:#999;margin-top:2px">
+        <span>현재 ${fmtBigWon(tysSales)}</span>
+        <span>전월 ${fmtBigWon(prevTotal)}</span>
+      </div>
     </div>
-    <div class="nc-data-row">
-      <span class="nc-dr-label">${prevMon}월</span>
-      <span class="nc-dr-val">${fmtBigWon(prevTotal)}</span>
-      <span class="nc-dr-val">${prevDays}일</span>
-      <span class="nc-dr-val">${fmtMan(prevAvg)}</span>
+    <div style="background:#F9FAFB;border-radius:12px;padding:16px;text-align:center">
+      <div style="font-size:11px;color:#666;margin-bottom:4px">현재 페이스(일평균 ${fmtMan(tyAvg)}) 유지 시</div>
+      <div style="font-size:24px;font-weight:900;color:#000">${fmtBigWon(mgrProjected)}</div>
+      <div style="font-size:13px;font-weight:700;color:${mgrGrowth >= 0 ? '#10B981' : '#EF4444'};margin-top:2px">
+        전월 대비 ${mgrGrowth >= 0 ? '+' : ''}${mgrGrowth.toFixed(1)}%
+      </div>
+      <div style="font-size:11px;color:#666;margin-top:4px">예상 타이어 인센티브: <b>${fmtBigWon(mgrProjIncentive)}</b></div>
     </div>
-    <div class="nc-data-row">
-      <span class="nc-dr-label">${month}월</span>
-      <span class="nc-dr-val">${fmtBigWon(tysSales)}</span>
-      <span class="nc-dr-val">${tyElapsed}/${totalBizDays}일</span>
-      <span class="nc-dr-val">${fmtMan(tyAvg)}</span>
+    <div style="text-align:center;margin-top:10px;font-size:12px;color:${mgrIsAhead ? '#10B981' : '#EF4444'};font-weight:600">
+      ${mgrIsAhead ? '👍 시간 대비 앞서가는 중!' : '⚡ 페이스업 필요! 일평균 ' + fmtMan(prevAvg) + ' 이상 목표'}
     </div>
   </div>`;
 
@@ -1693,23 +1711,51 @@ function renderSalesTargetDashboard(data, el, year, month) {
     <div class="nc-sub-text">성장률 ${currentGrowth >= 0 ? '+' : ''}${currentGrowth.toFixed(1)}%</div>
   </div>`;
 
-  // Box 3: 작년 동월 매출 - 매출 | 영업일 | 일평균
+  // Box 3: 이번 달 매출 예측
+  const projected = Math.round(tyAvg * totalBizDays);
+  const projectedGrowth = lyTotal > 0 ? ((projected - lyTotal) / lyTotal * 100) : 0;
+  const progressPct = lyTotal > 0 ? Math.min((tysSales / lyTotal * 100), 150).toFixed(1) : 0;
+  const timePct = (tyElapsed / totalBizDays * 100).toFixed(0);
+  // 예상 레벨 계산
+  function getPredictedLv(growth) {
+    const lvMap = [{g: -5, lv: 'Lv.-10', rate: 0.3}, {g: 0, lv: 'Lv.-5', rate: 0.5}, {g: 5, lv: 'Lv.1', rate: 0.6}, {g: 8, lv: 'Lv.5', rate: 0.7}, {g: Infinity, lv: 'Lv.10', rate: 0.9}];
+    if (growth <= -5) return lvMap[0];
+    if (growth <= 0) return lvMap[1];
+    if (growth <= 5) return lvMap[2];
+    if (growth <= 8) return lvMap[3];
+    return lvMap[4];
+  }
+  const predLv = getPredictedLv(projectedGrowth);
+  const predIncentive = Math.round(projected * predLv.rate / 100);
+  const barWidth = Math.min(parseFloat(progressPct), 100);
+  const isAhead = parseFloat(progressPct) >= parseFloat(timePct);
+
   html += `<div class="nc-box">
-    <div class="nc-box-title">작년 동월 매출</div>
-    <div class="nc-data-row-header">
-      <span></span><span>매출</span><span>영업일</span><span>일평균</span>
+    <div class="nc-box-title">이번 달 매출 예측</div>
+    <div style="margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:#666;margin-bottom:4px">
+        <span>작년 대비 진행률</span>
+        <span style="font-weight:700;color:${isAhead ? '#10B981' : '#EF4444'}">${progressPct}%</span>
+      </div>
+      <div style="height:12px;background:#eee;border-radius:8px;overflow:hidden;position:relative">
+        <div style="height:100%;width:${barWidth}%;background:${isAhead ? 'linear-gradient(90deg,#3EA6FF,#10B981)' : 'linear-gradient(90deg,#3EA6FF,#EF4444)'};border-radius:8px;transition:width 0.5s"></div>
+        <div style="position:absolute;top:0;bottom:0;left:${timePct}%;width:2px;background:#000;opacity:0.3" title="시간 경과 ${timePct}%"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:10px;color:#999;margin-top:2px">
+        <span>현재 ${fmtBigWon(tysSales)}</span>
+        <span>작년 ${fmtBigWon(lyTotal)}</span>
+      </div>
     </div>
-    <div class="nc-data-row">
-      <span class="nc-dr-label">${year-1}년 ${month}월</span>
-      <span class="nc-dr-val">${fmtBigWon(lyTotal)}</span>
-      <span class="nc-dr-val">${lyDays}일</span>
-      <span class="nc-dr-val">${fmtMan(lyAvg)}</span>
+    <div style="background:#F9FAFB;border-radius:12px;padding:16px;text-align:center">
+      <div style="font-size:11px;color:#666;margin-bottom:4px">현재 페이스(일평균 ${fmtMan(tyAvg)}) 유지 시</div>
+      <div style="font-size:24px;font-weight:900;color:#000">${fmtBigWon(projected)}</div>
+      <div style="font-size:13px;font-weight:700;color:${projectedGrowth >= 0 ? '#10B981' : '#EF4444'};margin-top:2px">
+        작년 대비 ${projectedGrowth >= 0 ? '+' : ''}${projectedGrowth.toFixed(1)}% → ${predLv.lv}
+      </div>
+      <div style="font-size:11px;color:#666;margin-top:4px">예상 인센티브: <b>${fmtBigWon(predIncentive)}</b></div>
     </div>
-    <div class="nc-data-row">
-      <span class="nc-dr-label">${year}년 ${month}월</span>
-      <span class="nc-dr-val">${fmtBigWon(tysSales)}</span>
-      <span class="nc-dr-val">${tyElapsed}/${totalBizDays}일</span>
-      <span class="nc-dr-val">${fmtMan(tyAvg)}</span>
+    <div style="text-align:center;margin-top:10px;font-size:12px;color:${isAhead ? '#10B981' : '#EF4444'};font-weight:600">
+      ${isAhead ? '👍 시간 대비 앞서가는 중!' : '⚡ 페이스업 필요! 일평균 ' + fmtMan(lyAvg) + ' 이상 목표'}
     </div>
   </div>`;
 
@@ -1747,7 +1793,6 @@ function renderSalesTargetDashboard(data, el, year, month) {
           <div class="nc-split-value" id="targetLvDaily">${cur.achieved ? '달성!' : fmtMan(cur.daily) + '/일'}</div>
         </div>
       </div>
-      <div class="nc-sub-text" id="targetLvSub" style="margin-top:8px">${cur.achieved ? tierLvNames[defaultIdx] + ' 달성 완료! 🎉' : tierLvNames[defaultIdx] + ' 달성까지 ' + fmtBigWon(cur.remain) + ' 남음 · 남은 영업일 ' + tyRemain + '일'}</div>
     </div>`;
 
     // 레벨 변경 핸들러를 전역에 등록
@@ -1761,7 +1806,6 @@ function renderSalesTargetDashboard(data, el, year, month) {
       const name = window._directorLvNames[idx];
       const remain = window._directorTyRemain;
       document.getElementById('targetLvDaily').textContent = d.achieved ? '달성!' : fmtMan(d.daily) + '/일';
-      document.getElementById('targetLvSub').textContent = d.achieved ? name + ' 달성 완료! 🎉' : name + ' 달성까지 ' + fmtBigWon(d.remain) + ' 남음 · 남은 영업일 ' + remain + '일';
     };
   }
 
