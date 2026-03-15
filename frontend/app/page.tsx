@@ -219,8 +219,20 @@ function HomeContent() {
   return (
     <Layout>
       {/* Hero Section */}
-      <section className="relative bg-gradient-to-br from-[#7C4DFF] to-[#5B2FC2] text-white py-20 md:py-32 overflow-hidden">
-        <div className="absolute inset-0 bg-black/20" />
+      <section className="relative text-white py-20 md:py-32 overflow-hidden">
+        {/* Background Video */}
+        <div className="absolute inset-0 z-0">
+          <video
+            src="/title.gif"
+            autoPlay
+            loop
+            muted
+            playsInline
+            className="w-full h-full object-cover"
+          />
+        </div>
+        {/* Dark overlay */}
+        <div className="absolute inset-0 bg-black/60 z-[1]" />
         <div className="container mx-auto px-4 md:px-6 relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -252,7 +264,7 @@ function HomeContent() {
       </section>
 
       {/* 다크 → 라이트 그라데이션 전환 */}
-      <div className="h-16 md:h-24 bg-gradient-to-b from-[#5B2FC2] via-[#7C4DFF]/30 to-[#F8F7FC]" />
+      <div className="h-16 md:h-24 bg-gradient-to-b from-[#1a1a2e] via-[#2d2d44]/30 to-[#F8F7FC]" />
 
       {/* 문의 퍼널 섹션 */}
       <section id="inquiry-funnel" className="bg-[#F8F7FC] py-12 md:py-20">
