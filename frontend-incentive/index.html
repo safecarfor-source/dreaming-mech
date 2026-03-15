@@ -341,17 +341,20 @@ body {
 
 /* ===== NEW CLEAN DESIGN (팀/권중/정석 only) ===== */
 #tab-team .nc-wrap, #tab-manager .nc-wrap, #tab-director .nc-wrap {
-  background: #ffffff; border: 1px solid #000; margin: 0 auto; max-width: 520px;
-  border-radius: 16px; overflow: hidden;
+  margin: 0 auto; max-width: 520px;
 }
 .nc-name {
   text-align: center; font-size: 72px; font-weight: 900; color: #000;
-  padding: 28px 0; border-bottom: 1px solid #000; letter-spacing: 4px;
+  padding: 28px 0; letter-spacing: 4px;
+  background: #ffffff; border: 0.5px solid rgba(0,0,0,0.15); border-radius: 16px;
+  margin-bottom: 12px;
 }
 .nc-box {
-  padding: 16px; border-bottom: 1px solid #000; color: #000;
+  padding: 20px; color: #000;
+  background: #ffffff; border: 0.5px solid rgba(0,0,0,0.15); border-radius: 16px;
+  margin-bottom: 12px;
 }
-.nc-box:last-child { border-bottom: none; }
+.nc-box:last-child { margin-bottom: 0; }
 .nc-box-title {
   font-size: 36px; font-weight: 900; color: #000; margin-bottom: 14px; text-align: center;
   letter-spacing: 2px;
@@ -375,7 +378,7 @@ body {
   padding: 12px 8px; text-align: center;
 }
 .nc-split > div:first-child {
-  border-right: 1px solid #000;
+  border-right: 1px solid rgba(0,0,0,0.15);
 }
 .nc-split-label { font-size: 11px; color: #666; margin-bottom: 4px; }
 .nc-split-value { font-size: 20px; font-weight: 800; color: #000; }
@@ -410,7 +413,7 @@ body {
 .nc-data-row .nc-dr-val { text-align: right; font-variant-numeric: tabular-nums; }
 .nc-data-row-header {
   display: grid; grid-template-columns: auto 1fr 1fr 1fr; gap: 4px;
-  padding: 4px 0 6px; border-bottom: 1px solid #000; font-size: 11px; color: #666; font-weight: 600;
+  padding: 4px 0 6px; border-bottom: 1px solid rgba(0,0,0,0.2); font-size: 11px; color: #666; font-weight: 600;
 }
 .nc-data-row-header span { text-align: right; }
 .nc-data-row-header span:first-child { text-align: left; }
@@ -420,7 +423,7 @@ body {
 .nc-table td { padding: 6px 0; border-bottom: 1px solid #eee; }
 .nc-table td:last-child { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
 .nc-table tr:last-child td { border-bottom: none; }
-.nc-table .nc-total { border-top: 2px solid #000; font-weight: 800; font-size: 14px; }
+.nc-table .nc-total { border-top: 2px solid rgba(0,0,0,0.3); font-weight: 800; font-size: 14px; }
 
 /* Goal item */
 .nc-goal-item {
@@ -444,13 +447,10 @@ body {
 .nc-admin-detail { margin-bottom: 12px; }
 
 @media (max-width: 520px) {
-  #tab-team .nc-wrap, #tab-manager .nc-wrap, #tab-director .nc-wrap {
-    border-left: none; border-right: none; border-radius: 0;
-  }
-  .nc-name { font-size: 56px; padding: 22px 0; }
+  .nc-name { font-size: 56px; padding: 22px 0; border-radius: 12px; }
+  .nc-box { padding: 16px; border-radius: 12px; }
   .nc-box-title { font-size: 28px; }
   .nc-big-num { font-size: 28px; }
-  .nc-box { padding: 12px; }
 }
 </style>
 </head>
