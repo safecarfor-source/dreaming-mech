@@ -1713,12 +1713,15 @@ function renderSalesTargetDashboard(data, el, year, month) {
     </div>
   </div>`;
 
-  // Box 4: 일평균 매출 목표
+  // Box 4: 일평균 매출 목표 (Lv.1 기준)
   if (tyRemain > 0) {
-    const nextTierIdx = Math.min(currentTierIdx + 1, 4);
-    const nextTier = tiers[nextTierIdx];
-    const nextTarget = tierThresholds[nextTierIdx] === Infinity ? null : Math.round(lyTotal * (1 + tierThresholds[nextTierIdx] / 100));
-    const dailyNeeded = nextTarget && nextTarget > tysSales ? Math.round((nextTarget - tysSales) / tyRemain) : 0;
+    // Lv.1 = tier index 2 (0~5% 성장, 0.6%)
+    const lv1Tier = tiers[2];
+    const lv1Threshold = tierThresholds[2]; // 0%
+    const lv1Target = Math.round(lyTotal * (1 + lv1Threshold / 100));
+    const lv1Remain = lv1Target - tysSales;
+    const lv1DailyNeeded = lv1Remain > 0 ? Math.round(lv1Remain / tyRemain) : 0;
+    const lv1Achieved = tysSales >= lv1Target;
 
     html += `<div class="nc-box" style="text-align:center">
       <div class="nc-box-title">일평균 매출 목표</div>
@@ -1728,11 +1731,11 @@ function renderSalesTargetDashboard(data, el, year, month) {
           <div class="nc-split-value">${fmtMan(tyAvg)}</div>
         </div>
         <div>
-          <div class="nc-split-label">다음 단계(${nextTier.rate}%) 필요</div>
-          <div class="nc-split-value">${dailyNeeded > 0 ? fmtMan(dailyNeeded) + '/일' : '달성'}</div>
+          <div class="nc-split-label">Lv.1 달성 목표</div>
+          <div class="nc-split-value">${lv1Achieved ? '달성!' : fmtMan(lv1DailyNeeded) + '/일'}</div>
         </div>
       </div>
-      <div class="nc-sub-text" style="margin-top:8px">남은 영업일 ${tyRemain}일</div>
+      <div class="nc-sub-text" style="margin-top:8px">${lv1Achieved ? 'Lv.1 달성 완료! 🎉' : 'Lv.1 달성까지 ' + fmtBigWon(lv1Remain) + ' 남음 · 남은 영업일 ' + tyRemain + '일'}</div>
     </div>`;
   }
 
