@@ -342,17 +342,19 @@ body {
 /* ===== NEW CLEAN DESIGN (팀/권중/정석 only) ===== */
 #tab-team .nc-wrap, #tab-manager .nc-wrap, #tab-director .nc-wrap {
   background: #ffffff; border: 1px solid #000; margin: 0 auto; max-width: 520px;
+  border-radius: 16px; overflow: hidden;
 }
 .nc-name {
-  text-align: center; font-size: 24px; font-weight: 900; color: #000;
-  padding: 20px 0; border-bottom: 1px solid #000; letter-spacing: 2px;
+  text-align: center; font-size: 72px; font-weight: 900; color: #000;
+  padding: 28px 0; border-bottom: 1px solid #000; letter-spacing: 4px;
 }
 .nc-box {
   padding: 16px; border-bottom: 1px solid #000; color: #000;
 }
 .nc-box:last-child { border-bottom: none; }
 .nc-box-title {
-  font-size: 13px; font-weight: 700; color: #000; margin-bottom: 10px; text-align: center;
+  font-size: 36px; font-weight: 900; color: #000; margin-bottom: 14px; text-align: center;
+  letter-spacing: 2px;
 }
 .nc-big-num {
   font-size: 32px; font-weight: 900; color: #000; text-align: center; letter-spacing: -1px;
@@ -394,8 +396,8 @@ body {
 }
 .nc-bar-name { font-size: 13px; font-weight: 600; color: #000; }
 .nc-bar-val { font-size: 12px; color: #666; }
-.nc-bar-track { height: 10px; background: #eee; border-radius: 2px; overflow: hidden; position: relative; }
-.nc-bar-fill { height: 100%; background: #333; border-radius: 2px; transition: width 0.5s; }
+.nc-bar-track { height: 10px; background: #eee; border-radius: 6px; overflow: hidden; position: relative; }
+.nc-bar-fill { height: 100%; background: #333; border-radius: 6px; transition: width 0.5s; }
 .nc-bar-target { position: absolute; top: -2px; bottom: -2px; width: 1.5px; border-left: 1.5px dashed #000; }
 
 /* 3-column data row */
@@ -422,8 +424,8 @@ body {
 
 /* Goal item */
 .nc-goal-item {
-  display: flex; align-items: center; gap: 8px; padding: 8px; border: 1px solid #ddd;
-  border-radius: 4px; margin-bottom: 6px;
+  display: flex; align-items: center; gap: 8px; padding: 10px 12px; border: 1px solid #ddd;
+  border-radius: 12px; margin-bottom: 8px;
 }
 .nc-goal-num {
   width: 24px; height: 24px; border-radius: 50%; border: 1.5px solid #000;
@@ -443,9 +445,10 @@ body {
 
 @media (max-width: 520px) {
   #tab-team .nc-wrap, #tab-manager .nc-wrap, #tab-director .nc-wrap {
-    border-left: none; border-right: none;
+    border-left: none; border-right: none; border-radius: 0;
   }
-  .nc-name { font-size: 22px; padding: 16px 0; }
+  .nc-name { font-size: 56px; padding: 22px 0; }
+  .nc-box-title { font-size: 28px; }
   .nc-big-num { font-size: 28px; }
   .nc-box { padding: 12px; }
 }
@@ -1040,10 +1043,11 @@ function renderTeam(data, el) {
   allItems.forEach(item => {
     const pi = prevItems[item.key];
     const prevSales = pi ? pi.sales : 0;
+    const prevQty = pi ? pi.qty : 0;
     const pct = prevSales > 0 ? Math.round(item.sales / prevSales * 100) : (item.sales > 0 ? 100 : 0);
     html += `<div class="nc-bar-item">
       <div class="nc-bar-head">
-        <span class="nc-bar-name">${item.label}</span>
+        <span class="nc-bar-name">${item.label} (${item.qty}/${prevQty})</span>
         <span class="nc-bar-val">${fmtWon(item.sales)} (${pct}%)</span>
       </div>
       <div class="nc-bar-track">
@@ -1388,7 +1392,7 @@ function renderManagerSalesTarget(data, el, year, month, teamData) {
   html += `<div class="nc-wrap">`;
 
   // 이름
-  html += `<div class="nc-name">권중</div>`;
+  html += `<div class="nc-name">김권중</div>`;
 
   // Box 1: 그래프
   html += `<div class="nc-box">
@@ -1661,7 +1665,7 @@ function renderSalesTargetDashboard(data, el, year, month) {
   html += `<div class="nc-wrap">`;
 
   // 이름
-  html += `<div class="nc-name">정석</div>`;
+  html += `<div class="nc-name">이정석</div>`;
 
   // Box 1: 그래프
   html += `<div class="nc-box">
