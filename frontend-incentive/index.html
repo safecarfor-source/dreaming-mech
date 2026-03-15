@@ -346,12 +346,14 @@ body {
 .nc-name {
   text-align: center; font-size: 72px; font-weight: 900; color: #000;
   padding: 28px 0; letter-spacing: 4px;
-  background: #ffffff; border: 0.5px solid rgba(0,0,0,0.15); border-radius: 16px;
+  background: #ffffff; border: none; border-radius: 16px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 4px 14px rgba(0,0,0,0.06);
   margin-bottom: 12px;
 }
 .nc-box {
   padding: 20px; color: #000;
-  background: #ffffff; border: 0.5px solid rgba(0,0,0,0.15); border-radius: 16px;
+  background: #ffffff; border: none; border-radius: 16px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 4px 14px rgba(0,0,0,0.06);
   margin-bottom: 12px;
 }
 .nc-box:last-child { margin-bottom: 0; }
@@ -400,7 +402,7 @@ body {
 .nc-bar-name { font-size: 13px; font-weight: 600; color: #000; }
 .nc-bar-val { font-size: 12px; color: #666; }
 .nc-bar-track { height: 10px; background: #eee; border-radius: 6px; overflow: hidden; position: relative; }
-.nc-bar-fill { height: 100%; background: #333; border-radius: 6px; transition: width 0.5s; }
+.nc-bar-fill { height: 100%; background: #3EA6FF; border-radius: 6px; transition: width 0.5s; }
 .nc-bar-target { position: absolute; top: -2px; bottom: -2px; width: 1.5px; border-left: 1.5px dashed #000; }
 
 /* 3-column data row */
@@ -431,9 +433,10 @@ body {
   border-radius: 12px; margin-bottom: 8px;
 }
 .nc-goal-num {
-  width: 24px; height: 24px; border-radius: 50%; border: 1.5px solid #000;
+  min-width: 48px; height: 24px; border-radius: 12px; border: 1.5px solid #000;
   display: flex; align-items: center; justify-content: center;
-  font-size: 11px; font-weight: 800; color: #000; flex-shrink: 0;
+  font-size: 10px; font-weight: 800; color: #000; flex-shrink: 0;
+  padding: 0 6px; letter-spacing: -0.5px;
 }
 .nc-goal-num.done { background: #000; color: #fff; }
 .nc-goal-info { flex: 1; min-width: 0; }
@@ -709,6 +712,14 @@ function createStockChart(canvasId, labels, dataArr, options = {}) {
   const yFormat = options.yFormat || (v => fmt(v));
   const tipFormat = options.tipFormat || (v => fmtWon(v));
 
+  // Y축 역동적 범위 계산 (변동폭 강조)
+  const dataMin = Math.min(...dataArr.filter(v => v != null));
+  const dataMax = Math.max(...dataArr.filter(v => v != null));
+  const dataRange = dataMax - dataMin || dataMax * 0.1;
+  const yPad = dataRange * 0.15;
+  const dynamicMin = Math.max(0, Math.floor(dataMin - yPad));
+  const dynamicMax = Math.ceil(dataMax + yPad);
+
   const grad = ctx2d.createLinearGradient(0, 0, 0, 320);
   grad.addColorStop(0, mainColor + '30');
   grad.addColorStop(1, mainColor + '05');
@@ -730,12 +741,12 @@ function createStockChart(canvasId, labels, dataArr, options = {}) {
     borderColor: hasNeg ? pointColors : mainColor,
     backgroundColor: grad,
     fill: true,
-    tension: 0,
+    tension: 0.4,
     borderWidth: 2.5,
-    pointRadius: 5,
-    pointHoverRadius: 8,
+    pointRadius: 0,
+    pointHoverRadius: 5,
     pointBackgroundColor: pointColors,
-    pointBorderColor: '#272727',
+    pointBorderColor: '#fff',
     pointBorderWidth: 2,
     pointHitRadius: 20,
     segment: segmentBorder,
@@ -815,10 +826,11 @@ function createStockChart(canvasId, labels, dataArr, options = {}) {
           ticks: { font: { size: 11, family: 'Noto Sans KR' }, color: '#aaa' },
         },
         y: {
-          grid: { color: '#3F3F3F', drawBorder: false },
+          grid: { color: '#E8E8E8', drawBorder: false },
           border: { display: false },
-          ticks: { font: { size: 11, family: 'Noto Sans KR' }, color: '#bbb', callback: yFormat, maxTicksLimit: 4 },
-          min: 0,
+          ticks: { font: { size: 11, family: 'Noto Sans KR' }, color: '#999', callback: yFormat, maxTicksLimit: 5 },
+          min: dynamicMin,
+          max: dynamicMax,
         },
       },
       animation: { duration: 600, easing: 'easeOutQuart' },
@@ -1089,7 +1101,7 @@ function renderTeam(data, el) {
     chartInstances.team = createStockChart('teamChart',
       teamMonthlyData.map(m => m.month),
       teamMonthlyData.map(m => m.incentive),
-      { color: '#333333', negColor: '#999999', negCheck: (i) => teamMonthlyData[i] && teamMonthlyData[i].penalized, yFormat: v => fmtMan(v), tipFormat: v => fmtWon(v), label: '인센티브' }
+      { color: '#3EA6FF', negColor: '#FF4E45', negCheck: (i) => teamMonthlyData[i] && teamMonthlyData[i].penalized, yFormat: v => fmtMan(v), tipFormat: v => fmtWon(v), label: '인센티브' }
     );
   }
 }
@@ -1471,7 +1483,7 @@ function renderManagerChart() {
       managerMonthlyData.map(m => m.month),
       managerMonthlyData.map(m => (m.tireSales || 0) + (m.alignmentSales || 0)),
       {
-        color: '#333333',
+        color: '#3EA6FF',
         yFormat: v => (v/1e8).toFixed(1) + '억', tipFormat: v => fmtWon(v), label: '타이어+얼라인',
       }
     );
@@ -1728,20 +1740,22 @@ function renderSalesTargetDashboard(data, el, year, month) {
   if (tyRemain > 0) {
     html += `<div class="nc-box">
       <div class="nc-box-title">오늘의 목표</div>`;
+    const tierLevels = [-10, -5, 1, 5, 10];
     tiers.forEach((tier, idx) => {
       const thres = tierThresholds[idx];
-      if (thres === -Infinity) return;
-      const tierTarget = Math.round(lyTotal * (1 + thres / 100));
+      // 5% 이상 하락 (tier 0): 기본 달성 (매출 있으면 무조건)
+      const tierTarget = (thres === -Infinity) ? 0 : Math.round(lyTotal * (1 + thres / 100));
       const isAchieved = tysSales >= tierTarget;
       const remain = tierTarget - tysSales;
       const dailyNeeded = isAchieved ? 0 : Math.round(remain / tyRemain);
-      const tierIncentive = Math.round(tierTarget * tier.rate / 100);
+      const tierIncentive = (thres === -Infinity) ? Math.round(lyTotal * 0.95 * tier.rate / 100) : Math.round(tierTarget * tier.rate / 100);
+      const lvLabel = 'Lv.' + tierLevels[idx];
 
       html += `<div class="nc-goal-item" style="${isAchieved ? 'opacity:0.5' : ''}">
-        <div class="nc-goal-num ${isAchieved ? 'done' : ''}">${isAchieved ? '✓' : (idx + 1)}</div>
+        <div class="nc-goal-num ${isAchieved ? 'done' : ''}">${isAchieved ? '✓' : lvLabel}</div>
         <div class="nc-goal-info">
-          <div class="nc-goal-label">${tier.label} (${tier.rate}%)</div>
-          <div class="nc-goal-sub">${isAchieved ? '달성 완료' : '하루 ' + fmtMan(dailyNeeded)}</div>
+          <div class="nc-goal-label">매출 ${tier.label} → 인센티브 비율 ${tier.rate}%</div>
+          <div class="nc-goal-sub">${isAchieved ? '달성 완료' : '하루 매출 ' + fmtMan(dailyNeeded) + ' 달성 시 가능'}</div>
         </div>
         <div class="nc-goal-right">
           <div class="nc-goal-val">${fmtBigWon(tierIncentive)}</div>
@@ -1765,7 +1779,7 @@ function renderDirectorChart() {
       directorMonthlyData.map(m => m.month),
       directorMonthlyData.map(m => m.totalRevenue),
       {
-        color: '#333333',
+        color: '#3EA6FF',
         yFormat: v => (v/1e8).toFixed(1) + '억', tipFormat: v => fmtWon(v), label: '매출',
       }
     );
