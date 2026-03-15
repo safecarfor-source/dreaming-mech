@@ -8,32 +8,32 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;800;900&display=swap">
 <style>
 :root {
-  /* 배경 3단계 */
-  --bg: #0F0F0F;
-  --card: #272727;
-  --border: #3A3A3A;
+  /* 배경 3단계 (라이트모드) */
+  --bg: #FFFFFF;
+  --card: #FFFFFF;
+  --border: #E0E0E0;
   /* 텍스트 3단계 */
-  --text: #F1F1F1;
-  --text-muted: #AAAAAA;
-  --text-light: #606060;
+  --text: #1A1A1A;
+  --text-muted: #666666;
+  --text-light: #999999;
   /* 기능색 3가지만 */
   --green: #2BA640;
   --red: #FF4E45;
   --accent: #3EA6FF;
   /* 감액 배경 */
-  --red-light: #2D1515;
-  --green-light: #1A2D1A;
-  --shadow: none;
-  --shadow-md: 0 2px 8px rgba(0,0,0,0.3);
+  --red-light: #FEF2F2;
+  --green-light: #F0FFF4;
+  --shadow: 0 1px 3px rgba(0,0,0,0.08);
+  --shadow-md: 0 1px 3px rgba(0,0,0,0.08), 0 4px 14px rgba(0,0,0,0.06);
   /* 하위 호환 */
   --purple: var(--accent);
-  --purple-light: #1A2A3A;
+  --purple-light: #EBF5FF;
   --teal: var(--green);
   --teal-light: var(--green-light);
   --blue: var(--accent);
-  --blue-light: #1A2A3A;
+  --blue-light: #EBF5FF;
   --amber: var(--text-muted);
-  --amber-light: #2A2A2A;
+  --amber-light: #F5F5F5;
 }
 
 * { margin:0; padding:0; box-sizing:border-box; }
@@ -59,9 +59,9 @@ body {
 .login-box input {
   width: 100%; padding: 14px 16px; border: 1px solid var(--border); border-radius: 12px;
   font-size: 15px; font-family: inherit; margin-bottom: 12px; outline: none; transition: border-color 0.2s;
-  background: #1A1A1A; color: var(--text);
+  background: #F5F5F5; color: var(--text);
 }
-.login-box input:focus { border-color: var(--purple); background: #222; }
+.login-box input:focus { border-color: var(--purple); background: #fff; }
 .login-box input::placeholder { color: var(--text-light); }
 .login-box button {
   width: 100%; padding: 14px; background: var(--purple); color: #fff; border: none; border-radius: 12px;
@@ -109,7 +109,7 @@ body {
   display: block; width: 100%; text-align: left; padding: 12px 20px; background: none; border: none;
   font-size: 14px; font-family: inherit; cursor: pointer; color: var(--text);
 }
-.mobile-dropdown button:hover { background: #3F3F3F; }
+.mobile-dropdown button:hover { background: #F0F0F0; }
 .mobile-dropdown .dd-info {
   padding: 12px 20px; font-size: 13px; color: var(--text-muted); border-bottom: 1px solid var(--border);
 }
@@ -156,10 +156,10 @@ body {
 .text-green { color: var(--green); }
 
 /* --- Loss/OK Banner --- */
-.loss-banner { background: #3D1C1C; border-radius: 12px; padding: 24px; text-align: center; margin-bottom: 12px; }
+.loss-banner { background: #FEF2F2; border-radius: 12px; padding: 24px; text-align: center; margin-bottom: 12px; }
 .loss-banner .loss-label { font-size: 13px; font-weight: 600; color: var(--red); margin-bottom: 4px; }
 .loss-banner .loss-amount { font-size: 28px; font-weight: 800; color: var(--red); }
-.ok-banner { background: #1A3D34; border-radius: 12px; padding: 24px; text-align: center; margin-bottom: 12px; }
+.ok-banner { background: #F0FFF4; border-radius: 12px; padding: 24px; text-align: center; margin-bottom: 12px; }
 .ok-banner .ok-label { font-size: 13px; font-weight: 600; color: var(--green); }
 .ok-banner .ok-amount { font-size: 28px; font-weight: 800; color: var(--green); }
 
@@ -180,7 +180,7 @@ body {
 .mqp-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
 .mqp-name { font-size: 14px; font-weight: 600; color: var(--text); }
 .mqp-count { font-size: 13px; font-weight: 600; }
-.mqp-bar-wrap { position: relative; height: 12px; background: #1A1A1A; border-radius: 6px; overflow: visible; }
+.mqp-bar-wrap { position: relative; height: 12px; background: #E8E8E8; border-radius: 6px; overflow: visible; }
 .mqp-bar { height: 100%; border-radius: 6px; transition: width 0.6s ease; }
 .mqp-target-line { position: absolute; top: -3px; bottom: -3px; width: 1.5px; border-left: 1.5px dashed #717171; }
 .mqp-action { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
@@ -192,11 +192,11 @@ body {
 .bar-group-text h4 { font-size: 15px; font-weight: 700; color: var(--text); }
 .bar-group-text p { font-size: 11px; color: var(--text-light); margin-top: 1px; }
 .bar-item { background: var(--card); border: 0.5px solid var(--border); border-radius: 12px; padding: 14px; margin-bottom: 10px; }
-.bar-item.achieved { background: #1A3D34; border-color: #2DD4A060; }
+.bar-item.achieved { background: #F0FFF4; border-color: #2DD4A060; }
 .bar-item-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
 .bar-item-name { font-size: 14px; font-weight: 700; color: var(--text); white-space: nowrap; }
 .bar-item-revenue { font-size: 12px; color: var(--text-muted); white-space: nowrap; }
-.bar-item-bar-wrap { position: relative; height: 32px; background: #3A3A3A; border-radius: 8px; overflow: hidden; display: flex; }
+.bar-item-bar-wrap { position: relative; height: 32px; background: #E8E8E8; border-radius: 8px; overflow: hidden; display: flex; }
 .bar-legend { display: flex; justify-content: center; gap: 14px; padding: 8px 0; margin-top: 4px; }
 .bar-legend-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--text-muted); }
 .bar-legend-dot { width: 9px; height: 9px; border-radius: 3px; }
@@ -213,14 +213,14 @@ body {
 .item-card-bottom { display: flex; justify-content: space-between; align-items: center; }
 .item-card-inc-label { font-size: 13px; color: var(--text-muted); }
 .item-card-inc-value { font-size: 20px; font-weight: 700; color: var(--purple); }
-.item-card.inactive { background: #1A1A1A; opacity: 0.6; }
+.item-card.inactive { background: #F5F5F5; opacity: 0.6; }
 .item-card.inactive .item-card-inc-value { color: #CCCCCC; }
 .zero-toggle {
   display: block; width: 100%; text-align: center; padding: 12px; font-size: 13px; color: var(--text-muted);
   background: none; border: 1px dashed var(--border); border-radius: 10px; cursor: pointer; font-family: inherit;
   margin-bottom: 8px;
 }
-.zero-toggle:hover { background: #fafafa; }
+.zero-toggle:hover { background: #F0F0F0; }
 
 /* --- Table (desktop) --- */
 .desktop-table { display: block; }
@@ -494,9 +494,9 @@ body {
   <div id="pwModal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.4);z-index:999;justify-content:center;align-items:center">
     <div style="background:var(--card);border-radius:16px;padding:32px;width:100%;max-width:380px;box-shadow:0 8px 32px rgba(0,0,0,0.15);margin:16px">
       <h3 style="margin-bottom:20px;font-size:18px">비밀번호 변경</h3>
-      <input type="password" id="pwCurrent" placeholder="현재 비밀번호" style="width:100%;padding:12px;border:1px solid var(--border);border-radius:10px;font-size:14px;font-family:inherit;margin-bottom:10px;background:#1A1A1A;color:var(--text)">
-      <input type="password" id="pwNew" placeholder="새 비밀번호" style="width:100%;padding:12px;border:1px solid var(--border);border-radius:10px;font-size:14px;font-family:inherit;margin-bottom:10px;background:#1A1A1A">
-      <input type="password" id="pwConfirm" placeholder="새 비밀번호 확인" style="width:100%;padding:12px;border:1px solid var(--border);border-radius:10px;font-size:14px;font-family:inherit;margin-bottom:16px;background:#1A1A1A">
+      <input type="password" id="pwCurrent" placeholder="현재 비밀번호" style="width:100%;padding:12px;border:1px solid var(--border);border-radius:10px;font-size:14px;font-family:inherit;margin-bottom:10px;background:#F5F5F5;color:var(--text)">
+      <input type="password" id="pwNew" placeholder="새 비밀번호" style="width:100%;padding:12px;border:1px solid var(--border);border-radius:10px;font-size:14px;font-family:inherit;margin-bottom:10px;background:#F5F5F5">
+      <input type="password" id="pwConfirm" placeholder="새 비밀번호 확인" style="width:100%;padding:12px;border:1px solid var(--border);border-radius:10px;font-size:14px;font-family:inherit;margin-bottom:16px;background:#F5F5F5">
       <div id="pwError" style="color:var(--red);font-size:13px;min-height:20px;margin-bottom:8px"></div>
       <div style="display:flex;gap:10px">
         <button onclick="closePwModal()" style="flex:1;padding:12px;background:none;border:1px solid var(--border);border-radius:10px;font-size:14px;font-family:inherit;cursor:pointer">취소</button>
@@ -628,12 +628,12 @@ function renderBarItem(item, prevItems, hasMq) {
       <span class="bar-item-name">${item.label}</span>
       <span class="bar-item-revenue">매출 ${fmtWon(item.inc)}</span>
     </div>
-    <div class="bar-item-bar-wrap" style="position:relative;height:32px;border-radius:8px;overflow:hidden;display:flex;background:#3A3A3A">
+    <div class="bar-item-bar-wrap" style="position:relative;height:32px;border-radius:8px;overflow:hidden;display:flex;background:#E8E8E8">
       <div style="width:${fillPct}%;background:${color};display:flex;align-items:center;justify-content:center;min-width:${currentVal > 0 ? '36px' : '0'};border-radius:${fillPct >= 100 ? '8px' : '8px 0 0 8px'};position:relative;z-index:1">
         <span style="font-size:12px;font-weight:700;color:#fff;white-space:nowrap">${currentLabel}</span>
       </div>
       ${remainPct > 0 && remainCount > 0 ? `<div style="flex:1;display:flex;align-items:center;justify-content:center">
-        <span style="font-size:11px;font-weight:600;color:#fff;white-space:nowrap">${remainLabel}</span>
+        <span style="font-size:11px;font-weight:600;color:#666;white-space:nowrap">${remainLabel}</span>
       </div>` : ''}
     </div>
   </div>`;
@@ -1080,10 +1080,10 @@ function renderTeam(data, el) {
       <input type="date" id="teamUploadMonth" style="padding:6px 12px;border:1px solid var(--border);border-radius:8px;font-family:'Noto Sans KR'">
     </div>
     <div class="upload-area" onclick="document.getElementById('teamExcelFile').click()"
-      ondragover="event.preventDefault();this.style.borderColor='#3EA6FF';this.style.background='#1A2A3A'"
+      ondragover="event.preventDefault();this.style.borderColor='#3EA6FF';this.style.background='#EBF5FF'"
       ondragleave="this.style.borderColor='';this.style.background=''"
       ondrop="event.preventDefault();this.style.borderColor='';this.style.background='';var f=document.getElementById('teamExcelFile');f.files=event.dataTransfer.files;uploadExcel(f)"
-      style="border:2px dashed var(--border);border-radius:12px;padding:24px;text-align:center;cursor:pointer;background:#1A1A1A">
+      style="border:2px dashed var(--border);border-radius:12px;padding:24px;text-align:center;cursor:pointer;background:#F5F5F5">
       <div style="font-size:28px;margin-bottom:8px">📄</div>
       <div style="font-size:13px;color:var(--text-muted)">극동 매출 엑셀 파일을 선택하거나 드래그하세요</div>
       <input type="file" id="teamExcelFile" accept=".xlsx,.xls" onchange="uploadExcel(this)" style="display:none">
@@ -1204,7 +1204,7 @@ function renderManager(data, el) {
 
   // 감액 배너
   if (isLoss) {
-    html += `<div style="background:#3D1C1C;border-radius:12px;padding:24px;text-align:center;margin-bottom:12px">
+    html += `<div style="background:#FEF2F2;border-radius:12px;padding:24px;text-align:center;margin-bottom:12px">
       <div style="font-size:18px;font-weight:800;color:var(--red);margin-bottom:20px">⚠️ 팀 최소수량 미달 — 팀 보너스 감액</div>
       <div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:4px">실제 수령액</div>
       <div style="font-size:36px;font-weight:900;color:var(--red);margin-bottom:16px" data-countup="${data.totalIncentive}">${fmtWon(data.totalIncentive)}</div>
@@ -1221,7 +1221,7 @@ function renderManager(data, el) {
       </div>
     </div>`;
   } else {
-    html += `<div style="background:#1A3D34;border-radius:12px;padding:24px;text-align:center;margin-bottom:12px">
+    html += `<div style="background:#F0FFF4;border-radius:12px;padding:24px;text-align:center;margin-bottom:12px">
       <div style="font-size:14px;font-weight:700;color:var(--green);margin-bottom:12px">✅ 팀 최소수량 달성! 100% 수령</div>
       <div style="font-size:17px;font-weight:900;color:var(--text);margin-bottom:4px">이번 달 인센티브</div>
       <div style="font-size:36px;font-weight:900;color:var(--green)" data-countup="${data.totalIncentive}">${fmtWon(data.totalIncentive)}</div>
@@ -1246,7 +1246,7 @@ function renderManager(data, el) {
     const circ = 2 * Math.PI * r;
     const filled = Math.min(pct, 100) / 100 * circ;
     return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
-      <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="#2A2A2A" stroke-width="${stroke}"/>
+      <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="#E0E0E0" stroke-width="${stroke}"/>
       <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="${color}" stroke-width="${stroke}"
         stroke-dasharray="${filled} ${circ}" stroke-dashoffset="0" stroke-linecap="round"
         transform="rotate(-90 ${size/2} ${size/2})" style="transition:stroke-dashoffset 0.6s ease"/>
@@ -1264,7 +1264,7 @@ function renderManager(data, el) {
 
   html += `<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
     <div class="card" style="text-align:center;padding:16px 12px;border-radius:14px;border:1px solid #F0F0F0">
-      <div style="background:#1A3D34;padding:6px 10px;border-radius:8px;margin-bottom:10px">
+      <div style="background:#F0FFF4;padding:6px 10px;border-radius:8px;margin-bottom:10px">
         <div style="font-size:14px;font-weight:800;color:var(--green)">타이어 인센티브</div>
       </div>
       <div style="position:relative;display:inline-block;margin-bottom:10px">
@@ -1279,7 +1279,7 @@ function renderManager(data, el) {
       ${mgrPrevMonth ? `<div style="font-size:12px;color:var(--text);font-weight:700;margin-top:4px">전월: ${fmtWon(prevTire)}</div>` : ''}
     </div>
     <div class="card" style="text-align:center;padding:16px 12px;border-radius:14px;border:1px solid #F0F0F0">
-      <div style="background:#1A3D34;padding:6px 10px;border-radius:8px;margin-bottom:10px">
+      <div style="background:#F0FFF4;padding:6px 10px;border-radius:8px;margin-bottom:10px">
         <div style="font-size:14px;font-weight:800;color:var(--green)">권중 프리미엄 (x1.5)</div>
       </div>
       <div style="position:relative;display:inline-block;margin-bottom:10px">
@@ -1341,8 +1341,8 @@ function renderManagerSalesTarget(data, el, year, month, teamData) {
   // 관리자 — 영업일수 수정 (카드 밖, 기존 다크 스타일)
   if (isAdmin) {
     html += `<details class="nc-admin-detail" style="margin-bottom:12px">
-      <summary style="cursor:pointer;font-size:13px;font-weight:700;color:var(--accent);padding:10px 14px;background:#1A2A3A;border:1.5px solid var(--accent);border-radius:10px;user-select:none">영업일수 수정</summary>
-      <div style="background:#1A2A3A;border:1.5px solid var(--accent);border-top:none;border-radius:0 0 10px 10px;padding:14px">
+      <summary style="cursor:pointer;font-size:13px;font-weight:700;color:var(--accent);padding:10px 14px;background:#EBF5FF;border:1.5px solid var(--accent);border-radius:10px;user-select:none">영업일수 수정</summary>
+      <div style="background:#EBF5FF;border:1.5px solid var(--accent);border-top:none;border-radius:0 0 10px 10px;padding:14px">
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:6px">
           <div>
             <label style="font-size:11px;font-weight:700;color:var(--text-muted);display:block;margin-bottom:3px">지난달 영업일</label>
@@ -1360,7 +1360,7 @@ function renderManagerSalesTarget(data, el, year, month, teamData) {
           </div>
           <div>
             <label style="font-size:11px;font-weight:700;color:var(--text-muted);display:block;margin-bottom:3px">남은 영업일 (자동)</label>
-            <input id="mstTyRemain" type="number" value="${tyRemain ?? ''}" readonly style="width:100%;font-size:13px;font-weight:600;border:1px solid var(--border);border-radius:6px;padding:6px 8px;outline:none;background:#1A2A3A;color:var(--accent)">
+            <input id="mstTyRemain" type="number" value="${tyRemain ?? ''}" readonly style="width:100%;font-size:13px;font-weight:600;border:1px solid var(--border);border-radius:6px;padding:6px 8px;outline:none;background:#EBF5FF;color:var(--accent)">
           </div>
         </div>
         <button onclick="saveManagerSalesTarget(${year}, ${month})" style="width:100%;padding:8px;background:var(--purple);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">영업일수 저장</button>
@@ -1592,7 +1592,7 @@ const DIR_TIERS = [
   { label: '0~5% 하락',   min: -5,   max: 0,  rate: 0.5, color: '#FF4E45', bg: '#FEF2F2', mult: 0.97 },
   { label: '동일 ~ 5% 성장', min: 0, max: 5,  rate: 0.6, color: '#6B7280', bg: '#F9FAFB', mult: 1.025 },
   { label: '5~8% 성장',   min: 5,    max: 8,  rate: 0.7, color: '#6B7280', bg: '#F9FAFB', mult: 1.065 },
-  { label: '8% 이상 성장', min: 8,    max: 999, rate: 0.9, color: '#3EA6FF', bg: '#1A2A3A', mult: 1.10 },
+  { label: '8% 이상 성장', min: 8,    max: 999, rate: 0.9, color: '#3EA6FF', bg: '#EBF5FF', mult: 1.10 },
 ];
 function getDirTierIdx(gr) { if(gr<=-5)return 0;if(gr<=0)return 1;if(gr<=5)return 2;if(gr<=8)return 3;return 4; }
 
@@ -1621,8 +1621,8 @@ function renderSalesTargetDashboard(data, el, year, month) {
   // 관리자 — 영업일수 수정 (카드 밖, 기존 다크 스타일)
   if (isAdmin) {
     html += `<details class="nc-admin-detail" style="margin-bottom:12px">
-      <summary style="cursor:pointer;font-size:13px;font-weight:700;color:var(--accent);padding:10px 14px;background:#1A2A3A;border:1.5px solid var(--accent);border-radius:10px;user-select:none">영업일수 수정</summary>
-      <div style="background:#1A2A3A;border:1.5px solid var(--accent);border-top:none;border-radius:0 0 10px 10px;padding:14px">
+      <summary style="cursor:pointer;font-size:13px;font-weight:700;color:var(--accent);padding:10px 14px;background:#EBF5FF;border:1.5px solid var(--accent);border-radius:10px;user-select:none">영업일수 수정</summary>
+      <div style="background:#EBF5FF;border:1.5px solid var(--accent);border-top:none;border-radius:0 0 10px 10px;padding:14px">
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:6px">
           <div>
             <label style="font-size:11px;font-weight:700;color:var(--text-muted);display:block;margin-bottom:3px">작년 영업일</label>
@@ -1640,7 +1640,7 @@ function renderSalesTargetDashboard(data, el, year, month) {
           </div>
           <div>
             <label style="font-size:11px;font-weight:700;color:var(--text-muted);display:block;margin-bottom:3px">남은 영업일 (자동)</label>
-            <input id="stTyRemain" type="number" value="${tyRemain ?? ''}" readonly style="width:100%;font-size:13px;font-weight:600;border:1px solid var(--border);border-radius:6px;padding:6px 8px;outline:none;background:#1A2A3A;color:var(--accent)">
+            <input id="stTyRemain" type="number" value="${tyRemain ?? ''}" readonly style="width:100%;font-size:13px;font-weight:600;border:1px solid var(--border);border-radius:6px;padding:6px 8px;outline:none;background:#EBF5FF;color:var(--accent)">
           </div>
         </div>
         <button onclick="saveSalesTarget(${year}, ${month})" style="width:100%;padding:8px;background:var(--purple);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">영업일수 저장</button>
@@ -2124,7 +2124,7 @@ async function loadAdminPanel() {
           <input type="date" id="uploadMonth" style="padding:6px 12px;border:1px solid var(--border);border-radius:8px;font-family:'Noto Sans KR'">
         </div>
         <div class="upload-area" onclick="document.getElementById('excelFile').click()"
-          ondragover="event.preventDefault();this.style.borderColor='#3EA6FF';this.style.background='#1A2A3A'"
+          ondragover="event.preventDefault();this.style.borderColor='#3EA6FF';this.style.background='#EBF5FF'"
           ondragleave="this.style.borderColor='';this.style.background=''"
           ondrop="event.preventDefault();this.style.borderColor='';this.style.background='';var f=document.getElementById('excelFile');f.files=event.dataTransfer.files;uploadExcel(f)">
           <div class="upload-icon">📄</div><div class="upload-text">극동 매출 엑셀 파일을 선택하거나 드래그하세요</div>
@@ -2246,7 +2246,7 @@ async function uploadExcel(input) {
     if (!res.ok) throw new Error(data.message || '업로드 실패');
 
     // 업로드 성공 메시지만 표시
-    let ph = `<div style="background:#1A3D34;border-radius:12px;padding:24px;text-align:center">
+    let ph = `<div style="background:#F0FFF4;border-radius:12px;padding:24px;text-align:center">
       <div style="font-size:28px;margin-bottom:8px">✅</div>
       <div style="color:var(--green);font-weight:700;font-size:15px">업로드 성공</div>
       <div style="color:var(--text-muted);font-size:13px;margin-top:6px">${data.month} 데이터가 반영되었습니다</div>
@@ -2333,18 +2333,18 @@ async function loadQtyHistory() {
     months.forEach(m => {
       h += `<th class="num">${m}</th>`;
     });
-    if (hasPrev) h += `<th class="num" style="background:#2A2A2A;color:var(--text-muted);font-weight:700;font-size:11px">${prevMonthLabel}<br>설정</th>`;
-    h += `<th class="num" style="background:#1A2A3A;color:var(--accent);font-weight:700">${selMonth || ''}<br>최소수량</th></tr></thead><tbody>`;
+    if (hasPrev) h += `<th class="num" style="background:#F0F0F0;color:var(--text-muted);font-weight:700;font-size:11px">${prevMonthLabel}<br>설정</th>`;
+    h += `<th class="num" style="background:#EBF5FF;color:var(--accent);font-weight:700">${selMonth || ''}<br>최소수량</th></tr></thead><tbody>`;
     itemKeys.forEach(key => {
       h += `<tr><td style="font-weight:600;white-space:nowrap">${ITEM_LABELS[key]}</td>`;
       months.forEach(m => {
         const md = Array.isArray(historyData) ? historyData.find(d => d.month === m) : null;
         const qty = md && md.items[key] ? md.items[key] : 0;
-        h += `<td class="num" style="${qty > 0 ? 'font-weight:600;color:var(--accent)' : 'color:#ccc'}">${qty}</td>`;
+        h += `<td class="num" style="${qty > 0 ? 'font-weight:600;color:var(--accent)' : 'color:#bbb'}">${qty}</td>`;
       });
       if (hasPrev) {
         const pv = prevTargets[key] || 0;
-        h += `<td class="num" style="background:#2A2A2A;${pv > 0 ? 'font-weight:600;color:var(--text-muted)' : 'color:#ccc'}">${pv}</td>`;
+        h += `<td class="num" style="background:#F0F0F0;${pv > 0 ? 'font-weight:600;color:var(--text-muted)' : 'color:#bbb'}">${pv}</td>`;
       }
       const existVal = existingTargets[key] || 0;
       h += `<td class="num" style="background:#F9F5FF"><input type="number" min="0" value="${existVal}" id="minqty-${key}" style="width:55px;text-align:center;border:1px solid #D4B4FE;border-radius:6px;padding:4px;font-size:13px;font-weight:600;font-family:'Noto Sans KR'"></td>`;
@@ -2399,7 +2399,7 @@ async function loadMappings() {
       h += `<tr>
         <td><code style="background:var(--border);padding:2px 6px;border-radius:4px">${m.code}</code></td>
         <td style="font-size:11px">${m.isPrefix ? '접두어' : '정확'}</td>
-        <td><span style="background:${m.isIncentive?'#1A2A3A':'#2A2A2A'};color:${m.isIncentive?'#3EA6FF':'var(--text-light)'};padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600">${CAT_LABELS[m.category]||m.category}</span></td>
+        <td><span style="background:${m.isIncentive?'#EBF5FF':'#F0F0F0'};color:${m.isIncentive?'#2563EB':'var(--text-light)'};padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600">${CAT_LABELS[m.category]||m.category}</span></td>
         <td style="text-align:center">${m.isIncentive ? '<span style="color:var(--green)">O</span>' : '<span style="color:var(--text-light)">-</span>'}</td>
         <td><button class="btn-save" style="background:#FF6B6B;font-size:11px;padding:3px 8px" onclick="deleteMapping('${m.id}','${m.code}')">삭제</button></td>
       </tr>`;
