@@ -1713,15 +1713,22 @@ function renderSalesTargetDashboard(data, el, year, month) {
     </div>
   </div>`;
 
-  // Box 4: 일평균 매출 목표 (Lv.1 기준)
+  // Box 4: 일평균 매출 목표 (레벨 선택 가능)
   if (tyRemain > 0) {
-    // Lv.1 = tier index 2 (0~5% 성장, 0.6%)
-    const lv1Tier = tiers[2];
-    const lv1Threshold = tierThresholds[2]; // 0%
-    const lv1Target = Math.round(lyTotal * (1 + lv1Threshold / 100));
-    const lv1Remain = lv1Target - tysSales;
-    const lv1DailyNeeded = lv1Remain > 0 ? Math.round(lv1Remain / tyRemain) : 0;
-    const lv1Achieved = tysSales >= lv1Target;
+    const tierLvNames = ['Lv.-10', 'Lv.-5', 'Lv.1', 'Lv.5', 'Lv.10'];
+    const savedLvIdx = localStorage.getItem('directorTargetLv') || '2';
+    const defaultIdx = parseInt(savedLvIdx);
+
+    // 각 레벨별 데이터 미리 계산 (JSON으로 넘김)
+    const lvData = tiers.map((t, i) => {
+      const thres = tierThresholds[i];
+      const target = (thres === -Infinity) ? 0 : Math.round(lyTotal * (1 + thres / 100));
+      const remain = target - tysSales;
+      const daily = remain > 0 ? Math.round(remain / tyRemain) : 0;
+      const achieved = tysSales >= target;
+      return { target, remain, daily, achieved, rate: t.rate };
+    });
+    const cur = lvData[defaultIdx];
 
     html += `<div class="nc-box" style="text-align:center">
       <div class="nc-box-title">일평균 매출 목표</div>
@@ -1731,12 +1738,31 @@ function renderSalesTargetDashboard(data, el, year, month) {
           <div class="nc-split-value">${fmtMan(tyAvg)}</div>
         </div>
         <div>
-          <div class="nc-split-label">Lv.1 달성 목표</div>
-          <div class="nc-split-value">${lv1Achieved ? '달성!' : fmtMan(lv1DailyNeeded) + '/일'}</div>
+          <div class="nc-split-label" style="display:flex;align-items:center;justify-content:center;gap:4px">
+            <select id="targetLvSelect" onchange="updateTargetLv(this.value)" style="font-size:12px;font-weight:700;border:1.5px solid #000;border-radius:8px;padding:2px 6px;background:#fff;color:#000;cursor:pointer">
+              ${tierLvNames.map((name, i) => `<option value="${i}" ${i === defaultIdx ? 'selected' : ''}>${name}</option>`).join('')}
+            </select>
+            <span>달성 목표</span>
+          </div>
+          <div class="nc-split-value" id="targetLvDaily">${cur.achieved ? '달성!' : fmtMan(cur.daily) + '/일'}</div>
         </div>
       </div>
-      <div class="nc-sub-text" style="margin-top:8px">${lv1Achieved ? 'Lv.1 달성 완료! 🎉' : 'Lv.1 달성까지 ' + fmtBigWon(lv1Remain) + ' 남음 · 남은 영업일 ' + tyRemain + '일'}</div>
+      <div class="nc-sub-text" id="targetLvSub" style="margin-top:8px">${cur.achieved ? tierLvNames[defaultIdx] + ' 달성 완료! 🎉' : tierLvNames[defaultIdx] + ' 달성까지 ' + fmtBigWon(cur.remain) + ' 남음 · 남은 영업일 ' + tyRemain + '일'}</div>
     </div>`;
+
+    // 레벨 변경 핸들러를 전역에 등록
+    window._directorLvData = lvData;
+    window._directorLvNames = tierLvNames;
+    window._directorTyRemain = tyRemain;
+    window.updateTargetLv = function(idx) {
+      idx = parseInt(idx);
+      localStorage.setItem('directorTargetLv', idx);
+      const d = window._directorLvData[idx];
+      const name = window._directorLvNames[idx];
+      const remain = window._directorTyRemain;
+      document.getElementById('targetLvDaily').textContent = d.achieved ? '달성!' : fmtMan(d.daily) + '/일';
+      document.getElementById('targetLvSub').textContent = d.achieved ? name + ' 달성 완료! 🎉' : name + ' 달성까지 ' + fmtBigWon(d.remain) + ' 남음 · 남은 영업일 ' + remain + '일';
+    };
   }
 
   // Box 5: 오늘의 목표
