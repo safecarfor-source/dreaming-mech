@@ -1000,7 +1000,7 @@ function renderTeam(data, el) {
   // Box 2: 인센티브
   html += `<div class="nc-box" style="text-align:center">
     <div class="nc-box-title">인센티브</div>
-    <div class="nc-big-num">${fmtWon(inc.actual)}</div>`;
+    <div class="nc-big-num">💵 ${fmtWon(inc.actual)}</div>`;
   if (isLoss) {
     html += `<div class="nc-sub-text">감액 전 ${fmtWon(inc.calculated)} / 감액 -${fmtWon(inc.lost)}</div>`;
   }
@@ -1403,7 +1403,7 @@ function renderManagerSalesTarget(data, el, year, month, teamData) {
   // Box 2: 총 인센티브 상세설명
   html += `<div class="nc-box">
     <div class="nc-box-title">총 인센티브</div>
-    <div class="nc-big-num">${fmtWon(totalManagerIncentive)}</div>
+    <div class="nc-big-num">💵 ${fmtWon(totalManagerIncentive)}</div>
     <table class="nc-table" style="margin-top:12px">
       <tr><td>타이어 매출</td><td>${fmtWon(tireSales)}</td></tr>
       <tr><td>얼라인먼트 매출</td><td>${fmtWon(alignSales)}</td></tr>
@@ -1676,7 +1676,7 @@ function renderSalesTargetDashboard(data, el, year, month) {
   // Box 2: 총 인센티브
   html += `<div class="nc-box" style="text-align:center">
     <div class="nc-box-title">총 인센티브</div>
-    <div class="nc-big-num">${fmtWon(currentIncentive)}</div>
+    <div class="nc-big-num">💵 ${fmtWon(currentIncentive)}</div>
     <div class="nc-sub-text">현재 요율 ${currentTier.rate}% / ${currentTier.label}</div>
     <div class="nc-sub-text">성장률 ${currentGrowth >= 0 ? '+' : ''}${currentGrowth.toFixed(1)}%</div>
   </div>`;
