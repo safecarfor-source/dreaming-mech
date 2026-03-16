@@ -25,7 +25,7 @@ export class TeamController {
 
   @Get('targets')
   getTargets(@Query('month') month: string) {
-    return this.teamService.getCurrent(month);
+    return this.teamService.getTargetsOnly(month);
   }
 
   @Get('item-qty-history')

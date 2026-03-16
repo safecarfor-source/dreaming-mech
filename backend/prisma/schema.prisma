@@ -686,3 +686,17 @@ model IncentiveEditLog {
   @@index([userId])
   @@index([editedAt])
 }
+
+// 현금흐름 데이터
+model CashFlow {
+  id         String   @id @default(uuid())
+  year       Int
+  month      Int
+  cash       BigInt   @default(0)   // 31일 기준 현금
+  investment BigInt   @default(0)   // 투자자산(증권)
+  inventory  BigInt   @default(0)   // 타이어 재고자산
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([year, month])
+}

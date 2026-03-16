@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>대표 인사이트 - 꿈꾸는 정비사</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;800;900&display=swap">
+<style>
+:root {
+  --bg: #F5F5F7;
+  --card: #FFFFFF;
+  --border: #E5E5EA;
+  --text: #1D1D1F;
+  --text-muted: #86868B;
+  --text-light: #AEAEB2;
+  --accent: #0071E3;
+  --green: #34C759;
+  --red: #FF3B30;
+  --shadow: 0 2px 8px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.06);
+  --shadow-lg: 0 4px 16px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.04);
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--bg); color: var(--text); min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+.header {
+  background: var(--card); border-bottom: 1px solid var(--border);
+  padding: 16px 20px; display: flex; align-items: center; justify-content: space-between;
+  position: sticky; top: 0; z-index: 100;
+}
+.header-title { font-size: 18px; font-weight: 800; letter-spacing: -0.5px; }
+.header-sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+.header-link {
+  font-size: 12px; color: var(--accent); text-decoration: none; font-weight: 600;
+  padding: 6px 12px; border: 1px solid var(--accent); border-radius: 20px;
+}
+
+.login-page {
+  display: flex; justify-content: center; align-items: center; min-height: 100vh;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+}
+.login-box {
+  background: var(--card); border-radius: 20px; padding: 40px; width: 90%; max-width: 360px;
+  box-shadow: var(--shadow-lg); text-align: center;
+}
+.login-box h2 { font-size: 24px; font-weight: 900; margin-bottom: 4px; }
+.login-box p { font-size: 13px; color: var(--text-muted); margin-bottom: 24px; }
+.login-box input {
+  width: 100%; padding: 12px 16px; border: 1.5px solid var(--border); border-radius: 12px;
+  font-size: 15px; font-family: inherit; margin-bottom: 12px; outline: none;
+}
+.login-box input:focus { border-color: var(--accent); }
+.login-box button {
+  width: 100%; padding: 14px; background: #1a1a2e; color: #fff; border: none;
+  border-radius: 12px; font-size: 16px; font-weight: 700; cursor: pointer; font-family: inherit;
+}
+
+.content { padding: 16px; max-width: 520px; margin: 0 auto; }
+.month-sel { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+.month-sel select {
+  padding: 8px 12px; border: 1px solid var(--border); border-radius: 10px;
+  font-size: 14px; font-family: inherit; background: var(--card); cursor: pointer;
+}
+
+.card {
+  background: var(--card); border-radius: 16px; padding: 20px;
+  box-shadow: var(--shadow); margin-bottom: 12px;
+}
+.card-title {
+  font-size: 13px; font-weight: 700; color: var(--text-muted); margin-bottom: 14px;
+  text-transform: uppercase; letter-spacing: 0.5px;
+}
+.big-num { font-size: 32px; font-weight: 900; letter-spacing: -1px; text-align: center; }
+.sub-text { font-size: 12px; color: var(--text-muted); text-align: center; margin-top: 4px; }
+
+.data-tbl { width: 100%; border-collapse: collapse; }
+.data-tbl td { padding: 10px 0; font-size: 14px; border-bottom: 1px solid #f0f0f0; }
+.data-tbl td:last-child { text-align: right; font-weight: 700; font-variant-numeric: tabular-nums; }
+.data-tbl tr:last-child td { border-bottom: none; }
+.data-tbl .total td { font-weight: 800; font-size: 15px; border-top: 2px solid var(--text); border-bottom: none; padding-top: 12px; }
+
+.insight-card { background: linear-gradient(135deg, #EBF5FF 0%, #F0F7FF 100%); }
+.insight-item { font-size: 13px; padding: 6px 0; line-height: 1.5; }
+
+.bar-wrap { margin-bottom: 12px; }
+.bar-label { display: flex; justify-content: space-between; font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+.bar-track { height: 24px; background: #f0f0f0; border-radius: 12px; overflow: hidden; }
+.bar-fill { height: 100%; border-radius: 12px; transition: width 0.8s ease; }
+
+.growth { display: inline-block; font-size: 14px; font-weight: 800; padding: 2px 8px; border-radius: 6px; }
+.growth.up { color: var(--green); background: rgba(52,199,89,0.1); }
+.growth.down { color: var(--red); background: rgba(255,59,48,0.1); }
+
+.chart-wrap { position: relative; height: 220px; }
+
+.cf-input {
+  width: 100%; font-size: 15px; font-weight: 600; border: 1.5px solid var(--border);
+  border-radius: 10px; padding: 10px 12px; font-family: inherit; outline: none;
+}
+.cf-input:focus { border-color: var(--accent); }
+.cf-label { font-size: 11px; font-weight: 700; color: var(--text-muted); margin-bottom: 4px; }
+
+.loading { text-align: center; padding: 60px 20px; color: var(--text-muted); }
+.spinner { width: 32px; height: 32px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 12px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+@media (max-width: 480px) {
+  .big-num { font-size: 28px; }
+  .card { padding: 16px; }
+}
+</style>
+</head>
+<body>
+
+<div id="loginPage" class="login-page">
+  <div class="login-box">
+    <h2>대표 인사이트</h2>
+    <p>시흥총판 유니타이어 경영 대시보드</p>
+    <input id="loginId" type="text" placeholder="아이디">
+    <input id="loginPw" type="password" placeholder="비밀번호">
+    <button onclick="doLogin()">로그인</button>
+  </div>
+</div>
+
+<div id="app" style="display:none">
+  <div class="header">
+    <div>
+      <div class="header-title">대표 인사이트</div>
+      <div class="header-sub" id="updateInfo"></div>
+    </div>
+    <a href="/incentive/" class="header-link">인센티브 →</a>
+  </div>
+  <div class="content">
+    <div class="month-sel">
+      <select id="yearSel" onchange="loadData()"></select>
+      <select id="monthSel" onchange="loadData()"></select>
+    </div>
+    <div id="mainContent"><div class="loading"><div class="spinner"></div>로딩 중...</div></div>
+  </div>
+</div>
+
+<script>
+const API = '/api/incentive';
+let token = localStorage.getItem('incentive_token');
+let currentUser = null;
+
+function fmtWon(n) { return (n||0).toLocaleString('ko-KR') + '원'; }
+function fmtMan(n) {
+  const abs = Math.abs(n||0);
+  if (abs >= 100000000) return (n/100000000).toFixed(1).replace(/\.0$/,'') + '억';
+  if (abs >= 10000) return Math.round(n/10000).toLocaleString('ko-KR') + '만';
+  return (n||0).toLocaleString('ko-KR');
+}
+function fmtManWon(n) { return fmtMan(n) + '원'; }
+
+async function api(path, opts = {}) {
+  const res = await fetch(API + path, {
+    ...opts,
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token, ...opts.headers },
+  });
+  if (res.status === 401) { doLogout(); throw new Error('인증 만료'); }
+  if (!res.ok) throw new Error('API 오류: ' + res.status);
+  return res.json();
+}
+
+async function doLogin() {
+  const id = document.getElementById('loginId').value;
+  const pw = document.getElementById('loginPw').value;
+  try {
+    const res = await fetch(API + '/auth/login', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: id, password: pw }),
+    });
+    const data = await res.json();
+    if (!res.ok) { alert(data.message || '로그인 실패'); return; }
+    token = data.access_token;
+    localStorage.setItem('incentive_token', token);
+    initApp();
+  } catch { alert('로그인 실패'); }
+}
+function doLogout() {
+  token = null; localStorage.removeItem('incentive_token');
+  document.getElementById('loginPage').style.display = 'flex';
+  document.getElementById('app').style.display = 'none';
+}
+
+async function initApp() {
+  try { currentUser = await api('/auth/me'); } catch { doLogout(); return; }
+  document.getElementById('loginPage').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  const now = new Date();
+  const yearSel = document.getElementById('yearSel');
+  if (yearSel.options.length === 0) {
+    [now.getFullYear()-1, now.getFullYear()].forEach(y => {
+      const o = document.createElement('option'); o.value = y; o.textContent = y + '년';
+      if (y === now.getFullYear()) o.selected = true; yearSel.appendChild(o);
+    });
+  }
+  const monthSel = document.getElementById('monthSel');
+  if (monthSel.options.length === 0) {
+    for (let m = 1; m <= 12; m++) {
+      const o = document.createElement('option'); o.value = m; o.textContent = m + '월';
+      if (m === now.getMonth()+1) o.selected = true; monthSel.appendChild(o);
+    }
+  }
+  loadUpdateInfo();
+  loadData();
+}
+
+async function loadUpdateInfo() {
+  try {
+    const h = await api('/upload/history');
+    if (!h || !h.length) return;
+    const a = h.filter(x => x.status === 'approved');
+    const l = a.length > 0 ? a[0] : h[0];
+    const d = new Date(l.createdAt || l.uploadDate);
+    if (isNaN(d)) return;
+    const isToday = d.toDateString() === new Date().toDateString();
+    const ds = isToday ? `오늘 ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`
+      : `${d.getMonth()+1}.${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+    document.getElementById('updateInfo').innerHTML = `<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--green)"></span> 업데이트: ${ds}`;
+  } catch {}
+}
+
+const LY_REV = {1:141000000,2:119870650,3:141360490,4:152108207,5:145727900,6:125293560,7:161988450,8:158435400,9:167255850,10:183964700,11:175339060,12:212235800};
+let chartInst = null;
+
+async function loadData() {
+  const year = parseInt(document.getElementById('yearSel').value);
+  const month = parseInt(document.getElementById('monthSel').value);
+  if (!year || !month) return;
+  const el = document.getElementById('mainContent');
+  el.innerHTML = '<div class="loading"><div class="spinner"></div>로딩 중...</div>';
+  try {
+    const ms = (year-2000) + '년 ' + month + '월';
+    const pm = month===1 ? 12 : month-1;
+    const py = month===1 ? year-1 : year;
+    const pms = (py-2000) + '년 ' + pm + '월';
+
+    const [teamData, mgrData, stData, dirMonthly] = await Promise.all([
+      api('/team/current?month=' + encodeURIComponent(ms)).catch(() => null),
+      api('/manager/current?month=' + encodeURIComponent(ms)).catch(() => null),
+      api('/sales-target/' + year + '/' + month).catch(() => null),
+      api('/director/monthly').catch(() => []),
+    ]);
+
+    let cf = null;
+    try { cf = await api('/dashboard/cashflow/' + year + '/' + month); } catch {}
+    if (!cf) { const s = localStorage.getItem('cf_'+year+'_'+month); if (s) cf = JSON.parse(s); }
+    let pcf = null;
+    try { pcf = await api('/dashboard/cashflow/' + py + '/' + pm); } catch {}
+    if (!pcf) { const s = localStorage.getItem('cf_'+py+'_'+pm); if (s) pcf = JSON.parse(s); }
+
+    let pmRev = 0;
+    if (dirMonthly && Array.isArray(dirMonthly)) {
+      const e = dirMonthly.find(m => m.month === pms);
+      if (e) pmRev = e.totalRevenue || 0;
+    }
+
+    render({teamData, mgrData, stData, dirMonthly, cf, pcf, pmRev, year, month}, el);
+  } catch (e) {
+    el.innerHTML = '<div style="text-align:center;padding:40px;color:var(--red)">데이터 로드 실패</div>';
+  }
+}
+
+function render(d, el) {
+  const {teamData, mgrData, stData, dirMonthly, cf, pcf, pmRev, year, month} = d;
+  let html = '';
+
+  const totalRev = stData ? stData.tysSales : 0;
+  const lyRev = LY_REV[month] || 0;
+  const lyG = lyRev > 0 ? ((totalRev - lyRev) / lyRev * 100) : 0;
+  const pmG = pmRev > 0 ? ((totalRev - pmRev) / pmRev * 100) : 0;
+
+  // 매출 현황
+  html += `<div class="card">
+    <div class="card-title">💰 이번 달 총 매출</div>
+    <div class="big-num">${fmtManWon(totalRev)}</div>
+    <div style="display:flex;justify-content:center;gap:20px;margin-top:12px">
+      <div style="text-align:center">
+        <div style="font-size:11px;color:var(--text-light)">전년 동월</div>
+        <span class="growth ${lyG>=0?'up':'down'}">${lyG>=0?'▲':'▼'} ${Math.abs(lyG).toFixed(1)}%</span>
+        <div style="font-size:10px;color:var(--text-light);margin-top:2px">${fmtManWon(lyRev)}</div>
+      </div>
+      <div style="width:1px;background:var(--border)"></div>
+      <div style="text-align:center">
+        <div style="font-size:11px;color:var(--text-light)">전월</div>
+        <span class="growth ${pmG>=0?'up':'down'}">${pmG>=0?'▲':'▼'} ${Math.abs(pmG).toFixed(1)}%</span>
+        <div style="font-size:10px;color:var(--text-light);margin-top:2px">${fmtManWon(pmRev)}</div>
+      </div>
+    </div>
+  </div>`;
+
+  // 매출 구성
+  const IL = {brake_oil:'브레이크오일',lining:'라이닝',mission_oil:'미션오일',diff_oil:'데후오일',wiper:'와이퍼',battery:'밧데리',ac_filter:'에어컨필터',guardian_h3:'가디안H3',guardian_h5:'가디안H5',guardian_h7:'가디안H7'};
+  let svcTotal = 0;
+  const items = {};
+  if (teamData && teamData.items) {
+    for (const [k, v] of Object.entries(teamData.items)) { svcTotal += v.sales; items[k] = v; }
+  }
+  const tireS = mgrData ? (mgrData.tireSales||0) : 0;
+  const alignS = mgrData ? (mgrData.alignmentSales||0) : 0;
+  const otherS = Math.max(0, totalRev - svcTotal - tireS - alignS);
+
+  const cats = [
+    {label:'타이어', value:tireS, color:'#0071E3'},
+    {label:'서비스(정비)', value:svcTotal, color:'#34C759'},
+    {label:'얼라인먼트', value:alignS, color:'#FF9500'},
+    {label:'기타(수리/검사)', value:otherS, color:'#AF52DE'},
+  ].filter(c => c.value > 0);
+  const catTot = cats.reduce((s,c) => s+c.value, 0) || 1;
+
+  html += `<div class="card"><div class="card-title">🏷️ 매출 구성</div>`;
+  cats.forEach(c => {
+    const p = (c.value/catTot*100).toFixed(1);
+    html += `<div class="bar-wrap">
+      <div class="bar-label"><span>${c.label}</span><span>${fmtManWon(c.value)} (${p}%)</span></div>
+      <div class="bar-track"><div class="bar-fill" style="width:${p}%;background:${c.color}"></div></div>
+    </div>`;
+  });
+  if (Object.keys(items).length > 0) {
+    html += `<details style="margin-top:8px"><summary style="font-size:12px;font-weight:700;color:var(--accent);cursor:pointer">서비스 항목 상세</summary>
+      <table class="data-tbl" style="margin-top:8px">`;
+    Object.entries(items).sort((a,b)=>b[1].sales-a[1].sales).forEach(([k,v]) => {
+      html += `<tr><td style="font-size:13px">${IL[k]||k}</td><td style="font-size:13px">${fmtWon(v.sales)} (${v.qty}건)</td></tr>`;
+    });
+    html += `</table></details>`;
+  }
+  html += `</div>`;
+
+  // 인센티브
+  const tInc = teamData ? teamData.incentive : null;
+  const tAct = tInc ? tInc.actual : 0;
+  const mTot = mgrData ? (mgrData.incentive||{}).total || 0 : 0;
+  let dInc = 0;
+  if (stData && stData.tysSales) {
+    const g = lyRev > 0 ? ((stData.tysSales-lyRev)/lyRev*100) : 0;
+    let r = 0.3; if(g>8)r=0.9;else if(g>5)r=0.7;else if(g>0)r=0.6;else if(g>-5)r=0.5;
+    dInc = Math.round(stData.tysSales * r / 100);
+  }
+  const tCnt = 7, tTot = tAct * tCnt;
+  const grand = dInc + mTot + tTot;
+  const iR = totalRev > 0 ? (grand/totalRev*100) : 0;
+
+  html += `<div class="card">
+    <div class="card-title">🏆 인센티브 총괄</div>
+    <div class="big-num" style="font-size:26px;color:var(--accent)">${fmtWon(grand)}</div>
+    <div class="sub-text">매출 대비 ${iR.toFixed(2)}%</div>
+    <table class="data-tbl" style="margin-top:12px">
+      <tr><td>이정석 (매출 요율)</td><td>${fmtWon(dInc)}</td></tr>
+      <tr><td>김권중 (타이어+서비스)</td><td>${fmtWon(mTot)}</td></tr>
+      <tr><td>기사 ${tCnt}명 (1인 ${fmtWon(tAct)})</td><td>${fmtWon(tTot)}</td></tr>
+      <tr class="total"><td>총 인센비용</td><td>${fmtWon(grand)}</td></tr>
+    </table>
+  </div>`;
+
+  // 자산
+  const c = cf||{}, p = pcf||{};
+  const cTot = (c.cash||0)+(c.investment||0)+(c.inventory||0);
+  const pTot = (p.cash||0)+(p.investment||0)+(p.inventory||0);
+  const cChg = pTot > 0 ? cTot - pTot : 0;
+
+  html += `<div class="card">
+    <div class="card-title">💰 자산 현황</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+      <div><div class="cf-label">31일 현금</div>
+        <input class="cf-input" id="cfCash" type="number" value="${c.cash||''}" placeholder="0" onchange="saveCF(${year},${month})"></div>
+      <div><div class="cf-label">투자자산(증권)</div>
+        <input class="cf-input" id="cfInvest" type="number" value="${c.investment||''}" placeholder="0" onchange="saveCF(${year},${month})"></div>
+    </div>
+    <div style="margin-bottom:12px"><div class="cf-label">타이어 재고자산</div>
+      <input class="cf-input" id="cfInv" type="number" value="${c.inventory||''}" placeholder="0" onchange="saveCF(${year},${month})"></div>
+    <div style="background:var(--bg);border-radius:12px;padding:14px;text-align:center">
+      <div style="font-size:12px;color:var(--text-muted)">총 자산</div>
+      <div style="font-size:24px;font-weight:900" id="cfDisp">${cTot > 0 ? fmtManWon(cTot) : '-'}</div>
+      ${cChg !== 0 ? `<div style="font-size:12px;font-weight:700;color:${cChg>=0?'var(--green)':'var(--red)'}">전월 대비 ${cChg>=0?'+':''}${fmtManWon(cChg)}</div>` : ''}
+    </div>
+  </div>`;
+
+  // 인사이트
+  const ins = [];
+  if (lyG >= 8) ins.push({i:'🔥', t:'작년 대비 8% 이상 성장! 최고 등급 인센 요율'});
+  else if (lyG >= 0) ins.push({i:'📈', t:'작년 대비 성장세 유지 (+' + lyG.toFixed(1) + '%)'});
+  else if (lyG >= -5) ins.push({i:'⚠️', t:'작년 대비 소폭 하락 (' + lyG.toFixed(1) + '%). 페이스업 필요'});
+  else ins.push({i:'🚨', t:'작년 대비 ' + Math.abs(lyG).toFixed(1) + '% 하락. 최저 인센 요율 적용'});
+  if (tInc && tInc.lost > 0) ins.push({i:'⚡', t:'최소수량 미달 → 팀 인센 50% 감액 (-' + fmtWon(tInc.lost) + ')'});
+  if (cats.length > 0) ins.push({i:'🏷️', t:'매출 1위: ' + cats[0].label + ' (' + (cats[0].value/catTot*100).toFixed(0) + '%)'});
+  if (pmG < -10) ins.push({i:'📉', t:'전월 대비 ' + Math.abs(pmG).toFixed(0) + '% 하락'});
+  else if (pmG > 10) ins.push({i:'🚀', t:'전월 대비 ' + pmG.toFixed(0) + '% 성장!'});
+  if (iR > 3) ins.push({i:'💸', t:'인센비율 ' + iR.toFixed(1) + '% — 매출 대비 높은 편'});
+
+  html += `<div class="card insight-card"><div class="card-title">💡 대표 인사이트</div>`;
+  ins.forEach(x => { html += `<div class="insight-item">${x.i} ${x.t}</div>`; });
+  html += `</div>`;
+
+  // 차트
+  html += `<div class="card"><div class="card-title">📊 월별 매출 트렌드</div><div class="chart-wrap"><canvas id="trendChart"></canvas></div></div>`;
+
+  el.innerHTML = html;
+  renderChart(dirMonthly, year, month);
+}
+
+function saveCF(y, m) {
+  const cash = parseInt(document.getElementById('cfCash').value)||0;
+  const investment = parseInt(document.getElementById('cfInvest').value)||0;
+  const inventory = parseInt(document.getElementById('cfInv').value)||0;
+  const data = {cash, investment, inventory};
+  localStorage.setItem('cf_'+y+'_'+m, JSON.stringify(data));
+  const t = cash + investment + inventory;
+  document.getElementById('cfDisp').textContent = t > 0 ? fmtManWon(t) : '-';
+  api('/dashboard/cashflow/'+y+'/'+m, {method:'PUT', body:JSON.stringify(data)}).catch(()=>{});
+}
+
+function renderChart(dm, year, month) {
+  const c = document.getElementById('trendChart');
+  if (!c) return;
+  if (chartInst) chartInst.destroy();
+  const labels=[], revs=[], lys=[];
+  for (let i=5;i>=0;i--) {
+    let m=month-i, y=year;
+    while(m<=0){m+=12;y--;}
+    labels.push(m+'월');
+    let r=0;
+    if (dm && Array.isArray(dm)) {
+      const e = dm.find(x => x.month === (y-2000)+'년 '+m+'월');
+      if (e) r = e.totalRevenue||0;
+    }
+    revs.push(r);
+    lys.push(LY_REV[m]||0);
+  }
+  chartInst = new Chart(c.getContext('2d'), {
+    type:'bar', data:{labels, datasets:[
+      {label:year+'년', data:revs, backgroundColor:'#0071E3', borderRadius:6, barPercentage:0.4},
+      {label:(year-1)+'년', data:lys, backgroundColor:'#E5E5EA', borderRadius:6, barPercentage:0.4},
+    ]},
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{
+        legend:{position:'top',labels:{font:{size:11,weight:'600',family:'Noto Sans KR'}}},
+        tooltip:{callbacks:{label:ctx=>ctx.dataset.label+': '+fmtManWon(ctx.raw)}}
+      },
+      scales:{
+        y:{beginAtZero:true,ticks:{callback:v=>fmtMan(v),font:{size:10}},grid:{color:'#f5f5f5'}},
+        x:{grid:{display:false},ticks:{font:{size:11,weight:'600'}}}
+      }
+    }
+  });
+}
+
+document.getElementById('loginPw').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
+document.getElementById('loginId').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('loginPw').focus();});
+if (token) { initApp(); }
+</script>
+</body>
+</html>

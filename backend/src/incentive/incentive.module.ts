@@ -33,6 +33,10 @@ import { ConfigController } from './config/config.controller';
 import { UsersController } from './users/users.controller';
 import { LogsController } from './logs/logs.controller';
 
+// Dashboard
+import { DashboardController } from './dashboard/dashboard.controller';
+import { DashboardService } from './dashboard/dashboard.service';
+
 @Module({
   imports: [
     PassportModule,
@@ -53,6 +57,7 @@ import { LogsController } from './logs/logs.controller';
     ConfigController,
     UsersController,
     LogsController,
+    DashboardController,
   ],
   providers: [
     IncentiveAuthService,
@@ -63,6 +68,7 @@ import { LogsController } from './logs/logs.controller';
     DirectorService,
     SalesTargetService,
     UploadService,
+    DashboardService,
   ],
 })
 export class IncentiveModule {}

@@ -251,11 +251,18 @@ body {
 .summary-footer .sf-divider { width: 1px; height: 32px; background: rgba(255,255,255,0.25); }
 
 /* --- Month Selector --- */
-.month-sel { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+.month-sel { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; flex-wrap: wrap; }
 .month-sel label { font-size: 14px; font-weight: 600; color: var(--text-muted); }
 .month-sel select {
   padding: 8px 14px; border: 0.5px solid var(--border); border-radius: 10px; font-size: 14px;
   font-family: inherit; background: var(--card); color: var(--text); cursor: pointer;
+}
+.last-update-row {
+  font-size: 13px; color: var(--text-light); margin-bottom: 16px;
+  display: flex; align-items: center; gap: 4px;
+}
+.last-update-row .update-dot {
+  width: 6px; height: 6px; border-radius: 50%; background: var(--green); display: inline-block;
 }
 
 /* --- Admin --- */
@@ -441,7 +448,7 @@ body {
 .nc-goal-num.done { background: #000; color: #fff; }
 .nc-goal-info { flex: 1; min-width: 0; }
 .nc-goal-label { font-size: 12px; font-weight: 600; color: #000; }
-.nc-goal-sub { font-size: 11px; color: #999; }
+.nc-goal-sub { font-size: 11px; color: #777; font-weight: 500; }
 .nc-goal-right { text-align: right; flex-shrink: 0; }
 .nc-goal-val { font-size: 14px; font-weight: 800; color: #000; }
 .nc-goal-remain { font-size: 10px; color: #999; }
@@ -513,6 +520,7 @@ body {
         <label>조회 월:</label>
         <select id="teamMonthSel" onchange="loadTeamData()"></select>
       </div>
+      <div class="last-update-row" id="lastUpdateTeam"></div>
       <div id="teamContent"><div class="loading"><div class="spinner"></div>로딩 중...</div></div>
     </div>
     <div class="tab-content" id="tab-manager">
@@ -521,6 +529,7 @@ body {
         <select id="managerYearSel" onchange="loadManagerData()" style="margin-right:4px"></select>
         <select id="managerMonthSel" onchange="loadManagerData()"></select>
       </div>
+      <div class="last-update-row" id="lastUpdateManager"></div>
       <div id="managerContent"><div class="loading"><div class="spinner"></div>로딩 중...</div></div>
     </div>
     <div class="tab-content" id="tab-director">
@@ -529,6 +538,7 @@ body {
         <select id="directorYearSel" onchange="loadDirectorData()" style="margin-right:4px"></select>
         <select id="directorMonthSel" onchange="loadDirectorData()"></select>
       </div>
+      <div class="last-update-row" id="lastUpdateDirector"></div>
       <div id="directorContent"><div class="loading"><div class="spinner"></div>로딩 중...</div></div>
     </div>
     <div class="tab-content" id="tab-admin">
@@ -885,6 +895,30 @@ async function initApp() {
     ddInfo.textContent = currentUser.name + ' · ' + (roleMap[currentUser.role] || currentUser.role);
   }
   buildTabs();
+  loadLastUpdateDate();
+}
+
+// 최신 업데이트 날짜 로드
+async function loadLastUpdateDate() {
+  try {
+    const history = await api('/upload/history');
+    if (!history || history.length === 0) return;
+    // approved 중 가장 최신 항목
+    const approved = history.filter(h => h.status === 'approved');
+    const latest = approved.length > 0 ? approved[0] : history[0];
+    const d = new Date(latest.createdAt || latest.uploadDate);
+    if (isNaN(d)) return;
+    const now = new Date();
+    const isToday = d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
+    const dateStr = isToday
+      ? `오늘 ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`
+      : `${d.getMonth()+1}.${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+    const html = `<span class="update-dot"></span> 데이터 업데이트: ${dateStr}`;
+    ['lastUpdateTeam','lastUpdateManager','lastUpdateDirector'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.innerHTML = html;
+    });
+  } catch (e) { console.log('lastUpdate load failed:', e); }
 }
 
 function buildTabs() {
@@ -1025,6 +1059,38 @@ function renderTeam(data, el, monthStr, stData) {
   }
   html += `</div>`;
 
+  // 최소수량 달성 시 인센티브 시뮬레이션
+  // 미달 품목 → 목표 수량 기준 매출로 재계산, 나머지 → 현재 매출 유지
+  let simIncentive = 0;
+  const mqcMap = {};
+  mqc.items.forEach(mq => { mqcMap[mq.itemKey] = mq; });
+  for (const [key, val] of Object.entries(data.items)) {
+    const rate = ITEM_RATES[key] || 0;
+    const mq = mqcMap[key];
+    let sales = val.sales;
+    if (mq && !mq.met && val.qty > 0) {
+      const unitPrice = val.sales / val.qty;
+      sales = Math.round(unitPrice * mq.target);
+    }
+    simIncentive += Math.round(sales * rate / 100);
+  }
+
+  // Box 3: 최소수량 달성/미달 | 달성 시 인센티브 (순서 위로)
+  html += `<div class="nc-box" style="padding:0">
+    <div class="nc-split">
+      <div style="background:${isLoss ? 'rgba(239,68,68,0.08)' : 'rgba(62,166,255,0.08)'}">
+        <div style="font-size:18px;font-weight:900;color:#000;letter-spacing:-0.5px;margin-bottom:4px">최소수량</div>
+        <div style="font-size:18px;font-weight:900;color:${isLoss ? '#EF4444' : '#3EA6FF'};letter-spacing:-0.5px">${isLoss ? '미달' : '달성'}</div>
+        <div class="nc-split-sub">${mqc.metCount}/${mqc.totalCount} 품목</div>
+      </div>
+      <div>
+        <div style="font-size:18px;font-weight:900;color:#000;letter-spacing:-0.5px;margin-bottom:4px">목표 달성 시</div>
+        <div style="font-size:18px;font-weight:900;color:#000;letter-spacing:-0.5px">${fmtWon(simIncentive)}</div>
+        <div class="nc-split-sub">${isLoss ? '+' + fmtWon(simIncentive - inc.actual) + ' 더 받을 수 있음' : '100% 수령 중'}</div>
+      </div>
+    </div>
+  </div>`;
+
   // Box 2.5: 이번 달 매출 예측 (전체 매출 — 작년 동월 대비)
   const teamMonthNum = parseInt((monthStr || '').replace(/.*?(\d+)월.*/, '$1')) || (new Date().getMonth() + 1);
   const lyTeamTotal = LAST_YEAR_REVENUE[teamMonthNum] || 0;
@@ -1056,33 +1122,17 @@ function renderTeam(data, el, monthStr, stData) {
         </div>
       </div>
       <div style="background:#F9FAFB;border-radius:12px;padding:16px;text-align:center">
-        <div style="font-size:11px;color:#666;margin-bottom:4px">현재 페이스(일평균 ${fmtMan(stDailyAvg)}) 유지 시</div>
-        <div style="font-size:24px;font-weight:900;color:#000">${fmtBigWon(stProjected)}</div>
-        <div style="font-size:13px;font-weight:700;color:${stGrowth >= 0 ? '#10B981' : '#EF4444'};margin-top:2px">
+        <div style="font-size:24px;font-weight:900;color:#000;margin-bottom:6px">일 평균 ${fmtMan(stDailyAvg)}원 매출 시</div>
+        <div style="font-size:17px;font-weight:700;color:${stGrowth >= 0 ? '#10B981' : '#EF4444'};margin-bottom:4px">
           작년 대비 ${stGrowth >= 0 ? '+' : ''}${stGrowth.toFixed(1)}%
         </div>
+        <div style="font-size:14px;font-weight:700;color:#333;margin-top:4px">매출: ${fmtBigWon(stProjected)}</div>
       </div>
       <div style="text-align:center;margin-top:10px;font-size:12px;color:${stIsAhead ? '#10B981' : '#EF4444'};font-weight:600">
         ${stIsAhead ? '👍 시간 대비 앞서가는 중!' : '⚡ 페이스업 필요!'}
       </div>
     </div>`;
   }
-
-  // Box 3: 최소수량 달성/미달 | 목표달성
-  html += `<div class="nc-box" style="padding:0">
-    <div class="nc-split">
-      <div>
-        <div class="nc-split-label">최소수량</div>
-        <div class="nc-split-value">${isLoss ? '미달' : '달성'}</div>
-        <div class="nc-split-sub">${mqc.metCount}/${mqc.totalCount} 품목</div>
-      </div>
-      <div>
-        <div class="nc-split-label">목표달성</div>
-        <div class="nc-split-value">${fmtWon(inc.actual)}</div>
-        <div class="nc-split-sub">${isLoss ? '50% 감액' : '100% 수령'}</div>
-      </div>
-    </div>
-  </div>`;
 
   // Box 4: 이 달의 목표 (최소수량 항목 바 그래프)
   if (mqc.items.length > 0) {
@@ -1464,6 +1514,9 @@ function renderManagerSalesTarget(data, el, year, month, teamData) {
   const teamCalc = teamInc ? teamInc.calculated : 0;
   const teamLost = teamInc ? teamInc.lost : 0;
   const teamBonus = Math.round(teamActual * 1.5);
+  const fullTeamBonus = Math.round(teamCalc * 1.5);
+  const teamBonusDiff = fullTeamBonus - teamBonus;
+  const teamAchieved = teamLost === 0;
   const totalManagerIncentive = currentTireIncentive + teamBonus;
 
   // ===== 새 카드 레이아웃 =====
@@ -1486,7 +1539,7 @@ function renderManagerSalesTarget(data, el, year, month, teamData) {
       <tr><td>타이어 매출</td><td>${fmtWon(tireSales)}</td></tr>
       <tr><td>얼라인먼트 매출</td><td>${fmtWon(alignSales)}</td></tr>
       <tr><td>타이어 인센티브 (0.3%)</td><td>${fmtWon(currentTireIncentive)}</td></tr>
-      <tr><td>팀 인센티브 x 1.5배</td><td>${teamData ? fmtWon(teamBonus) : '-'}</td></tr>
+      <tr><td>팀 인센티브 x 1.5배 <span style="color:${teamAchieved ? '#10B981' : '#EF4444'};font-weight:700">${teamAchieved ? '달성' : '(차감금액: ' + fmtWon(teamBonusDiff) + ')'}</span></td><td>${teamData ? fmtWon(teamBonus) : '-'}</td></tr>
       <tr class="nc-total"><td>총 지급 예정액</td><td>${fmtWon(totalManagerIncentive)}</td></tr>
     </table>
   </div>`;
@@ -1516,12 +1569,11 @@ function renderManagerSalesTarget(data, el, year, month, teamData) {
       </div>
     </div>
     <div style="background:#F9FAFB;border-radius:12px;padding:16px;text-align:center">
-      <div style="font-size:11px;color:#666;margin-bottom:4px">현재 페이스(일평균 ${fmtMan(tyAvg)}) 유지 시</div>
-      <div style="font-size:24px;font-weight:900;color:#000">${fmtBigWon(mgrProjected)}</div>
-      <div style="font-size:13px;font-weight:700;color:${mgrGrowth >= 0 ? '#10B981' : '#EF4444'};margin-top:2px">
+      <div style="font-size:24px;font-weight:900;color:#000;margin-bottom:6px">일 평균 ${fmtMan(tyAvg)}원 매출 시</div>
+      <div style="font-size:17px;color:#666;margin-bottom:4px">예상 타이어 인센티브: <b>${fmtBigWon(mgrProjIncentive)}</b></div>
+      <div style="font-size:17px;font-weight:700;color:${mgrGrowth >= 0 ? '#10B981' : '#EF4444'};margin-bottom:4px">
         전월 대비 ${mgrGrowth >= 0 ? '+' : ''}${mgrGrowth.toFixed(1)}%
       </div>
-      <div style="font-size:11px;color:#666;margin-top:4px">예상 타이어 인센티브: <b>${fmtBigWon(mgrProjIncentive)}</b></div>
     </div>
     <div style="text-align:center;margin-top:10px;font-size:12px;color:${mgrIsAhead ? '#10B981' : '#EF4444'};font-weight:600">
       ${mgrIsAhead ? '👍 시간 대비 앞서가는 중!' : '⚡ 페이스업 필요! 일평균 ' + fmtMan(prevAvg) + ' 이상 목표'}
@@ -1539,15 +1591,17 @@ function renderManagerSalesTarget(data, el, year, month, teamData) {
         <tr class="nc-total"><td>김권중 적용 (x1.5배)</td><td>${fmtWon(teamBonus)}</td></tr>
       </table>`;
     if (teamMqc && teamMqc.items && teamMqc.items.length > 0) {
-      html += `<div style="margin-top:12px"><div style="font-size:12px;font-weight:700;color:#000;margin-bottom:8px">필요 최소수량</div>`;
+      html += `<div style="margin-top:16px">
+        <div class="nc-box-title" style="margin-bottom:8px">필요 최소수량</div>
+        <table class="nc-table">`;
       teamMqc.items.forEach(item => {
         const short = item.met ? 0 : (item.target - item.current);
-        html += `<div class="nc-check">
-          <span>${ITEM_LABELS[item.itemKey] || item.itemKey}</span>
-          <span class="nc-check-status">${item.current}/${item.target} ${item.met ? '달성' : '부족 ' + short}</span>
-        </div>`;
+        html += `<tr>
+          <td>${ITEM_LABELS[item.itemKey] || item.itemKey}</td>
+          <td style="color:${item.met ? '#10B981' : '#EF4444'};font-weight:700">${item.current}/${item.target} ${item.met ? '달성' : '부족 ' + short}</td>
+        </tr>`;
       });
-      html += `</div>`;
+      html += `</table></div>`;
     }
     html += `</div>`;
   }
@@ -1769,11 +1823,16 @@ function renderSalesTargetDashboard(data, el, year, month) {
   </div>`;
 
   // Box 2: 총 인센티브
-  html += `<div class="nc-box" style="text-align:center">
+  html += `<div class="nc-box">
     <div class="nc-box-title">총 인센티브</div>
     <div class="nc-big-num">💵 ${fmtWon(currentIncentive)}</div>
-    <div class="nc-sub-text">현재 요율 ${currentTier.rate}% / ${currentTier.label}</div>
-    <div class="nc-sub-text">성장률 ${currentGrowth >= 0 ? '+' : ''}${currentGrowth.toFixed(1)}%</div>
+    <table class="nc-table" style="margin-top:12px">
+      <tr><td>올해 매출</td><td>${fmtWon(tysSales)}</td></tr>
+      <tr><td>작년 매출</td><td>${fmtWon(lyTotal)}</td></tr>
+      <tr><td>성장률</td><td style="color:${currentGrowth >= 0 ? '#10B981' : '#EF4444'};font-weight:700">${currentGrowth >= 0 ? '+' : ''}${currentGrowth.toFixed(1)}%</td></tr>
+      <tr><td>적용 요율 (${currentTier.label})</td><td>${currentTier.rate}%</td></tr>
+      <tr class="nc-total"><td>총 지급 예정액</td><td>${fmtWon(currentIncentive)}</td></tr>
+    </table>
   </div>`;
 
   // Box 3: 이번 달 매출 예측
@@ -1794,6 +1853,7 @@ function renderSalesTargetDashboard(data, el, year, month) {
   const predIncentive = Math.round(projected * predLv.rate / 100);
   const barWidth = Math.min(parseFloat(progressPct), 100);
   const isAhead = parseFloat(progressPct) >= parseFloat(timePct);
+  const projectedBarWidth = lyTotal > 0 ? Math.min(projected / lyTotal * 100, 100) : 0;
 
   html += `<div class="nc-box">
     <div class="nc-box-title">이번 달 매출 예측</div>
@@ -1802,32 +1862,39 @@ function renderSalesTargetDashboard(data, el, year, month) {
         <span>작년 대비 진행률</span>
         <span style="font-weight:700;color:${isAhead ? '#10B981' : '#EF4444'}">${progressPct}%</span>
       </div>
-      <div style="height:12px;background:#eee;border-radius:8px;overflow:hidden;position:relative">
-        <div style="height:100%;width:${barWidth}%;background:${isAhead ? 'linear-gradient(90deg,#3EA6FF,#10B981)' : 'linear-gradient(90deg,#3EA6FF,#EF4444)'};border-radius:8px;transition:width 0.5s"></div>
+      <div style="position:relative">
+        <div style="height:12px;background:#eee;border-radius:8px;overflow:hidden">
+          <div style="height:100%;width:${barWidth}%;background:${isAhead ? 'linear-gradient(90deg,#3EA6FF,#10B981)' : 'linear-gradient(90deg,#3EA6FF,#EF4444)'};border-radius:8px;transition:width 0.5s"></div>
+        </div>
+        <div style="position:absolute;top:-3px;left:${projectedBarWidth}%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;pointer-events:none">
+          <div style="width:2px;height:18px;background:#000;border-radius:1px"></div>
+          <div style="font-size:9px;font-weight:700;color:#000;white-space:nowrap;margin-top:1px">예상 ${predLv.lv}</div>
+        </div>
       </div>
-      <div style="display:flex;justify-content:space-between;font-size:10px;color:#999;margin-top:2px">
+      <div style="display:flex;justify-content:space-between;font-size:10px;color:#999;margin-top:16px">
         <span>현재 ${fmtBigWon(tysSales)}</span>
         <span>작년 ${fmtBigWon(lyTotal)}</span>
       </div>
     </div>
     <div style="background:#F9FAFB;border-radius:12px;padding:16px;text-align:center">
-      <div style="font-size:11px;color:#666;margin-bottom:4px">현재 페이스(일평균 ${fmtMan(tyAvg)}) 유지 시</div>
-      <div style="font-size:24px;font-weight:900;color:#000">${fmtBigWon(projected)}</div>
-      <div style="font-size:13px;font-weight:700;color:${projectedGrowth >= 0 ? '#10B981' : '#EF4444'};margin-top:2px">
+      <div style="font-size:24px;font-weight:900;color:#000;margin-bottom:6px">일 평균 ${fmtMan(tyAvg)}원 매출 시</div>
+      <div style="font-size:17px;color:#666;margin-bottom:4px">예상 인센티브: <b>${fmtBigWon(predIncentive)}</b></div>
+      <div style="font-size:17px;font-weight:700;color:${projectedGrowth >= 0 ? '#10B981' : '#EF4444'};margin-bottom:4px">
         작년 대비 ${projectedGrowth >= 0 ? '+' : ''}${projectedGrowth.toFixed(1)}% → ${predLv.lv}
       </div>
-      <div style="font-size:11px;color:#666;margin-top:4px">예상 인센티브: <b>${fmtBigWon(predIncentive)}</b></div>
     </div>
     <div style="text-align:center;margin-top:10px;font-size:12px;color:${isAhead ? '#10B981' : '#EF4444'};font-weight:600">
       ${isAhead ? '👍 시간 대비 앞서가는 중!' : '⚡ 페이스업 필요! 일평균 ' + fmtMan(lyAvg) + ' 이상 목표'}
     </div>
   </div>`;
 
+  // 목표 레벨 인덱스 (Box 4 + Box 5 공용)
+  const savedLvIdx = localStorage.getItem('directorTargetLv') || '2';
+  const defaultIdx = parseInt(savedLvIdx);
+
   // Box 4: 일평균 매출 목표 (레벨 선택 가능)
   if (tyRemain > 0) {
     const tierLvNames = ['Lv.-10', 'Lv.-5', 'Lv.1', 'Lv.5', 'Lv.10'];
-    const savedLvIdx = localStorage.getItem('directorTargetLv') || '2';
-    const defaultIdx = parseInt(savedLvIdx);
 
     // 각 레벨별 데이터 미리 계산 (JSON으로 넘김)
     const lvData = tiers.map((t, i) => {
@@ -1854,7 +1921,7 @@ function renderSalesTargetDashboard(data, el, year, month) {
             </select>
             <span>달성 목표</span>
           </div>
-          <div class="nc-split-value" id="targetLvDaily">${cur.achieved ? '달성!' : fmtMan(cur.daily) + '/일'}</div>
+          <div class="nc-split-value" id="targetLvDaily" style="color:#3EA6FF">${cur.achieved ? '달성!' : fmtMan(cur.daily) + '/일'}</div>
         </div>
       </div>
     </div>`;
@@ -1887,16 +1954,20 @@ function renderSalesTargetDashboard(data, el, year, month) {
       const dailyNeeded = isAchieved ? 0 : Math.round(remain / tyRemain);
       const tierIncentive = (thres === -Infinity) ? Math.round(lyTotal * 0.95 * tier.rate / 100) : Math.round(tierTarget * tier.rate / 100);
       const lvLabel = 'Lv.' + tierLevels[idx];
+      const isTarget = idx === defaultIdx;
 
-      html += `<div class="nc-goal-item" style="${isAchieved ? 'opacity:0.5' : ''}">
-        <div class="nc-goal-num ${isAchieved ? 'done' : ''}">${isAchieved ? '✓' : lvLabel}</div>
+      html += `<div class="nc-goal-item" style="${isTarget && !isAchieved ? 'border-color:#3EA6FF;border-width:2px;background:rgba(62,166,255,0.05)' : isAchieved ? 'background:linear-gradient(135deg,rgba(62,166,255,0.08),rgba(16,185,129,0.08));border-color:#10B981' : ''}">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:2px;flex-shrink:0">
+          ${isTarget ? '<div style="font-size:12px;line-height:1">👑</div>' : ''}
+          <div class="nc-goal-num ${isAchieved ? 'done' : ''}" style="${isAchieved ? 'background:linear-gradient(135deg,#3EA6FF,#10B981);border-color:#10B981' : isTarget ? 'border-color:#3EA6FF;color:#3EA6FF' : ''}">${isAchieved ? '완료' : lvLabel}</div>
+          ${isTarget ? '<div style="font-size:8px;font-weight:800;color:#3EA6FF;letter-spacing:-0.5px">목표</div>' : ''}
+        </div>
         <div class="nc-goal-info">
-          <div class="nc-goal-label">매출 ${tier.label} → 인센티브 비율 ${tier.rate}%</div>
-          <div class="nc-goal-sub">${isAchieved ? '달성 완료' : '하루 매출 ' + fmtMan(dailyNeeded) + ' 달성 시 가능'}</div>
+          <div class="nc-goal-label" style="${isAchieved ? 'color:#10B981' : ''}">매출 ${tier.label}<br>→ 인센티브 비율 ${tier.rate}%</div>
+          <div class="nc-goal-sub" style="${isAchieved ? 'color:#10B981' : ''}">${isAchieved ? '달성 완료' : '하루 매출 ' + fmtMan(dailyNeeded) + ' 달성 시 가능'}</div>
         </div>
         <div class="nc-goal-right">
           <div class="nc-goal-val">${fmtBigWon(tierIncentive)}</div>
-          ${!isAchieved ? `<div class="nc-goal-remain">${fmtBigWon(remain)} 남음</div>` : ''}
         </div>
       </div>`;
     });
