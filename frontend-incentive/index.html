@@ -138,8 +138,9 @@ body {
 .blur-unlock-btn { display: none !important; }
 /* 화면 하단 고정 unlock 버튼 */
 #fixedUnlockBtn {
-  display: none; position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
-  z-index: 100; padding: 16px 32px; background: var(--accent); color: #fff;
+  display: none; position: fixed !important; bottom: 24px !important; left: 50% !important;
+  transform: translateX(-50%); z-index: 99999 !important;
+  padding: 16px 32px; background: var(--accent); color: #fff;
   border: none; border-radius: 16px; font-size: 1.1rem; font-weight: 700;
   font-family: inherit; cursor: pointer;
   box-shadow: 0 6px 24px rgba(124,77,255,0.4);
@@ -724,9 +725,6 @@ body {
   </div>
 
   <div class="tab-bar" id="tabBar"></div>
-
-  <!-- Fixed Unlock Button -->
-  <button id="fixedUnlockBtn" onclick="onFixedUnlock()">🔓 내 인센 보기</button>
 
   <!-- PIN Modal -->
   <div class="pin-modal" id="pinModal">
@@ -3761,5 +3759,7 @@ function gdProductToggle(rowId) {
 
 if (token) { initApp(); }
 </script>
+<!-- Fixed Unlock Button: body 직하위 (부모 overflow 영향 제거) -->
+<button id="fixedUnlockBtn" onclick="onFixedUnlock()">🔓 내 인센 보기</button>
 </body>
 </html>
