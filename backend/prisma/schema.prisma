@@ -748,6 +748,7 @@ model GdVehicle {
   updatedAt     DateTime  @updatedAt
 
   repairs       GdRepair[]
+  reminders     CustomerReminder[]
 
   @@index([plateNumber])
   @@index([ownerName])
@@ -822,6 +823,25 @@ model GdRepair {
   @@index([vehicleCode])
   @@index([repairDate])
   @@index([vehicleCode, repairDate])
+}
+
+// 고객 리마인더 (자동 알림 시스템)
+model CustomerReminder {
+  id            Int       @id @default(autoincrement())
+  vehicleCode   String                     // 차량 코드 (GdVehicle.code)
+  vehicle       GdVehicle @relation(fields: [vehicleCode], references: [code])
+  reminderType  String                     // "oil_change" | "tire_rotation" | "no_visit_3m" | "no_visit_6m" | "inspection" | "custom"
+  dueDate       DateTime                   // 알림 예정일
+  status        String    @default("pending") // "pending" | "sent" | "completed" | "dismissed"
+  message       String?   @db.Text         // 발송 메시지 내용
+  sentAt        DateTime?                  // 발송일시
+  completedAt   DateTime?                  // 완료(방문)일시
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([vehicleCode])
+  @@index([dueDate])
+  @@index([status])
 }
 
 // 동기화 이력 (극동 데이터 임포트 기록)

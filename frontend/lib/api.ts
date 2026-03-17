@@ -457,6 +457,24 @@ export const publicReportApi = {
     api.get(`/public/report/${token}`, { params: period ? { period } : {} }),
 };
 
+// ERP API (극동 정비소 관리)
+export const erpApi = {
+  getDashboard: () => api.get('/erp/dashboard'),
+  getDailySales: (params?: { from?: string; to?: string }) =>
+    api.get('/erp/sales/daily', { params }),
+  getSalesByCategory: (params?: { from?: string; to?: string }) =>
+    api.get('/erp/sales/category', { params }),
+  searchCustomers: (params?: { q?: string; page?: number; limit?: number }) =>
+    api.get('/erp/customers', { params }),
+  getCustomerDetail: (code: string) => api.get(`/erp/customers/${code}/detail`),
+  predictNextVisit: (code: string) => api.get(`/erp/customers/${code}/predict`),
+  getReminders: (params?: { status?: string; page?: number; limit?: number }) =>
+    api.get('/erp/reminders', { params }),
+  generateReminders: () => api.post('/erp/reminders/generate'),
+  getTopProducts: (params?: { from?: string; to?: string; limit?: number }) =>
+    api.get('/erp/products/top', { params }),
+};
+
 export const communityApi = {
   getPosts: (params?: { category?: string; page?: number; limit?: number }) =>
     api.get('/community/posts', { params }),

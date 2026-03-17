@@ -23,6 +23,7 @@ import { UnifiedInquiryModule } from './unified-inquiry/unified-inquiry.module';
 import { TrackingLinkModule } from './tracking-link/tracking-link.module';
 import { CommunityModule } from './community/community.module';
 import { IncentiveModule } from './incentive/incentive.module';
+import { ErpModule } from './erp/erp.module';
 
 @Module({
   imports: [
@@ -53,6 +54,7 @@ import { IncentiveModule } from './incentive/incentive.module';
     TrackingLinkModule,
     CommunityModule,
     IncentiveModule,
+    ErpModule,
   ],
   controllers: [AppController],
   providers: [
