@@ -3069,9 +3069,6 @@ function loadGdVehicle() {
 
   const input = document.getElementById('gdVehicleQ');
   const vSpacer = el.querySelector('.gd-search-spacer');
-  input.addEventListener('focus', () => {
-    if (vSpacer) vSpacer.style.height = '0';
-  });
   input.addEventListener('input', () => {
     const q = input.value.trim();
     if (vSpacer) vSpacer.style.height = q ? '0' : '30vh';
@@ -3085,7 +3082,6 @@ function loadGdVehicle() {
     }
     gdVehicleState.debounceTimer = setTimeout(() => gdVehicleSearch(q, true), 300);
   });
-  input.focus();
 }
 
 function gdVehicleReset() {
@@ -3296,9 +3292,6 @@ function loadGdProduct() {
 
   const input = document.getElementById('gdProductQ');
   const pSpacer = el.querySelector('.gd-search-spacer');
-  input.addEventListener('focus', () => {
-    if (pSpacer) pSpacer.style.height = '0';
-  });
   input.addEventListener('input', () => {
     const q = input.value.trim();
     if (pSpacer) pSpacer.style.height = q ? '0' : '30vh';
@@ -3312,7 +3305,6 @@ function loadGdProduct() {
     }
     gdProductState.debounceTimer = setTimeout(() => gdProductSearch(q, true), 300);
   });
-  input.focus();
 }
 
 function gdProductReset() {
