@@ -3056,6 +3056,7 @@ function loadGdVehicle() {
   const el = document.getElementById('gdVehicleContent');
   el.innerHTML = `
     <div style="max-width:520px;margin:0 auto">
+      <div class="gd-search-spacer" style="height:30vh"></div>
       <div class="gd-search-wrap">
         <input class="gd-search-input" id="gdVehicleQ" type="search" placeholder="차량번호, 고객명, 전화번호"
           autocomplete="off" inputmode="search">
@@ -3067,12 +3068,13 @@ function loadGdVehicle() {
     </div>`;
 
   const input = document.getElementById('gdVehicleQ');
-  // 모바일 키보드 뜰 때 검색창이 보이도록
+  const vSpacer = el.querySelector('.gd-search-spacer');
   input.addEventListener('focus', () => {
-    setTimeout(() => input.scrollIntoView({ behavior: 'smooth', block: 'start' }), 300);
+    if (vSpacer) vSpacer.style.height = '0';
   });
   input.addEventListener('input', () => {
     const q = input.value.trim();
+    if (vSpacer) vSpacer.style.height = q ? '0' : '30vh';
     document.getElementById('gdVehicleClear').classList.toggle('show', q.length > 0);
     clearTimeout(gdVehicleState.debounceTimer);
     if (!q) {
@@ -3281,6 +3283,7 @@ function loadGdProduct() {
   const el = document.getElementById('gdProductContent');
   el.innerHTML = `
     <div style="max-width:520px;margin:0 auto">
+      <div class="gd-search-spacer" style="height:30vh"></div>
       <div class="gd-search-wrap">
         <input class="gd-search-input" id="gdProductQ" type="search" placeholder="상품명, 코드, 타이어사이즈(2355519)"
           autocomplete="off" inputmode="search">
@@ -3292,11 +3295,13 @@ function loadGdProduct() {
     </div>`;
 
   const input = document.getElementById('gdProductQ');
+  const pSpacer = el.querySelector('.gd-search-spacer');
   input.addEventListener('focus', () => {
-    setTimeout(() => input.scrollIntoView({ behavior: 'smooth', block: 'start' }), 300);
+    if (pSpacer) pSpacer.style.height = '0';
   });
   input.addEventListener('input', () => {
     const q = input.value.trim();
+    if (pSpacer) pSpacer.style.height = q ? '0' : '30vh';
     document.getElementById('gdProductClear').classList.toggle('show', q.length > 0);
     clearTimeout(gdProductState.debounceTimer);
     if (!q) {
