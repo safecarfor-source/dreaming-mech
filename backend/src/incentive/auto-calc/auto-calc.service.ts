@@ -167,16 +167,18 @@ export class AutoCalcService {
   // --- 분류/집계 로직 (UploadService와 동일) ---
 
   private classifyProduct(code: string, mappings: any[]) {
-    // 접두어 매칭 (isPrefix=true)
-    for (const m of mappings.filter(m => m.isPrefix)) {
-      if (code.startsWith(m.code)) {
-        return { category: m.category, label: m.label, isIncentive: m.isIncentive };
-      }
-    }
-    // 정확 매칭
+    // 1. 정확 매칭 먼저 (NN00000000020 = brake_oil이 NN = parts에 먹히지 않도록)
     const exact = mappings.find(m => !m.isPrefix && m.code === code);
     if (exact) {
       return { category: exact.category, label: exact.label, isIncentive: exact.isIncentive };
+    }
+    // 2. 접두어 매칭 (긴 코드부터 — 더 구체적인 매칭 우선)
+    const prefixMatches = mappings
+      .filter(m => m.isPrefix && code.startsWith(m.code))
+      .sort((a, b) => b.code.length - a.code.length);
+    if (prefixMatches.length > 0) {
+      const m = prefixMatches[0];
+      return { category: m.category, label: m.label, isIncentive: m.isIncentive };
     }
     return null;
   }
