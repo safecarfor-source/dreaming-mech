@@ -44,11 +44,12 @@ export class ErpController {
   // ----------------------------------------
   @Public()
   @Post('auth/login')
-  login(@Body() body: { pin: string }) {
+  login(@Body() body: { pin: string }, @Headers('x-forwarded-for') xff?: string, @Headers('x-real-ip') realIp?: string) {
     if (!body?.pin || typeof body.pin !== 'string') {
       throw new BadRequestException('PIN이 필요합니다.');
     }
-    return this.erpAuthService.login(body.pin);
+    const ip = xff?.split(',')[0]?.trim() || realIp || 'unknown';
+    return this.erpAuthService.login(body.pin, ip);
   }
 
   // ----------------------------------------

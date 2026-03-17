@@ -21,25 +21,31 @@ export class ErpService {
   constructor(private readonly prisma: PrismaService) {}
 
   // ========================================
-  // 오늘/이번달 날짜 헬퍼
+  // 오늘/이번달 날짜 헬퍼 (KST 기준)
   // ========================================
+  private getKstNow(): Date {
+    const now = new Date();
+    // UTC+9 적용
+    return new Date(now.getTime() + 9 * 60 * 60 * 1000);
+  }
+
   private getTodayStr(): string {
-    return new Date().toISOString().substring(0, 10);
+    return this.getKstNow().toISOString().substring(0, 10);
   }
 
   private getMonthStart(): string {
-    const d = new Date();
+    const d = this.getKstNow();
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`;
   }
 
   private getLastYearMonthStart(): string {
-    const d = new Date();
+    const d = this.getKstNow();
     d.setFullYear(d.getFullYear() - 1);
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`;
   }
 
   private getLastYearMonthEnd(): string {
-    const d = new Date();
+    const d = this.getKstNow();
     d.setFullYear(d.getFullYear() - 1);
     const lastDay = new Date(d.getFullYear(), d.getMonth() + 1, 0);
     return lastDay.toISOString().substring(0, 10);
@@ -560,130 +566,141 @@ export class ErpService {
     const today = new Date();
     const todayStr = today.toISOString().substring(0, 10);
 
-    // 모든 차량과 최근 정비 이력 조회
-    const vehicles = await this.prisma.gdVehicle.findMany({
-      include: {
-        repairs: {
-          orderBy: { repairDate: 'desc' },
-          take: 20,
-        },
-        reminders: {
-          where: {
-            status: { in: ['pending', 'sent'] },
-          },
-        },
-      },
-    });
-
     const created: {
       vehicleCode: string;
       reminderType: string;
       reason: string;
     }[] = [];
 
-    for (const vehicle of vehicles) {
-      const repairs = vehicle.repairs;
-      const existingTypes = new Set(vehicle.reminders.map(r => r.reminderType));
+    // 배치 처리: 100대씩 커서 페이지네이션
+    let cursor: string | undefined;
+    const BATCH_SIZE = 100;
 
-      if (repairs.length === 0) continue;
-
-      const lastRepair = repairs[0];
-      const lastRepairDate = lastRepair.repairDate
-        ? new Date(lastRepair.repairDate)
-        : null;
-
-      if (!lastRepairDate) continue;
-
-      const daysSinceLastVisit = Math.floor(
-        (today.getTime() - lastRepairDate.getTime()) / (1000 * 60 * 60 * 24),
-      );
-
-      // 90일 미방문
-      if (daysSinceLastVisit > 90 && !existingTypes.has('no_visit_3m')) {
-        const dueDate = new Date(lastRepairDate);
-        dueDate.setDate(dueDate.getDate() + 90);
-
-        await this.prisma.customerReminder.create({
-          data: {
-            vehicleCode: vehicle.code,
-            reminderType: 'no_visit_3m',
-            dueDate,
-            status: 'pending',
-            message: `${vehicle.ownerName ?? '고객'}님 차량(${vehicle.plateNumber})이 방문한 지 ${daysSinceLastVisit}일이 지났습니다. 점검을 권장합니다.`,
+    while (true) {
+      const vehicles = await this.prisma.gdVehicle.findMany({
+        take: BATCH_SIZE,
+        ...(cursor ? { skip: 1, cursor: { code: cursor } } : {}),
+        orderBy: { code: 'asc' },
+        include: {
+          repairs: {
+            orderBy: { repairDate: 'desc' },
+            take: 5,
           },
-        });
-        created.push({ vehicleCode: vehicle.code, reminderType: 'no_visit_3m', reason: `${daysSinceLastVisit}일 미방문` });
-      }
-
-      // 180일 미방문
-      if (daysSinceLastVisit > 180 && !existingTypes.has('no_visit_6m')) {
-        const dueDate = new Date(lastRepairDate);
-        dueDate.setDate(dueDate.getDate() + 180);
-
-        await this.prisma.customerReminder.create({
-          data: {
-            vehicleCode: vehicle.code,
-            reminderType: 'no_visit_6m',
-            dueDate,
-            status: 'pending',
-            message: `${vehicle.ownerName ?? '고객'}님 차량(${vehicle.plateNumber})이 6개월 이상 방문이 없습니다. 적극적인 연락을 권장합니다.`,
+          reminders: {
+            where: {
+              status: { in: ['pending', 'sent'] },
+            },
           },
-        });
-        created.push({ vehicleCode: vehicle.code, reminderType: 'no_visit_6m', reason: `${daysSinceLastVisit}일 미방문` });
-      }
+        },
+      });
 
-      // 엔진오일 교환 (마지막 오일 교환 후 6개월)
-      const lastOilRepair = repairs.find(
-        r => r.productCode?.startsWith('N0') || r.productName?.includes('엔진오일'),
-      );
-      if (lastOilRepair?.repairDate && !existingTypes.has('oil_change')) {
-        const lastOilDate = new Date(lastOilRepair.repairDate);
-        const monthsSinceOil =
-          (today.getTime() - lastOilDate.getTime()) / (1000 * 60 * 60 * 24 * 30);
+      if (vehicles.length === 0) break;
+      cursor = vehicles[vehicles.length - 1].code;
 
-        if (monthsSinceOil >= 6) {
-          const dueDate = new Date(lastOilDate);
-          dueDate.setMonth(dueDate.getMonth() + 6);
+      for (const vehicle of vehicles) {
+        const repairs = vehicle.repairs;
+        const existingTypes = new Set(vehicle.reminders.map(r => r.reminderType));
+
+        if (repairs.length === 0) continue;
+
+        const lastRepair = repairs[0];
+        const lastRepairDate = lastRepair.repairDate
+          ? new Date(lastRepair.repairDate)
+          : null;
+
+        if (!lastRepairDate) continue;
+
+        const daysSinceLastVisit = Math.floor(
+          (today.getTime() - lastRepairDate.getTime()) / (1000 * 60 * 60 * 24),
+        );
+
+        // 90일 미방문
+        if (daysSinceLastVisit > 90 && !existingTypes.has('no_visit_3m')) {
+          const dueDate = new Date(lastRepairDate);
+          dueDate.setDate(dueDate.getDate() + 90);
 
           await this.prisma.customerReminder.create({
             data: {
               vehicleCode: vehicle.code,
-              reminderType: 'oil_change',
+              reminderType: 'no_visit_3m',
               dueDate,
               status: 'pending',
-              message: `${vehicle.ownerName ?? '고객'}님 차량(${vehicle.plateNumber}) 엔진오일 교환 시기입니다. 마지막 교환: ${lastOilRepair.repairDate}`,
+              message: `${vehicle.ownerName ?? '고객'}님 차량(${vehicle.plateNumber})이 ${daysSinceLastVisit}일간 미방문입니다.`,
             },
           });
-          created.push({ vehicleCode: vehicle.code, reminderType: 'oil_change', reason: `마지막 오일교환 ${Math.floor(monthsSinceOil)}개월 전` });
+          created.push({ vehicleCode: vehicle.code, reminderType: 'no_visit_3m', reason: `${daysSinceLastVisit}일 미방문` });
         }
-      }
 
-      // 타이어 교환 (마지막 타이어 교체 후 35,000km)
-      const lastTireRepair = repairs.find(
-        r =>
-          r.productCode?.match(/^(TA|TH|TK|TM|TC|TP|TB|TL|TG|TZ)/) ||
-          r.productName?.includes('타이어'),
-      );
-      if (
-        lastTireRepair?.mileage &&
-        lastRepair.mileage &&
-        !existingTypes.has('tire_rotation')
-      ) {
-        const kmSinceTire = lastRepair.mileage - lastTireRepair.mileage;
-        if (kmSinceTire >= 35000) {
-          const dueDate = new Date();
-          dueDate.setDate(dueDate.getDate() + 7); // 1주 내 방문 권장
+        // 180일 미방문
+        if (daysSinceLastVisit > 180 && !existingTypes.has('no_visit_6m')) {
+          const dueDate = new Date(lastRepairDate);
+          dueDate.setDate(dueDate.getDate() + 180);
 
           await this.prisma.customerReminder.create({
             data: {
               vehicleCode: vehicle.code,
-              reminderType: 'tire_rotation',
+              reminderType: 'no_visit_6m',
               dueDate,
               status: 'pending',
-              message: `${vehicle.ownerName ?? '고객'}님 차량(${vehicle.plateNumber}) 타이어 마모 점검이 필요합니다. 마지막 교체 이후 ${Math.round(kmSinceTire).toLocaleString()}km 주행.`,
+              message: `${vehicle.ownerName ?? '고객'}님 차량(${vehicle.plateNumber})이 6개월 이상 미방문입니다.`,
             },
           });
-          created.push({ vehicleCode: vehicle.code, reminderType: 'tire_rotation', reason: `타이어 교체 후 ${Math.round(kmSinceTire).toLocaleString()}km` });
+          created.push({ vehicleCode: vehicle.code, reminderType: 'no_visit_6m', reason: `${daysSinceLastVisit}일 미방문` });
+        }
+
+        // 엔진오일 교환 (마지막 오일 교환 후 6개월)
+        const lastOilRepair = repairs.find(
+          r => r.productCode?.startsWith('N0') || r.productName?.includes('엔진오일'),
+        );
+        if (lastOilRepair?.repairDate && !existingTypes.has('oil_change')) {
+          const lastOilDate = new Date(lastOilRepair.repairDate);
+          const monthsSinceOil =
+            (today.getTime() - lastOilDate.getTime()) / (1000 * 60 * 60 * 24 * 30);
+
+          if (monthsSinceOil >= 6) {
+            const dueDate = new Date(lastOilDate);
+            dueDate.setMonth(dueDate.getMonth() + 6);
+
+            await this.prisma.customerReminder.create({
+              data: {
+                vehicleCode: vehicle.code,
+                reminderType: 'oil_change',
+                dueDate,
+                status: 'pending',
+                message: `${vehicle.ownerName ?? '고객'}님 엔진오일 교환 시기입니다. 마지막: ${lastOilRepair.repairDate}`,
+              },
+            });
+            created.push({ vehicleCode: vehicle.code, reminderType: 'oil_change', reason: `오일교환 ${Math.floor(monthsSinceOil)}개월 전` });
+          }
+        }
+
+        // 타이어 교환
+        const lastTireRepair = repairs.find(
+          r =>
+            r.productCode?.match(/^(TA|TH|TK|TM|TC|TP|TB|TL|TG|TZ)/) ||
+            r.productName?.includes('타이어'),
+        );
+        if (
+          lastTireRepair?.mileage &&
+          lastRepair.mileage &&
+          !existingTypes.has('tire_rotation')
+        ) {
+          const kmSinceTire = lastRepair.mileage - lastTireRepair.mileage;
+          if (kmSinceTire >= 35000) {
+            const dueDate = new Date();
+            dueDate.setDate(dueDate.getDate() + 7);
+
+            await this.prisma.customerReminder.create({
+              data: {
+                vehicleCode: vehicle.code,
+                reminderType: 'tire_rotation',
+                dueDate,
+                status: 'pending',
+                message: `${vehicle.ownerName ?? '고객'}님 타이어 점검 필요. 교체 후 ${Math.round(kmSinceTire).toLocaleString()}km 주행.`,
+              },
+            });
+            created.push({ vehicleCode: vehicle.code, reminderType: 'tire_rotation', reason: `타이어 ${Math.round(kmSinceTire).toLocaleString()}km` });
+          }
         }
       }
     }
@@ -759,80 +776,100 @@ export class ErpService {
   // 10. 고객/차량 등록
   // ========================================
   async createVehicle(dto: CreateVehicleDto) {
-    // 차량번호 중복 체크
-    const existing = await this.prisma.gdVehicle.findFirst({
-      where: { plateNumber: dto.plateNumber },
-    });
-    if (existing) {
-      return { success: false, error: '이미 등록된 차량번호입니다.', existingCode: existing.code };
-    }
+    // 차량번호 정규화 (공백 제거)
+    const normalizedPlate = dto.plateNumber.replace(/\s+/g, '').trim();
 
-    // 새 코드 생성 (기존 최대 코드 + 1)
-    const lastVehicle = await this.prisma.gdVehicle.findFirst({
-      orderBy: { code: 'desc' },
-      select: { code: true },
-    });
-
-    let newCode = 'V00001';
-    if (lastVehicle?.code) {
-      const num = parseInt(lastVehicle.code.replace(/\D/g, ''), 10);
-      if (!isNaN(num)) {
-        newCode = 'V' + String(num + 1).padStart(5, '0');
+    // 트랜잭션으로 코드 생성 + 저장 (race condition 방지)
+    return this.prisma.$transaction(async (tx) => {
+      // 차량번호 중복 체크
+      const existing = await tx.gdVehicle.findFirst({
+        where: { plateNumber: normalizedPlate },
+      });
+      if (existing) {
+        return { success: false, error: '이미 등록된 차량번호입니다.', existingCode: existing.code };
       }
-    }
 
-    const vehicle = await this.prisma.gdVehicle.create({
-      data: {
-        code: newCode,
-        plateNumber: dto.plateNumber,
-        ownerName: dto.ownerName,
-        phone: dto.phone ?? null,
-        carModel: dto.carModel ?? null,
-        carModel2: dto.carModel2 ?? null,
-        modelYear: dto.modelYear ?? null,
-        color: dto.color ?? null,
-        displacement: dto.displacement ?? null,
-        memo: dto.memo ?? null,
-      },
+      // 웹 등록 전용 코드: WEB- 접두사 (극동 동기화 충돌 방지)
+      const lastWebVehicle = await tx.gdVehicle.findFirst({
+        where: { code: { startsWith: 'WEB-' } },
+        orderBy: { code: 'desc' },
+        select: { code: true },
+      });
+
+      let newCode = 'WEB-00001';
+      if (lastWebVehicle?.code) {
+        const num = parseInt(lastWebVehicle.code.replace('WEB-', ''), 10);
+        if (!isNaN(num)) {
+          newCode = 'WEB-' + String(num + 1).padStart(5, '0');
+        }
+      }
+
+      const vehicle = await tx.gdVehicle.create({
+        data: {
+          code: newCode,
+          plateNumber: normalizedPlate,
+          ownerName: dto.ownerName,
+          phone: dto.phone ?? null,
+          carModel: dto.carModel ?? null,
+          carModel2: dto.carModel2 ?? null,
+          modelYear: dto.modelYear ?? null,
+          color: dto.color ?? null,
+          displacement: dto.displacement ?? null,
+          memo: dto.memo ?? null,
+        },
+      });
+
+      return { success: true, data: vehicle };
     });
-
-    return { success: true, data: vehicle };
   }
 
   // ========================================
   // 11. 매출/매입 등록
   // ========================================
   async createSale(dto: CreateSaleDto) {
-    // 전표번호 생성 (날짜 기반)
-    const datePrefix = dto.saleDate.replace(/-/g, '');
-    const lastSale = await this.prisma.gdSaleDetail.findFirst({
-      where: { fno: { startsWith: datePrefix } },
-      orderBy: { fno: 'desc' },
-      select: { fno: true },
-    });
-
-    let seq = 1;
-    if (lastSale?.fno) {
-      const lastSeq = parseInt(lastSale.fno.slice(8), 10);
-      if (!isNaN(lastSeq)) seq = lastSeq + 1;
+    // 날짜 검증: 미래 날짜 불가, 1년 이전 불가
+    const today = this.getTodayStr();
+    if (dto.saleDate > today) {
+      return { success: false, error: '미래 날짜로 등록할 수 없습니다.' };
     }
-    const fno = datePrefix + String(seq).padStart(4, '0');
+    const oneYearAgo = new Date(this.getKstNow());
+    oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+    if (dto.saleDate < oneYearAgo.toISOString().substring(0, 10)) {
+      return { success: false, error: '1년 이전 날짜로 등록할 수 없습니다.' };
+    }
 
-    const sale = await this.prisma.gdSaleDetail.create({
-      data: {
-        fno,
-        saleDate: dto.saleDate,
-        saleType: dto.saleType,
-        customerCode: dto.customerCode,
-        productCode: dto.productCode,
-        productName: dto.productName ?? dto.productCode,
-        qty: dto.qty,
-        unitPrice: dto.unitPrice,
-        amount: dto.amount,
-      },
+    // 트랜잭션으로 전표번호 생성 + 저장 (race condition 방지)
+    return this.prisma.$transaction(async (tx) => {
+      const datePrefix = dto.saleDate.replace(/-/g, '');
+      const lastSale = await tx.gdSaleDetail.findFirst({
+        where: { fno: { startsWith: datePrefix } },
+        orderBy: { fno: 'desc' },
+        select: { fno: true },
+      });
+
+      let seq = 1;
+      if (lastSale?.fno) {
+        const lastSeq = parseInt(lastSale.fno.slice(8), 10);
+        if (!isNaN(lastSeq)) seq = lastSeq + 1;
+      }
+      const fno = datePrefix + String(seq).padStart(4, '0');
+
+      const sale = await tx.gdSaleDetail.create({
+        data: {
+          fno,
+          saleDate: dto.saleDate,
+          saleType: dto.saleType,
+          customerCode: dto.customerCode,
+          productCode: dto.productCode,
+          productName: dto.productName ?? dto.productCode,
+          qty: dto.qty,
+          unitPrice: dto.unitPrice,
+          amount: dto.amount,
+        },
+      });
+
+      return { success: true, data: sale };
     });
-
-    return { success: true, data: sale };
   }
 
   // ========================================
@@ -842,9 +879,33 @@ export class ErpService {
     // 차량 존재 확인
     const vehicle = await this.prisma.gdVehicle.findUnique({
       where: { code: dto.vehicleCode },
+      include: {
+        repairs: {
+          orderBy: { repairDate: 'desc' },
+          take: 1,
+          select: { mileage: true, repairDate: true },
+        },
+      },
     });
     if (!vehicle) {
       return { success: false, error: '존재하지 않는 차량 코드입니다.' };
+    }
+
+    // 주행거리 역주행 방지
+    if (dto.mileage != null && vehicle.repairs.length > 0) {
+      const lastMileage = vehicle.repairs[0]?.mileage;
+      if (lastMileage != null && dto.mileage < lastMileage) {
+        return {
+          success: false,
+          error: `주행거리가 이전 기록(${lastMileage.toLocaleString()}km)보다 작습니다. 확인해주세요.`,
+        };
+      }
+    }
+
+    // 날짜 검증
+    const today = this.getTodayStr();
+    if (dto.repairDate > today) {
+      return { success: false, error: '미래 날짜로 등록할 수 없습니다.' };
     }
 
     const repair = await this.prisma.gdRepair.create({
