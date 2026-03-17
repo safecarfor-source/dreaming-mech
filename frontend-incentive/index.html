@@ -1038,15 +1038,17 @@ async function loadLastUpdateDate() {
 function buildTabs() {
   const bar = document.getElementById('inlineTabs');
   bar.innerHTML = '';
-  const tabs = [{ id: 'team', label: '팀 인센티브' }];
+  const tabs = [];
+  // 662: 차량조회 → 상품조회 → 인센티브 → 업로드
+  if (currentUser.access.includes('admin') || currentUser.loginId === '662') tabs.push({ id: 'gd-vehicle', label: '차량조회' });
+  if (currentUser.access.includes('admin') || currentUser.loginId === '662') tabs.push({ id: 'gd-product', label: '상품조회' });
+  tabs.push({ id: 'team', label: '팀 인센티브' });
   if (currentUser.access.includes('manager')) tabs.push({ id: 'manager', label: '김권중' });
   if (currentUser.access.includes('director')) tabs.push({ id: 'director', label: '이정석' });
   if (!currentUser.access.includes('admin')) tabs.push({ id: 'upload', label: '업로드' });
   if (currentUser.access.includes('admin')) tabs.push({ id: 'settlement', label: '월말결산' });
   if (currentUser.access.includes('admin')) tabs.push({ id: 'insight', label: '인사이트' });
   if (currentUser.access.includes('admin')) tabs.push({ id: 'admin', label: '관리자' });
-  if (currentUser.access.includes('admin') || currentUser.loginId === '662') tabs.push({ id: 'gd-vehicle', label: '차량조회' });
-  if (currentUser.access.includes('admin') || currentUser.loginId === '662') tabs.push({ id: 'gd-product', label: '상품조회' });
   tabs.forEach((t, i) => {
     const btn = document.createElement('button');
     btn.className = 'tab-btn' + (i === 0 ? ' active' : '');
