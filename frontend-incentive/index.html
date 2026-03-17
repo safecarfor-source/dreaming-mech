@@ -1218,7 +1218,8 @@ document.addEventListener('DOMContentLoaded', () => {
 // --- Blur State ---
 function needsBlur() {
   if (!currentUser) return false;
-  // 662(공용)만 blur 불필요, 나머지(admin/manager/director) 전부 적용
+  // admin(sjy)과 662(공용)는 블러 불필요
+  if (currentUser.role === 'admin') return false;
   if (currentUser.loginId === '662') return false;
   return true;
 }
@@ -1356,8 +1357,10 @@ async function initApp() {
   document.getElementById('privacyBtn').textContent = '🔓';
   startInactivityTimer();
   loadSyncTime();
-  // 탭 전환 시 blur 적용
-  setTimeout(applyBlurState, 100);
+  // blur 즉시 + 지연 적용 (탭 빌드 후에도 확실히 적용)
+  applyBlurState();
+  setTimeout(applyBlurState, 300);
+  setTimeout(applyBlurState, 1000);
 }
 
 // 최신 업데이트 날짜 로드
