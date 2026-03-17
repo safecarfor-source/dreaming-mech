@@ -78,6 +78,7 @@ preview.html
 backups/
 *.sql
 *.sql.gz
+!backend/prisma/migrations/**/*.sql
 
 # SSL Certificates (Let's Encrypt)
 certbot/
