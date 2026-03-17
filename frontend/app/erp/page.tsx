@@ -236,6 +236,11 @@ function KpiCard({ title, value, icon, badge, sub }: KpiCardProps) {
 // 메인 페이지
 // ------------------------------------------------------------------
 
+interface SyncStatus {
+  lastSync?: string;
+  message?: string;
+}
+
 export default function ErpDashboardPage() {
   const [dashboard, setDashboard] = useState<DashboardData | null>(null);
   const [dailySales, setDailySales] = useState<DailySalesItem[]>([]);
@@ -243,6 +248,11 @@ export default function ErpDashboardPage() {
   const [topProducts, setTopProducts] = useState<TopProductItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [syncStatus, setSyncStatus] = useState<SyncStatus | null>(null);
+
+  useEffect(() => {
+    erpApi.getSyncStatus().then(res => setSyncStatus(res.data)).catch(() => {});
+  }, []);
 
   useEffect(() => {
     const fetchAll = async () => {
@@ -273,6 +283,15 @@ export default function ErpDashboardPage() {
       <div className="space-y-6">
         {/* 페이지 제목 */}
         <h1 className="text-xl font-bold text-gray-900">대시보드</h1>
+
+        {/* PC 동기화 상태 */}
+        {syncStatus?.lastSync && (
+          <div className="flex items-center gap-2 text-xs text-gray-500 bg-gray-50 rounded-lg px-3 py-2">
+            <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+            <span>PC 동기화: {new Date(syncStatus.lastSync).toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+            {syncStatus.message && <span className="text-gray-400">({syncStatus.message})</span>}
+          </div>
+        )}
 
         {/* 에러 */}
         {error && (

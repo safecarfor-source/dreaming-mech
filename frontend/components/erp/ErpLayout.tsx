@@ -13,6 +13,7 @@ interface Props {
 const erpTabs = [
   { href: '/erp', label: '대시보드' },
   { href: '/erp/customers', label: '고객관리' },
+  { href: '/erp/register', label: '등록' },
   { href: '/erp/sales', label: '매출분석' },
   { href: '/erp/reminders', label: '리마인더' },
 ];

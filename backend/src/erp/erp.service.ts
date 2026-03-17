@@ -11,6 +11,9 @@ import {
   ReminderQueryDto,
   TopProductsQueryDto,
   getProductCategory,
+  CreateVehicleDto,
+  CreateSaleDto,
+  CreateRepairDto,
 } from './dto/erp-query.dto';
 
 @Injectable()
@@ -750,5 +753,170 @@ export class ErpService {
       .slice(0, limit);
 
     return { data, meta: { from, to, limit } };
+  }
+
+  // ========================================
+  // 10. 고객/차량 등록
+  // ========================================
+  async createVehicle(dto: CreateVehicleDto) {
+    // 차량번호 중복 체크
+    const existing = await this.prisma.gdVehicle.findFirst({
+      where: { plateNumber: dto.plateNumber },
+    });
+    if (existing) {
+      return { success: false, error: '이미 등록된 차량번호입니다.', existingCode: existing.code };
+    }
+
+    // 새 코드 생성 (기존 최대 코드 + 1)
+    const lastVehicle = await this.prisma.gdVehicle.findFirst({
+      orderBy: { code: 'desc' },
+      select: { code: true },
+    });
+
+    let newCode = 'V00001';
+    if (lastVehicle?.code) {
+      const num = parseInt(lastVehicle.code.replace(/\D/g, ''), 10);
+      if (!isNaN(num)) {
+        newCode = 'V' + String(num + 1).padStart(5, '0');
+      }
+    }
+
+    const vehicle = await this.prisma.gdVehicle.create({
+      data: {
+        code: newCode,
+        plateNumber: dto.plateNumber,
+        ownerName: dto.ownerName,
+        phone: dto.phone ?? null,
+        carModel: dto.carModel ?? null,
+        carModel2: dto.carModel2 ?? null,
+        modelYear: dto.modelYear ?? null,
+        color: dto.color ?? null,
+        displacement: dto.displacement ?? null,
+        memo: dto.memo ?? null,
+      },
+    });
+
+    return { success: true, data: vehicle };
+  }
+
+  // ========================================
+  // 11. 매출/매입 등록
+  // ========================================
+  async createSale(dto: CreateSaleDto) {
+    // 전표번호 생성 (날짜 기반)
+    const datePrefix = dto.saleDate.replace(/-/g, '');
+    const lastSale = await this.prisma.gdSaleDetail.findFirst({
+      where: { fno: { startsWith: datePrefix } },
+      orderBy: { fno: 'desc' },
+      select: { fno: true },
+    });
+
+    let seq = 1;
+    if (lastSale?.fno) {
+      const lastSeq = parseInt(lastSale.fno.slice(8), 10);
+      if (!isNaN(lastSeq)) seq = lastSeq + 1;
+    }
+    const fno = datePrefix + String(seq).padStart(4, '0');
+
+    const sale = await this.prisma.gdSaleDetail.create({
+      data: {
+        fno,
+        saleDate: dto.saleDate,
+        saleType: dto.saleType,
+        customerCode: dto.customerCode,
+        productCode: dto.productCode,
+        productName: dto.productName ?? dto.productCode,
+        qty: dto.qty,
+        unitPrice: dto.unitPrice,
+        amount: dto.amount,
+      },
+    });
+
+    return { success: true, data: sale };
+  }
+
+  // ========================================
+  // 12. 정비 등록
+  // ========================================
+  async createRepair(dto: CreateRepairDto) {
+    // 차량 존재 확인
+    const vehicle = await this.prisma.gdVehicle.findUnique({
+      where: { code: dto.vehicleCode },
+    });
+    if (!vehicle) {
+      return { success: false, error: '존재하지 않는 차량 코드입니다.' };
+    }
+
+    const repair = await this.prisma.gdRepair.create({
+      data: {
+        vehicleCode: dto.vehicleCode,
+        repairDate: dto.repairDate,
+        productCode: dto.productCode ?? null,
+        productName: dto.productName,
+        qty: dto.qty,
+        unitPrice: dto.unitPrice,
+        amount: dto.amount,
+        mileage: dto.mileage ?? null,
+        memo: dto.memo ?? null,
+      },
+    });
+
+    return { success: true, data: repair };
+  }
+
+  // ========================================
+  // 13. 상품 검색 (등록 폼에서 사용)
+  // ========================================
+  async searchProducts(q: string, limit = 10) {
+    if (!q || q.length < 1) return { data: [] };
+
+    const products = await this.prisma.gdProduct.findMany({
+      where: {
+        OR: [
+          { name: { contains: q, mode: 'insensitive' } },
+          { code: { contains: q, mode: 'insensitive' } },
+          { altName: { contains: q, mode: 'insensitive' } },
+        ],
+      },
+      take: limit,
+      orderBy: { name: 'asc' },
+    });
+
+    return { data: products };
+  }
+
+  // ========================================
+  // 14. 동기화 상태 조회
+  // ========================================
+  async getSyncStatus() {
+    try {
+      const lastSync = await this.prisma.gdSyncLog.findFirst({
+        where: { status: 'completed' },
+        orderBy: { completedAt: 'desc' },
+      });
+
+      if (lastSync) {
+        return {
+          lastSync: lastSync.completedAt,
+          syncType: lastSync.syncType,
+          tableName: lastSync.tableName,
+          rowCount: lastSync.rowCount,
+        };
+      }
+    } catch {
+      // GdSyncLog 비어있으면 최근 전표로 대체
+    }
+
+    // 최근 전표 날짜 기준
+    const latestSale = await this.prisma.gdSaleDetail.findFirst({
+      orderBy: { saleDate: 'desc' },
+      select: { saleDate: true, createdAt: true },
+    });
+
+    return {
+      lastSync: latestSale?.createdAt ?? null,
+      lastSaleDate: latestSale?.saleDate ?? null,
+      message: latestSale ? '최근 전표 날짜 기준' : '데이터 없음',
+    };
   }
 }

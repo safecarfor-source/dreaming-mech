@@ -42,4 +42,9 @@ export class GdController {
   ) {
     return this.gdService.searchCustomers(q, parseInt(page), parseInt(limit));
   }
+
+  @Get('sync-status')
+  getSyncStatus() {
+    return this.gdService.getSyncStatus();
+  }
 }

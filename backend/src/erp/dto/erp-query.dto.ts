@@ -78,3 +78,51 @@ export function getProductCategory(code: string): string {
   const prefix2 = upper.substring(0, 2);
   return PRODUCT_CATEGORY_MAP[prefix2] ?? '기타';
 }
+
+// ----------------------------------------
+// 고객/차량 등록
+// ----------------------------------------
+export const CreateVehicleSchema = z.object({
+  plateNumber: z.string().min(1, '차량번호 필수'),
+  ownerName: z.string().min(1, '고객명 필수'),
+  phone: z.string().optional(),
+  carModel: z.string().optional(),
+  carModel2: z.string().optional(),
+  modelYear: z.string().optional(),
+  color: z.string().optional(),
+  displacement: z.string().optional(),
+  memo: z.string().optional(),
+});
+export type CreateVehicleDto = z.infer<typeof CreateVehicleSchema>;
+
+// ----------------------------------------
+// 매출 등록
+// ----------------------------------------
+export const CreateSaleSchema = z.object({
+  saleDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'YYYY-MM-DD 형식'),
+  customerCode: z.string().min(1, '거래처 코드 필수'),
+  productCode: z.string().min(1, '상품 코드 필수'),
+  productName: z.string().optional(),
+  qty: z.number().min(0.01, '수량 필수'),
+  unitPrice: z.number().min(0, '단가 필수'),
+  amount: z.number().min(0, '금액 필수'),
+  saleType: z.enum(['1', '2', '3']).default('2'), // 1=입고(매입), 2=판매(매출), 3=반품
+  memo: z.string().optional(),
+});
+export type CreateSaleDto = z.infer<typeof CreateSaleSchema>;
+
+// ----------------------------------------
+// 정비 등록
+// ----------------------------------------
+export const CreateRepairSchema = z.object({
+  vehicleCode: z.string().min(1, '차량 코드 필수'),
+  repairDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'YYYY-MM-DD 형식'),
+  productCode: z.string().optional(),
+  productName: z.string().min(1, '정비 항목 필수'),
+  qty: z.number().default(1),
+  unitPrice: z.number().default(0),
+  amount: z.number().min(0, '금액 필수'),
+  mileage: z.number().optional(),
+  memo: z.string().optional(),
+});
+export type CreateRepairDto = z.infer<typeof CreateRepairSchema>;

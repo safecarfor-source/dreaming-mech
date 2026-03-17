@@ -25,6 +25,9 @@ import {
   CustomerQuerySchema,
   ReminderQuerySchema,
   TopProductsQuerySchema,
+  CreateVehicleSchema,
+  CreateSaleSchema,
+  CreateRepairSchema,
 } from './dto/erp-query.dto';
 
 @Controller('erp')
@@ -158,6 +161,15 @@ export class ErpController {
   }
 
   // ----------------------------------------
+  // GET /erp/products/search?q=검색어
+  // 상품 검색 (등록 폼에서 사용)
+  // ----------------------------------------
+  @Get('products/search')
+  async searchProducts(@Query('q') q: string = '') {
+    return this.erpService.searchProducts(q);
+  }
+
+  // ----------------------------------------
   // GET /erp/products/top?from=&to=&limit=10
   // 상위 판매 상품
   // ----------------------------------------
@@ -168,5 +180,53 @@ export class ErpController {
       throw new BadRequestException(result.error.flatten().fieldErrors);
     }
     return this.erpService.getTopProducts(result.data);
+  }
+
+  // ----------------------------------------
+  // POST /erp/customers
+  // 신규 고객/차량 등록
+  // ----------------------------------------
+  @Post('customers')
+  async createVehicle(@Body() body: any) {
+    const result = CreateVehicleSchema.safeParse(body);
+    if (!result.success) {
+      throw new BadRequestException(result.error.flatten().fieldErrors);
+    }
+    return this.erpService.createVehicle(result.data);
+  }
+
+  // ----------------------------------------
+  // POST /erp/sales
+  // 매출/매입 등록
+  // ----------------------------------------
+  @Post('sales')
+  async createSale(@Body() body: any) {
+    const result = CreateSaleSchema.safeParse(body);
+    if (!result.success) {
+      throw new BadRequestException(result.error.flatten().fieldErrors);
+    }
+    return this.erpService.createSale(result.data);
+  }
+
+  // ----------------------------------------
+  // POST /erp/repairs
+  // 정비 등록
+  // ----------------------------------------
+  @Post('repairs')
+  async createRepair(@Body() body: any) {
+    const result = CreateRepairSchema.safeParse(body);
+    if (!result.success) {
+      throw new BadRequestException(result.error.flatten().fieldErrors);
+    }
+    return this.erpService.createRepair(result.data);
+  }
+
+  // ----------------------------------------
+  // GET /erp/sync-status
+  // 동기화 상태 조회
+  // ----------------------------------------
+  @Get('sync-status')
+  async getSyncStatus() {
+    return this.erpService.getSyncStatus();
   }
 }

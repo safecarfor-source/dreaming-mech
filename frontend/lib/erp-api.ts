@@ -44,4 +44,44 @@ export const erpApi = {
   generateReminders: () => erpAxios.post('/erp/reminders/generate'),
   getTopProducts: (params?: { from?: string; to?: string; limit?: number }) =>
     erpAxios.get('/erp/products/top', { params }),
+
+  // CREATE operations
+  createVehicle: (data: {
+    plateNumber: string;
+    ownerName: string;
+    phone?: string;
+    carModel?: string;
+    modelYear?: string;
+    color?: string;
+    displacement?: string;
+    memo?: string;
+  }) => erpAxios.post('/erp/customers', data),
+
+  createSale: (data: {
+    saleDate: string;
+    customerCode: string;
+    productCode: string;
+    productName?: string;
+    qty: number;
+    unitPrice: number;
+    amount: number;
+    saleType?: '1' | '2' | '3';
+    memo?: string;
+  }) => erpAxios.post('/erp/sales', data),
+
+  createRepair: (data: {
+    vehicleCode: string;
+    repairDate: string;
+    productCode?: string;
+    productName: string;
+    qty?: number;
+    unitPrice?: number;
+    amount: number;
+    mileage?: number;
+    memo?: string;
+  }) => erpAxios.post('/erp/repairs', data),
+
+  searchProducts: (q: string) => erpAxios.get('/erp/products/search', { params: { q } }),
+
+  getSyncStatus: () => erpAxios.get('/erp/sync-status'),
 };

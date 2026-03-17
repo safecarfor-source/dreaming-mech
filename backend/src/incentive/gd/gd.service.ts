@@ -162,4 +162,40 @@ export class GdService {
 
     return { data, total, page, limit };
   }
+
+  // 동기화 상태 조회
+  async getSyncStatus() {
+    try {
+      const lastSync = await this.prisma.gdSyncLog.findFirst({
+        where: { status: 'completed' },
+        orderBy: { completedAt: 'desc' },
+      });
+
+      if (!lastSync) {
+        return { lastSync: null, message: '동기화 이력 없음' };
+      }
+
+      return {
+        lastSync: lastSync.completedAt,
+        syncType: lastSync.syncType,
+        tableName: lastSync.tableName,
+        rowCount: lastSync.rowCount,
+      };
+    } catch {
+      // GdSyncLog 테이블이 아직 없거나 데이터가 없는 경우
+      // GdSaleDetail의 최신 날짜로 대체
+      try {
+        const latestSale = await this.prisma.gdSaleDetail.findFirst({
+          orderBy: { saleDate: 'desc' },
+          select: { saleDate: true },
+        });
+        return {
+          lastSync: latestSale?.saleDate || null,
+          message: latestSale ? '최근 전표 날짜 기준' : '데이터 없음',
+        };
+      } catch {
+        return { lastSync: null, message: '조회 불가' };
+      }
+    }
+  }
 }
