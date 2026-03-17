@@ -5,7 +5,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 export class SalesTargetService {
   constructor(private prisma: PrismaService) {}
 
-  // 쉬는 날: 1월1일, 설, 추석만 (나머지는 모두 영업)
+  // 쉬는 날: 1월1일, 설(+대체공휴일), 추석(+대체공휴일)만 (나머지는 모두 영업)
   private getKoreanHolidays(year: number): Set<string> {
     const holidays = new Set<string>();
     const add = (m: number, d: number) => {
@@ -14,15 +14,17 @@ export class SalesTargetService {
 
     add(1, 1); // 신정
 
-    // 설/추석 (음력이라 연도별 하드코딩)
+    // 설/추석 + 대체공휴일 (음력이라 연도별 하드코딩)
     if (year === 2025) {
       add(1, 28); add(1, 29); add(1, 30); // 설
       add(10, 5); add(10, 6); add(10, 7); // 추석
+      add(10, 8); // 추석 대체공휴일 (10/5 일요일)
     } else if (year === 2026) {
       add(2, 16); add(2, 17); add(2, 18); // 설
       add(9, 24); add(9, 25); add(9, 26); // 추석
     } else if (year === 2027) {
       add(2, 5); add(2, 6); add(2, 7); // 설
+      add(2, 8); // 설 대체공휴일 (2/7 일요일)
       add(9, 14); add(9, 15); add(9, 16); // 추석
     }
 
@@ -76,9 +78,10 @@ export class SalesTargetService {
     let tyRemain: number;
 
     if (isCurrentMonth) {
-      // 현재 월: 오늘까지 경과 영업일, 나머지 남은 영업일
+      // 현재 월: 매출 데이터는 전일까지 반영되므로, 전일까지 경과 영업일 계산
       const today = now.getDate();
-      tyElapsed = this.countBusinessDays(year, month, 1, today);
+      const dataUpToDay = today > 1 ? today - 1 : 0;
+      tyElapsed = dataUpToDay > 0 ? this.countBusinessDays(year, month, 1, dataUpToDay) : 0;
       tyRemain = totalBusinessDays - tyElapsed;
     } else {
       // 과거/미래 월: 전체 영업일
