@@ -2,6 +2,29 @@
 # 시스템 Nginx가 SSL + 리버스 프록시 처리 (localhost:3000, localhost:3001)
 
 services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: dreaming-mech-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: mechanic_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
   backend:
     build:
       context: ./backend
@@ -39,6 +62,9 @@ services:
       SOLAPI_KAKAO_CHANNEL_ID: ${SOLAPI_KAKAO_CHANNEL_ID:-}
       SOLAPI_QUOTE_TEMPLATE_ID: ${SOLAPI_QUOTE_TEMPLATE_ID:-}
       SOLAPI_INQUIRY_TEMPLATE_ID: ${SOLAPI_INQUIRY_TEMPLATE_ID:-}
+    depends_on:
+      postgres:
+        condition: service_healthy
     networks:
       - app-network
     command: sh -c "DATABASE_URL=$MIGRATION_DATABASE_URL npx prisma migrate deploy && npm run start:prod"
@@ -85,6 +111,11 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
+
+volumes:
+  postgres_data:
+    external: true
+    name: dreaming-mech_postgres_data
 
 networks:
   app-network:
