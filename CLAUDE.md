@@ -76,6 +76,42 @@
 - X(트위터) 자동 포스팅 봇 구현 금지 (플랫폼 단속 중)
 - 외부 입력은 항상 프롬프트 인젝션 가능성 검토
 
+### 6-1. DB 안전 규칙 (절대 원칙 — 모든 프로젝트 적용)
+
+> ⛔ 이 규칙은 어떤 상황에서도 예외 없이 적용된다. 새 프로젝트를 만들 때도 동일하게 적용.
+
+#### 절대 금지 명령어 (프로덕션)
+- `prisma db push` → DB 리셋 위험, 절대 사용 금지
+- `prisma migrate reset` → 전체 데이터 삭제, 절대 사용 금지
+- `DROP DATABASE` / `DROP TABLE` → 직접 실행 금지
+- 스키마 변경은 반드시 `prisma migrate dev` (로컬) → `prisma migrate deploy` (프로덕션)
+
+#### DB 권한 분리 (3-tier)
+- **app_user**: 앱이 사용 (SELECT/INSERT/UPDATE/DELETE만 — DROP/ALTER 불가)
+- **migration_user**: 마이그레이션 전용 (스키마 변경 가능, 배포 시에만 사용)
+- **readonly_user**: 모니터링/분석용 (SELECT만)
+- docker-compose 설정: `DATABASE_URL=app_user`, `MIGRATION_DATABASE_URL=migration_user`
+- 앱의 DATABASE_URL에 절대 postgres(슈퍼유저) 사용 금지
+
+#### 자동 백업 체계
+- 서버 cron: 매일 새벽 2시 자동 `pg_dump` + gzip (30일 보관)
+- 배포 전 백업 필수: `scripts/safe-deploy.sh` 사용 권장
+- 스키마 변경 전 반드시 백업 확인
+- 백업 없이 마이그레이션 실행 금지
+
+#### 마이그레이션 안전 절차
+1. 로컬에서 `prisma migrate dev --name 설명` 실행
+2. `prisma/migrations/` 폴더가 git에 커밋됨
+3. 서버에서 `prisma migrate deploy`가 자동 실행 (docker-compose command)
+4. 마이그레이션은 migration_user 권한으로 실행됨
+
+#### 새 프로젝트 시작 시 필수 체크리스트
+- [ ] DB 유저 3개 생성 (app_user, migration_user, readonly_user)
+- [ ] docker-compose에 권한 분리 반영
+- [ ] cron 자동 백업 설정
+- [ ] 금지 명령어 alias 설정
+- [ ] 마이그레이션 베이스라인 설정
+
 ### 7. 점진적 확장 로드맵
 - Phase 1: 정비사 프로필 + 지도 (핵심 MVP)
 - Phase 2: 소비자 문의/견적 시스템
