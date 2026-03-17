@@ -144,7 +144,8 @@ body {
 /* PIN Modal */
 .pin-modal {
   display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0,0,0,0.5); z-index: 999; justify-content: center; align-items: center;
+  background: rgba(0,0,0,0.5); z-index: 999; justify-content: center; align-items: flex-start;
+  padding-top: 80px;
 }
 .pin-modal.show { display: flex; }
 .pin-box {
@@ -1130,7 +1131,18 @@ const INACTIVITY_MS = 4 * 60 * 1000; // 4분 후 경고
 const WARNING_SEC = 60; // 60초 카운트다운
 
 // --- PIN ---
-function getPinHash() { return localStorage.getItem('inc_pin_' + (currentUser ? currentUser.loginId : '')); }
+// 기본 PIN: kkj=0000, ljs=1111
+const DEFAULT_PINS = { kkj: '0000', ljs: '1111' };
+function getPinHash() {
+  const key = 'inc_pin_' + (currentUser ? currentUser.loginId : '');
+  let stored = localStorage.getItem(key);
+  // 기본 PIN이 있으면 자동 설정
+  if (!stored && currentUser && DEFAULT_PINS[currentUser.loginId]) {
+    stored = btoa(DEFAULT_PINS[currentUser.loginId]);
+    localStorage.setItem(key, stored);
+  }
+  return stored;
+}
 function setPinHash(pin) { localStorage.setItem('inc_pin_' + currentUser.loginId, btoa(pin)); }
 
 function showPinModal(mode) {
@@ -1173,17 +1185,23 @@ function submitPin() {
     }
   }
 }
-// PIN input auto-advance
+// PIN input auto-advance (모바일 호환)
 document.addEventListener('DOMContentLoaded', () => {
   ['pin1','pin2','pin3','pin4'].forEach((id, i, arr) => {
     const el = document.getElementById(id);
-    el.addEventListener('input', () => {
+    function handlePinInput() {
+      if (el.value.length > 1) el.value = el.value.slice(-1); // 중복 입력 방지
       if (el.value.length === 1 && i < 3) document.getElementById(arr[i + 1]).focus();
-      if (el.value.length === 1 && i === 3) submitPin();
-    });
+      if (el.value.length === 1 && i === 3) setTimeout(submitPin, 50); // 모바일 딜레이
+    }
+    el.addEventListener('input', handlePinInput);
+    el.addEventListener('change', handlePinInput);
+    el.addEventListener('keyup', handlePinInput);
     el.addEventListener('keydown', (e) => {
       if (e.key === 'Backspace' && !el.value && i > 0) document.getElementById(arr[i - 1]).focus();
     });
+    // 모바일 터치 시 기존 값 클리어
+    el.addEventListener('focus', () => { el.value = ''; });
   });
 });
 
