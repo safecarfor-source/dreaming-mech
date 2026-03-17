@@ -1190,9 +1190,8 @@ document.addEventListener('DOMContentLoaded', () => {
 // --- Blur State ---
 function needsBlur() {
   if (!currentUser) return false;
-  // 662(공용), admin, viewer는 blur 불필요
+  // 662(공용)만 blur 불필요, 나머지(admin/manager/director) 전부 적용
   if (currentUser.loginId === '662') return false;
-  if (currentUser.role === 'viewer') return false;
   return true;
 }
 function applyBlurState() {
