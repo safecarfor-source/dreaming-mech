@@ -541,6 +541,9 @@ body {
       <div class="last-update-row" id="lastUpdateDirector"></div>
       <div id="directorContent"><div class="loading"><div class="spinner"></div>로딩 중...</div></div>
     </div>
+    <div class="tab-content" id="tab-upload">
+      <div id="uploadContent"></div>
+    </div>
     <div class="tab-content" id="tab-admin">
       <div id="adminContent"></div>
     </div>
@@ -927,6 +930,7 @@ function buildTabs() {
   const tabs = [{ id: 'team', label: '팀 인센티브' }];
   if (currentUser.access.includes('manager')) tabs.push({ id: 'manager', label: '김권중' });
   if (currentUser.access.includes('director')) tabs.push({ id: 'director', label: '이정석' });
+  if (!currentUser.access.includes('admin')) tabs.push({ id: 'upload', label: '업로드' });
   if (currentUser.access.includes('admin')) tabs.push({ id: 'settlement', label: '월말결산' });
   if (currentUser.access.includes('admin')) tabs.push({ id: 'admin', label: '관리자' });
   tabs.forEach((t, i) => {
@@ -947,6 +951,7 @@ function switchTab(tabId, btn) {
   if (tabId === 'team') loadTeamInit();
   else if (tabId === 'manager') loadManagerInit();
   else if (tabId === 'director') loadDirectorInit();
+  else if (tabId === 'upload') loadUploadPanel();
   else if (tabId === 'settlement') loadSettlement();
   else if (tabId === 'admin') loadAdminPanel();
 }
@@ -972,6 +977,10 @@ async function loadTeamInit() {
     teamMonthlyData = await api('/team/monthly');
     const sel = document.getElementById('teamMonthSel');
     sel.innerHTML = '';
+    if (!teamMonthlyData || teamMonthlyData.length === 0) {
+      document.getElementById('teamContent').innerHTML = '<div style="text-align:center;padding:60px 20px;color:#999"><div style="font-size:48px;margin-bottom:16px">📊</div><div style="font-size:16px;font-weight:700;margin-bottom:8px">데이터가 없습니다</div><div style="font-size:13px">극동 엑셀 파일을 업로드해주세요</div></div>';
+      return;
+    }
     teamMonthlyData.forEach((m, i) => {
       const opt = document.createElement('option');
       opt.value = m.month; opt.textContent = m.month;
@@ -2140,6 +2149,73 @@ async function loadSettlement() {
   } catch (e) {
     el.innerHTML = '<p style="color:var(--red)">월말결산 데이터 로드 실패: ' + e.message + '</p>';
   }
+}
+
+// ===== UPLOAD (team 전용) =====
+let uploadPanelLoaded = false;
+async function loadUploadPanel() {
+  if (uploadPanelLoaded) return;
+  const el = document.getElementById('uploadContent');
+  let html = '';
+  html += `<div class="admin-section"><h3>극동 엑셀 업로드</h3>
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+      <label style="font-size:13px;color:var(--text-muted)">대상 날짜:</label>
+      <input type="date" id="uploadMonth2" style="padding:6px 12px;border:1px solid var(--border);border-radius:8px;font-family:'Noto Sans KR'">
+    </div>
+    <div class="upload-area" onclick="document.getElementById('excelFile2').click()"
+      ondragover="event.preventDefault();this.style.borderColor='#3EA6FF';this.style.background='#EBF5FF'"
+      ondragleave="this.style.borderColor='';this.style.background=''"
+      ondrop="event.preventDefault();this.style.borderColor='';this.style.background='';var f=document.getElementById('excelFile2');f.files=event.dataTransfer.files;uploadExcel2(f)">
+      <div class="upload-icon">📄</div><div class="upload-text">극동 매출 엑셀 파일을 선택하거나 드래그하세요</div>
+      <input type="file" id="excelFile2" accept=".xlsx,.xls" onchange="uploadExcel2(this)" style="display:none">
+    </div><div id="uploadResult2" style="margin-top:16px"></div></div>`;
+  html += `<div class="admin-section"><h3>업로드 이력</h3><div id="uploadHistory2"><div class="loading"><div class="spinner"></div></div></div></div>`;
+  el.innerHTML = html;
+  const now = new Date();
+  document.getElementById('uploadMonth2').value = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(now.getDate()).padStart(2,'0');
+  loadUploadHistory2();
+  uploadPanelLoaded = true;
+}
+
+async function uploadExcel2(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const dateVal = document.getElementById('uploadMonth2').value;
+  if (!dateVal) { alert('대상 날짜를 선택해주세요'); return; }
+  const [y, m] = dateVal.split('-');
+  const month = y + '-' + m;
+  const fd = new FormData();
+  fd.append('file', file);
+  fd.append('month', month);
+  fd.append('dataDate', dateVal);
+  const res = document.getElementById('uploadResult2');
+  res.innerHTML = '<div class="loading"><div class="spinner"></div>업로드 중...</div>';
+  try {
+    const r = await fetch(API + '/upload', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token }, body: fd });
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.message || '업로드 실패');
+    res.innerHTML = '<div style="color:var(--green);font-weight:600">✅ 업로드 완료!</div>';
+    teamMonthlyData = null;
+    loadUploadHistory2();
+  } catch (e) { res.innerHTML = '<div style="color:var(--red)">❌ ' + e.message + '</div>'; }
+  input.value = '';
+}
+
+async function loadUploadHistory2() {
+  try {
+    const hist = await api('/upload/history');
+    const el = document.getElementById('uploadHistory2');
+    if (!hist || hist.length === 0) { el.innerHTML = '<p style="color:var(--text-muted);text-align:center;padding:20px">업로드 이력이 없습니다</p>'; return; }
+    let html = '<table class="data-table"><thead><tr><th>날짜</th><th>파일명</th><th>상태</th></tr></thead><tbody>';
+    hist.forEach(h => {
+      const d = new Date(h.createdAt);
+      const dateStr = d.getFullYear() + '.' + String(d.getMonth()+1).padStart(2,'0') + '.' + String(d.getDate()).padStart(2,'0');
+      const st = h.status === 'approved' ? '<span style="color:var(--green)">✅ 승인</span>' : '<span style="color:var(--amber)">⏳ 대기</span>';
+      html += `<tr><td>${dateStr}</td><td>${h.originalFilename||'-'}</td><td>${st}</td></tr>`;
+    });
+    html += '</tbody></table>';
+    el.innerHTML = html;
+  } catch (e) { document.getElementById('uploadHistory2').innerHTML = ''; }
 }
 
 // ===== ADMIN =====

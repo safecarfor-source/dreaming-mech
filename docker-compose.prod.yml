@@ -14,6 +14,7 @@ services:
       NODE_ENV: production
       # RDS 또는 외부 PostgreSQL URL
       DATABASE_URL: ${DATABASE_URL}
+      MIGRATION_DATABASE_URL: ${MIGRATION_DATABASE_URL}
       JWT_SECRET: ${JWT_SECRET}
       NAVER_MAP_CLIENT_ID: ${NAVER_MAP_CLIENT_ID}
       NAVER_MAP_CLIENT_SECRET: ${NAVER_MAP_CLIENT_SECRET}
@@ -40,7 +41,7 @@ services:
       SOLAPI_INQUIRY_TEMPLATE_ID: ${SOLAPI_INQUIRY_TEMPLATE_ID:-}
     networks:
       - app-network
-    command: sh -c "npx prisma migrate deploy && npm run start:prod"
+    command: sh -c "DATABASE_URL=$MIGRATION_DATABASE_URL npx prisma migrate deploy && npm run start:prod"
     healthcheck:
       test: ["CMD-SHELL", "node -e \"require('http').get('http://localhost:3001/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})\""]
       interval: 30s

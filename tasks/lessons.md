@@ -84,6 +84,15 @@
 5. **만료 정책은 상태 기반**: 24시간 시간 기반 만료 → 혼란. CONNECTED/COMPLETED 상태 기반 만료가 실운영에 적합
 6. **영업시간 > 휴무일**: 두 데이터 충돌 시 "더 구체적인 정보"가 우선. operatingHours 설정 있으면 holidays 무시
 
+## DB 안전 관리 (2026-03-16 추가) 🚨 치명적
+
+### 프로덕션 DB 조작 금지 규칙
+1. **`prisma db push` 프로덕션 절대 사용 금지**: 스키마 차이가 크면 DB를 리셋함. 2026-03-16 인센티브 데이터 전량 손실 사고 발생
+2. **마이그레이션만 사용**: 새 모델/컬럼 추가 시 반드시 `prisma migrate dev --create-only` (로컬) → `prisma migrate deploy` (서버)
+3. **로컬 DB 없으면 SQL 직접 작성**: 마이그레이션 파일 수동 생성 or 서버에서 `ALTER TABLE` / `CREATE TABLE` 직접 실행
+4. **DB 백업 습관**: 스키마 변경 전 반드시 `pg_dump`로 백업. `docker exec postgres pg_dump -U postgres mechanic_db > backup.sql`
+5. **변경 전 데이터 확인**: `SELECT COUNT(*)` 등으로 기존 데이터 존재 확인 후 작업
+
 ---
 
-*마지막 업데이트: 2026-03-01 (코드 중복·API 추적·만료 정책 교훈 추가)*
+*마지막 업데이트: 2026-03-16 (DB 안전 관리 교훈 추가 - prisma db push 사고)*
