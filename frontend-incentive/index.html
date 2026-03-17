@@ -1079,6 +1079,8 @@ function switchTab(tabId, btn) {
   document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
   document.getElementById('tab-' + tabId).classList.add('active');
   if (btn) btn.classList.add('active');
+  // 탭 전환 시 콘텐츠 영역으로 스크롤 (top-bar 바로 아래)
+  window.scrollTo({ top: 0, behavior: 'instant' });
   if (tabId === 'team') loadTeamInit();
   else if (tabId === 'manager') loadManagerInit();
   else if (tabId === 'director') loadDirectorInit();
