@@ -83,16 +83,44 @@ export class GdService {
     return { vehicle, repairs, total, page, limit };
   }
 
+  // 타이어 사이즈 숫자를 표준 형식으로 변환
+  // "2355519" → "235/55R19", "2454518" → "245/45R18"
+  private parseTireSize(q: string): string | null {
+    const digits = q.replace(/\D/g, '');
+    if (digits.length === 7) {
+      // 2355519 → 235/55R19
+      return `${digits.slice(0, 3)}/${digits.slice(3, 5)}R${digits.slice(5, 7)}`;
+    }
+    if (digits.length === 6) {
+      // 195615 → 195/6?R15 (드문 패턴)
+      return null;
+    }
+    return null;
+  }
+
   // 상품/타이어 검색
   async searchProducts(q: string, page = 1, limit = 20) {
     const skip = (page - 1) * limit;
-    const where = q ? {
-      OR: [
+
+    // 타이어 사이즈 숫자 검색 지원 (2355519 → 235/55R19)
+    const tireSize = this.parseTireSize(q);
+    const searchTerms: { OR: any[] } = { OR: [] };
+
+    if (q) {
+      searchTerms.OR.push(
         { name: { contains: q, mode: 'insensitive' as const } },
         { code: { contains: q, mode: 'insensitive' as const } },
         { altName: { contains: q, mode: 'insensitive' as const } },
-      ],
-    } : {};
+      );
+    }
+
+    if (tireSize) {
+      searchTerms.OR.push(
+        { name: { contains: tireSize, mode: 'insensitive' as const } },
+      );
+    }
+
+    const where = searchTerms.OR.length > 0 ? searchTerms : {};
 
     const [data, total] = await Promise.all([
       this.prisma.gdProduct.findMany({
