@@ -82,7 +82,7 @@ body {
 /* --- Top Bar --- */
 .top-bar {
   display: flex; align-items: center; padding: 0 20px;
-  background: var(--card); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100;
+  background: var(--card); border-bottom: 1px solid var(--border); position: fixed; top: 0; left: 0; right: 0; z-index: 100;
   gap: 0; height: 52px;
 }
 .top-bar .logo { font-size: 16px; font-weight: 800; color: var(--purple); white-space: nowrap; margin-right: 8px; flex-shrink: 0; }
@@ -136,7 +136,7 @@ body {
 .tab-btn.active { color: var(--purple); border-bottom-color: var(--purple); font-weight: 700; }
 
 /* --- Content --- */
-.content { padding: 20px; max-width: 1200px; margin: 0 auto; }
+.content { padding: 20px; padding-top: 72px; max-width: 1200px; margin: 0 auto; }
 .tab-content { display: none; }
 .tab-content.active { display: block; max-width: 520px; margin: 0 auto; }
 
