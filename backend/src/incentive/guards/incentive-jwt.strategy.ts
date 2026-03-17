@@ -8,7 +8,7 @@ export class IncentiveJwtStrategy extends PassportStrategy(Strategy, 'incentive-
   constructor(private prisma: PrismaService) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-      secretOrKey: process.env.JWT_SECRET || 'incentive-secret',
+      secretOrKey: process.env.JWT_SECRET || (() => { throw new Error('JWT_SECRET 환경변수 필수'); })(),
     });
   }
 

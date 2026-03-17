@@ -18,11 +18,13 @@ export class ManagerSalesTargetService {
     if (year === 2025) {
       add(1, 28); add(1, 29); add(1, 30); // 설
       add(10, 5); add(10, 6); add(10, 7); // 추석
+      add(10, 8); // 추석 대체공휴일
     } else if (year === 2026) {
       add(2, 16); add(2, 17); add(2, 18); // 설
       add(9, 24); add(9, 25); add(9, 26); // 추석
     } else if (year === 2027) {
       add(2, 5); add(2, 6); add(2, 7); // 설
+      add(2, 8); // 설 대체공휴일
       add(9, 14); add(9, 15); add(9, 16); // 추석
     }
 
@@ -80,8 +82,8 @@ export class ManagerSalesTargetService {
     let tyRemain: number;
 
     if (isCurrentMonth) {
-      const today = now.getDate();
-      tyElapsed = this.countBusinessDays(year, month, 1, today);
+      const today = now.getDate() - 1; // 전일 기준
+      tyElapsed = today >= 1 ? this.countBusinessDays(year, month, 1, today) : 0;
       tyRemain = totalBusinessDays - tyElapsed;
     } else {
       const monthEnd = new Date(year, month, 0);

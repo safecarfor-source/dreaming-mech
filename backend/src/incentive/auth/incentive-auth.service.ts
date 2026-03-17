@@ -66,7 +66,7 @@ export class IncentiveAuthService {
     const hashed = await bcrypt.hash(newPassword, 10);
     await this.prisma.incentiveUser.update({
       where: { id: userId },
-      data: { password: hashed, plainPassword: newPassword },
+      data: { password: hashed },
     });
 
     return { message: '비밀번호가 변경되었습니다' };

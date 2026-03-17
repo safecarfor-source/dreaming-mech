@@ -462,6 +462,28 @@ body {
   .nc-box-title { font-size: 22px; }
   .nc-big-num { font-size: 28px; }
 }
+
+/* ===== Master Insight ===== */
+.mi-bar-row { display:flex; align-items:center; gap:8px; margin-bottom:6px; }
+.mi-bar-label { width:55px; font-size:11px; color:var(--text-muted); text-align:right; flex-shrink:0; }
+.mi-bar-track { flex:1; height:22px; background:#E8E8E8; border-radius:6px; overflow:hidden; }
+.mi-bar-fill { height:100%; border-radius:6px; transition:width 0.5s; }
+.mi-bar-value { width:90px; font-size:11px; font-weight:600; color:var(--text); text-align:right; flex-shrink:0; font-variant-numeric:tabular-nums; }
+.mi-comp-bar { display:flex; height:28px; border-radius:8px; overflow:hidden; margin-bottom:8px; }
+.mi-comp-legend { display:flex; flex-wrap:wrap; gap:6px 14px; font-size:11px; color:var(--text-muted); }
+.mi-comp-dot { width:10px; height:10px; border-radius:3px; display:inline-block; vertical-align:middle; margin-right:3px; }
+.mi-asset-stack { display:flex; height:32px; border-radius:10px; overflow:hidden; margin-bottom:8px; }
+.mi-stat-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:12px; }
+.mi-stat-card { background:#F9FAFB; border-radius:12px; padding:14px; text-align:center; }
+.mi-stat-label { font-size:11px; color:#888; margin-bottom:4px; }
+.mi-stat-value { font-size:22px; font-weight:800; color:#111; }
+.mi-stat-sub { font-size:12px; font-weight:600; margin-top:2px; }
+.mi-section-gap { margin-top:24px; }
+@media (max-width:480px) {
+  .mi-bar-label { width:40px; font-size:10px; }
+  .mi-bar-value { width:70px; font-size:10px; }
+  .mi-stat-grid { grid-template-columns:1fr; }
+}
 </style>
 </head>
 <body>
@@ -549,6 +571,9 @@ body {
     </div>
     <div class="tab-content" id="tab-settlement">
       <div id="settlementContent"></div>
+    </div>
+    <div class="tab-content" id="tab-insight">
+      <div id="insightContent"></div>
     </div>
   </div>
 </div>
@@ -932,6 +957,7 @@ function buildTabs() {
   if (currentUser.access.includes('director')) tabs.push({ id: 'director', label: '이정석' });
   if (!currentUser.access.includes('admin')) tabs.push({ id: 'upload', label: '업로드' });
   if (currentUser.access.includes('admin')) tabs.push({ id: 'settlement', label: '월말결산' });
+  if (currentUser.access.includes('admin')) tabs.push({ id: 'insight', label: '인사이트' });
   if (currentUser.access.includes('admin')) tabs.push({ id: 'admin', label: '관리자' });
   tabs.forEach((t, i) => {
     const btn = document.createElement('button');
@@ -953,6 +979,7 @@ function switchTab(tabId, btn) {
   else if (tabId === 'director') loadDirectorInit();
   else if (tabId === 'upload') loadUploadPanel();
   else if (tabId === 'settlement') loadSettlement();
+  else if (tabId === 'insight') loadInsight();
   else if (tabId === 'admin') loadAdminPanel();
 }
 
@@ -1115,8 +1142,12 @@ function renderTeam(data, el, monthStr, stData) {
     const stBarWidth = Math.min(parseFloat(stProgressPct), 100);
     const stIsAhead = stProjected >= lyTeamTotal;
 
+    const stRemain = stData?.tyRemain || (stTotalBiz - stElapsed);
+    const stNeededDaily = stRemain > 0 ? Math.round((lyTeamTotal - stTotalSales) / stRemain) : 0;
+    const stDailyGap = stNeededDaily - stDailyAvg;
+
     html += `<div class="nc-box">
-      <div class="nc-box-title">이번 달 매출 예측</div>
+      <div class="nc-box-title">${teamMonthNum}월 매출 예측</div>
       <div style="margin-bottom:12px">
         <div style="display:flex;justify-content:space-between;font-size:11px;color:#666;margin-bottom:4px">
           <span>작년 대비 진행률</span>
@@ -1130,15 +1161,16 @@ function renderTeam(data, el, monthStr, stData) {
           <span>작년 ${fmtBigWon(lyTeamTotal)}</span>
         </div>
       </div>
-      <div style="background:#F9FAFB;border-radius:12px;padding:16px;text-align:center">
-        <div style="font-size:24px;font-weight:900;color:#000;margin-bottom:6px">일 평균 ${fmtMan(stDailyAvg)}원 매출 시</div>
-        <div style="font-size:17px;font-weight:700;color:${stGrowth >= 0 ? '#10B981' : '#EF4444'};margin-bottom:4px">
+      <div style="background:#F9FAFB;border-radius:12px;padding:16px;text-align:center;margin-bottom:10px">
+        <div style="font-size:12px;color:#666;margin-bottom:4px">${teamMonthNum}월 일평균 매출</div>
+        <div style="font-size:28px;font-weight:900;color:#000;margin-bottom:4px">${fmtMan(stDailyAvg)}원</div>
+        <div style="font-size:15px;font-weight:700;color:${stGrowth >= 0 ? '#10B981' : '#EF4444'}">
           작년 대비 ${stGrowth >= 0 ? '+' : ''}${stGrowth.toFixed(1)}%
         </div>
-        <div style="font-size:14px;font-weight:700;color:#333;margin-top:4px">매출: ${fmtBigWon(stProjected)}</div>
       </div>
-      <div style="text-align:center;margin-top:10px;font-size:12px;color:${stIsAhead ? '#10B981' : '#EF4444'};font-weight:600">
-        ${stIsAhead ? '👍 시간 대비 앞서가는 중!' : '⚡ 페이스업 필요!'}
+      <div style="background:${stIsAhead ? '#F0FDF4' : '#FEF2F2'};border-radius:12px;padding:16px;text-align:center">
+        <div style="font-size:12px;color:#666;margin-bottom:4px">작년 동급 필요 일평균 매출</div>
+        <div style="font-size:28px;font-weight:900;color:${stIsAhead ? '#10B981' : '#EF4444'}">${stNeededDaily > 0 ? fmtMan(stNeededDaily) + '원' : '달성!'}</div>
       </div>
     </div>`;
   }
@@ -1172,9 +1204,10 @@ function renderTeam(data, el, monthStr, stData) {
     html += `</div>`;
   }
 
-  // Box 5: 지난달 대비 바 그래프 (최소수량 품목 제외)
+  // Box 5: 지난달 대비 바 그래프 (최소수량 품목 + 타이어/얼라이먼트 제외)
   const mqKeys = new Set(mqc.items.map(i => i.itemKey));
-  const nonMqItems = allItems.filter(item => !mqKeys.has(item.key));
+  const excludeFromComparison = new Set(['tire', 'alignment']);
+  const nonMqItems = allItems.filter(item => !mqKeys.has(item.key) && !excludeFromComparison.has(item.key));
   html += `<div class="nc-box">
     <div class="nc-box-title">지난달 대비</div>`;
   nonMqItems.forEach(item => {
@@ -1197,28 +1230,7 @@ function renderTeam(data, el, monthStr, stData) {
 
   html += `</div>`; // nc-wrap 끝
 
-  // 엑셀 업로드 (카드 밖, 기존 다크 스타일 유지)
-  html += `<div class="card" style="margin-top:16px">
-    <div class="card-title">극동 엑셀 업로드</div>
-    <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
-      <label style="font-size:13px;color:var(--text-muted)">대상 날짜:</label>
-      <input type="date" id="teamUploadMonth" style="padding:6px 12px;border:1px solid var(--border);border-radius:8px;font-family:'Noto Sans KR'">
-    </div>
-    <div class="upload-area" onclick="document.getElementById('teamExcelFile').click()"
-      ondragover="event.preventDefault();this.style.borderColor='#3EA6FF';this.style.background='#EBF5FF'"
-      ondragleave="this.style.borderColor='';this.style.background=''"
-      ondrop="event.preventDefault();this.style.borderColor='';this.style.background='';var f=document.getElementById('teamExcelFile');f.files=event.dataTransfer.files;uploadExcel(f)"
-      style="border:2px dashed var(--border);border-radius:12px;padding:24px;text-align:center;cursor:pointer;background:#F5F5F5">
-      <div style="font-size:28px;margin-bottom:8px">📄</div>
-      <div style="font-size:13px;color:var(--text-muted)">극동 매출 엑셀 파일을 선택하거나 드래그하세요</div>
-      <input type="file" id="teamExcelFile" accept=".xlsx,.xls" onchange="uploadExcel(this)" style="display:none">
-    </div>
-    <div id="teamUploadResult" style="margin-top:16px"></div>
-  </div>`;
-
   el.innerHTML = html;
-  const teamUpMon = document.getElementById('teamUploadMonth');
-  if (teamUpMon) { const n=new Date(); teamUpMon.value = n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0'); }
 
   // Chart (monochrome)
   if (teamMonthlyData && teamMonthlyData.length > 0) {
@@ -2032,6 +2044,283 @@ async function saveSalesTarget(year, month) {
   }
 }
 
+// ===== 마스터 인사이트 =====
+let insightLoaded = false;
+async function loadInsight() {
+  const el = document.getElementById('insightContent');
+  if (insightLoaded) return;
+  el.innerHTML = '<div class="loading"><div class="spinner"></div>인사이트 로딩 중...</div>';
+
+  try {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth() + 1;
+
+    // 병렬 데이터 로드
+    const [summary, dirMonthly, salesTarget] = await Promise.all([
+      api(`/dashboard/summary/${year}/${month}`),
+      api('/director/monthly'),
+      api(`/sales-target/${year}/${month}`),
+    ]);
+
+    // 최근 6개월 CashFlow
+    const cfRequests = [];
+    let cy = year, cm = month;
+    for (let i = 0; i < 6; i++) {
+      cfRequests.push(api(`/cashflow/${cy}/${cm}`).catch(() => ({ year: cy, month: cm, cash: 0, investment: 0, inventory: 0, totalAssets: 0 })));
+      cm--; if (cm === 0) { cm = 12; cy--; }
+    }
+    const cashflows = (await Promise.all(cfRequests)).reverse();
+
+    el.innerHTML = renderInsightDashboard(summary, dirMonthly, salesTarget, cashflows, year, month);
+    insightLoaded = true;
+  } catch (e) {
+    el.innerHTML = `<div class="nc-box"><p style="color:var(--red)">인사이트 로드 실패: ${e.message}</p></div>`;
+  }
+}
+
+function renderInsightDashboard(summary, dirMonthly, salesTarget, cashflows, year, month) {
+  let html = '';
+
+  // ===== 매출 분석 =====
+  html += `<div class="nc-box-title" style="font-size:20px;font-weight:900;margin-bottom:4px">📊 매출 분석</div>`;
+  html += `<div style="font-size:13px;color:var(--text-muted);margin-bottom:16px">${year}년 ${month}월 기준</div>`;
+
+  // 카드 1: 이번 달 매출 요약 (2x2 그리드)
+  const rev = summary.revenue || {};
+  const totalRev = rev.total || 0;
+  const pmChange = summary.prevMonth?.change || 0;
+  const pyChange = summary.prevYear?.change || 0;
+  const elapsed = salesTarget?.tyElapsed || 1;
+  const dailyAvg = Math.round(totalRev / elapsed);
+
+  html += `<div class="nc-box">
+    <div class="nc-box-title" style="font-size:16px">${month}월 매출 요약</div>
+    <div class="mi-stat-grid">
+      <div class="mi-stat-card">
+        <div class="mi-stat-label">총 매출</div>
+        <div class="mi-stat-value">${fmtBigWon(totalRev)}</div>
+      </div>
+      <div class="mi-stat-card">
+        <div class="mi-stat-label">일평균 매출</div>
+        <div class="mi-stat-value">${fmtMan(dailyAvg)}원</div>
+        <div class="mi-stat-sub" style="color:#888">${elapsed}일 경과</div>
+      </div>
+      <div class="mi-stat-card">
+        <div class="mi-stat-label">전월 대비</div>
+        <div class="mi-stat-value" style="color:${pmChange >= 0 ? 'var(--green)' : 'var(--red)'}">${pmChange >= 0 ? '+' : ''}${pmChange}%</div>
+      </div>
+      <div class="mi-stat-card">
+        <div class="mi-stat-label">전년 동월 대비</div>
+        <div class="mi-stat-value" style="color:${pyChange >= 0 ? 'var(--green)' : 'var(--red)'}">${pyChange >= 0 ? '+' : ''}${pyChange}%</div>
+      </div>
+    </div>
+  </div>`;
+
+  // 카드 2: 월별 매출 추이 (최근 12개월 CSS 바 차트)
+  const recent12 = (dirMonthly || []).slice(-12);
+  if (recent12.length > 0) {
+    const maxRev = Math.max(...recent12.map(m => m.totalRevenue || 0));
+    html += `<div class="nc-box">
+      <div class="nc-box-title" style="font-size:16px">월별 매출 추이</div>`;
+    recent12.forEach(m => {
+      const pct = maxRev > 0 ? ((m.totalRevenue || 0) / maxRev * 100) : 0;
+      const label = (m.month || '').replace('년 ', '.').replace('월', '');
+      const isThisMonth = m.month === `${year - 2000}년 ${month}월`;
+      html += `<div class="mi-bar-row">
+        <span class="mi-bar-label">${label}</span>
+        <div class="mi-bar-track">
+          <div class="mi-bar-fill" style="width:${pct}%;background:${isThisMonth ? 'var(--accent)' : '#3EA6FF'}"></div>
+        </div>
+        <span class="mi-bar-value">${fmtBigWon(m.totalRevenue || 0)}</span>
+      </div>`;
+    });
+    html += `</div>`;
+  }
+
+  // 카드 3: 전년 동월 비교 (최근 3개월)
+  const thisYearMonths = (dirMonthly || []).filter(m => (m.month || '').startsWith(`${year - 2000}년`));
+  const recent3 = thisYearMonths.slice(-3);
+  if (recent3.length > 0) {
+    html += `<div class="nc-box">
+      <div class="nc-box-title" style="font-size:16px">전년 동월 비교</div>`;
+    recent3.forEach(m => {
+      const mn = extractMonthNum(m.month);
+      const ly = LAST_YEAR_REVENUE[mn] || 0;
+      const ty = m.totalRevenue || 0;
+      const max = Math.max(ly, ty, 1);
+      const growPct = ly > 0 ? ((ty - ly) / ly * 100).toFixed(1) : 'N/A';
+      const isUp = Number(growPct) >= 0;
+      html += `<div style="margin-bottom:14px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <span style="font-size:14px;font-weight:700">${mn}월</span>
+          <span style="font-size:13px;font-weight:700;color:${isUp ? 'var(--green)' : 'var(--red)'}">${isUp ? '▲' : '▼'} ${growPct}%</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+          <span style="width:35px;font-size:10px;color:#999">작년</span>
+          <div style="flex:1;height:18px;background:#E8E8E8;border-radius:5px;overflow:hidden">
+            <div style="width:${ly/max*100}%;height:100%;background:#CBD5E1;border-radius:5px"></div>
+          </div>
+          <span style="width:85px;font-size:11px;text-align:right;color:#666">${fmtBigWon(ly)}</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px">
+          <span style="width:35px;font-size:10px;color:#999">올해</span>
+          <div style="flex:1;height:18px;background:#E8E8E8;border-radius:5px;overflow:hidden">
+            <div style="width:${ty/max*100}%;height:100%;background:${isUp ? 'var(--green)' : 'var(--red)'};border-radius:5px"></div>
+          </div>
+          <span style="width:85px;font-size:11px;text-align:right;font-weight:600">${fmtBigWon(ty)}</span>
+        </div>
+      </div>`;
+    });
+    html += `</div>`;
+  }
+
+  // 카드 4: 매출 구성 (정비/타이어/얼라인/기타)
+  const serviceItems = rev.serviceItems || 0;
+  const tire = rev.tire || 0;
+  const alignment = rev.alignment || 0;
+  const other = rev.other || 0;
+  const compData = [
+    { label: '정비', value: serviceItems, color: '#3EA6FF' },
+    { label: '타이어', value: tire, color: '#10B981' },
+    { label: '얼라인', value: alignment, color: '#FFB020' },
+    { label: '기타', value: other, color: '#CBD5E1' },
+  ];
+  if (totalRev > 0) {
+    html += `<div class="nc-box">
+      <div class="nc-box-title" style="font-size:16px">매출 구성</div>
+      <div class="mi-comp-bar">`;
+    compData.forEach(d => {
+      const pct = totalRev > 0 ? (d.value / totalRev * 100) : 0;
+      if (pct > 0.5) html += `<div style="width:${pct}%;background:${d.color}" title="${d.label}"></div>`;
+    });
+    html += `</div><div class="mi-comp-legend">`;
+    compData.forEach(d => {
+      const pct = totalRev > 0 ? (d.value / totalRev * 100).toFixed(1) : '0';
+      html += `<span><span class="mi-comp-dot" style="background:${d.color}"></span>${d.label} ${pct}% (${fmtBigWon(d.value)})</span>`;
+    });
+    html += `</div></div>`;
+  }
+
+  // 카드 5: 연간 누적 (YTD)
+  const ytdTotal = thisYearMonths.reduce((sum, m) => sum + (m.totalRevenue || 0), 0);
+  const ytdCount = thisYearMonths.length;
+  let lyYtd = 0;
+  for (let i = 1; i <= ytdCount; i++) lyYtd += LAST_YEAR_REVENUE[i] || 0;
+  const ytdGrowth = lyYtd > 0 ? ((ytdTotal - lyYtd) / lyYtd * 100).toFixed(1) : '0';
+  const ytdIsUp = Number(ytdGrowth) >= 0;
+
+  html += `<div class="nc-box">
+    <div class="nc-box-title" style="font-size:16px">연간 누적 (YTD)</div>
+    <div class="mi-stat-grid">
+      <div class="mi-stat-card">
+        <div class="mi-stat-label">${year}년 누적 (${ytdCount}개월)</div>
+        <div class="mi-stat-value">${fmtBigWon(ytdTotal)}</div>
+      </div>
+      <div class="mi-stat-card">
+        <div class="mi-stat-label">${year-1}년 동기 누적</div>
+        <div class="mi-stat-value">${fmtBigWon(lyYtd)}</div>
+        <div class="mi-stat-sub" style="color:${ytdIsUp ? 'var(--green)' : 'var(--red)'}">${ytdIsUp ? '▲' : '▼'} ${ytdGrowth}%</div>
+      </div>
+    </div>
+  </div>`;
+
+  // ===== 현금 흐름표 =====
+  html += `<div class="mi-section-gap"></div>`;
+  html += `<div class="nc-box-title" style="font-size:20px;font-weight:900;margin-bottom:4px">💰 현금 흐름표</div>`;
+  html += `<div style="font-size:13px;color:var(--text-muted);margin-bottom:16px">${year}년 ${month}월 기준</div>`;
+
+  // 카드 6: 이번 달 자산 현황
+  const cf = summary.cashflow || {};
+  const totalAssets = cf.totalAssets || 0;
+  const cfCash = cf.cash || 0;
+  const cfInv = cf.investment || 0;
+  const cfStock = cf.inventory || 0;
+
+  html += `<div class="nc-box">
+    <div class="nc-box-title" style="font-size:16px">자산 현황</div>
+    <div style="text-align:center;margin:12px 0">
+      <div style="font-size:13px;color:#888">총 자산</div>
+      <div style="font-size:28px;font-weight:900;color:#111">${fmtBigWon(totalAssets)}</div>
+    </div>`;
+
+  if (totalAssets > 0) {
+    html += `<div class="mi-asset-stack">
+      <div style="width:${cfCash/totalAssets*100}%;background:#3EA6FF" title="현금"></div>
+      <div style="width:${cfInv/totalAssets*100}%;background:#10B981" title="투자"></div>
+      <div style="width:${cfStock/totalAssets*100}%;background:#FFB020" title="재고"></div>
+    </div>
+    <div class="mi-comp-legend" style="margin-bottom:12px">
+      <span><span class="mi-comp-dot" style="background:#3EA6FF"></span>현금 ${(cfCash/totalAssets*100).toFixed(1)}%</span>
+      <span><span class="mi-comp-dot" style="background:#10B981"></span>투자 ${(cfInv/totalAssets*100).toFixed(1)}%</span>
+      <span><span class="mi-comp-dot" style="background:#FFB020"></span>재고 ${(cfStock/totalAssets*100).toFixed(1)}%</span>
+    </div>`;
+  }
+
+  html += `<table style="width:100%;font-size:13px;border-collapse:collapse">
+    <tr style="border-bottom:1px solid #eee"><td style="padding:8px 0;color:#666">현금</td><td style="padding:8px 0;text-align:right;font-weight:600">${fmtBigWon(cfCash)}</td></tr>
+    <tr style="border-bottom:1px solid #eee"><td style="padding:8px 0;color:#666">투자자산 (증권)</td><td style="padding:8px 0;text-align:right;font-weight:600">${fmtBigWon(cfInv)}</td></tr>
+    <tr><td style="padding:8px 0;color:#666">타이어 재고</td><td style="padding:8px 0;text-align:right;font-weight:600">${fmtBigWon(cfStock)}</td></tr>
+  </table>
+  </div>`;
+
+  // 카드 7: 전월 대비 변동
+  if (cf.prevMonth) {
+    const cashChg = cf.prevMonth.cashChange || 0;
+    const assetChg = cf.prevMonth.assetChange || 0;
+    html += `<div class="nc-box">
+      <div class="nc-box-title" style="font-size:16px">전월 대비 변동</div>
+      <div class="mi-stat-grid">
+        <div class="mi-stat-card">
+          <div class="mi-stat-label">현금 변동</div>
+          <div class="mi-stat-value" style="font-size:18px;color:${cashChg >= 0 ? 'var(--green)' : 'var(--red)'}">
+            ${cashChg >= 0 ? '+' : ''}${fmtBigWon(cashChg)}
+          </div>
+        </div>
+        <div class="mi-stat-card">
+          <div class="mi-stat-label">총 자산 변동</div>
+          <div class="mi-stat-value" style="font-size:18px;color:${assetChg >= 0 ? 'var(--green)' : 'var(--red)'}">
+            ${assetChg >= 0 ? '+' : ''}${fmtBigWon(assetChg)}
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  // 카드 8: 자산 월별 추이 (6개월 스택 바)
+  const validCf = (cashflows || []).filter(c => c && c.totalAssets > 0);
+  if (validCf.length > 1) {
+    const maxAsset = Math.max(...validCf.map(c => c.totalAssets));
+    html += `<div class="nc-box">
+      <div class="nc-box-title" style="font-size:16px">자산 월별 추이</div>`;
+    validCf.forEach(c => {
+      const label = `${(c.year || 0) % 100}.${c.month}`;
+      const totalPct = maxAsset > 0 ? (c.totalAssets / maxAsset * 100) : 0;
+      const cashPct = c.totalAssets > 0 ? (c.cash / c.totalAssets * 100) : 0;
+      const invPct = c.totalAssets > 0 ? (c.investment / c.totalAssets * 100) : 0;
+      const stockPct = c.totalAssets > 0 ? (c.inventory / c.totalAssets * 100) : 0;
+      html += `<div class="mi-bar-row">
+        <span class="mi-bar-label">${label}</span>
+        <div class="mi-bar-track">
+          <div style="display:flex;height:100%;width:${totalPct}%">
+            <div style="width:${cashPct}%;background:#3EA6FF"></div>
+            <div style="width:${invPct}%;background:#10B981"></div>
+            <div style="width:${stockPct}%;background:#FFB020"></div>
+          </div>
+        </div>
+        <span class="mi-bar-value">${fmtBigWon(c.totalAssets)}</span>
+      </div>`;
+    });
+    html += `<div class="mi-comp-legend" style="margin-top:8px">
+      <span><span class="mi-comp-dot" style="background:#3EA6FF"></span>현금</span>
+      <span><span class="mi-comp-dot" style="background:#10B981"></span>투자</span>
+      <span><span class="mi-comp-dot" style="background:#FFB020"></span>재고</span>
+    </div></div>`;
+  }
+
+  return html;
+}
+
 // ===== 월말결산 =====
 let settlementLoaded = false;
 async function loadSettlement() {
@@ -2151,7 +2440,7 @@ async function loadSettlement() {
   }
 }
 
-// ===== UPLOAD (team 전용) =====
+// ===== UPLOAD (업로드 탭) =====
 let uploadPanelLoaded = false;
 async function loadUploadPanel() {
   if (uploadPanelLoaded) return;
@@ -2160,62 +2449,21 @@ async function loadUploadPanel() {
   html += `<div class="admin-section"><h3>극동 엑셀 업로드</h3>
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
       <label style="font-size:13px;color:var(--text-muted)">대상 날짜:</label>
-      <input type="date" id="uploadMonth2" style="padding:6px 12px;border:1px solid var(--border);border-radius:8px;font-family:'Noto Sans KR'">
+      <input type="date" id="uploadMonth" style="padding:6px 12px;border:1px solid var(--border);border-radius:8px;font-family:'Noto Sans KR'">
     </div>
-    <div class="upload-area" onclick="document.getElementById('excelFile2').click()"
+    <div class="upload-area" onclick="document.getElementById('excelFile').click()"
       ondragover="event.preventDefault();this.style.borderColor='#3EA6FF';this.style.background='#EBF5FF'"
       ondragleave="this.style.borderColor='';this.style.background=''"
-      ondrop="event.preventDefault();this.style.borderColor='';this.style.background='';var f=document.getElementById('excelFile2');f.files=event.dataTransfer.files;uploadExcel2(f)">
+      ondrop="event.preventDefault();this.style.borderColor='';this.style.background='';var f=document.getElementById('excelFile');f.files=event.dataTransfer.files;uploadExcel(f)">
       <div class="upload-icon">📄</div><div class="upload-text">극동 매출 엑셀 파일을 선택하거나 드래그하세요</div>
-      <input type="file" id="excelFile2" accept=".xlsx,.xls" onchange="uploadExcel2(this)" style="display:none">
-    </div><div id="uploadResult2" style="margin-top:16px"></div></div>`;
-  html += `<div class="admin-section"><h3>업로드 이력</h3><div id="uploadHistory2"><div class="loading"><div class="spinner"></div></div></div></div>`;
+      <input type="file" id="excelFile" accept=".xlsx,.xls" onchange="uploadExcel(this)" style="display:none">
+    </div><div id="uploadResult" style="margin-top:16px"></div></div>`;
+  html += `<div class="admin-section"><h3>업로드 이력</h3><div id="uploadHistory"><div class="loading"><div class="spinner"></div></div></div></div>`;
   el.innerHTML = html;
   const now = new Date();
-  document.getElementById('uploadMonth2').value = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(now.getDate()).padStart(2,'0');
-  loadUploadHistory2();
+  document.getElementById('uploadMonth').value = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(now.getDate()).padStart(2,'0');
+  loadUploadHistory();
   uploadPanelLoaded = true;
-}
-
-async function uploadExcel2(input) {
-  const file = input.files[0];
-  if (!file) return;
-  const dateVal = document.getElementById('uploadMonth2').value;
-  if (!dateVal) { alert('대상 날짜를 선택해주세요'); return; }
-  const [y, m] = dateVal.split('-');
-  const month = y + '-' + m;
-  const fd = new FormData();
-  fd.append('file', file);
-  fd.append('month', month);
-  fd.append('dataDate', dateVal);
-  const res = document.getElementById('uploadResult2');
-  res.innerHTML = '<div class="loading"><div class="spinner"></div>업로드 중...</div>';
-  try {
-    const r = await fetch(API + '/upload', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token }, body: fd });
-    const data = await r.json();
-    if (!r.ok) throw new Error(data.message || '업로드 실패');
-    res.innerHTML = '<div style="color:var(--green);font-weight:600">✅ 업로드 완료!</div>';
-    teamMonthlyData = null;
-    loadUploadHistory2();
-  } catch (e) { res.innerHTML = '<div style="color:var(--red)">❌ ' + e.message + '</div>'; }
-  input.value = '';
-}
-
-async function loadUploadHistory2() {
-  try {
-    const hist = await api('/upload/history');
-    const el = document.getElementById('uploadHistory2');
-    if (!hist || hist.length === 0) { el.innerHTML = '<p style="color:var(--text-muted);text-align:center;padding:20px">업로드 이력이 없습니다</p>'; return; }
-    let html = '<table class="data-table"><thead><tr><th>날짜</th><th>파일명</th><th>상태</th></tr></thead><tbody>';
-    hist.forEach(h => {
-      const d = new Date(h.createdAt);
-      const dateStr = d.getFullYear() + '.' + String(d.getMonth()+1).padStart(2,'0') + '.' + String(d.getDate()).padStart(2,'0');
-      const st = h.status === 'approved' ? '<span style="color:var(--green)">✅ 승인</span>' : '<span style="color:var(--amber)">⏳ 대기</span>';
-      html += `<tr><td>${dateStr}</td><td>${h.originalFilename||'-'}</td><td>${st}</td></tr>`;
-    });
-    html += '</tbody></table>';
-    el.innerHTML = html;
-  } catch (e) { document.getElementById('uploadHistory2').innerHTML = ''; }
 }
 
 // ===== ADMIN =====
@@ -2352,8 +2600,6 @@ async function loadAdminPanel() {
     document.getElementById('minQtyMonth').value = curMonthVal;
     const uploadMonthEl = document.getElementById('uploadMonth');
     if (uploadMonthEl) uploadMonthEl.value = curDateVal;
-    const teamUploadEl = document.getElementById('teamUploadMonth');
-    if (teamUploadEl) teamUploadEl.value = curDateVal;
     loadUploadHistory();
     loadQtyHistory();
     loadMappings();
@@ -2438,14 +2684,14 @@ async function saveConfig(key) {
 async function uploadExcel(input) {
   const file = input.files[0];
   if (!file) return;
-  const uploadMonthEl = document.getElementById('uploadMonth') || document.getElementById('teamUploadMonth');
+  const uploadMonthEl = document.getElementById('uploadMonth');
   if (!uploadMonthEl || !uploadMonthEl.value) {
     alert('날짜를 먼저 설정해주세요');
     input.value = '';
     return;
   }
   let resultEl = input.closest('.upload-area, .upload-compact')?.nextElementSibling;
-  if (!resultEl) resultEl = document.getElementById('uploadResult') || document.getElementById('teamUploadResult');
+  if (!resultEl) resultEl = document.getElementById('uploadResult');
   if (resultEl) resultEl.innerHTML = '<div class="loading"><div class="spinner"></div>업로드 중...</div>';
   const formData = new FormData();
   formData.append('file', file);

@@ -223,13 +223,15 @@ function HomeContent() {
         {/* Background Video */}
         <div className="absolute inset-0 z-0">
           <video
-            src="/title.gif"
             autoPlay
             loop
             muted
             playsInline
+            poster="/hero-poster.jpg"
             className="w-full h-full object-cover"
-          />
+          >
+            <source src="/title.mp4" type="video/mp4" />
+          </video>
         </div>
         {/* Dark overlay */}
         <div className="absolute inset-0 bg-black/60 z-[1]" />
