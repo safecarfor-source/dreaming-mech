@@ -41,6 +41,10 @@ import { DashboardService } from './dashboard/dashboard.service';
 import { GdController } from './gd/gd.controller';
 import { GdService } from './gd/gd.service';
 
+// Auto Calc (인센티브 자동 계산)
+import { AutoCalcController } from './auto-calc/auto-calc.controller';
+import { AutoCalcService } from './auto-calc/auto-calc.service';
+
 @Module({
   imports: [
     PassportModule,
@@ -63,6 +67,7 @@ import { GdService } from './gd/gd.service';
     LogsController,
     DashboardController,
     GdController,
+    AutoCalcController,
   ],
   providers: [
     IncentiveAuthService,
@@ -75,6 +80,7 @@ import { GdService } from './gd/gd.service';
     UploadService,
     DashboardService,
     GdService,
+    AutoCalcService,
   ],
 })
 export class IncentiveModule {}
