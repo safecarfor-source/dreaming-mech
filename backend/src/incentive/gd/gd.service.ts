@@ -125,7 +125,10 @@ export class GdService {
     const [data, total] = await Promise.all([
       this.prisma.gdProduct.findMany({
         where,
-        orderBy: { name: 'asc' },
+        orderBy: [
+          { stock: 'desc' },  // 재고 있는 것 우선
+          { code: 'asc' },    // 극동 코드 순서 (TH=한국, TM=미쉘린 등)
+        ],
         skip,
         take: limit,
       }),
