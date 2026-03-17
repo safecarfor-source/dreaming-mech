@@ -1249,8 +1249,11 @@ function applyBlurState() {
       tab.classList.add('blur-overlay', 'unlocked');
     }
   });
-  // 고정 버튼: blur 상태일 때만 표시
-  if (fixedBtn) fixedBtn.style.display = shouldBlur ? 'block' : 'none';
+  // 고정 버튼: blur 상태 + 개인 탭(김권중/이정석)일 때만 표시
+  // 팀 인센티브 등 다른 탭에서는 숨김
+  const activeTab = document.querySelector('.tab-content.active');
+  const isPersonalTab = activeTab && (activeTab.id === 'tab-manager' || activeTab.id === 'tab-director');
+  if (fixedBtn) fixedBtn.style.display = (shouldBlur && isPersonalTab) ? 'block' : 'none';
 }
 function lockScreen() {
   pinUnlocked = false;
