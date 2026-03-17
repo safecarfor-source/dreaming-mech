@@ -134,13 +134,22 @@ body {
 .blur-overlay.unlocked::after {
   opacity: 0; pointer-events: none;
 }
-.blur-unlock-btn {
-  position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-  z-index: 51; padding: 14px 28px; background: var(--accent); color: #fff;
-  border: none; border-radius: 12px; font-size: 15px; font-weight: 700;
-  font-family: inherit; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+/* 탭 내부 unlock 버튼은 숨김 (고정 버튼으로 대체) */
+.blur-unlock-btn { display: none !important; }
+/* 화면 하단 고정 unlock 버튼 */
+#fixedUnlockBtn {
+  display: none; position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+  z-index: 100; padding: 16px 32px; background: var(--accent); color: #fff;
+  border: none; border-radius: 16px; font-size: 1.1rem; font-weight: 700;
+  font-family: inherit; cursor: pointer;
+  box-shadow: 0 6px 24px rgba(124,77,255,0.4);
+  animation: floatPulse 2s ease-in-out infinite;
 }
-.blur-unlock-btn:hover { opacity: 0.9; }
+#fixedUnlockBtn:active { transform: translateX(-50%) scale(0.96); }
+@keyframes floatPulse {
+  0%, 100% { box-shadow: 0 6px 24px rgba(124,77,255,0.4); }
+  50% { box-shadow: 0 8px 32px rgba(124,77,255,0.6); }
+}
 /* PIN Modal */
 .pin-modal {
   display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
@@ -716,6 +725,9 @@ body {
 
   <div class="tab-bar" id="tabBar"></div>
 
+  <!-- Fixed Unlock Button -->
+  <button id="fixedUnlockBtn" onclick="onFixedUnlock()">🔓 내 인센 보기</button>
+
   <!-- PIN Modal -->
   <div class="pin-modal" id="pinModal">
     <div class="pin-box">
@@ -1212,13 +1224,19 @@ function needsBlur() {
   if (currentUser.loginId === '662') return false;
   return true;
 }
+function onFixedUnlock() {
+  if (!getPinHash()) showPinModal('setup');
+  else showPinModal('verify');
+}
 function applyBlurState() {
   const mgrTab = document.getElementById('tab-manager');
   const dirTab = document.getElementById('tab-director');
+  const fixedBtn = document.getElementById('fixedUnlockBtn');
   if (!needsBlur()) {
     if (mgrTab) mgrTab.classList.remove('blur-overlay');
     if (dirTab) dirTab.classList.remove('blur-overlay');
     document.getElementById('privacyBtn').style.display = 'none';
+    if (fixedBtn) fixedBtn.style.display = 'none';
     return;
   }
   document.getElementById('privacyBtn').style.display = '';
@@ -1228,25 +1246,12 @@ function applyBlurState() {
     if (shouldBlur) {
       tab.classList.add('blur-overlay');
       tab.classList.remove('unlocked');
-      // Add unlock button if not exists
-      if (!tab.querySelector('.blur-unlock-btn')) {
-        const btn = document.createElement('button');
-        btn.className = 'blur-unlock-btn';
-        btn.textContent = '🔓 내 인센 보기';
-        btn.onclick = () => {
-          if (!getPinHash()) showPinModal('setup');
-          else showPinModal('verify');
-        };
-        tab.style.position = 'relative';
-        tab.appendChild(btn);
-      }
-      tab.querySelector('.blur-unlock-btn').style.display = '';
     } else {
       tab.classList.add('blur-overlay', 'unlocked');
-      const btn = tab.querySelector('.blur-unlock-btn');
-      if (btn) btn.style.display = 'none';
     }
   });
+  // 고정 버튼: blur 상태일 때만 표시
+  if (fixedBtn) fixedBtn.style.display = shouldBlur ? 'block' : 'none';
 }
 function lockScreen() {
   pinUnlocked = false;
