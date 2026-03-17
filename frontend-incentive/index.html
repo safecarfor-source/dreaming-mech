@@ -119,6 +119,84 @@ body {
   padding: 12px 20px; font-size: 13px; color: var(--text-muted); border-bottom: 1px solid var(--border);
 }
 
+/* --- Security: Blur overlay --- */
+.blur-overlay {
+  position: relative;
+}
+.blur-overlay::after {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  background: rgba(255,255,255,0.6);
+  z-index: 50; border-radius: 12px;
+  transition: opacity 0.3s;
+}
+.blur-overlay.unlocked::after {
+  opacity: 0; pointer-events: none;
+}
+.blur-unlock-btn {
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  z-index: 51; padding: 14px 28px; background: var(--accent); color: #fff;
+  border: none; border-radius: 12px; font-size: 15px; font-weight: 700;
+  font-family: inherit; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+.blur-unlock-btn:hover { opacity: 0.9; }
+/* PIN Modal */
+.pin-modal {
+  display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.5); z-index: 999; justify-content: center; align-items: center;
+}
+.pin-modal.show { display: flex; }
+.pin-box {
+  background: var(--card); border-radius: 16px; padding: 32px; width: 100%;
+  max-width: 340px; box-shadow: 0 8px 32px rgba(0,0,0,0.15); margin: 16px; text-align: center;
+}
+.pin-box h3 { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+.pin-box .pin-sub { font-size: 13px; color: var(--text-muted); margin-bottom: 20px; }
+.pin-inputs { display: flex; gap: 10px; justify-content: center; margin-bottom: 16px; }
+.pin-inputs input {
+  width: 48px; height: 56px; text-align: center; font-size: 24px; font-weight: 800;
+  border: 2px solid var(--border); border-radius: 12px; font-family: inherit;
+  background: #F5F5F5; color: var(--text); outline: none; -webkit-text-security: disc;
+}
+.pin-inputs input:focus { border-color: var(--accent); background: #fff; }
+.pin-error { color: var(--red); font-size: 13px; min-height: 20px; margin-bottom: 8px; }
+.pin-btns { display: flex; gap: 10px; }
+.pin-btns button {
+  flex: 1; padding: 12px; border-radius: 10px; font-size: 14px; font-family: inherit; cursor: pointer;
+}
+.pin-cancel { background: none; border: 1px solid var(--border); color: var(--text-muted); }
+.pin-submit { background: var(--accent); border: none; color: #fff; font-weight: 700; }
+/* Privacy toggle */
+.privacy-btn {
+  background: none; border: 1px solid var(--border); border-radius: 8px;
+  padding: 5px 10px; font-size: 16px; cursor: pointer; line-height: 1; color: var(--text-muted);
+}
+.privacy-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+/* Inactivity warning */
+.inactivity-modal {
+  display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.6); z-index: 1000; justify-content: center; align-items: center;
+}
+.inactivity-modal.show { display: flex; }
+.inactivity-box {
+  background: var(--card); border-radius: 16px; padding: 32px; width: 100%;
+  max-width: 340px; box-shadow: 0 8px 32px rgba(0,0,0,0.2); margin: 16px; text-align: center;
+}
+.inactivity-box h3 { font-size: 18px; font-weight: 700; margin-bottom: 8px; color: var(--red); }
+.inactivity-box p { font-size: 14px; color: var(--text-muted); margin-bottom: 20px; }
+.inactivity-box .countdown { font-size: 36px; font-weight: 900; color: var(--red); margin-bottom: 20px; }
+.inactivity-box button {
+  width: 100%; padding: 14px; background: var(--accent); color: #fff; border: none;
+  border-radius: 12px; font-size: 16px; font-weight: 700; font-family: inherit; cursor: pointer;
+}
+/* Sync time indicator */
+.sync-time-bar {
+  text-align: center; font-size: 11px; color: var(--text-light); padding: 4px 0;
+  background: #F8F8F8; border-bottom: 1px solid var(--border);
+}
+.sync-time-bar .sync-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--green); margin-right: 4px; vertical-align: middle; }
+
 /* --- Tabs (inline in top-bar) --- */
 .tab-bar {
   display: none; /* hidden, tabs rendered inside top-bar */
@@ -603,6 +681,7 @@ body {
     <div class="user-info">
       <span class="name" id="userName"></span>
       <span class="role-badge" id="userRole"></span>
+      <button class="privacy-btn" id="privacyBtn" onclick="togglePrivacy()" title="프라이빗 모드" style="display:none">🔒</button>
       <button class="btn-outline" onclick="showChangePw()" style="border-color:var(--blue);color:var(--blue)">비밀번호 변경</button>
       <button class="btn-outline" onclick="doLogout()">로그아웃</button>
       <button class="hamburger" id="hamburgerBtn" onclick="toggleMobileMenu()">☰</button>
@@ -629,7 +708,41 @@ body {
     </div>
   </div>
 
+  <!-- Sync time bar -->
+  <div class="sync-time-bar" id="syncTimeBar" style="display:none">
+    <span class="sync-dot"></span> <span id="syncTimeText">극동 데이터 로딩...</span>
+  </div>
+
   <div class="tab-bar" id="tabBar"></div>
+
+  <!-- PIN Modal -->
+  <div class="pin-modal" id="pinModal">
+    <div class="pin-box">
+      <h3 id="pinTitle">PIN 입력</h3>
+      <div class="pin-sub" id="pinSub">4자리 PIN을 입력하세요</div>
+      <div class="pin-inputs">
+        <input type="tel" maxlength="1" id="pin1" inputmode="numeric">
+        <input type="tel" maxlength="1" id="pin2" inputmode="numeric">
+        <input type="tel" maxlength="1" id="pin3" inputmode="numeric">
+        <input type="tel" maxlength="1" id="pin4" inputmode="numeric">
+      </div>
+      <div class="pin-error" id="pinError"></div>
+      <div class="pin-btns">
+        <button class="pin-cancel" onclick="closePinModal()">취소</button>
+        <button class="pin-submit" onclick="submitPin()">확인</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Inactivity Warning Modal -->
+  <div class="inactivity-modal" id="inactivityModal">
+    <div class="inactivity-box">
+      <h3>자동 로그아웃</h3>
+      <p>활동이 없어 곧 로그아웃됩니다</p>
+      <div class="countdown" id="inactivityCountdown">60</div>
+      <button onclick="resetInactivity()">계속 사용하기</button>
+    </div>
+  </div>
 
   <div class="content">
     <div class="tab-content" id="tab-team">
@@ -999,10 +1112,201 @@ async function doLogin() {
 function doLogout() {
   token = null; currentUser = null;
   localStorage.removeItem('inc_token');
+  stopInactivityTimer();
   document.getElementById('app').classList.remove('active');
   document.getElementById('loginPage').style.display = 'flex';
   document.getElementById('loginId').value = '';
   document.getElementById('loginPw').value = '';
+  document.getElementById('syncTimeBar').style.display = 'none';
+}
+
+// ===== SECURITY: Blur + PIN + Privacy + Inactivity =====
+let pinUnlocked = false;
+let privacyMode = false;
+let inactivityTimer = null;
+let warningTimer = null;
+let countdownInterval = null;
+const INACTIVITY_MS = 4 * 60 * 1000; // 4분 후 경고
+const WARNING_SEC = 60; // 60초 카운트다운
+
+// --- PIN ---
+function getPinHash() { return localStorage.getItem('inc_pin_' + (currentUser ? currentUser.loginId : '')); }
+function setPinHash(pin) { localStorage.setItem('inc_pin_' + currentUser.loginId, btoa(pin)); }
+
+function showPinModal(mode) {
+  const modal = document.getElementById('pinModal');
+  modal.classList.add('show');
+  document.getElementById('pinError').textContent = '';
+  if (mode === 'setup') {
+    document.getElementById('pinTitle').textContent = 'PIN 설정';
+    document.getElementById('pinSub').textContent = '4자리 숫자를 설정하세요';
+  } else {
+    document.getElementById('pinTitle').textContent = 'PIN 입력';
+    document.getElementById('pinSub').textContent = '4자리 PIN을 입력하세요';
+  }
+  modal.dataset.mode = mode || 'verify';
+  ['pin1','pin2','pin3','pin4'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('pin1').focus();
+}
+function closePinModal() {
+  document.getElementById('pinModal').classList.remove('show');
+}
+function submitPin() {
+  const pin = ['pin1','pin2','pin3','pin4'].map(id => document.getElementById(id).value).join('');
+  if (pin.length < 4) { document.getElementById('pinError').textContent = '4자리를 모두 입력하세요'; return; }
+  const mode = document.getElementById('pinModal').dataset.mode;
+  if (mode === 'setup') {
+    setPinHash(pin);
+    closePinModal();
+    pinUnlocked = true;
+    applyBlurState();
+  } else {
+    const stored = getPinHash();
+    if (btoa(pin) === stored) {
+      closePinModal();
+      pinUnlocked = true;
+      applyBlurState();
+    } else {
+      document.getElementById('pinError').textContent = 'PIN이 틀렸습니다';
+      ['pin1','pin2','pin3','pin4'].forEach(id => document.getElementById(id).value = '');
+      document.getElementById('pin1').focus();
+    }
+  }
+}
+// PIN input auto-advance
+document.addEventListener('DOMContentLoaded', () => {
+  ['pin1','pin2','pin3','pin4'].forEach((id, i, arr) => {
+    const el = document.getElementById(id);
+    el.addEventListener('input', () => {
+      if (el.value.length === 1 && i < 3) document.getElementById(arr[i + 1]).focus();
+      if (el.value.length === 1 && i === 3) submitPin();
+    });
+    el.addEventListener('keydown', (e) => {
+      if (e.key === 'Backspace' && !el.value && i > 0) document.getElementById(arr[i - 1]).focus();
+    });
+  });
+});
+
+// --- Blur State ---
+function needsBlur() {
+  if (!currentUser) return false;
+  // 662(공용), admin, viewer는 blur 불필요
+  if (currentUser.loginId === '662') return false;
+  if (currentUser.role === 'viewer') return false;
+  return true;
+}
+function applyBlurState() {
+  const mgrTab = document.getElementById('tab-manager');
+  const dirTab = document.getElementById('tab-director');
+  if (!needsBlur()) {
+    if (mgrTab) mgrTab.classList.remove('blur-overlay');
+    if (dirTab) dirTab.classList.remove('blur-overlay');
+    document.getElementById('privacyBtn').style.display = 'none';
+    return;
+  }
+  document.getElementById('privacyBtn').style.display = '';
+  const shouldBlur = !pinUnlocked || privacyMode;
+  [mgrTab, dirTab].forEach(tab => {
+    if (!tab) return;
+    if (shouldBlur) {
+      tab.classList.add('blur-overlay');
+      tab.classList.remove('unlocked');
+      // Add unlock button if not exists
+      if (!tab.querySelector('.blur-unlock-btn')) {
+        const btn = document.createElement('button');
+        btn.className = 'blur-unlock-btn';
+        btn.textContent = '🔓 내 인센 보기';
+        btn.onclick = () => {
+          if (!getPinHash()) showPinModal('setup');
+          else showPinModal('verify');
+        };
+        tab.style.position = 'relative';
+        tab.appendChild(btn);
+      }
+      tab.querySelector('.blur-unlock-btn').style.display = '';
+    } else {
+      tab.classList.add('blur-overlay', 'unlocked');
+      const btn = tab.querySelector('.blur-unlock-btn');
+      if (btn) btn.style.display = 'none';
+    }
+  });
+}
+function lockScreen() {
+  pinUnlocked = false;
+  applyBlurState();
+}
+
+// --- Privacy Toggle ---
+function togglePrivacy() {
+  privacyMode = !privacyMode;
+  const btn = document.getElementById('privacyBtn');
+  btn.textContent = privacyMode ? '🔒' : '🔓';
+  btn.classList.toggle('active', privacyMode);
+  if (privacyMode) pinUnlocked = false;
+  applyBlurState();
+}
+
+// --- Visibility Change (auto-lock) ---
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden && currentUser && needsBlur()) {
+    lockScreen();
+  }
+});
+
+// --- Inactivity Timer ---
+function startInactivityTimer() {
+  stopInactivityTimer();
+  if (!currentUser) return;
+  inactivityTimer = setTimeout(showInactivityWarning, INACTIVITY_MS);
+}
+function stopInactivityTimer() {
+  clearTimeout(inactivityTimer);
+  clearTimeout(warningTimer);
+  clearInterval(countdownInterval);
+  document.getElementById('inactivityModal').classList.remove('show');
+}
+function resetInactivity() {
+  stopInactivityTimer();
+  startInactivityTimer();
+}
+function showInactivityWarning() {
+  let remaining = WARNING_SEC;
+  document.getElementById('inactivityCountdown').textContent = remaining;
+  document.getElementById('inactivityModal').classList.add('show');
+  countdownInterval = setInterval(() => {
+    remaining--;
+    document.getElementById('inactivityCountdown').textContent = remaining;
+    if (remaining <= 0) {
+      stopInactivityTimer();
+      doLogout();
+    }
+  }, 1000);
+}
+// Activity detection
+['click','touchstart','scroll','keypress','mousemove'].forEach(evt => {
+  document.addEventListener(evt, () => {
+    if (currentUser && !document.getElementById('inactivityModal').classList.contains('show')) {
+      resetInactivity();
+    }
+  }, { passive: true });
+});
+
+// --- Sync Time ---
+async function loadSyncTime() {
+  try {
+    const res = await fetch(API + '/gd/sync-status', { headers: { 'Authorization': 'Bearer ' + token } });
+    if (!res.ok) return;
+    const data = await res.json();
+    if (data && data.lastSync) {
+      const d = new Date(data.lastSync);
+      const now = new Date();
+      const isToday = d.toDateString() === now.toDateString();
+      const timeStr = String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+      const dateStr = isToday ? '오늘 ' + timeStr : (d.getMonth()+1) + '/' + d.getDate() + ' ' + timeStr;
+      document.getElementById('syncTimeText').textContent = '극동 데이터: ' + dateStr + ' 업데이트';
+      document.getElementById('syncTimeBar').style.display = '';
+    }
+  } catch (e) { /* 동기화 API 없으면 무시 */ }
 }
 
 async function initApp() {
@@ -1025,6 +1329,15 @@ async function initApp() {
   }
   buildTabs();
   loadLastUpdateDate();
+  // Security init
+  pinUnlocked = false;
+  privacyMode = false;
+  document.getElementById('privacyBtn').classList.remove('active');
+  document.getElementById('privacyBtn').textContent = '🔓';
+  startInactivityTimer();
+  loadSyncTime();
+  // 탭 전환 시 blur 적용
+  setTimeout(applyBlurState, 100);
 }
 
 // 최신 업데이트 날짜 로드
@@ -1090,6 +1403,8 @@ function switchTab(tabId, btn) {
   else if (tabId === 'admin') loadAdminPanel();
   else if (tabId === 'gd-vehicle') loadGdVehicle();
   else if (tabId === 'gd-product') loadGdProduct();
+  // blur 상태 적용
+  setTimeout(applyBlurState, 50);
 }
 
 // ===== CONFIG CACHE =====
