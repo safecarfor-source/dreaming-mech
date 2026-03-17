@@ -700,3 +700,138 @@ model CashFlow {
 
   @@unique([year, month])
 }
+
+// ========================================
+// 🔧 극동(PsimCarS) 데이터 모델
+// ========================================
+
+// 거래처 (극동 CUSTOMS 테이블)
+model GdCustomer {
+  id            Int       @id @default(autoincrement())
+  code          String    @unique          // 극동 거래처 코드
+  name          String                     // 업체명
+  ceo           String?                    // 대표자
+  phone         String?                    // 전화번호
+  fax           String?                    // 팩스
+  address       String?                    // 주소
+  bizNumber     String?                    // 사업자번호
+  bizType       String?                    // 업태
+  bizCategory   String?                    // 종목
+  memo          String?   @db.Text         // 메모
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  sales         GdSaleDetail[]
+
+  @@index([name])
+  @@index([bizNumber])
+  @@index([phone])
+}
+
+// 차량/고객 (극동 ASCUST 테이블)
+model GdVehicle {
+  id            Int       @id @default(autoincrement())
+  code          String    @unique          // 극동 차량 코드
+  plateNumber   String?                    // 차량번호 (IDNO)
+  ownerName     String?                    // 고객명/차량명
+  rep           String?                    // 담당자
+  phone         String?                    // 연락처
+  address       String?                    // 주소
+  carModel      String?                    // 차종 (CJONG)
+  carModel2     String?                    // 차종2 (BJONG)
+  color         String?                    // 색상
+  displacement  String?                    // 배기량
+  modelYear     String?                    // 연식 (YDAY)
+  purchaseDate  String?                    // 구매일 (CDAY)
+  memo          String?   @db.Text         // 메모
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  repairs       GdRepair[]
+
+  @@index([plateNumber])
+  @@index([ownerName])
+  @@index([phone])
+  @@index([carModel])
+}
+
+// 상품 (극동 GOODS 테이블)
+model GdProduct {
+  id            Int       @id @default(autoincrement())
+  code          String    @unique          // 극동 상품 코드
+  name          String                     // 상품명
+  altName       String?                    // 별칭 (XNAME)
+  unit          String?                    // 단위 (EA, 리터 등)
+  costPrice     Float     @default(0)      // 원가 (COST_B)
+  sellPrice1    Float     @default(0)      // 판매가 1단계
+  sellPrice2    Float     @default(0)      // 판매가 2단계
+  sellPrice3    Float     @default(0)      // 판매가 3단계
+  sellPrice4    Float     @default(0)      // 판매가 4단계
+  sellPrice5    Float     @default(0)      // 판매가 5단계
+  fixedPrice    Float     @default(0)      // 정가 (FIXP)
+  stock         Float     @default(0)      // 재고 (JAEGO)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  saleDetails   GdSaleDetail[]
+
+  @@index([name])
+  @@index([code])
+}
+
+// 전표 상세 (극동 DATAS 테이블 — 거래처 판매 기록)
+model GdSaleDetail {
+  id            Int       @id @default(autoincrement())
+  fno           String                     // 전표번호
+  saleDate      String                     // 거래일자 (YYYY-MM-DD)
+  saleType      String?                    // 입출고 구분 (1=입고, 2=판매, 3=반품)
+  customerCode  String                     // 거래처 코드
+  customer      GdCustomer @relation(fields: [customerCode], references: [code])
+  productCode   String                     // 상품 코드
+  product       GdProduct  @relation(fields: [productCode], references: [code])
+  productName   String?                    // 품목명
+  qty           Float      @default(0)     // 수량
+  unitPrice     Float      @default(0)     // 단가
+  amount        Float      @default(0)     // 금액
+  createdAt     DateTime   @default(now())
+
+  @@index([saleDate])
+  @@index([customerCode])
+  @@index([productCode])
+  @@index([customerCode, saleDate])
+  @@index([fno])
+}
+
+// 정비 이력 (극동 ASDATA 테이블 — 차량 정비 기록)
+model GdRepair {
+  id            Int       @id @default(autoincrement())
+  fno           String?                    // 작업번호
+  vehicleCode   String                     // 차량 코드
+  vehicle       GdVehicle @relation(fields: [vehicleCode], references: [code])
+  repairDate    String?                    // 정비 날짜 (YYYY-MM-DD)
+  productCode   String?                    // 상품 코드
+  productName   String?                    // 정비 품목명
+  unit          String?                    // 단위
+  qty           Float      @default(0)     // 수량
+  unitPrice     Float      @default(0)     // 단가
+  amount        Float      @default(0)     // 금액
+  mileage       Float?                     // 주행거리 (km)
+  memo          String?                    // 비고
+  createdAt     DateTime   @default(now())
+
+  @@index([vehicleCode])
+  @@index([repairDate])
+  @@index([vehicleCode, repairDate])
+}
+
+// 동기화 이력 (극동 데이터 임포트 기록)
+model GdSyncLog {
+  id            Int       @id @default(autoincrement())
+  syncType      String                     // "full" | "incremental"
+  tableName     String                     // 동기화한 테이블명
+  rowCount      Int       @default(0)      // 처리 건수
+  status        String    @default("running") // "running" | "completed" | "failed"
+  errorMessage  String?   @db.Text
+  startedAt     DateTime  @default(now())
+  completedAt   DateTime?
+}

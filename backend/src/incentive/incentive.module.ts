@@ -37,6 +37,10 @@ import { LogsController } from './logs/logs.controller';
 import { DashboardController } from './dashboard/dashboard.controller';
 import { DashboardService } from './dashboard/dashboard.service';
 
+// GD (극동 PsimCarS)
+import { GdController } from './gd/gd.controller';
+import { GdService } from './gd/gd.service';
+
 @Module({
   imports: [
     PassportModule,
@@ -58,6 +62,7 @@ import { DashboardService } from './dashboard/dashboard.service';
     UsersController,
     LogsController,
     DashboardController,
+    GdController,
   ],
   providers: [
     IncentiveAuthService,
@@ -69,6 +74,7 @@ import { DashboardService } from './dashboard/dashboard.service';
     SalesTargetService,
     UploadService,
     DashboardService,
+    GdService,
   ],
 })
 export class IncentiveModule {}

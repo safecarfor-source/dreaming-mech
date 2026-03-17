@@ -463,6 +463,86 @@ body {
   .nc-big-num { font-size: 28px; }
 }
 
+/* ===== GD 조회 (차량/상품) ===== */
+.gd-search-wrap {
+  position: relative; margin-bottom: 16px;
+}
+.gd-search-input {
+  width: 100%; padding: 13px 44px 13px 16px;
+  border: 1px solid var(--border); border-radius: 12px;
+  font-size: 15px; font-family: inherit; background: #F5F5F5;
+  color: var(--text); outline: none; transition: border-color 0.2s, background 0.2s;
+  -webkit-appearance: none;
+}
+.gd-search-input:focus { border-color: var(--accent); background: #fff; }
+.gd-search-input::placeholder { color: var(--text-light); }
+.gd-search-clear {
+  position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+  background: none; border: none; font-size: 18px; color: var(--text-light);
+  cursor: pointer; display: none; line-height: 1; padding: 4px;
+}
+.gd-search-clear.show { display: block; }
+.gd-status {
+  font-size: 13px; color: var(--text-muted); text-align: center;
+  padding: 40px 0; display: none;
+}
+.gd-status.show { display: block; }
+.gd-list { margin-top: 0; }
+.gd-row {
+  padding: 13px 16px; background: var(--card); border: 0.5px solid var(--border);
+  border-radius: 12px; margin-bottom: 8px; cursor: pointer;
+  transition: background 0.15s;
+}
+.gd-row:hover { background: #F8F8F8; }
+.gd-row.open { background: #F0F7FF; border-color: #B3D4FF; }
+.gd-row-main {
+  display: grid; align-items: center; gap: 8px; font-size: 14px;
+}
+.gd-row-main.vehicle { grid-template-columns: auto 1fr auto; }
+.gd-row-main.product { grid-template-columns: 1fr auto; }
+.gd-plate {
+  font-size: 15px; font-weight: 800; color: var(--text); letter-spacing: 0.5px;
+  font-variant-numeric: tabular-nums;
+}
+.gd-model { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
+.gd-owner { font-size: 13px; color: var(--text-muted); text-align: right; white-space: nowrap; }
+.gd-prod-name { font-size: 14px; font-weight: 600; color: var(--text); }
+.gd-prod-unit { font-size: 12px; color: var(--text-light); margin-top: 2px; }
+.gd-prod-price { font-size: 14px; font-weight: 700; color: var(--text); text-align: right; white-space: nowrap; }
+.gd-detail {
+  display: none; margin-top: 10px; border-top: 1px solid var(--border); padding-top: 10px;
+}
+.gd-detail.show { display: block; }
+.gd-repair-row {
+  display: grid; grid-template-columns: 72px 1fr auto auto;
+  gap: 6px; align-items: center; font-size: 13px; padding: 6px 0;
+  border-bottom: 1px solid #F0F0F0; color: var(--text);
+}
+.gd-repair-row:last-child { border-bottom: none; }
+.gd-repair-date { color: var(--text-muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.gd-repair-item { font-weight: 500; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gd-repair-amt { font-weight: 700; text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.gd-repair-km { color: var(--text-muted); text-align: right; white-space: nowrap; font-size: 12px; }
+.gd-repair-header {
+  display: grid; grid-template-columns: 72px 1fr auto auto;
+  gap: 6px; font-size: 11px; color: var(--text-light); padding-bottom: 4px;
+  border-bottom: 1px solid var(--border); font-weight: 600; margin-bottom: 2px;
+}
+.gd-prod-detail-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 4px;
+}
+.gd-prod-detail-item { font-size: 13px; color: var(--text); }
+.gd-prod-detail-label { font-size: 11px; color: var(--text-light); margin-bottom: 2px; }
+.gd-prod-detail-value { font-weight: 600; font-variant-numeric: tabular-nums; }
+.gd-load-more {
+  display: none; width: 100%; padding: 12px; font-size: 13px; color: var(--accent);
+  background: none; border: 1px solid var(--border); border-radius: 10px;
+  cursor: pointer; font-family: inherit; margin-top: 4px; text-align: center;
+}
+.gd-load-more.show { display: block; }
+.gd-load-more:hover { background: #F0F8FF; }
+.gd-repair-loading { font-size: 12px; color: var(--text-muted); text-align: center; padding: 8px 0; }
+
 /* ===== Master Insight ===== */
 .mi-bar-row { display:flex; align-items:center; gap:8px; margin-bottom:6px; }
 .mi-bar-label { width:55px; font-size:11px; color:var(--text-muted); text-align:right; flex-shrink:0; }
@@ -574,6 +654,12 @@ body {
     </div>
     <div class="tab-content" id="tab-insight">
       <div id="insightContent"></div>
+    </div>
+    <div class="tab-content" id="tab-gd-vehicle">
+      <div id="gdVehicleContent"></div>
+    </div>
+    <div class="tab-content" id="tab-gd-product">
+      <div id="gdProductContent"></div>
     </div>
   </div>
 </div>
@@ -959,6 +1045,8 @@ function buildTabs() {
   if (currentUser.access.includes('admin')) tabs.push({ id: 'settlement', label: '월말결산' });
   if (currentUser.access.includes('admin')) tabs.push({ id: 'insight', label: '인사이트' });
   if (currentUser.access.includes('admin')) tabs.push({ id: 'admin', label: '관리자' });
+  if (currentUser.access.includes('admin')) tabs.push({ id: 'gd-vehicle', label: '차량조회' });
+  if (currentUser.access.includes('admin')) tabs.push({ id: 'gd-product', label: '상품조회' });
   tabs.forEach((t, i) => {
     const btn = document.createElement('button');
     btn.className = 'tab-btn' + (i === 0 ? ' active' : '');
@@ -981,6 +1069,8 @@ function switchTab(tabId, btn) {
   else if (tabId === 'settlement') loadSettlement();
   else if (tabId === 'insight') loadInsight();
   else if (tabId === 'admin') loadAdminPanel();
+  else if (tabId === 'gd-vehicle') loadGdVehicle();
+  else if (tabId === 'gd-product') loadGdProduct();
 }
 
 // ===== CONFIG CACHE =====
@@ -2936,6 +3026,368 @@ async function doChangePw() {
 
 document.getElementById('loginPw').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
 document.getElementById('loginId').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('loginPw').focus(); });
+
+// ===== GD 차량조회 =====
+let gdVehicleInit = false;
+let gdVehicleState = { q: '', page: 1, total: 0, loading: false, items: [], debounceTimer: null };
+
+function loadGdVehicle() {
+  if (gdVehicleInit) return;
+  gdVehicleInit = true;
+  const el = document.getElementById('gdVehicleContent');
+  el.innerHTML = `
+    <div style="max-width:520px;margin:0 auto">
+      <div class="gd-search-wrap">
+        <input class="gd-search-input" id="gdVehicleQ" type="search" placeholder="차량번호, 고객명, 전화번호"
+          autocomplete="off" inputmode="search">
+        <button class="gd-search-clear" id="gdVehicleClear" onclick="gdVehicleClear()">×</button>
+      </div>
+      <div class="gd-status show" id="gdVehicleStatus">검색어를 입력하세요</div>
+      <div class="gd-list" id="gdVehicleList"></div>
+      <button class="gd-load-more" id="gdVehicleMore" onclick="gdVehicleLoadMore()">더 보기</button>
+    </div>`;
+
+  const input = document.getElementById('gdVehicleQ');
+  input.addEventListener('input', () => {
+    const q = input.value.trim();
+    document.getElementById('gdVehicleClear').classList.toggle('show', q.length > 0);
+    clearTimeout(gdVehicleState.debounceTimer);
+    if (!q) {
+      gdVehicleReset();
+      document.getElementById('gdVehicleStatus').textContent = '검색어를 입력하세요';
+      document.getElementById('gdVehicleStatus').classList.add('show');
+      return;
+    }
+    gdVehicleState.debounceTimer = setTimeout(() => gdVehicleSearch(q, true), 300);
+  });
+  input.focus();
+}
+
+function gdVehicleReset() {
+  gdVehicleState = { ...gdVehicleState, q: '', page: 1, total: 0, items: [] };
+  document.getElementById('gdVehicleList').innerHTML = '';
+  document.getElementById('gdVehicleMore').classList.remove('show');
+}
+
+function gdVehicleClear() {
+  document.getElementById('gdVehicleQ').value = '';
+  document.getElementById('gdVehicleClear').classList.remove('show');
+  gdVehicleReset();
+  document.getElementById('gdVehicleStatus').textContent = '검색어를 입력하세요';
+  document.getElementById('gdVehicleStatus').classList.add('show');
+  document.getElementById('gdVehicleQ').focus();
+}
+
+async function gdVehicleSearch(q, reset) {
+  if (gdVehicleState.loading) return;
+  gdVehicleState.loading = true;
+  const statusEl = document.getElementById('gdVehicleStatus');
+  const listEl = document.getElementById('gdVehicleList');
+  const moreEl = document.getElementById('gdVehicleMore');
+
+  if (reset) {
+    gdVehicleState.q = q;
+    gdVehicleState.page = 1;
+    gdVehicleState.items = [];
+    listEl.innerHTML = '';
+    moreEl.classList.remove('show');
+  }
+
+  statusEl.textContent = '검색 중...';
+  statusEl.classList.add('show');
+
+  try {
+    const page = gdVehicleState.page;
+    const data = await api('/gd/vehicles?q=' + encodeURIComponent(q) + '&page=' + page + '&limit=20');
+    gdVehicleState.total = data.total || 0;
+    const items = data.data || [];
+    gdVehicleState.items = gdVehicleState.items.concat(items);
+
+    if (gdVehicleState.items.length === 0) {
+      statusEl.textContent = '검색 결과가 없습니다';
+      statusEl.classList.add('show');
+    } else {
+      statusEl.classList.remove('show');
+      items.forEach(v => listEl.insertAdjacentHTML('beforeend', gdVehicleCard(v)));
+    }
+    const loaded = gdVehicleState.items.length;
+    moreEl.classList.toggle('show', loaded < gdVehicleState.total);
+    if (loaded < gdVehicleState.total) moreEl.textContent = '더 보기 (' + loaded + '/' + gdVehicleState.total + ')';
+    gdVehicleState.page++;
+  } catch (e) {
+    statusEl.textContent = '조회 실패: ' + e.message;
+    statusEl.classList.add('show');
+  }
+  gdVehicleState.loading = false;
+}
+
+function gdVehicleLoadMore() {
+  if (gdVehicleState.q) gdVehicleSearch(gdVehicleState.q, false);
+}
+
+function gdVehicleCard(v) {
+  const id = 'gv-' + (v.code || v.plateNumber).replace(/\s/g, '_');
+  return `<div class="gd-row" id="${id}" onclick="gdVehicleToggle('${id}','${encodeURIComponent(v.code || '')}')">
+    <div class="gd-row-main vehicle">
+      <div>
+        <div class="gd-plate">${v.plateNumber || '-'}</div>
+        <div class="gd-model">${[v.carModel, v.color, v.modelYear ? v.modelYear + '년' : ''].filter(Boolean).join(' · ') || '-'}</div>
+      </div>
+      <div></div>
+      <div class="gd-owner">
+        <div style="font-weight:600">${v.ownerName || '-'}</div>
+        <div style="font-size:12px;color:var(--text-light)">${v.phone || ''}</div>
+      </div>
+    </div>
+    <div class="gd-detail" id="${id}-detail">
+      <div class="gd-repair-loading">불러오는 중...</div>
+    </div>
+  </div>`;
+}
+
+let gdVehicleOpenCode = null;
+async function gdVehicleToggle(rowId, encodedCode) {
+  const row = document.getElementById(rowId);
+  const detail = document.getElementById(rowId + '-detail');
+  const isOpen = detail.classList.contains('show');
+  // 닫기
+  document.querySelectorAll('.gd-detail.show').forEach(d => d.classList.remove('show'));
+  document.querySelectorAll('.gd-row.open').forEach(r => r.classList.remove('open'));
+  if (isOpen) return;
+
+  row.classList.add('open');
+  detail.classList.add('show');
+  const code = decodeURIComponent(encodedCode);
+  if (!code) { detail.innerHTML = '<p style="font-size:13px;color:var(--text-muted);padding:8px 0">차량 코드 없음</p>'; return; }
+
+  // 이미 로드됐으면 스킵
+  if (detail.dataset.loaded) return;
+  detail.innerHTML = '<div class="gd-repair-loading">정비 이력 불러오는 중...</div>';
+
+  try {
+    let allRepairs = [];
+    let repairPage = 1;
+    let repairTotal = 0;
+
+    const loadRepairs = async (pg) => {
+      const data = await api('/gd/vehicles/' + encodeURIComponent(code) + '/repairs?page=' + pg + '&limit=20');
+      repairTotal = data.total || 0;
+      return data.repairs || [];
+    };
+
+    allRepairs = await loadRepairs(1);
+
+    const renderRepairs = (repairs) => {
+      if (repairs.length === 0) return '<p style="font-size:13px;color:var(--text-muted);padding:8px 0">정비 이력이 없습니다</p>';
+      let h = `<div class="gd-repair-header"><span>날짜</span><span>품목</span><span>금액</span><span>주행</span></div>`;
+      repairs.forEach(r => {
+        const d = r.repairDate ? r.repairDate.slice(0, 10).replace(/-/g, '.') : '-';
+        h += `<div class="gd-repair-row">
+          <span class="gd-repair-date">${d}</span>
+          <span class="gd-repair-item">${r.productName || '-'}</span>
+          <span class="gd-repair-amt">${r.amount != null ? fmt(r.amount) + '원' : '-'}</span>
+          <span class="gd-repair-km">${r.mileage != null ? fmt(r.mileage) + 'km' : '-'}</span>
+        </div>`;
+      });
+      return h;
+    };
+
+    let currentRepairs = allRepairs;
+    let currentPage = 1;
+
+    const updateDetail = () => {
+      const moreBtn = currentRepairs.length < repairTotal
+        ? `<button class="gd-load-more show" id="${rowId}-rmore" onclick="gdRepairLoadMore('${rowId}','${encodeURIComponent(code)}')">더 보기 (${currentRepairs.length}/${repairTotal})</button>`
+        : '';
+      detail.innerHTML = renderRepairs(currentRepairs) + moreBtn;
+      detail.dataset.loaded = '1';
+      detail.dataset.page = String(currentPage);
+      detail.dataset.total = String(repairTotal);
+      detail.dataset.repairJson = JSON.stringify(currentRepairs);
+    };
+
+    updateDetail();
+  } catch (e) {
+    detail.innerHTML = '<p style="font-size:13px;color:var(--red);padding:8px 0">정비 이력 로드 실패</p>';
+  }
+}
+
+async function gdRepairLoadMore(rowId, encodedCode) {
+  const detail = document.getElementById(rowId + '-detail');
+  const code = decodeURIComponent(encodedCode);
+  const page = parseInt(detail.dataset.page || '1') + 1;
+  const existing = JSON.parse(detail.dataset.repairJson || '[]');
+  const total = parseInt(detail.dataset.total || '0');
+
+  const btn = document.getElementById(rowId + '-rmore');
+  if (btn) btn.textContent = '불러오는 중...';
+
+  try {
+    const data = await api('/gd/vehicles/' + encodeURIComponent(code) + '/repairs?page=' + page + '&limit=20');
+    const newRepairs = data.repairs || [];
+    const allRepairs = existing.concat(newRepairs);
+
+    let h = `<div class="gd-repair-header"><span>날짜</span><span>품목</span><span>금액</span><span>주행</span></div>`;
+    allRepairs.forEach(r => {
+      const d = r.repairDate ? r.repairDate.slice(0, 10).replace(/-/g, '.') : '-';
+      h += `<div class="gd-repair-row">
+        <span class="gd-repair-date">${d}</span>
+        <span class="gd-repair-item">${r.productName || '-'}</span>
+        <span class="gd-repair-amt">${r.amount != null ? fmt(r.amount) + '원' : '-'}</span>
+        <span class="gd-repair-km">${r.mileage != null ? fmt(r.mileage) + 'km' : '-'}</span>
+      </div>`;
+    });
+    const moreBtn = allRepairs.length < total
+      ? `<button class="gd-load-more show" id="${rowId}-rmore" onclick="gdRepairLoadMore('${rowId}','${encodeURIComponent(code)}')">더 보기 (${allRepairs.length}/${total})</button>`
+      : '';
+    detail.innerHTML = h + moreBtn;
+    detail.dataset.page = String(page);
+    detail.dataset.repairJson = JSON.stringify(allRepairs);
+  } catch (e) {
+    if (btn) btn.textContent = '로드 실패 — 다시 시도';
+  }
+}
+
+// ===== GD 상품조회 =====
+let gdProductInit = false;
+let gdProductState = { q: '', page: 1, total: 0, loading: false, items: [], debounceTimer: null };
+
+function loadGdProduct() {
+  if (gdProductInit) return;
+  gdProductInit = true;
+  const el = document.getElementById('gdProductContent');
+  el.innerHTML = `
+    <div style="max-width:520px;margin:0 auto">
+      <div class="gd-search-wrap">
+        <input class="gd-search-input" id="gdProductQ" type="search" placeholder="상품명, 상품코드"
+          autocomplete="off" inputmode="search">
+        <button class="gd-search-clear" id="gdProductClear" onclick="gdProductClear()">×</button>
+      </div>
+      <div class="gd-status show" id="gdProductStatus">검색어를 입력하세요</div>
+      <div class="gd-list" id="gdProductList"></div>
+      <button class="gd-load-more" id="gdProductMore" onclick="gdProductLoadMore()">더 보기</button>
+    </div>`;
+
+  const input = document.getElementById('gdProductQ');
+  input.addEventListener('input', () => {
+    const q = input.value.trim();
+    document.getElementById('gdProductClear').classList.toggle('show', q.length > 0);
+    clearTimeout(gdProductState.debounceTimer);
+    if (!q) {
+      gdProductReset();
+      document.getElementById('gdProductStatus').textContent = '검색어를 입력하세요';
+      document.getElementById('gdProductStatus').classList.add('show');
+      return;
+    }
+    gdProductState.debounceTimer = setTimeout(() => gdProductSearch(q, true), 300);
+  });
+  input.focus();
+}
+
+function gdProductReset() {
+  gdProductState = { ...gdProductState, q: '', page: 1, total: 0, items: [] };
+  document.getElementById('gdProductList').innerHTML = '';
+  document.getElementById('gdProductMore').classList.remove('show');
+}
+
+function gdProductClear() {
+  document.getElementById('gdProductQ').value = '';
+  document.getElementById('gdProductClear').classList.remove('show');
+  gdProductReset();
+  document.getElementById('gdProductStatus').textContent = '검색어를 입력하세요';
+  document.getElementById('gdProductStatus').classList.add('show');
+  document.getElementById('gdProductQ').focus();
+}
+
+async function gdProductSearch(q, reset) {
+  if (gdProductState.loading) return;
+  gdProductState.loading = true;
+  const statusEl = document.getElementById('gdProductStatus');
+  const listEl = document.getElementById('gdProductList');
+  const moreEl = document.getElementById('gdProductMore');
+
+  if (reset) {
+    gdProductState.q = q;
+    gdProductState.page = 1;
+    gdProductState.items = [];
+    listEl.innerHTML = '';
+    moreEl.classList.remove('show');
+  }
+
+  statusEl.textContent = '검색 중...';
+  statusEl.classList.add('show');
+
+  try {
+    const page = gdProductState.page;
+    const data = await api('/gd/products?q=' + encodeURIComponent(q) + '&page=' + page + '&limit=20');
+    gdProductState.total = data.total || 0;
+    const items = data.data || [];
+    gdProductState.items = gdProductState.items.concat(items);
+
+    if (gdProductState.items.length === 0) {
+      statusEl.textContent = '검색 결과가 없습니다';
+      statusEl.classList.add('show');
+    } else {
+      statusEl.classList.remove('show');
+      items.forEach(p => listEl.insertAdjacentHTML('beforeend', gdProductCard(p)));
+    }
+    const loaded = gdProductState.items.length;
+    moreEl.classList.toggle('show', loaded < gdProductState.total);
+    if (loaded < gdProductState.total) moreEl.textContent = '더 보기 (' + loaded + '/' + gdProductState.total + ')';
+    gdProductState.page++;
+  } catch (e) {
+    statusEl.textContent = '조회 실패: ' + e.message;
+    statusEl.classList.add('show');
+  }
+  gdProductState.loading = false;
+}
+
+function gdProductLoadMore() {
+  if (gdProductState.q) gdProductSearch(gdProductState.q, false);
+}
+
+function gdProductCard(p) {
+  const id = 'gp-' + (p.code || '').replace(/[^a-zA-Z0-9가-힣]/g, '_');
+  const price = p.sellPrice1 != null ? fmt(p.sellPrice1) + '원' : (p.fixedPrice != null ? fmt(p.fixedPrice) + '원' : '-');
+  const name = p.name || p.altName || '-';
+  const unit = p.unit || '';
+
+  // 상세 가격 단계 HTML
+  const priceSteps = [1,2,3,4,5].map(i => {
+    const v = p['sellPrice' + i];
+    if (v == null) return '';
+    return `<div class="gd-prod-detail-item"><div class="gd-prod-detail-label">판매가${i}</div><div class="gd-prod-detail-value">${fmt(v)}원</div></div>`;
+  }).join('');
+  const costHtml = p.costPrice != null
+    ? `<div class="gd-prod-detail-item"><div class="gd-prod-detail-label">원가</div><div class="gd-prod-detail-value" style="color:var(--text-muted)">${fmt(p.costPrice)}원</div></div>` : '';
+  const codeHtml = `<div class="gd-prod-detail-item"><div class="gd-prod-detail-label">상품코드</div><div class="gd-prod-detail-value" style="font-size:12px">${p.code || '-'}</div></div>`;
+  const altHtml = p.altName && p.altName !== p.name
+    ? `<div class="gd-prod-detail-item" style="grid-column:1/-1"><div class="gd-prod-detail-label">이름2</div><div class="gd-prod-detail-value" style="font-size:12px">${p.altName}</div></div>` : '';
+
+  return `<div class="gd-row" id="${id}" onclick="gdProductToggle('${id}')">
+    <div class="gd-row-main product">
+      <div>
+        <div class="gd-prod-name">${name}</div>
+        ${unit ? `<div class="gd-prod-unit">${unit}</div>` : ''}
+      </div>
+      <div class="gd-prod-price">${price}</div>
+    </div>
+    <div class="gd-detail" id="${id}-detail">
+      <div class="gd-prod-detail-grid">
+        ${codeHtml}${costHtml}${priceSteps}${altHtml}
+      </div>
+    </div>
+  </div>`;
+}
+
+function gdProductToggle(rowId) {
+  const row = document.getElementById(rowId);
+  const detail = document.getElementById(rowId + '-detail');
+  const isOpen = detail.classList.contains('show');
+  document.querySelectorAll('#gdProductList .gd-detail.show').forEach(d => d.classList.remove('show'));
+  document.querySelectorAll('#gdProductList .gd-row.open').forEach(r => r.classList.remove('open'));
+  if (!isOpen) { row.classList.add('open'); detail.classList.add('show'); }
+}
 
 if (token) { initApp(); }
 </script>
