@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>인센티브 현황판 - 꿈꾸는 정비사</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;800;900&display=swap">
@@ -37,12 +37,17 @@
 }
 
 * { margin:0; padding:0; box-sizing:border-box; }
+html, body {
+  overflow-x: hidden; /* 좌우 스크롤 완전 차단 */
+  width: 100%;
+}
 body {
   font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
   background: var(--bg);
   color: var(--text);
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
+  -webkit-text-size-adjust: 100%; /* iOS 폰트 크기 자동조정 방지 */
 }
 
 /* --- Login --- */
@@ -509,6 +514,11 @@ body {
 .gd-prod-name { font-size: 14px; font-weight: 600; color: var(--text); }
 .gd-prod-unit { font-size: 12px; color: var(--text-light); margin-top: 2px; }
 .gd-prod-price { font-size: 14px; font-weight: 700; color: var(--text); text-align: right; white-space: nowrap; }
+.gd-prod-stock { font-size: 12px; margin-top: 2px; text-align: right; }
+.gd-prod-stock.has { color: var(--green); font-weight: 600; }
+.gd-prod-stock.empty { color: var(--text-light); }
+.gd-row.no-stock .gd-prod-name { color: var(--text-light); }
+.gd-row.no-stock .gd-prod-price { color: var(--text-light); }
 .gd-detail {
   display: none; margin-top: 10px; border-top: 1px solid var(--border); padding-top: 10px;
 }
@@ -542,6 +552,11 @@ body {
 .gd-load-more.show { display: block; }
 .gd-load-more:hover { background: #F0F8FF; }
 .gd-repair-loading { font-size: 12px; color: var(--text-muted); text-align: center; padding: 8px 0; }
+/* 모바일 키보드 최적화 */
+.gd-search-wrap {
+  position: sticky; top: 0; z-index: 10; background: var(--bg);
+  padding-top: 4px; padding-bottom: 12px;
+}
 
 /* ===== Master Insight ===== */
 .mi-bar-row { display:flex; align-items:center; gap:8px; margin-bottom:6px; }
@@ -3050,6 +3065,10 @@ function loadGdVehicle() {
     </div>`;
 
   const input = document.getElementById('gdVehicleQ');
+  // 모바일 키보드 뜰 때 검색창이 보이도록
+  input.addEventListener('focus', () => {
+    setTimeout(() => input.scrollIntoView({ behavior: 'smooth', block: 'start' }), 300);
+  });
   input.addEventListener('input', () => {
     const q = input.value.trim();
     document.getElementById('gdVehicleClear').classList.toggle('show', q.length > 0);
@@ -3271,6 +3290,9 @@ function loadGdProduct() {
     </div>`;
 
   const input = document.getElementById('gdProductQ');
+  input.addEventListener('focus', () => {
+    setTimeout(() => input.scrollIntoView({ behavior: 'smooth', block: 'start' }), 300);
+  });
   input.addEventListener('input', () => {
     const q = input.value.trim();
     document.getElementById('gdProductClear').classList.toggle('show', q.length > 0);
@@ -3353,6 +3375,12 @@ function gdProductCard(p) {
   const price = p.sellPrice1 != null ? fmt(p.sellPrice1) + '원' : (p.fixedPrice != null ? fmt(p.fixedPrice) + '원' : '-');
   const name = p.name || p.altName || '-';
   const unit = p.unit || '';
+  const stock = p.stock || 0;
+  const hasStock = stock > 0;
+  const noStockClass = hasStock ? '' : ' no-stock';
+  const stockHtml = hasStock
+    ? `<div class="gd-prod-stock has">재고 ${fmt(stock)}${unit || '개'}</div>`
+    : `<div class="gd-prod-stock empty">재고 없음</div>`;
 
   // 상세 가격 단계 HTML
   const priceSteps = [1,2,3,4,5].map(i => {
@@ -3362,21 +3390,25 @@ function gdProductCard(p) {
   }).join('');
   const costHtml = p.costPrice != null
     ? `<div class="gd-prod-detail-item"><div class="gd-prod-detail-label">원가</div><div class="gd-prod-detail-value" style="color:var(--text-muted)">${fmt(p.costPrice)}원</div></div>` : '';
+  const stockDetailHtml = `<div class="gd-prod-detail-item"><div class="gd-prod-detail-label">재고</div><div class="gd-prod-detail-value" style="color:${hasStock ? 'var(--green)' : 'var(--text-light)'}">${fmt(stock)}${unit || '개'}</div></div>`;
   const codeHtml = `<div class="gd-prod-detail-item"><div class="gd-prod-detail-label">상품코드</div><div class="gd-prod-detail-value" style="font-size:12px">${p.code || '-'}</div></div>`;
   const altHtml = p.altName && p.altName !== p.name
     ? `<div class="gd-prod-detail-item" style="grid-column:1/-1"><div class="gd-prod-detail-label">이름2</div><div class="gd-prod-detail-value" style="font-size:12px">${p.altName}</div></div>` : '';
 
-  return `<div class="gd-row" id="${id}" onclick="gdProductToggle('${id}')">
+  return `<div class="gd-row${noStockClass}" id="${id}" onclick="gdProductToggle('${id}')">
     <div class="gd-row-main product">
       <div>
         <div class="gd-prod-name">${name}</div>
         ${unit ? `<div class="gd-prod-unit">${unit}</div>` : ''}
       </div>
-      <div class="gd-prod-price">${price}</div>
+      <div>
+        <div class="gd-prod-price">${price}</div>
+        ${stockHtml}
+      </div>
     </div>
     <div class="gd-detail" id="${id}-detail">
       <div class="gd-prod-detail-grid">
-        ${codeHtml}${costHtml}${priceSteps}${altHtml}
+        ${codeHtml}${stockDetailHtml}${costHtml}${priceSteps}${altHtml}
       </div>
     </div>
   </div>`;
