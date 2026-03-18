@@ -1365,21 +1365,40 @@ async function initApp() {
   setTimeout(applyBlurState, 1000);
 }
 
-// 최신 업데이트 날짜 로드
+// 최신 업데이트 날짜 로드 (자동계산 + 수동업로드 중 최신)
 async function loadLastUpdateDate() {
   try {
-    const history = await api('/upload/history');
-    if (!history || history.length === 0) return;
-    // approved 중 가장 최신 항목
-    const approved = history.filter(h => h.status === 'approved');
-    const latest = approved.length > 0 ? approved[0] : history[0];
-    const d = new Date(latest.createdAt || latest.uploadDate);
-    if (isNaN(d)) return;
+    let latestDate = null;
+
+    // 1. 자동 계산 이력 확인
+    try {
+      const autoStatus = await api('/auto-calc/status');
+      if (autoStatus && autoStatus.length > 0) {
+        const autoDate = new Date(autoStatus[0].editedAt);
+        if (!isNaN(autoDate)) latestDate = autoDate;
+      }
+    } catch (e) { /* auto-calc API 없으면 무시 */ }
+
+    // 2. 수동 업로드 이력 확인
+    try {
+      const history = await api('/upload/history');
+      if (history && history.length > 0) {
+        const approved = history.filter(h => h.status === 'approved');
+        const latest = approved.length > 0 ? approved[0] : history[0];
+        const uploadDate = new Date(latest.createdAt || latest.uploadDate);
+        if (!isNaN(uploadDate) && (!latestDate || uploadDate > latestDate)) {
+          latestDate = uploadDate;
+        }
+      }
+    } catch (e) { /* 업로드 이력 없으면 무시 */ }
+
+    if (!latestDate) return;
+
     const now = new Date();
-    const isToday = d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
+    const isToday = latestDate.getFullYear() === now.getFullYear() && latestDate.getMonth() === now.getMonth() && latestDate.getDate() === now.getDate();
     const dateStr = isToday
-      ? `오늘 ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`
-      : `${d.getMonth()+1}.${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+      ? `오늘 ${String(latestDate.getHours()).padStart(2,'0')}:${String(latestDate.getMinutes()).padStart(2,'0')}`
+      : `${latestDate.getMonth()+1}.${latestDate.getDate()} ${String(latestDate.getHours()).padStart(2,'0')}:${String(latestDate.getMinutes()).padStart(2,'0')}`;
     const html = `<span class="update-dot"></span> 데이터 업데이트: ${dateStr}`;
     ['lastUpdateTeam','lastUpdateManager','lastUpdateDirector'].forEach(id => {
       const el = document.getElementById(id);
