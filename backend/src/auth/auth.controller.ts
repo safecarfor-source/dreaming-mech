@@ -81,14 +81,18 @@ export class AuthController {
   // ── 카카오 소셜 로그인 ──
 
   @Get('kakao')
-  kakaoLogin(@Response() res: ExpressResponse) {
-    const url = this.authService.getKakaoLoginUrl();
+  kakaoLogin(
+    @Query('from') from: string,
+    @Response() res: ExpressResponse,
+  ) {
+    const url = this.authService.getKakaoLoginUrl(from);
     res.redirect(url);
   }
 
   @Get('kakao/callback')
   async kakaoCallback(
     @Query('code') code: string,
+    @Query('state') state: string,
     @Response() res: ExpressResponse,
   ) {
     try {
@@ -103,7 +107,9 @@ export class AuthController {
         path: '/',
       });
 
-      res.redirect(`${frontendUrl}/auth/callback?businessStatus=${result.user.businessStatus}`);
+      // state 파라미터에서 from 값 복원하여 프론트로 전달
+      const fromParam = state ? `&from=${state}` : '';
+      res.redirect(`${frontendUrl}/auth/callback?businessStatus=${result.user.businessStatus}${fromParam}`);
     } catch (error: any) {
       console.error('카카오 로그인 에러:', error?.response?.data || error?.message || error);
       const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';

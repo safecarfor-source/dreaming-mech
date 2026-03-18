@@ -20,6 +20,7 @@ function CallbackContent() {
   const searchParams = useSearchParams();
   const { login } = useUserStore();
   const businessStatus = searchParams.get('businessStatus');
+  const from = searchParams.get('from');
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -48,8 +49,12 @@ function CallbackContent() {
         // businessStatus에 따라 리다이렉트
         const status = userData.businessStatus || businessStatus;
         if (status === 'NONE') {
-          // 첫 로그인 일반 유저 → 홈으로
-          router.replace('/');
+          // from=owner 파라미터가 있으면 정비사 온보딩으로, 없으면 홈으로
+          if (from === 'owner') {
+            router.replace('/owner/onboarding');
+          } else {
+            router.replace('/');
+          }
         } else {
           // PENDING/APPROVED/REJECTED → 사장님 대시보드
           router.replace('/owner');
@@ -60,7 +65,7 @@ function CallbackContent() {
     };
 
     fetchProfile();
-  }, [login, router, businessStatus]);
+  }, [login, router, businessStatus, from]);
 
   return (
     <div className="min-h-screen flex items-center justify-center">

@@ -501,7 +501,7 @@ function InquiryContent() {
 
                   <button
                     onClick={handleSubmit}
-                    disabled={!phone || phone.length < 12 || !privacyAgreed || submitting}
+                    disabled={!phone || phone.replace(/[^\d]/g, '').length < 9 || !privacyAgreed || submitting}
                     className="w-full bg-[#7C4DFF] text-white px-6 py-4 rounded-xl font-bold text-lg
                       hover:bg-[#6B3FE0] transition-all disabled:opacity-50 disabled:cursor-not-allowed
                       flex items-center justify-center gap-2 shadow-lg"

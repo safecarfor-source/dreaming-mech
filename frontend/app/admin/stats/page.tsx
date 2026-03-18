@@ -90,7 +90,7 @@ export default function StatsPage() {
     if (activeTab === 'mechanics') {
       fetchTopMechanics();
     }
-  }, [topMechanicsPeriod, selectedMonth, activeTab]);
+  }, [topMechanicsPeriod, selectedMonth, selectedYear, activeTab]);
 
   // 통계 계산
   const totalClicks = mechanics.reduce((sum, m) => sum + m.clickCount, 0);

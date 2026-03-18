@@ -1,12 +1,25 @@
 'use client';
 
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useEffect, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+
+function OwnerLoginContent() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    const from = searchParams.get('from');
+    const destination = from ? `/login?from=${from}` : '/login';
+    router.replace(destination);
+  }, [router, searchParams]);
+
+  return null;
+}
 
 export default function OwnerLoginPage() {
-  const router = useRouter();
-  useEffect(() => {
-    router.replace('/login');
-  }, [router]);
-  return null;
+  return (
+    <Suspense>
+      <OwnerLoginContent />
+    </Suspense>
+  );
 }

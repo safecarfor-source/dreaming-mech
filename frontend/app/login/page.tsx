@@ -8,6 +8,7 @@ import { gtagEvent } from '@/lib/gtag-events';
 function LoginContent() {
   const searchParams = useSearchParams();
   const error = searchParams.get('error');
+  const from = searchParams.get('from');
   const apiUrl = process.env.NEXT_PUBLIC_API_URL;
   const [fromInquiry, setFromInquiry] = useState(false);
 
@@ -72,7 +73,7 @@ function LoginContent() {
 
           {/* 카카오 로그인 버튼 */}
           <a
-            href={`${apiUrl}/auth/kakao`}
+            href={`${apiUrl}/auth/kakao${from ? `?from=${from}` : ''}`}
             onClick={() => gtagEvent.ownerLoginStart()}
             className="w-full flex items-center justify-center gap-3 px-6 py-3.5 bg-[#FEE500] text-[#191919] font-bold rounded-xl hover:bg-[#F5D800] active:scale-[0.98] transition-all shadow-sm"
           >

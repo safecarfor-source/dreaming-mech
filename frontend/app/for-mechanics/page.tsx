@@ -121,7 +121,7 @@ export default function ForMechanicsPage() {
             transition={{ duration: 0.5, delay: 0.3, ease: [0.4, 0, 0.2, 1] }}
           >
             <Link
-              href="/owner/login"
+              href="/owner/login?from=owner"
               className="inline-flex items-center gap-2.5 bg-[#FEE500] hover:bg-[#F5DC00] text-[#3C1E1E] px-8 py-4 md:px-10 md:py-5 rounded-2xl font-bold text-base md:text-lg transition-all duration-150 shadow-lg shadow-[#FEE500]/20"
               style={{ transitionTimingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)' }}
             >
@@ -265,7 +265,7 @@ export default function ForMechanicsPage() {
                 가입은 무료입니다. 카카오 로그인 3초면 완료!
               </p>
               <Link
-                href="/owner/login"
+                href="/owner/login?from=owner"
                 className="inline-flex items-center gap-2.5 bg-[#FEE500] hover:bg-[#F5DC00] text-[#3C1E1E] px-8 py-4 md:px-10 md:py-5 rounded-2xl font-bold text-base md:text-lg transition-all duration-150 shadow-lg shadow-[#FEE500]/20"
                 style={{ transitionTimingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)' }}
               >

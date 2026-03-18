@@ -59,12 +59,16 @@ export class AuthService {
 
   // ── 카카오 OAuth ──
 
-  getKakaoLoginUrl() {
+  getKakaoLoginUrl(from?: string) {
     const params = new URLSearchParams({
       client_id: process.env.KAKAO_CLIENT_ID || '',
       redirect_uri: process.env.KAKAO_CALLBACK_URL || '',
       response_type: 'code',
     });
+    // from 파라미터가 있으면 state에 담아 콜백에서 복원
+    if (from) {
+      params.set('state', from);
+    }
     return `https://kauth.kakao.com/oauth/authorize?${params}`;
   }
 
