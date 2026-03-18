@@ -66,10 +66,11 @@ export class AutoCalcService {
 
     const summary = this.summarize(classified);
 
-    // totalRevenue: 전체 합산 (극동 매출원장 "매출금액"과 동일)
-    // 회계·할인 카테고리 제외, 비정상 금액(10억 이상) 제외
+    // totalRevenue: 전체 합산 (극동 매출원장 "매출금액"과 1원 단위 일치)
+    // 수금 행은 이미 위에서 ']' 필터로 제외됨
+    // 비정상 금액(10억 이상)만 제외
     const totalRevenue = classified
-      .filter(r => r.category !== 'accounting' && r.category !== 'discount' && Math.abs(r.amount) < 1_000_000_000)
+      .filter(r => Math.abs(r.amount) < 1_000_000_000)
       .reduce((sum, r) => sum + r.amount, 0);
 
     // 5. 기존 데이터 삭제 후 새로 저장 (덮어쓰기)
