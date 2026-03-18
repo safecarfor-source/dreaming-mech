@@ -28,16 +28,17 @@ export class AutoCalcService {
 
     this.logger.log(`자동 계산 시작: ${month} (${yearMonth})`);
 
-    // 2. GdRepair에서 해당 월 데이터 조회
-    const repairs = await this.prisma.gdRepair.findMany({
+    // 2. GdSaleDetail에서 해당 월 매출전표 데이터 조회 (DATAS 기반 — 극동 매출금액과 1원 단위 일치)
+    const sales = await this.prisma.gdSaleDetail.findMany({
       where: {
-        repairDate: { startsWith: yearMonth },
+        saleDate: { startsWith: yearMonth },
+        saleType: '2', // IO=2 (출고/매출)만
       },
       select: { productCode: true, productName: true, qty: true, amount: true },
     });
 
-    if (repairs.length === 0) {
-      this.logger.warn(`${month} 정비이력 0건 — 계산 스킵`);
+    if (sales.length === 0) {
+      this.logger.warn(`${month} 매출전표 0건 — 계산 스킵`);
       return { month, repairCount: 0, skipped: true };
     }
 
@@ -45,16 +46,16 @@ export class AutoCalcService {
     const mappings = await this.prisma.productCodeMapping.findMany();
 
     // 4. 분류 + 집계
-    // DATAS(매출전표) 기반: 수금 행(상품코드 ']'로 시작) 제외
+    // GdSaleDetail(DATAS IO=2) 기반: 수금 행(상품코드 ']'로 시작) 제외
     // → 극동 매출원장 "매출금액"과 1원 단위까지 정확히 일치
     // → qty는 절대값 (극동은 출고=음수)
-    const classified: ClassifiedRow[] = repairs
+    const classified: ClassifiedRow[] = sales
       .filter(r => r.productCode && r.productCode.trim().length > 0)
-      .filter(r => !r.productCode!.startsWith(']')) // 수금 행 제외 (]000=카드, ]000=현금, ]000=온라인수금)
+      .filter(r => !r.productCode.startsWith(']')) // 수금 행 제외
       .map(r => {
-        const mapping = this.classifyProduct(r.productCode!, mappings);
+        const mapping = this.classifyProduct(r.productCode, mappings);
         return {
-          productCode: r.productCode!,
+          productCode: r.productCode,
           productName: r.productName || '',
           qty: Math.abs(r.qty), // 출고=음수이므로 절대값
           amount: r.amount,     // 양수+음수 모두 포함 (극동 매출금액 기준)
@@ -118,7 +119,7 @@ export class AutoCalcService {
         detail: JSON.stringify({
           month,
           totalRevenue,
-          repairCount: repairs.length,
+          repairCount: sales.length,
           classifiedCount: classified.filter(c => c.category).length,
           itemCount: Object.keys(summary.incentiveItems).length,
         }),
@@ -126,13 +127,13 @@ export class AutoCalcService {
     });
 
     this.logger.log(
-      `자동 계산 완료: ${month} | 정비 ${repairs.length}건 | 총매출 ${totalRevenue.toLocaleString()}원 | 품목 ${Object.keys(summary.incentiveItems).length}개`,
+      `자동 계산 완료: ${month} | 전표 ${sales.length}건 | 총매출 ${totalRevenue.toLocaleString()}원 | 품목 ${Object.keys(summary.incentiveItems).length}개`,
     );
 
     return {
       month,
       totalRevenue,
-      repairCount: repairs.length,
+      repairCount: sales.length,
       classifiedCount: classified.filter(c => c.category).length,
       summary,
       skipped: false,
