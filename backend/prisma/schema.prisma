@@ -805,13 +805,14 @@ model GdSaleDetail {
 
 // 정비 이력 (극동 ASDATA 테이블 — 차량 정비 기록)
 model GdRepair {
-  id            Int       @id @default(autoincrement())
+  id            Int        @id @default(autoincrement())
   fno           String?                    // 작업번호
-  vehicleCode   String                     // 차량 코드
-  vehicle       GdVehicle @relation(fields: [vehicleCode], references: [code])
-  repairDate    String?                    // 정비 날짜 (YYYY-MM-DD)
+  vehicleCode   String?                    // 거래처/차량 코드 (DATAS.CUST)
+  vehicle       GdVehicle? @relation(fields: [vehicleCode], references: [code])
+  customerCode  String?                    // 거래처 코드 (DATAS 원본 CUST)
+  repairDate    String?                    // 날짜 (YYYY-MM-DD)
   productCode   String?                    // 상품 코드
-  productName   String?                    // 정비 품목명
+  productName   String?                    // 품목명
   unit          String?                    // 단위
   qty           Float      @default(0)     // 수량
   unitPrice     Float      @default(0)     // 단가
@@ -821,6 +822,7 @@ model GdRepair {
   createdAt     DateTime   @default(now())
 
   @@index([vehicleCode])
+  @@index([customerCode])
   @@index([repairDate])
   @@index([vehicleCode, repairDate])
 }
