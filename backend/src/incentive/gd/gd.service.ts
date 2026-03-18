@@ -163,6 +163,139 @@ export class GdService {
     return { data, total, page, limit };
   }
 
+  // 시재관리 (현금 출납부)
+  // - 현금입금: productCode=]000000000001 (현금수금), amount는 음수 → ABS가 입금액
+  // - 현금출금: IO=1 데이터 미동기화 상태이므로 1단계에서는 0으로 표시
+  async getCashLedger(startDate: string, endDate: string) {
+    // 이월시재: startDate 이전 현금수금 누계 (모두 음수이므로 SUM의 절대값)
+    const carryOverResult = await this.prisma.gdSaleDetail.aggregate({
+      where: {
+        productCode: ']000000000001',
+        saleDate: { lt: startDate },
+      },
+      _sum: { amount: true },
+    });
+    // amount가 음수이므로 ABS = 이월시재 (음수 합계를 양수로 전환)
+    const carryOver = Math.abs(carryOverResult._sum.amount ?? 0);
+
+    // 기간 내 현금수금 항목 전체 조회 (거래처명 JOIN)
+    const rawEntries = await this.prisma.$queryRaw<
+      Array<{
+        fno: string;
+        saleDate: string;
+        productCode: string;
+        productName: string | null;
+        customerCode: string;
+        customerName: string | null;
+        amount: number;
+      }>
+    >`
+      SELECT
+        s.fno,
+        s."saleDate",
+        s."productCode",
+        s."productName",
+        s."customerCode",
+        c.name AS "customerName",
+        s.amount
+      FROM "GdSaleDetail" s
+      LEFT JOIN "GdCustomer" c ON s."customerCode" = c.code
+      WHERE s."productCode" = ']000000000001'
+        AND s."saleDate" >= ${startDate}
+        AND s."saleDate" <= ${endDate}
+      ORDER BY s."saleDate" ASC, s.fno ASC
+    `;
+
+    // 일별 그룹핑
+    const dailyMap = new Map<
+      string,
+      {
+        date: string;
+        entries: Array<{
+          type: 'in' | 'out';
+          amount: number;
+          description: string;
+          source: string;
+        }>;
+        dailyCashIn: number;
+        dailyCashOut: number;
+        balance: number;
+      }
+    >();
+
+    let totalCashIn = 0;
+    let totalCashOut = 0;
+
+    for (const row of rawEntries) {
+      const date = row.saleDate;
+      if (!dailyMap.has(date)) {
+        dailyMap.set(date, {
+          date,
+          entries: [],
+          dailyCashIn: 0,
+          dailyCashOut: 0,
+          balance: 0,
+        });
+      }
+
+      const day = dailyMap.get(date)!;
+      // amount 음수 → 입금 (현금수금은 항상 음수)
+      const absAmount = Math.abs(row.amount);
+      const isIn = row.amount < 0;
+
+      // description: 거래처명 기반 (거래처명 없으면 전표번호 사용)
+      const customerLabel =
+        row.customerName && row.customerName !== '정비고객관리'
+          ? row.customerName
+          : row.fno;
+      const productLabel = (row.productName ?? '현금수금')
+        .replace(/\s+/g, ' ')
+        .trim();
+      const description = `${customerLabel} ${productLabel}`;
+
+      if (isIn) {
+        day.entries.push({
+          type: 'in',
+          amount: absAmount,
+          description,
+          source: '매출장',
+        });
+        day.dailyCashIn += absAmount;
+        totalCashIn += absAmount;
+      } else {
+        // amount 양수 = 출금 (현재 데이터에서는 드문 케이스)
+        day.entries.push({
+          type: 'out',
+          amount: absAmount,
+          description,
+          source: '매출장',
+        });
+        day.dailyCashOut += absAmount;
+        totalCashOut += absAmount;
+      }
+    }
+
+    // 일별 누계 잔액 계산 (이월시재 + 일별 입출금 누적)
+    const dailyEntries = Array.from(dailyMap.values()).sort((a, b) =>
+      a.date.localeCompare(b.date),
+    );
+    let runningBalance = carryOver;
+    for (const day of dailyEntries) {
+      runningBalance += day.dailyCashIn - day.dailyCashOut;
+      day.balance = runningBalance;
+    }
+
+    const currentBalance = carryOver + totalCashIn - totalCashOut;
+
+    return {
+      carryOver,         // 이월시재 (startDate 이전 현금수금 누계)
+      totalCashIn,       // 기간 내 총 현금 입금
+      totalCashOut,      // 기간 내 총 현금 출금 (IO=1 미동기화로 현재 0)
+      currentBalance,    // 현재 시재 (이월+입금-출금)
+      dailyEntries,
+    };
+  }
+
   // 동기화 상태 조회
   async getSyncStatus() {
     try {
