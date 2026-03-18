@@ -44,10 +44,10 @@ export class AutoCalcService {
     // 3. ProductCodeMapping 조회
     const mappings = await this.prisma.productCodeMapping.findMany();
 
-    // 4. 분류 + 집계 (UploadService와 동일 로직)
-    // - 빈 상품코드 제외
-    // - 극동 시스템은 출고(판매)=음수 qty → 절대값으로 변환
-    // - 회계 코드(]0)로 시작하는 수금/공제 항목 제외 (totalRevenue 계산용)
+    // 4. 분류 + 집계
+    // DATAS(매출전표) 기반: 양수 = 매출, 음수 = 공제/환불
+    // → 전체 금액 합산 (극동 매출원장의 "매출금액"과 일치시키기 위해)
+    // → qty는 절대값 (극동은 출고=음수)
     const classified: ClassifiedRow[] = repairs
       .filter(r => r.productCode && r.productCode.trim().length > 0)
       .map(r => {
@@ -55,8 +55,8 @@ export class AutoCalcService {
         return {
           productCode: r.productCode!,
           productName: r.productName || '',
-          qty: Math.abs(r.qty),   // 음수 → 양수 변환
-          amount: Math.abs(r.amount), // 음수 금액도 양수 변환
+          qty: Math.abs(r.qty), // 출고=음수이므로 절대값
+          amount: r.amount,     // 양수+음수 모두 포함 (극동 매출금액 기준)
           category: mapping?.category || null,
           label: mapping?.label || null,
           isIncentive: mapping?.isIncentive ?? false,
@@ -65,9 +65,10 @@ export class AutoCalcService {
 
     const summary = this.summarize(classified);
 
-    // totalRevenue: 회계(수금/공제) 항목 제외, 비정상 금액(10억 이상) 제외
+    // totalRevenue: 전체 합산 (극동 매출원장 "매출금액"과 동일)
+    // 회계·할인 카테고리 제외, 비정상 금액(10억 이상) 제외
     const totalRevenue = classified
-      .filter(r => r.category !== 'accounting' && r.category !== 'discount' && r.amount < 1_000_000_000)
+      .filter(r => r.category !== 'accounting' && r.category !== 'discount' && Math.abs(r.amount) < 1_000_000_000)
       .reduce((sum, r) => sum + r.amount, 0);
 
     // 5. 기존 데이터 삭제 후 새로 저장 (덮어쓰기)
