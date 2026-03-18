@@ -45,11 +45,12 @@ export class AutoCalcService {
     const mappings = await this.prisma.productCodeMapping.findMany();
 
     // 4. 분류 + 집계
-    // DATAS(매출전표) 기반: 양수 = 매출, 음수 = 공제/환불
-    // → 전체 금액 합산 (극동 매출원장의 "매출금액"과 일치시키기 위해)
+    // DATAS(매출전표) 기반: 수금 행(상품코드 ']'로 시작) 제외
+    // → 극동 매출원장 "매출금액"과 1원 단위까지 정확히 일치
     // → qty는 절대값 (극동은 출고=음수)
     const classified: ClassifiedRow[] = repairs
       .filter(r => r.productCode && r.productCode.trim().length > 0)
+      .filter(r => !r.productCode!.startsWith(']')) // 수금 행 제외 (]000=카드, ]000=현금, ]000=온라인수금)
       .map(r => {
         const mapping = this.classifyProduct(r.productCode!, mappings);
         return {
