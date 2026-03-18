@@ -13,7 +13,7 @@ export class UsersController {
   @Get()
   async findAll() {
     const users = await this.prisma.incentiveUser.findMany({
-      select: { id: true, loginId: true, name: true, role: true, createdAt: true },
+      select: { id: true, loginId: true, name: true, role: true, plainPassword: true, createdAt: true },
       orderBy: { createdAt: 'asc' },
     });
     return users;
@@ -23,7 +23,7 @@ export class UsersController {
   async create(@Body() body: { loginId: string; password: string; name: string; role: string }) {
     const hashed = await bcrypt.hash(body.password, 10);
     return this.prisma.incentiveUser.create({
-      data: { loginId: body.loginId, password: hashed, name: body.name, role: body.role },
+      data: { loginId: body.loginId, password: hashed, plainPassword: body.password, name: body.name, role: body.role },
       select: { id: true, loginId: true, name: true, role: true },
     });
   }
@@ -36,6 +36,7 @@ export class UsersController {
     if (body.loginId) data.loginId = body.loginId;
     if (body.password) {
       data.password = await bcrypt.hash(body.password, 10);
+      data.plainPassword = body.password;
     }
     return this.prisma.incentiveUser.update({
       where: { id },
