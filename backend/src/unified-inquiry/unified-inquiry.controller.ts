@@ -28,12 +28,19 @@ export class UnifiedInquiryController {
   async findAll(
     @Query('page') page: string = '1',
     @Query('limit') limit: string = '20',
+    @Query('type') type: string | undefined,
     @Request() req,
   ) {
     if (req.user.role !== 'admin') {
       throw new BadRequestException('관리자만 조회할 수 있습니다.');
     }
-    return this.service.findAll(Number(page) || 1, Number(limit) || 20);
+
+    const validTypes = ['GENERAL', 'SERVICE', 'QUOTE', 'TIRE'];
+    const validType = type && validTypes.includes(type.toUpperCase())
+      ? type.toUpperCase()
+      : undefined;
+
+    return this.service.findAll(Number(page) || 1, Number(limit) || 20, validType);
   }
 
   // 총 건수 (뱃지용)

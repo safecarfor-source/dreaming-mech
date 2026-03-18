@@ -29,7 +29,7 @@ export interface UnifiedInquiry {
 export class UnifiedInquiryService {
   constructor(private prisma: PrismaService) {}
 
-  async findAll(page: number = 1, limit: number = 20) {
+  async findAll(page: number = 1, limit: number = 20, type?: string) {
     // 문의별 가입 정비사 수 집계 (signupInquiryId 기준)
     const ownerSignups = await this.prisma.user.groupBy({
       by: ['signupInquiryId'],
@@ -42,33 +42,34 @@ export class UnifiedInquiryService {
         .map((o) => [o.signupInquiryId as number, o._count.id]),
     );
 
-    // 3개 테이블에서 병렬 조회
+    // type 필터가 있으면 해당 테이블만 조회, 없으면 전체 조회
+    const fetchGeneral = !type || type === 'GENERAL';
+    const fetchService = !type || type === 'SERVICE';
+    const fetchQuote = !type || type === 'QUOTE';
+    const fetchTire = !type || type === 'TIRE';
+
     const [inquiries, serviceInquiries, quoteRequests, tireInquiries] = await Promise.all([
-      this.prisma.inquiry.findMany({
-        orderBy: { createdAt: 'desc' },
-      }),
-      this.prisma.serviceInquiry.findMany({
-        include: {
-          user: {
-            select: { id: true, nickname: true, phone: true },
-          },
-          trackingLink: {
-            select: { name: true },
-          },
-        },
-        orderBy: { createdAt: 'desc' },
-      }),
-      this.prisma.quoteRequest.findMany({
-        include: {
-          mechanic: {
-            select: { id: true, name: true },
-          },
-        },
-        orderBy: { createdAt: 'desc' },
-      }),
-      this.prisma.tireInquiry.findMany({
-        orderBy: { createdAt: 'desc' },
-      }),
+      fetchGeneral
+        ? this.prisma.inquiry.findMany({ orderBy: { createdAt: 'desc' } })
+        : Promise.resolve([]),
+      fetchService
+        ? this.prisma.serviceInquiry.findMany({
+            include: {
+              user: { select: { id: true, nickname: true, phone: true } },
+              trackingLink: { select: { name: true } },
+            },
+            orderBy: { createdAt: 'desc' },
+          })
+        : Promise.resolve([]),
+      fetchQuote
+        ? this.prisma.quoteRequest.findMany({
+            include: { mechanic: { select: { id: true, name: true } } },
+            orderBy: { createdAt: 'desc' },
+          })
+        : Promise.resolve([]),
+      fetchTire
+        ? this.prisma.tireInquiry.findMany({ orderBy: { createdAt: 'desc' } })
+        : Promise.resolve([]),
     ]);
 
     // 통합 매핑

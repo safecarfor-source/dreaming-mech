@@ -55,7 +55,6 @@ type FilterType = 'ALL' | 'SERVICE' | 'GENERAL' | 'QUOTE' | 'TIRE';
 
 export default function UnifiedInquiriesPage() {
   const [inquiries, setInquiries] = useState<UnifiedInquiry[]>([]);
-  const [allInquiries, setAllInquiries] = useState<UnifiedInquiry[]>([]);
   const [filter, setFilter] = useState<FilterType>('ALL');
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -68,31 +67,22 @@ export default function UnifiedInquiriesPage() {
   const fetchInquiries = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await unifiedInquiryApi.getAll(1, 200);
+      const typeParam = filter !== 'ALL' ? filter : undefined;
+      const res = await unifiedInquiryApi.getAll(page, 20, typeParam);
       const data = res.data;
-      setAllInquiries(data.data);
+      setInquiries(data.data);
+      setTotal(data.total);
+      setTotalPages(data.totalPages);
     } catch (error) {
       console.error('통합 문의 로딩 실패:', error);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [filter, page]);
 
   useEffect(() => {
     fetchInquiries();
   }, [fetchInquiries]);
-
-  // 필터링
-  useEffect(() => {
-    let filtered = allInquiries;
-    if (filter !== 'ALL') {
-      filtered = allInquiries.filter((inq) => inq.type === filter);
-    }
-    setTotal(filtered.length);
-    setTotalPages(Math.ceil(filtered.length / 20));
-    const start = (page - 1) * 20;
-    setInquiries(filtered.slice(start, start + 20));
-  }, [allInquiries, filter, page]);
 
   const handleFilterChange = (newFilter: FilterType) => {
     setFilter(newFilter);
@@ -174,9 +164,12 @@ export default function UnifiedInquiriesPage() {
     return exact;
   };
 
+  // 현재 선택된 필터의 카운트는 서버에서 받은 total 사용
+  // 선택되지 않은 탭은 현재 페이지 데이터에서 카운트 (정확도보다 서버사이드 필터 정확성 우선)
   const getTypeCount = (type?: FilterType) => {
-    if (!type || type === 'ALL') return allInquiries.length;
-    return allInquiries.filter((inq) => inq.type === type).length;
+    const isCurrentFilter = !type || type === 'ALL' ? filter === 'ALL' : filter === type;
+    if (isCurrentFilter) return total;
+    return inquiries.filter((inq) => inq.type === type).length;
   };
 
   const getKey = (inq: UnifiedInquiry) => `${inq.type}-${inq.id}`;

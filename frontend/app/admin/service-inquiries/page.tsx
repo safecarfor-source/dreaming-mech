@@ -56,17 +56,13 @@ export default function AdminServiceInquiriesPage() {
   const fetchInquiries = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await serviceInquiryApi.getAll(page, 20);
+      const statusParam = tab !== 'ALL' ? tab : undefined;
+      const res = await serviceInquiryApi.getAll(page, 20, statusParam);
       const data = res.data.data;
 
-      let filtered = data.data;
-      if (tab !== 'ALL') {
-        filtered = filtered.filter((inq) => inq.status === tab);
-      }
-
-      setInquiries(filtered);
-      setTotal(filtered.length);
-      setTotalPages(Math.ceil(filtered.length / 20));
+      setInquiries(data.data);
+      setTotal(data.total);
+      setTotalPages(data.totalPages);
     } catch (error) {
       console.error('서비스 문의 목록 로딩 실패:', error);
     } finally {
@@ -128,8 +124,11 @@ export default function AdminServiceInquiriesPage() {
     return `${year}-${month}-${day} ${hours}:${mins}`;
   };
 
+  // 현재 선택된 탭의 total은 서버에서 받은 값을 사용
+  // 선택되지 않은 탭의 카운트는 정확한 값을 알 수 없으므로 현재 탭 total만 정확히 표시
   const getStatCount = (status?: ServiceInquiryStatus) => {
-    if (!status) return inquiries.length;
+    const isCurrentTab = status ? tab === status : tab === 'ALL';
+    if (isCurrentTab) return total;
     return inquiries.filter((inq) => inq.status === status).length;
   };
 

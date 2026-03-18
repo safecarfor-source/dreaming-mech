@@ -206,11 +206,13 @@ export class ServiceInquiryService {
     );
   }
 
-  async findAll(page: number = 1, limit: number = 20) {
+  async findAll(page: number = 1, limit: number = 20, status?: ServiceInquiryStatus) {
     const skip = (page - 1) * limit;
+    const where = status ? { status } : {};
 
     const [items, total] = await Promise.all([
       this.prisma.serviceInquiry.findMany({
+        where,
         skip,
         take: limit,
         include: {
@@ -224,7 +226,7 @@ export class ServiceInquiryService {
         },
         orderBy: { createdAt: 'desc' },
       }),
-      this.prisma.serviceInquiry.count(),
+      this.prisma.serviceInquiry.count({ where }),
     ]);
 
     return {

@@ -378,8 +378,11 @@ export const serviceInquiryApi = {
   getPublic: (id: number) => api.get<ApiResponse<ServiceInquiry>>(`/service-inquiries/${id}`),
 
   // 관리자용
-  getAll: (page = 1, limit = 20) =>
-    api.get<ApiResponse<{ data: ServiceInquiry[]; total: number }>>(`/service-inquiries?page=${page}&limit=${limit}`),
+  getAll: (page = 1, limit = 20, status?: string) => {
+    const params = new URLSearchParams({ page: String(page), limit: String(limit) });
+    if (status) params.set('status', status);
+    return api.get<ApiResponse<{ data: ServiceInquiry[]; total: number; page: number; limit: number; totalPages: number }>>(`/service-inquiries?${params.toString()}`);
+  },
 
   getFull: (id: number) => api.get<ApiResponse<ServiceInquiry>>(`/service-inquiries/${id}/full`),
 
@@ -391,8 +394,11 @@ export const serviceInquiryApi = {
 
 // 통합 문의 API
 export const unifiedInquiryApi = {
-  getAll: (page = 1, limit = 20) =>
-    api.get<{ data: UnifiedInquiry[]; total: number; page: number; limit: number; totalPages: number }>(`/unified-inquiries?page=${page}&limit=${limit}`),
+  getAll: (page = 1, limit = 20, type?: string) => {
+    const params = new URLSearchParams({ page: String(page), limit: String(limit) });
+    if (type && type !== 'ALL') params.set('type', type);
+    return api.get<{ data: UnifiedInquiry[]; total: number; page: number; limit: number; totalPages: number }>(`/unified-inquiries?${params.toString()}`);
+  },
 
   getCount: () =>
     api.get<UnifiedInquiryCount>('/unified-inquiries/count'),

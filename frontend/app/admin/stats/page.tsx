@@ -34,8 +34,8 @@ export default function StatsPage() {
 
   // 기간별 TOP 5 상태
   const [topMechanicsPeriod, setTopMechanicsPeriod] = useState<number | 'monthly'>(1);
-  const [selectedMonth, setSelectedMonth] = useState<number>(1);
-  const [selectedYear, setSelectedYear] = useState<number>(2026);
+  const [selectedMonth, setSelectedMonth] = useState<number | null>(null);
+  const [selectedYear, setSelectedYear] = useState<number | null>(null);
   const [topMechanicsData, setTopMechanicsData] = useState<TopMechanic[]>([]);
   const [topMechanicsLoading, setTopMechanicsLoading] = useState(false);
   const [topMechanicsError, setTopMechanicsError] = useState<string | null>(null);
@@ -62,6 +62,9 @@ export default function StatsPage() {
 
   // 기간별 TOP 5 데이터 페칭
   const fetchTopMechanics = async () => {
+    // 날짜 초기화 전에는 실행하지 않음
+    if (selectedMonth === null || selectedYear === null) return;
+
     setTopMechanicsLoading(true);
     setTopMechanicsError(null);
 
@@ -320,7 +323,7 @@ export default function StatsPage() {
                       </h2>
                       <p className="text-xs sm:text-sm text-gray-500 mt-1">
                         {topMechanicsPeriod === 'monthly'
-                          ? `${selectedMonth}월 클릭 수 기준`
+                          ? selectedMonth !== null ? `${selectedMonth}월 클릭 수 기준` : '월별 클릭 수 기준'
                           : `최근 ${topMechanicsPeriod}일 클릭 수 기준`}
                       </p>
                     </div>
@@ -369,7 +372,7 @@ export default function StatsPage() {
                       <div className="flex flex-col gap-2">
                         <div>
                           <p className="text-sm font-medium text-gray-700">월 선택</p>
-                          <p className="text-xs text-gray-500 mt-0.5">조회할 월을 선택하세요 ({selectedYear}년)</p>
+                          <p className="text-xs text-gray-500 mt-0.5">조회할 월을 선택하세요 ({selectedYear ?? ''}년)</p>
                         </div>
                         <div className="grid grid-cols-3 sm:grid-cols-6 lg:grid-cols-12 gap-2">
                           {MONTHS.map((month) => (
@@ -378,7 +381,7 @@ export default function StatsPage() {
                               type="button"
                               onClick={() => setSelectedMonth(month.value)}
                               className={`px-3 py-2 rounded-lg font-semibold text-xs sm:text-sm transition-all duration-200 ${
-                                selectedMonth === month.value
+                                selectedMonth !== null && selectedMonth === month.value
                                   ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-md'
                                   : 'bg-white text-gray-600 hover:text-gray-900 hover:bg-gray-50 border border-gray-200'
                               }`}

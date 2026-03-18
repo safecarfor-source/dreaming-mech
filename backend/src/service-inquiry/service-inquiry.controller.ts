@@ -42,13 +42,20 @@ export class ServiceInquiryController {
   async findAll(
     @Query('page', ParseIntPipe) page: number = 1,
     @Query('limit', ParseIntPipe) limit: number = 20,
+    @Query('status') status: string | undefined,
     @Request() req,
   ) {
     if (req.user.role !== 'admin') {
       throw new BadRequestException('관리자만 목록을 조회할 수 있습니다.');
     }
 
-    return this.serviceInquiryService.findAll(page, limit);
+    // status 쿼리가 있고 유효한 값인 경우에만 필터 적용
+    const validStatus =
+      status && Object.values(ServiceInquiryStatus).includes(status as ServiceInquiryStatus)
+        ? (status as ServiceInquiryStatus)
+        : undefined;
+
+    return this.serviceInquiryService.findAll(page, limit, validStatus);
   }
 
   // 상세 조회 (로그인 상태에 따라 전화번호 공개/블러)
