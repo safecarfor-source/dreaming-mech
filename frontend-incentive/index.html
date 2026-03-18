@@ -799,6 +799,10 @@ body {
     <div class="tab-content" id="tab-gd-product">
       <div id="gdProductContent"></div>
     </div>
+    <!-- 시재관리 탭 -->
+    <div class="tab-content" id="tab-cash-ledger">
+      <div id="cashLedgerContent"></div>
+    </div>
   </div>
 </div>
 
@@ -1422,6 +1426,7 @@ function buildTabs() {
   // 업로드 탭 제거 — 극동 데이터 동기화 시 자동 계산됨
   if (currentUser.access.includes('admin')) tabs.push({ id: 'settlement', label: '월말결산' });
   if (currentUser.access.includes('admin')) tabs.push({ id: 'insight', label: '인사이트' });
+  if (currentUser.access.includes('admin')) tabs.push({ id: 'cash-ledger', label: '시재관리' });
   if (currentUser.access.includes('admin')) tabs.push({ id: 'admin', label: '관리자' });
   tabs.forEach((t, i) => {
     const btn = document.createElement('button');
@@ -1449,6 +1454,7 @@ function switchTab(tabId, btn) {
   else if (tabId === 'admin') loadAdminPanel();
   else if (tabId === 'gd-vehicle') loadGdVehicle();
   else if (tabId === 'gd-product') loadGdProduct();
+  else if (tabId === 'cash-ledger') loadCashLedger();
   // blur 상태 적용
   setTimeout(applyBlurState, 50);
 }
@@ -3635,6 +3641,170 @@ function gdProductToggle(rowId) {
   document.querySelectorAll('#gdProductList .gd-detail.show').forEach(d => d.classList.remove('show'));
   document.querySelectorAll('#gdProductList .gd-row.open').forEach(r => r.classList.remove('open'));
   if (!isOpen) { row.classList.add('open'); detail.classList.add('show'); }
+}
+
+// ===== 시재관리 =====
+let cashLedgerLoaded = false;
+
+function loadCashLedger() {
+  const el = document.getElementById('cashLedgerContent');
+  el.innerHTML = renderCashLedgerShell();
+  initCashLedgerDates();
+  fetchCashLedger();
+}
+
+function renderCashLedgerShell() {
+  return `
+    <div style="max-width:520px;margin:0 auto">
+      <!-- 날짜 선택 -->
+      <div class="card" style="margin-bottom:12px">
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <div style="display:flex;flex-direction:column;gap:4px;flex:1;min-width:120px">
+            <label style="font-size:11px;font-weight:700;color:var(--text-muted)">시작일</label>
+            <input type="date" id="clStartDate" style="padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit;background:#F5F5F5;color:var(--text);outline:none;" oninput="fetchCashLedger()">
+          </div>
+          <div style="font-size:16px;color:var(--text-light);padding-top:18px">~</div>
+          <div style="display:flex;flex-direction:column;gap:4px;flex:1;min-width:120px">
+            <label style="font-size:11px;font-weight:700;color:var(--text-muted)">종료일</label>
+            <input type="date" id="clEndDate" style="padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit;background:#F5F5F5;color:var(--text);outline:none;" oninput="fetchCashLedger()">
+          </div>
+        </div>
+      </div>
+      <!-- 요약 카드 -->
+      <div id="clSummary"></div>
+      <!-- 일별 내역 -->
+      <div id="clDetail"></div>
+    </div>`;
+}
+
+function initCashLedgerDates() {
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = String(now.getMonth() + 1).padStart(2, '0');
+  const start = `${y}-${m}-01`;
+  const lastDay = new Date(y, now.getMonth() + 1, 0).getDate();
+  const end = `${y}-${m}-${String(lastDay).padStart(2, '0')}`;
+  const startEl = document.getElementById('clStartDate');
+  const endEl = document.getElementById('clEndDate');
+  if (startEl && !startEl.value) startEl.value = start;
+  if (endEl && !endEl.value) endEl.value = end;
+}
+
+let clFetchTimer = null;
+function fetchCashLedger() {
+  clearTimeout(clFetchTimer);
+  clFetchTimer = setTimeout(_fetchCashLedger, 300);
+}
+
+async function _fetchCashLedger() {
+  const startEl = document.getElementById('clStartDate');
+  const endEl = document.getElementById('clEndDate');
+  const summaryEl = document.getElementById('clSummary');
+  const detailEl = document.getElementById('clDetail');
+  if (!startEl || !endEl || !summaryEl || !detailEl) return;
+
+  const startDate = startEl.value;
+  const endDate = endEl.value;
+  if (!startDate || !endDate) return;
+
+  const loadingHtml = '<div style="text-align:center;padding:40px 20px;color:var(--text-muted)"><div class="spinner" style="width:28px;height:28px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 12px"></div>로딩 중...</div>';
+  summaryEl.innerHTML = loadingHtml;
+  detailEl.innerHTML = '';
+
+  try {
+    const data = await api(`/gd/cash-ledger?startDate=${startDate}&endDate=${endDate}`);
+    renderCashLedgerSummary(data, summaryEl);
+    renderCashLedgerDetail(data, detailEl);
+  } catch (e) {
+    summaryEl.innerHTML = `<div style="text-align:center;padding:40px;color:var(--red)">데이터 로드 실패<br><span style="font-size:12px;color:var(--text-muted)">${e.message}</span></div>`;
+    detailEl.innerHTML = '';
+  }
+}
+
+function renderCashLedgerSummary(data, el) {
+  const { carryOver = 0, totalCashIn = 0, totalCashOut = 0, currentBalance = 0 } = data;
+  el.innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div class="stat-card">
+        <div class="label">이월시재</div>
+        <div class="value" style="font-size:20px;color:var(--text-muted)">₩${fmt(carryOver)}</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">현재시재</div>
+        <div class="value" style="font-size:20px;color:var(--accent)">₩${fmt(currentBalance)}</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">입금 합계</div>
+        <div class="value" style="font-size:20px;color:var(--green)">₩${fmt(totalCashIn)}</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">출금 합계</div>
+        <div class="value" style="font-size:20px;color:var(--red)">₩${fmt(totalCashOut)}</div>
+      </div>
+    </div>`;
+}
+
+function renderCashLedgerDetail(data, el) {
+  const { dailyEntries = [], totalCashIn = 0, totalCashOut = 0, currentBalance = 0 } = data;
+
+  if (!dailyEntries.length) {
+    el.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-muted)">해당 기간 내역이 없습니다.</div>';
+    return;
+  }
+
+  let rows = '';
+  dailyEntries.forEach(day => {
+    const dateLabel = formatDateShort(day.date);
+    (day.entries || []).forEach(entry => {
+      const isIn = entry.type === 'in';
+      const inAmt = isIn ? `<span style="color:var(--accent);font-weight:700">${fmt(entry.amount)}</span>` : '';
+      const outAmt = !isIn ? `<span style="color:var(--red);font-weight:700">${fmt(entry.amount)}</span>` : '';
+      rows += `<tr>
+        <td style="color:var(--text-muted);white-space:nowrap">${dateLabel}</td>
+        <td style="color:var(--text-muted);font-size:12px;white-space:nowrap">${entry.source || ''}</td>
+        <td style="max-width:160px;word-break:keep-all">${entry.description || ''}</td>
+        <td style="text-align:right;white-space:nowrap">${inAmt}</td>
+        <td style="text-align:right;white-space:nowrap">${outAmt}</td>
+        <td style="text-align:right;white-space:nowrap;font-weight:600">${fmt(day.balance)}</td>
+      </tr>`;
+    });
+  });
+
+  el.innerHTML = `
+    <div class="card" style="padding:0;overflow:hidden">
+      <div style="overflow-x:auto;-webkit-overflow-scrolling:touch">
+        <table style="width:100%;border-collapse:collapse;font-size:13px">
+          <thead>
+            <tr style="background:#F5F5F5;border-bottom:1px solid var(--border)">
+              <th style="padding:10px 12px;text-align:left;font-weight:700;color:var(--text-muted);white-space:nowrap">날짜</th>
+              <th style="padding:10px 8px;text-align:left;font-weight:700;color:var(--text-muted);white-space:nowrap">구분</th>
+              <th style="padding:10px 8px;text-align:left;font-weight:700;color:var(--text-muted)">적요</th>
+              <th style="padding:10px 8px;text-align:right;font-weight:700;color:var(--accent);white-space:nowrap">입금</th>
+              <th style="padding:10px 8px;text-align:right;font-weight:700;color:var(--red);white-space:nowrap">출금</th>
+              <th style="padding:10px 12px;text-align:right;font-weight:700;color:var(--text);white-space:nowrap">잔액</th>
+            </tr>
+          </thead>
+          <tbody id="clTableBody">
+            ${rows}
+          </tbody>
+          <tfoot>
+            <tr style="background:#F5F5F5;border-top:2px solid var(--border)">
+              <td colspan="3" style="padding:10px 12px;font-weight:800;font-size:14px">합계</td>
+              <td style="padding:10px 8px;text-align:right;font-weight:800;color:var(--accent);white-space:nowrap">${fmt(totalCashIn)}</td>
+              <td style="padding:10px 8px;text-align:right;font-weight:800;color:var(--red);white-space:nowrap">${fmt(totalCashOut)}</td>
+              <td style="padding:10px 12px;text-align:right;font-weight:800;color:var(--accent);white-space:nowrap">${fmt(currentBalance)}</td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>`;
+}
+
+function formatDateShort(dateStr) {
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  if (isNaN(d)) return dateStr;
+  return `${d.getMonth() + 1}/${d.getDate()}`;
 }
 
 if (token) { initApp(); }
