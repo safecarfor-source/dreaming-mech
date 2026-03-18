@@ -200,6 +200,21 @@ export function useMechanicForm({ mechanic, mode, apiBasePath = '/mechanics', re
 
       if (!response.ok) {
         const errData = await response.json().catch(() => null);
+        if (errData?.errors && Array.isArray(errData.errors)) {
+          const fieldLabels: Record<string, string> = {
+            name: '정비소명', phone: '전화번호', address: '주소',
+            location: '지역', mapLat: '위도', mapLng: '경도',
+            description: '설명', mainImageUrl: '대표 이미지',
+            youtubeUrl: '유튜브 숏폼 URL', youtubeLongUrl: '유튜브 롱폼 URL',
+            operatingHours: '영업시간', specialties: '전문 분야',
+            paymentMethods: '결제 수단', holidays: '휴무일',
+          };
+          const msgs = errData.errors.map((e: any) => {
+            const label = fieldLabels[e.field] || e.field;
+            return `• ${label}: ${e.message}`;
+          });
+          throw new Error('저장 실패:\n' + msgs.join('\n'));
+        }
         throw new Error(errData?.message || '저장 실패');
       }
 

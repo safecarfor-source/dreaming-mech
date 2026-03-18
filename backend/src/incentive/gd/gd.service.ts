@@ -287,6 +287,28 @@ export class GdService {
     return { carryOver, totalCashIn, totalCashOut, currentBalance, dailyEntries };
   }
 
+  // 일별 매출 조회 (극동 GdSaleDetail 기반)
+  async getDailyRevenue(date: string) {
+    const result = await this.prisma.$queryRaw<
+      Array<{ total_revenue: number; sale_count: number }>
+    >`
+      SELECT
+        COALESCE(SUM(amount), 0) AS total_revenue,
+        COUNT(*)::int AS sale_count
+      FROM "GdSaleDetail"
+      WHERE "saleDate" = ${date}
+        AND "saleType" = '2'
+        AND "productCode" NOT LIKE ']%'
+    `;
+
+    const { total_revenue = 0, sale_count = 0 } = result[0] || {};
+    return {
+      date,
+      totalRevenue: Number(total_revenue),
+      saleCount: Number(sale_count),
+    };
+  }
+
   // 동기화 상태 조회
   async getSyncStatus() {
     try {

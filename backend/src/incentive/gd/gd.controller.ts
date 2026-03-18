@@ -60,6 +60,12 @@ export class GdController {
     );
   }
 
+  @Get('daily-revenue')
+  getDailyRevenue(@Query('date') date?: string) {
+    const today = new Date().toISOString().slice(0, 10);
+    return this.gdService.getDailyRevenue(date || today);
+  }
+
   @Get('sync-status')
   getSyncStatus() {
     return this.gdService.getSyncStatus();

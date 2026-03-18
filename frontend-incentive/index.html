@@ -1704,9 +1704,18 @@ function renderTeam(data, el, monthStr, stData) {
   });
   html += `</div>`;
 
+  // Box 6: 오늘의 일매출 (극동 실시간)
+  html += `<div class="nc-box">
+    <div class="nc-box-title">오늘의 매출</div>
+    <div id="todayRevenueBox" style="text-align:center;padding:20px 0">
+      <div style="color:var(--text-muted);font-size:13px">로딩 중...</div>
+    </div>
+  </div>`;
+
   html += `</div>`; // nc-wrap 끝
 
   el.innerHTML = html;
+  loadTodayRevenue();
 
   // Chart (monochrome)
   if (teamMonthlyData && teamMonthlyData.length > 0) {
@@ -1716,6 +1725,25 @@ function renderTeam(data, el, monthStr, stData) {
       teamMonthlyData.map(m => m.incentive),
       { color: '#3EA6FF', negColor: '#FF4E45', negCheck: (i) => teamMonthlyData[i] && teamMonthlyData[i].penalized, yFormat: v => fmtMan(v), tipFormat: v => fmtWon(v), label: '인센티브' }
     );
+  }
+}
+
+async function loadTodayRevenue() {
+  const box = document.getElementById('todayRevenueBox');
+  if (!box) return;
+  try {
+    const today = new Date().toISOString().slice(0, 10);
+    const data = await api('/gd/daily-revenue?date=' + today);
+    const rev = data.totalRevenue || 0;
+    const cnt = data.saleCount || 0;
+    const manWon = Math.round(rev / 10000);
+    box.innerHTML = `
+      <div style="font-size:14px;color:#666;margin-bottom:8px">${today.replace(/-/g, '.')} 매출</div>
+      <div style="font-size:36px;font-weight:900;color:#000;margin-bottom:4px">${manWon.toLocaleString()}만원</div>
+      <div style="font-size:13px;color:#999">${cnt.toLocaleString()}건 | ${rev.toLocaleString()}원</div>
+    `;
+  } catch (e) {
+    box.innerHTML = '<div style="color:var(--red);font-size:13px">일매출 조회 실패</div>';
   }
 }
 

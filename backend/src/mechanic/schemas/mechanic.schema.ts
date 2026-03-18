@@ -17,14 +17,12 @@ export const CreateMechanicSchema = z.object({
 
   phone: z
     .string()
-    .regex(
-      /^0\d{1,3}-?\d{3,4}-?\d{3,4}$/,
-      'Phone must be a valid Korean phone number (e.g., 02-1234-5678, 010-1234-5678, 0000-000-000)',
-    )
-    .or(
+    .min(1, '전화번호는 필수 항목입니다')
+    .transform(val => val.replace(/[\s-]/g, ''))
+    .pipe(
       z.string().regex(
-        /^0\d{9,11}$/,
-        'Phone must be a valid Korean phone number without hyphens',
+        /^0\d{8,11}$/,
+        '전화번호 형식이 올바르지 않습니다 (예: 032-464-8333, 010-1234-5678)',
       ),
     ),
 
