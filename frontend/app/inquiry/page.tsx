@@ -49,7 +49,7 @@ function InquiryContent() {
   const [regionSearchQuery, setRegionSearchQuery] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [selectedMechanicId, setSelectedMechanicId] = useState<number | null>(null);
-  const [localMechanics, setLocalMechanics] = useState<Array<{ id: number; name: string; address: string; location: string }>>([]);
+  const [localMechanics, setLocalMechanics] = useState<Array<{ id: number; name: string; address: string; location: string; mainImageUrl: string | null }>>([]);
   const [loadingMechanics, setLoadingMechanics] = useState(false);
 
   // 지역 검색 결과
@@ -320,52 +320,77 @@ function InquiryContent() {
                     <p className="text-xs text-gray-400 mt-1">정확한 지역의 정비소를 연결해드립니다</p>
                   </div>
 
-                  {/* 정비소 선택 (선택사항) */}
+                  {/* 정비소 선택 (선택사항) — 썸네일 카드형 */}
                   {localMechanics.length > 0 && (
                     <div>
                       <label className="block text-sm font-semibold text-gray-700 mb-2">
                         원하는 정비소 선택 <span className="text-gray-400 font-normal">(선택사항)</span>
                       </label>
-                      <div className="space-y-2 max-h-48 overflow-y-auto">
-                        <button
-                          type="button"
-                          onClick={() => setSelectedMechanicId(null)}
-                          className={`w-full text-left px-4 py-3 rounded-lg transition-all text-sm ${
-                            selectedMechanicId === null
-                              ? 'border-2 border-[#7C4DFF] bg-[#F5F3FF] text-[#7C4DFF] font-semibold'
-                              : 'border border-gray-200 hover:border-gray-300 text-gray-600'
-                          }`}
-                        >
-                          🏪 선택 안함 (가장 빠른 정비소 연결)
-                        </button>
-                        {localMechanics.map((mechanic) => (
-                          <button
-                            key={mechanic.id}
-                            type="button"
-                            onClick={() => setSelectedMechanicId(mechanic.id)}
-                            className={`w-full text-left px-4 py-3 rounded-lg transition-all ${
-                              selectedMechanicId === mechanic.id
-                                ? 'border-2 border-[#7C4DFF] bg-[#F5F3FF]'
-                                : 'border border-gray-200 hover:border-[#7C4DFF] hover:bg-[#F5F3FF]/50'
-                            }`}
-                          >
-                            <div className="flex items-start gap-2">
-                              <span className="text-lg">🔧</span>
-                              <div>
-                                <p className={`font-semibold text-sm ${selectedMechanicId === mechanic.id ? 'text-[#7C4DFF]' : 'text-gray-800'}`}>
+
+                      {/* 선택 안함 버튼 */}
+                      <button
+                        type="button"
+                        onClick={() => setSelectedMechanicId(null)}
+                        className={`w-full text-left px-4 py-3 rounded-xl transition-all text-sm mb-3 ${
+                          selectedMechanicId === null
+                            ? 'border-2 border-[#7C4DFF] bg-[#F5F3FF] text-[#7C4DFF] font-semibold'
+                            : 'border border-gray-200 hover:border-gray-300 text-gray-600'
+                        }`}
+                      >
+                        🏪 선택 안함 (가장 빠른 정비소 연결)
+                      </button>
+
+                      {/* 카드 그리드 */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        {localMechanics.map((mechanic) => {
+                          const isSelected = selectedMechanicId === mechanic.id;
+                          return (
+                            <button
+                              key={mechanic.id}
+                              type="button"
+                              onClick={() => setSelectedMechanicId(mechanic.id)}
+                              className={`text-left rounded-xl overflow-hidden transition-all shadow-sm ${
+                                isSelected
+                                  ? 'border-2 border-[#7C4DFF] shadow-md'
+                                  : 'border border-gray-200 hover:border-[#7C4DFF]/50 hover:shadow-md'
+                              }`}
+                            >
+                              {/* 썸네일 */}
+                              <div className="relative aspect-video w-full bg-gray-100 flex items-center justify-center overflow-hidden">
+                                {mechanic.mainImageUrl ? (
+                                  <img
+                                    src={mechanic.mainImageUrl}
+                                    alt={mechanic.name}
+                                    className="w-full h-full object-cover"
+                                  />
+                                ) : (
+                                  <span className="text-4xl text-gray-400">🔧</span>
+                                )}
+                                {/* 선택 시 체크마크 오버레이 */}
+                                {isSelected && (
+                                  <div className="absolute top-2 right-2 w-6 h-6 bg-[#7C4DFF] rounded-full flex items-center justify-center shadow">
+                                    <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                    </svg>
+                                  </div>
+                                )}
+                              </div>
+                              {/* 정비소 정보 */}
+                              <div className="p-3">
+                                <p className={`font-bold text-sm leading-snug ${isSelected ? 'text-[#7C4DFF]' : 'text-gray-900'}`}>
                                   {mechanic.name}
                                 </p>
-                                <p className="text-xs text-gray-500 mt-0.5">{mechanic.address}</p>
+                                <p className="text-xs text-gray-500 mt-0.5 leading-relaxed line-clamp-2">
+                                  {mechanic.address}
+                                </p>
                               </div>
-                              {selectedMechanicId === mechanic.id && (
-                                <span className="ml-auto text-[#7C4DFF]">✓</span>
-                              )}
-                            </div>
-                          </button>
-                        ))}
+                            </button>
+                          );
+                        })}
                       </div>
+
                       {selectedMechanicId && (
-                        <p className="text-xs text-[#7C4DFF] mt-1">
+                        <p className="text-xs text-[#7C4DFF] mt-2">
                           ✓ 선택하신 정비소에 직접 문의가 전달됩니다
                         </p>
                       )}

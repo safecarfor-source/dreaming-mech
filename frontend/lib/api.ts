@@ -56,7 +56,7 @@ export const mechanicsApi = {
   reorder: (orderedIds: number[]) =>
     api.patch('/mechanics/reorder', { orderedIds }, buildConfig()),
   getByRegion: (sido: string, sigungu: string) =>
-    api.get<{ data: Array<{ id: number; name: string; address: string; location: string }> }>(
+    api.get<{ data: Array<{ id: number; name: string; address: string; location: string; mainImageUrl: string | null }> }>(
       `/mechanics?sido=${encodeURIComponent(sido)}&sigungu=${encodeURIComponent(sigungu)}`
     ),
 };
