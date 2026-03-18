@@ -82,8 +82,15 @@ export class ManagerSalesTargetService {
     let tyRemain: number;
 
     if (isCurrentMonth) {
-      const today = now.getDate() - 1; // 전일 기준
-      tyElapsed = today >= 1 ? this.countBusinessDays(year, month, 1, today) : 0;
+      // 한국 시간 기준 현재 시각
+      const krNow = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Seoul' }));
+      const krHour = krNow.getHours();
+      const today = krNow.getDate();
+
+      // 오후 7시(19시) 이후: 당일 매출 확정 → 오늘까지 포함
+      // 오후 7시 이전: 당일 미확정 → 전일까지만
+      const dataUpToDay = krHour >= 19 ? today : (today > 1 ? today - 1 : 0);
+      tyElapsed = dataUpToDay > 0 ? this.countBusinessDays(year, month, 1, dataUpToDay) : 0;
       tyRemain = totalBusinessDays - tyElapsed;
     } else {
       const monthEnd = new Date(year, month, 0);
@@ -100,25 +107,17 @@ export class ManagerSalesTargetService {
     const tysSales = thisData ? Math.round(thisData.tireSales + thisData.alignmentSales) : null;
     const prevTotal = prevData ? Math.round(prevData.tireSales + prevData.alignmentSales) : null;
 
-    // 오버라이드
-    const override = await this.prisma.managerMonthlySalesTarget.findUnique({
-      where: { year_month: { year, month } },
-    });
-
     return {
       year,
       month,
-      // 비교 대상: 지난달
       prevTotal: prevTotal,
-      prevDays: override?.lyDays ?? prevBusinessDays,
+      prevDays: prevBusinessDays,
       prevYear: prev.year,
       prevMonth: prev.month,
-      // 이번달
       tysSales: tysSales,
-      tyElapsed: override?.tyElapsed ?? tyElapsed,
-      tyRemain: override?.tyRemain ?? tyRemain,
+      tyElapsed,
+      tyRemain,
       totalBusinessDays,
-      // 세부 매출
       tireSales: thisData ? Math.round(thisData.tireSales) : null,
       alignmentSales: thisData ? Math.round(thisData.alignmentSales) : null,
       prevTireSales: prevData ? Math.round(prevData.tireSales) : null,

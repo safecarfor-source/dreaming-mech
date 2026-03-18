@@ -78,9 +78,14 @@ export class SalesTargetService {
     let tyRemain: number;
 
     if (isCurrentMonth) {
-      // 현재 월: 매출 데이터는 전일까지 반영되므로, 전일까지 경과 영업일 계산
-      const today = now.getDate();
-      const dataUpToDay = today > 1 ? today - 1 : 0;
+      // 한국 시간 기준 현재 시각
+      const krNow = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Seoul' }));
+      const krHour = krNow.getHours();
+      const today = krNow.getDate();
+
+      // 오후 7시(19시) 이후: 당일 매출 확정 → 오늘까지 포함
+      // 오후 7시 이전: 당일 미확정 → 전일까지만
+      const dataUpToDay = krHour >= 19 ? today : (today > 1 ? today - 1 : 0);
       tyElapsed = dataUpToDay > 0 ? this.countBusinessDays(year, month, 1, dataUpToDay) : 0;
       tyRemain = totalBusinessDays - tyElapsed;
     } else {
@@ -97,19 +102,14 @@ export class SalesTargetService {
       }
     }
 
-    // MonthlySalesTarget에 관리자 오버라이드 있으면 영업일수 반영
-    const override = await this.prisma.monthlySalesTarget.findUnique({
-      where: { year_month: { year, month } },
-    });
-
     return {
       year,
       month,
       lyTotal: lastYearData ? Math.round(lastYearData.totalRevenue) : null,
-      lyDays: override?.lyDays ?? lastYearBusinessDays,
+      lyDays: lastYearBusinessDays,
       tysSales: thisData ? Math.round(thisData.totalRevenue) : null,
-      tyElapsed: override?.tyElapsed ?? tyElapsed,
-      tyRemain: override?.tyRemain ?? tyRemain,
+      tyElapsed,
+      tyRemain,
       totalBusinessDays,
       autoPopulated: true,
     };

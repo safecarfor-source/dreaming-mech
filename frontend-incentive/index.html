@@ -1926,34 +1926,11 @@ function renderManagerSalesTarget(data, el, year, month, teamData) {
 
   let html = '';
 
-  // 관리자 — 영업일수 수정 (카드 밖, 기존 다크 스타일)
-  if (isAdmin) {
-    html += `<details class="nc-admin-detail" style="margin-bottom:12px">
-      <summary style="cursor:pointer;font-size:13px;font-weight:700;color:var(--accent);padding:10px 14px;background:#EBF5FF;border:1.5px solid var(--accent);border-radius:10px;user-select:none">영업일수 수정</summary>
-      <div style="background:#EBF5FF;border:1.5px solid var(--accent);border-top:none;border-radius:0 0 10px 10px;padding:14px">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:6px">
-          <div>
-            <label style="font-size:11px;font-weight:700;color:var(--text-muted);display:block;margin-bottom:3px">지난달 영업일</label>
-            <input id="mstLyDays" type="number" value="${prevDays ?? ''}" style="width:100%;font-size:13px;font-weight:600;border:1px solid var(--border);border-radius:6px;padding:6px 8px;outline:none">
-          </div>
-          <div>
-            <label style="font-size:11px;font-weight:700;color:var(--text-muted);display:block;margin-bottom:3px">총 영업일</label>
-            <input id="mstTotalDays" type="number" value="${totalBizDays}" oninput="calcMgrRemainDays()" style="width:100%;font-size:13px;font-weight:600;border:1px solid var(--border);border-radius:6px;padding:6px 8px;outline:none">
-          </div>
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
-          <div>
-            <label style="font-size:11px;font-weight:700;color:var(--text-muted);display:block;margin-bottom:3px">경과 영업일</label>
-            <input id="mstTyElapsed" type="number" value="${tyElapsed ?? ''}" oninput="calcMgrRemainDays()" style="width:100%;font-size:13px;font-weight:600;border:1px solid var(--border);border-radius:6px;padding:6px 8px;outline:none">
-          </div>
-          <div>
-            <label style="font-size:11px;font-weight:700;color:var(--text-muted);display:block;margin-bottom:3px">남은 영업일 (자동)</label>
-            <input id="mstTyRemain" type="number" value="${tyRemain ?? ''}" readonly style="width:100%;font-size:13px;font-weight:600;border:1px solid var(--border);border-radius:6px;padding:6px 8px;outline:none;background:#EBF5FF;color:var(--accent)">
-          </div>
-        </div>
-        <button onclick="saveManagerSalesTarget(${year}, ${month})" style="width:100%;padding:8px;background:var(--purple);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">영업일수 저장</button>
-      </div>
-    </details>`;
+  // 영업일수 읽기전용 표시
+  if (tyElapsed != null || tyRemain != null) {
+    html += `<div style="margin-bottom:12px;padding:10px 14px;background:#F9FAFB;border:1px solid var(--border);border-radius:10px;font-size:13px;color:var(--text-muted);font-weight:600">
+      경과 ${tyElapsed ?? '-'}일 / 남은 ${tyRemain ?? '-'}일
+    </div>`;
   }
 
   // 데이터 없으면 안내
@@ -2099,36 +2076,6 @@ function renderManagerChart() {
   }
 }
 
-function calcMgrRemainDays() {
-  const total = parseInt(document.getElementById('mstTotalDays')?.value) || 0;
-  const elapsed = parseInt(document.getElementById('mstTyElapsed')?.value) || 0;
-  const remainEl = document.getElementById('mstTyRemain');
-  if (remainEl) remainEl.value = Math.max(total - elapsed, 0);
-}
-
-async function saveManagerSalesTarget(year, month) {
-  const lyDays = parseInt(document.getElementById('mstLyDays').value);
-  const tyElapsed = parseInt(document.getElementById('mstTyElapsed').value);
-  const tyRemain = parseInt(document.getElementById('mstTyRemain').value);
-
-  if (!lyDays || !tyElapsed || tyRemain == null) {
-    alert('영업일수를 입력해 주세요.');
-    return;
-  }
-
-  try {
-    await api('/manager-sales-target/' + year + '/' + month, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ lyDays, tyElapsed, tyRemain }),
-    });
-    alert('저장 완료');
-    loadManagerData();
-  } catch (e) {
-    alert('저장 실패: ' + (e.message || e));
-  }
-}
-
 // ===== DIRECTOR =====
 let directorMonthlyData = null;
 async function loadDirectorInit() {
@@ -2209,34 +2156,11 @@ function renderSalesTargetDashboard(data, el, year, month) {
 
   let html = '';
 
-  // 관리자 — 영업일수 수정 (카드 밖, 기존 다크 스타일)
-  if (isAdmin) {
-    html += `<details class="nc-admin-detail" style="margin-bottom:12px">
-      <summary style="cursor:pointer;font-size:13px;font-weight:700;color:var(--accent);padding:10px 14px;background:#EBF5FF;border:1.5px solid var(--accent);border-radius:10px;user-select:none">영업일수 수정</summary>
-      <div style="background:#EBF5FF;border:1.5px solid var(--accent);border-top:none;border-radius:0 0 10px 10px;padding:14px">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:6px">
-          <div>
-            <label style="font-size:11px;font-weight:700;color:var(--text-muted);display:block;margin-bottom:3px">작년 영업일</label>
-            <input id="stLyDays" type="number" value="${lyDays ?? ''}" style="width:100%;font-size:13px;font-weight:600;border:1px solid var(--border);border-radius:6px;padding:6px 8px;outline:none">
-          </div>
-          <div>
-            <label style="font-size:11px;font-weight:700;color:var(--text-muted);display:block;margin-bottom:3px">총 영업일</label>
-            <input id="stTotalDays" type="number" value="${totalBizDays}" oninput="calcRemainDays()" style="width:100%;font-size:13px;font-weight:600;border:1px solid var(--border);border-radius:6px;padding:6px 8px;outline:none">
-          </div>
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
-          <div>
-            <label style="font-size:11px;font-weight:700;color:var(--text-muted);display:block;margin-bottom:3px">경과 영업일</label>
-            <input id="stTyElapsed" type="number" value="${tyElapsed ?? ''}" oninput="calcRemainDays()" style="width:100%;font-size:13px;font-weight:600;border:1px solid var(--border);border-radius:6px;padding:6px 8px;outline:none">
-          </div>
-          <div>
-            <label style="font-size:11px;font-weight:700;color:var(--text-muted);display:block;margin-bottom:3px">남은 영업일 (자동)</label>
-            <input id="stTyRemain" type="number" value="${tyRemain ?? ''}" readonly style="width:100%;font-size:13px;font-weight:600;border:1px solid var(--border);border-radius:6px;padding:6px 8px;outline:none;background:#EBF5FF;color:var(--accent)">
-          </div>
-        </div>
-        <button onclick="saveSalesTarget(${year}, ${month})" style="width:100%;padding:8px;background:var(--purple);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">영업일수 저장</button>
-      </div>
-    </details>`;
+  // 영업일수 읽기전용 표시
+  if (tyElapsed != null || tyRemain != null) {
+    html += `<div style="margin-bottom:12px;padding:10px 14px;background:#F9FAFB;border:1px solid var(--border);border-radius:10px;font-size:13px;color:var(--text-muted);font-weight:600">
+      경과 ${tyElapsed ?? '-'}일 / 남은 ${tyRemain ?? '-'}일
+    </div>`;
   }
 
   // 데이터 없으면 안내
@@ -2463,35 +2387,6 @@ function renderDirectorChart() {
         yFormat: v => (v/1e8).toFixed(1) + '억', tipFormat: v => fmtWon(v), label: '매출',
       }
     );
-  }
-}
-
-function calcRemainDays() {
-  const total = parseInt(document.getElementById('stTotalDays')?.value) || 0;
-  const elapsed = parseInt(document.getElementById('stTyElapsed')?.value) || 0;
-  const remainEl = document.getElementById('stTyRemain');
-  if (remainEl) remainEl.value = Math.max(total - elapsed, 0);
-}
-
-async function saveSalesTarget(year, month) {
-  const lyDays = parseInt(document.getElementById('stLyDays').value);
-  const tyElapsed = parseInt(document.getElementById('stTyElapsed').value);
-  const tyRemain = parseInt(document.getElementById('stTyRemain').value);
-
-  if (!lyDays || !tyElapsed || tyRemain == null) {
-    alert('영업일수를 입력해 주세요.');
-    return;
-  }
-
-  try {
-    await api('/sales-target/' + year + '/' + month, {
-      method: 'PUT',
-      body: JSON.stringify({ lyDays, tyElapsed, tyRemain }),
-    });
-    alert('영업일수 저장 완료!');
-    loadDirectorData();
-  } catch (e) {
-    alert('저장 실패: ' + e.message);
   }
 }
 
