@@ -12,13 +12,15 @@ import {
   HttpStatus,
   Ip,
   Req,
+  Request,
   UseGuards,
 } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
-import type { Request } from 'express';
+import type { Request as ExpressRequest } from 'express';
 import { MechanicService } from './mechanic.service';
 import { BotDetectionGuard } from '../common/guards/bot-detection.guard';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { OptionalJwtAuthGuard } from '../auth/optional-jwt-auth.guard';
 import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
 import {
   CreateMechanicSchema,
@@ -35,7 +37,9 @@ export class MechanicController {
   constructor(private readonly mechanicService: MechanicService) {}
 
   // GET /mechanics?page=1&limit=20&search=검색어&location=지역&specialty=전문분야&sido=시도&sigungu=시군구
+  // 관리자는 비활성 정비사까지 모두 조회됨
   @Get()
+  @UseGuards(OptionalJwtAuthGuard)
   findAll(
     @Query('page') page?: string,
     @Query('limit') limit?: string,
@@ -44,11 +48,15 @@ export class MechanicController {
     @Query('specialty') specialty?: string,
     @Query('sido') sido?: string,
     @Query('sigungu') sigungu?: string,
+    @Request() req?: any,
   ) {
+    // 인증된 admin이면 비활성 정비사도 포함
+    const isAdmin = req?.user?.role === 'admin';
     return this.mechanicService.findAll({
       page: page ? parseInt(page, 10) : 1,
       limit: limit ? parseInt(limit, 10) : 20,
       search, location, specialty, sido, sigungu,
+      includeInactive: isAdmin,
     });
   }
 
@@ -100,7 +108,7 @@ export class MechanicController {
   incrementClick(
     @Param('id', ParseIntPipe) id: number,
     @Ip() ip: string,
-    @Req() req: Request,
+    @Req() req: ExpressRequest,
   ) {
     const userAgent = req['userAgent'] as string;
     const isBot = req['isBot'] as boolean;
@@ -114,7 +122,7 @@ export class MechanicController {
   recordPhoneReveal(
     @Param('id', ParseIntPipe) id: number,
     @Ip() ip: string,
-    @Req() req: Request,
+    @Req() req: ExpressRequest,
   ) {
     const userAgent = req['userAgent'] as string;
     const isBot = req['isBot'] as boolean;

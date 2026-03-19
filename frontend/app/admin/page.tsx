@@ -21,7 +21,7 @@ export default function AdminDashboard() {
           serviceInquiryApi.getAll(1, 1000),
         ]);
         setMechanics(mechanicsRes.data.data || []);
-        setServiceInquiryCount(serviceInquiriesRes.data.data?.data?.length || 0);
+        setServiceInquiryCount(serviceInquiriesRes.data.total || 0);
       } catch (error) {
         console.error(error);
       } finally {

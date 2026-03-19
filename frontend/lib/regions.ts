@@ -1,8 +1,9 @@
 export interface Region {
-  sido: string;     // 시/도 (예: "경기도")
-  sigungu: string;  // 시/군/구 (예: "수원시")
-  display: string;  // 표시명 (예: "경기도 수원시")
-  popular?: boolean; // 인기 지역
+  sido: string;       // 시/도 (예: "경기도")
+  sigungu: string;    // 시/군/구 (예: "수원시")
+  display: string;    // 표시명 (예: "경기도 수원시")
+  popular?: boolean;  // 인기 지역
+  aliases?: string[]; // 검색 별칭 (예: ["일산", "일산서구"])
 }
 
 export const POPULAR_REGIONS: Region[] = [
@@ -121,19 +122,19 @@ export const ALL_REGIONS: Region[] = [
   { sido: '세종특별자치시', sigungu: '세종시', display: '세종시' },
 
   // 경기도 (주요 시)
-  { sido: '경기도', sigungu: '수원시', display: '경기 수원시' },
-  { sido: '경기도', sigungu: '성남시', display: '경기 성남시' },
-  { sido: '경기도', sigungu: '용인시', display: '경기 용인시' },
-  { sido: '경기도', sigungu: '고양시', display: '경기 고양시' },
-  { sido: '경기도', sigungu: '화성시', display: '경기 화성시' },
-  { sido: '경기도', sigungu: '안양시', display: '경기 안양시' },
-  { sido: '경기도', sigungu: '부천시', display: '경기 부천시' },
-  { sido: '경기도', sigungu: '남양주시', display: '경기 남양주시' },
-  { sido: '경기도', sigungu: '안산시', display: '경기 안산시' },
-  { sido: '경기도', sigungu: '평택시', display: '경기 평택시' },
-  { sido: '경기도', sigungu: '시흥시', display: '경기 시흥시' },
-  { sido: '경기도', sigungu: '파주시', display: '경기 파주시' },
-  { sido: '경기도', sigungu: '의정부시', display: '경기 의정부시' },
+  { sido: '경기도', sigungu: '수원시', display: '경기 수원시', aliases: ['수원'] },
+  { sido: '경기도', sigungu: '성남시', display: '경기 성남시', aliases: ['분당', '판교', '성남'] },
+  { sido: '경기도', sigungu: '용인시', display: '경기 용인시', aliases: ['수지', '기흥', '용인'] },
+  { sido: '경기도', sigungu: '고양시', display: '경기 고양시', aliases: ['일산', '일산서구', '일산동구', '덕양구', '고양'] },
+  { sido: '경기도', sigungu: '화성시', display: '경기 화성시', aliases: ['동탄', '화성'] },
+  { sido: '경기도', sigungu: '안양시', display: '경기 안양시', aliases: ['안양', '평촌'] },
+  { sido: '경기도', sigungu: '부천시', display: '경기 부천시', aliases: ['부천'] },
+  { sido: '경기도', sigungu: '남양주시', display: '경기 남양주시', aliases: ['남양주', '별내', '다산'] },
+  { sido: '경기도', sigungu: '안산시', display: '경기 안산시', aliases: ['안산', '반월'] },
+  { sido: '경기도', sigungu: '평택시', display: '경기 평택시', aliases: ['평택'] },
+  { sido: '경기도', sigungu: '시흥시', display: '경기 시흥시', aliases: ['시흥'] },
+  { sido: '경기도', sigungu: '파주시', display: '경기 파주시', aliases: ['파주', '운정'] },
+  { sido: '경기도', sigungu: '의정부시', display: '경기 의정부시', aliases: ['의정부'] },
   { sido: '경기도', sigungu: '김포시', display: '경기 김포시' },
   { sido: '경기도', sigungu: '광주시', display: '경기 광주시' },
   { sido: '경기도', sigungu: '광명시', display: '경기 광명시' },
@@ -251,7 +252,7 @@ export const ALL_REGIONS: Region[] = [
   { sido: '경상북도', sigungu: '경산시', display: '경북 경산시' },
 
   // 경상남도 (주요 시/군)
-  { sido: '경상남도', sigungu: '창원시', display: '경남 창원시' },
+  { sido: '경상남도', sigungu: '창원시', display: '경남 창원시', aliases: ['마산', '진해', '창원'] },
   { sido: '경상남도', sigungu: '진주시', display: '경남 진주시' },
   { sido: '경상남도', sigungu: '통영시', display: '경남 통영시' },
   { sido: '경상남도', sigungu: '사천시', display: '경남 사천시' },
@@ -287,8 +288,11 @@ export function searchRegions(query: string): Region[] {
     const sidoMatch = region.sido.toLowerCase().includes(normalized);
     const sigunguMatch = region.sigungu.toLowerCase().includes(normalized);
     const displayMatch = region.display.toLowerCase().includes(normalized);
+    const aliasMatch = region.aliases?.some((alias) =>
+      alias.toLowerCase().includes(normalized)
+    ) ?? false;
 
-    return sidoMatch || sigunguMatch || displayMatch;
+    return sidoMatch || sigunguMatch || displayMatch || aliasMatch;
   });
 
   // 최대 8개 반환

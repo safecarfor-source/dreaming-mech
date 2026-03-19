@@ -58,7 +58,7 @@ export default function AdminServiceInquiriesPage() {
     try {
       const statusParam = tab !== 'ALL' ? tab : undefined;
       const res = await serviceInquiryApi.getAll(page, 20, statusParam);
-      const data = res.data.data;
+      const data = res.data;
 
       setInquiries(data.data);
       setTotal(data.total);

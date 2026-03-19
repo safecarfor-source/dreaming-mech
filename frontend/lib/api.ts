@@ -381,7 +381,7 @@ export const serviceInquiryApi = {
   getAll: (page = 1, limit = 20, status?: string) => {
     const params = new URLSearchParams({ page: String(page), limit: String(limit) });
     if (status) params.set('status', status);
-    return api.get<ApiResponse<{ data: ServiceInquiry[]; total: number; page: number; limit: number; totalPages: number }>>(`/service-inquiries?${params.toString()}`);
+    return api.get<{ data: ServiceInquiry[]; total: number; page: number; limit: number; totalPages: number }>(`/service-inquiries?${params.toString()}`);
   },
 
   getFull: (id: number) => api.get<ApiResponse<ServiceInquiry>>(`/service-inquiries/${id}/full`),

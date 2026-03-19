@@ -30,12 +30,13 @@ export class MechanicService {
   ) {}
 
   // 모든 정비사 조회 (페이지네이션 + 검색/필터링 지원)
-  async findAll(paginationDto?: PaginationDto & { search?: string; location?: string; specialty?: string; sido?: string; sigungu?: string }): Promise<PaginatedResult<any>> {
-    const { page = 1, limit = 20, search, location, specialty, sido, sigungu } = paginationDto || {};
+  async findAll(paginationDto?: PaginationDto & { search?: string; location?: string; specialty?: string; sido?: string; sigungu?: string; includeInactive?: boolean }): Promise<PaginatedResult<any>> {
+    const { page = 1, limit = 20, search, location, specialty, sido, sigungu, includeInactive } = paginationDto || {};
     const skip = (page - 1) * limit;
 
     // 검색/필터 조건 구성
-    const where: any = { isActive: true };
+    // includeInactive가 true이면 isActive 필터 미적용 (관리자 전용)
+    const where: any = includeInactive ? {} : { isActive: true };
 
     // 검색어: 이름 또는 주소에 포함된 키워드
     if (search) {

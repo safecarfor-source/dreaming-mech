@@ -24,6 +24,66 @@ const LOCATION_OPTIONS: { group: string; options: string[] }[] = [
 // 모든 옵션을 flat하게
 const ALL_OPTIONS = LOCATION_OPTIONS.flatMap((g) => g.options);
 
+/**
+ * 검색 별칭 → 실제 옵션 문자열 매핑
+ * 별칭으로 검색하면 해당 지역 옵션이 결과에 포함됨
+ */
+const ALIAS_MAP: Record<string, string[]> = {
+  // 경기 고양시 (일산)
+  '일산': ['경기 고양시'],
+  '일산서구': ['경기 고양시'],
+  '일산동구': ['경기 고양시'],
+  '덕양구': ['경기 고양시'],
+  // 경기 의정부시
+  '의정부': ['경기 의정부시'],
+  // 경기 수원시
+  '수원': ['경기 수원시'],
+  // 경기 성남시
+  '분당': ['경기 성남시'],
+  '판교': ['경기 성남시'],
+  // 경기 용인시
+  '수지': ['경기 용인시'],
+  '기흥': ['경기 용인시'],
+  // 경기 화성시
+  '동탄': ['경기 화성시'],
+  // 경기 안양시
+  '평촌': ['경기 안양시'],
+  // 경기 남양주시
+  '별내': ['경기 남양주시'],
+  '다산': ['경기 남양주시'],
+  // 경기 파주시
+  '운정': ['경기 파주시'],
+  // 경남 창원시 (마산·진해)
+  '마산': ['경남 창원시'],
+  '진해': ['경남 창원시'],
+};
+
+/** 검색어에 매칭되는 옵션 목록 반환 (직접 포함 + 별칭 매칭) */
+function filterOptions(search: string): string[] {
+  const q = search.trim();
+  if (!q) return [];
+
+  // 직접 포함 매칭
+  const direct = ALL_OPTIONS.filter((opt) => opt.includes(q));
+
+  // 별칭 매칭: ALIAS_MAP 키 중 검색어를 포함하는 것 찾기
+  const aliasMatched = new Set<string>();
+  for (const [alias, targets] of Object.entries(ALIAS_MAP)) {
+    if (alias.includes(q) || q.includes(alias)) {
+      targets.forEach((t) => aliasMatched.add(t));
+    }
+  }
+
+  // 중복 제거 후 병합
+  const result = [...direct];
+  for (const opt of aliasMatched) {
+    if (!result.includes(opt)) {
+      result.push(opt);
+    }
+  }
+  return result;
+}
+
 interface LocationSearchDropdownProps {
   value: string;
   onChange: (value: string) => void;
@@ -55,7 +115,7 @@ function LocationSearchDropdown({ value, onChange }: LocationSearchDropdownProps
   }, [open]);
 
   const filtered = search.trim()
-    ? ALL_OPTIONS.filter((opt) => opt.includes(search.trim()))
+    ? filterOptions(search)
     : null; // null이면 그룹별 표시
 
   const handleSelect = (opt: string) => {

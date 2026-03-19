@@ -1,0 +1,220 @@
+{
+  "lastUpdated": "2026-03-18T23:00:00+09:00",
+  "nodes": [
+    {
+      "id": "root",
+      "name": "꿈꾸는정비사",
+      "icon": "🏢",
+      "status": "active",
+      "children": ["platform", "admin", "incentive", "marketing"]
+    },
+    {
+      "id": "platform",
+      "name": "정비소 플랫폼",
+      "icon": "🌐",
+      "url": "dreammechaniclab.com/",
+      "status": "active",
+      "children": ["platform-mechanic", "platform-consumer", "platform-community", "platform-youtube", "platform-seo"]
+    },
+    {
+      "id": "platform-mechanic",
+      "name": "정비사 탭",
+      "icon": "🔧",
+      "status": "in_progress",
+      "children": ["pm-register", "pm-detail", "pm-dashboard", "pm-auth"]
+    },
+    {
+      "id": "pm-register",
+      "name": "정비소 등록 플로우",
+      "icon": "📝",
+      "status": "in_progress",
+      "priority": "P0",
+      "note": "카카오 가입→사업자 인증→정비소 등록 3단계. 온보딩 리다이렉트 수정 완료(3/18)"
+    },
+    {
+      "id": "pm-detail",
+      "name": "정비소 상세 페이지",
+      "icon": "📄",
+      "status": "done",
+      "note": "저장 에러 상세 표시 + 전화번호 유연화 완료(3/18)"
+    },
+    {
+      "id": "pm-dashboard",
+      "name": "사장님 대시보드",
+      "icon": "📊",
+      "status": "done",
+      "note": "/owner 대시보드 구현 완료. 거절 사유 표시 완료."
+    },
+    {
+      "id": "pm-auth",
+      "name": "사업자 인증",
+      "icon": "🔑",
+      "status": "done",
+      "note": "카카오 로그인 + 사업자등록증 업로드 + PENDING/APPROVED 승인제"
+    },
+    {
+      "id": "platform-consumer",
+      "name": "소비자 탭",
+      "icon": "👤",
+      "status": "done",
+      "children": ["pc-funnel", "pc-region", "pc-kakao"]
+    },
+    {
+      "id": "pc-funnel",
+      "name": "4단계 문의 퍼널",
+      "icon": "🔄",
+      "status": "done",
+      "note": "지역→서비스→연락처→완료. 정비소 썸네일 카드 추가(3/18)"
+    },
+    {
+      "id": "pc-region",
+      "name": "지역별 검색",
+      "icon": "🗺️",
+      "status": "in_progress",
+      "priority": "P1",
+      "note": "지도 깃발 표시 대기 (대장님 이미지 필요)"
+    },
+    {
+      "id": "pc-kakao",
+      "name": "카카오 로그인",
+      "icon": "💬",
+      "status": "done"
+    },
+    {
+      "id": "platform-community",
+      "name": "커뮤니티 Q&A",
+      "icon": "💬",
+      "status": "done",
+      "note": "Post/Comment/PostLike + 정비사 매장 정보 노출"
+    },
+    {
+      "id": "platform-youtube",
+      "name": "유튜브 연동",
+      "icon": "🎥",
+      "status": "done",
+      "note": "/about 랜딩 + GA4 21개 이벤트"
+    },
+    {
+      "id": "platform-seo",
+      "name": "SEO/마케팅",
+      "icon": "📊",
+      "status": "done",
+      "note": "구조화 데이터 6종 + sitemap + 네이버/구글 등록"
+    },
+    {
+      "id": "admin",
+      "name": "관리자",
+      "icon": "⚙️",
+      "url": "dreammechaniclab.com/admin/",
+      "status": "active",
+      "children": ["admin-inquiry", "admin-mechanic", "admin-customer", "admin-stats", "admin-erp"]
+    },
+    {
+      "id": "admin-inquiry",
+      "name": "문의 관리",
+      "icon": "📨",
+      "status": "done",
+      "note": "서버사이드 필터링 완료(3/18). P0 버그 수정됨."
+    },
+    {
+      "id": "admin-mechanic",
+      "name": "정비사 관리",
+      "icon": "🔧",
+      "status": "done",
+      "note": "CRUD + 승인제 + 배지 실시간 갱신"
+    },
+    {
+      "id": "admin-customer",
+      "name": "고객 관리",
+      "icon": "👥",
+      "status": "done"
+    },
+    {
+      "id": "admin-stats",
+      "name": "통계",
+      "icon": "📈",
+      "status": "done",
+      "note": "selectedYear 의존성 + hydration 버그 수정(3/18)"
+    },
+    {
+      "id": "admin-erp",
+      "name": "ERP 연동",
+      "icon": "🏭",
+      "status": "in_progress",
+      "priority": "P1",
+      "note": "극동 차량/상품/고객 조회 구현. 리마인더 미완."
+    },
+    {
+      "id": "incentive",
+      "name": "인센티브",
+      "icon": "💰",
+      "url": "dreammechaniclab.com/incentive/",
+      "status": "active",
+      "children": ["inc-team", "inc-manager", "inc-cash", "inc-vehicle", "inc-autocalc"]
+    },
+    {
+      "id": "inc-team",
+      "name": "팀 인센티브",
+      "icon": "👥",
+      "status": "done",
+      "note": "최소수량 + 목표달성 시뮬 + 매출예측 + 오늘의매출(3/18)"
+    },
+    {
+      "id": "inc-manager",
+      "name": "매니저/부장 인센티브",
+      "icon": "👔",
+      "status": "done"
+    },
+    {
+      "id": "inc-cash",
+      "name": "시재관리",
+      "icon": "💵",
+      "status": "done",
+      "note": "이월시재 완전자동화(3/18). 극동과 530,000원 일치."
+    },
+    {
+      "id": "inc-vehicle",
+      "name": "차량/상품 조회",
+      "icon": "🚗",
+      "status": "done"
+    },
+    {
+      "id": "inc-autocalc",
+      "name": "자동계산",
+      "icon": "🤖",
+      "status": "done",
+      "note": "계산 이력 선입선출(3/18). 계정관리 PIN 추가."
+    },
+    {
+      "id": "marketing",
+      "name": "마케팅",
+      "icon": "📣",
+      "status": "in_progress",
+      "children": ["mkt-youtube", "mkt-seo", "mkt-social"]
+    },
+    {
+      "id": "mkt-youtube",
+      "name": "유튜브 전략",
+      "icon": "🎬",
+      "status": "in_progress",
+      "priority": "P0",
+      "note": "인기 영상 설명란 링크 추가 + 커뮤니티 탭 포스트 (대장님 담당)"
+    },
+    {
+      "id": "mkt-seo",
+      "name": "지역별 SEO",
+      "icon": "🔍",
+      "status": "not_started",
+      "priority": "P1",
+      "note": "/region/서울 등 지역별 랜딩 페이지"
+    },
+    {
+      "id": "mkt-social",
+      "name": "소셜 미디어",
+      "icon": "📱",
+      "status": "not_started",
+      "priority": "P2"
+    }
+  ],
+  "inbox": []
+}

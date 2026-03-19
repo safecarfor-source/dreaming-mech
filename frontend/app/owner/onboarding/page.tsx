@@ -2,8 +2,10 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { userAuthApi, uploadApi } from '@/lib/api';
+import Link from 'next/link';
+import { userAuthApi, uploadApi, mechanicsApi } from '@/lib/api';
 import { useUserStore } from '@/lib/auth';
+import type { Mechanic } from '@/types';
 import {
   CheckCircle,
   ChevronRight,
@@ -32,6 +34,7 @@ export default function OwnerOnboardingPage() {
   const [saving, setSaving] = useState(false);
   const [done, setDone] = useState(false);
   const [uploadError, setUploadError] = useState('');
+  const [sampleImageUrl, setSampleImageUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // 이미 프로필 정보가 있으면 채우기
@@ -43,6 +46,17 @@ export default function OwnerOnboardingPage() {
       if (profile.address) setAddress(profile.address);
       if (profile.businessName) setBusinessName(profile.businessName);
       if (profile.businessLicenseUrl) setLicensePreview(profile.businessLicenseUrl);
+    }).catch(() => {});
+  }, []);
+
+  // 첫 번째 활성 정비소 대표 이미지 로드
+  useEffect(() => {
+    mechanicsApi.getAll({ page: 1, limit: 1 }).then((res) => {
+      const list: Mechanic[] = res.data.data;
+      const first = list?.[0];
+      if (first?.mainImageUrl) {
+        setSampleImageUrl(first.mainImageUrl);
+      }
     }).catch(() => {});
   }, []);
 
@@ -134,11 +148,19 @@ export default function OwnerOnboardingPage() {
     <div className="min-h-screen bg-gray-50">
       {/* 헤더 */}
       <div className="bg-white border-b border-gray-100 px-4 py-4">
-        <div className="max-w-lg mx-auto flex items-center gap-3">
-          <div className="w-8 h-8 bg-[#7C4DFF] rounded-lg flex items-center justify-center">
-            <Wrench size={16} className="text-white" />
+        <div className="max-w-lg mx-auto flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 bg-[#7C4DFF] rounded-lg flex items-center justify-center">
+              <Wrench size={16} className="text-white" />
+            </div>
+            <span className="font-bold text-gray-900">꿈꾸는정비사</span>
           </div>
-          <span className="font-bold text-gray-900">꿈꾸는정비사</span>
+          <Link
+            href="/"
+            className="text-sm text-gray-500 hover:text-gray-700 transition-colors"
+          >
+            ← 메인으로
+          </Link>
         </div>
       </div>
 
@@ -318,14 +340,22 @@ export default function OwnerOnboardingPage() {
 
           {/* 정비소 카드 미리보기 */}
           <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
-            {/* 상단: 그라데이션 배경 */}
-            <div className="relative h-40 bg-gradient-to-br from-[#7C4DFF] to-[#5B2DE0] flex items-center justify-center">
-              <div className="flex flex-col items-center gap-2">
-                <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm">
-                  <Wrench size={32} className="text-white" />
+            {/* 상단: 대표 이미지 또는 그라데이션 배경 */}
+            <div className="relative h-40 bg-gradient-to-br from-[#7C4DFF] to-[#5B2DE0] flex items-center justify-center overflow-hidden">
+              {sampleImageUrl ? (
+                <img
+                  src={sampleImageUrl}
+                  alt="정비소 대표 이미지"
+                  className="absolute inset-0 w-full h-full object-cover"
+                />
+              ) : (
+                <div className="flex flex-col items-center gap-2">
+                  <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm">
+                    <Wrench size={32} className="text-white" />
+                  </div>
+                  <span className="text-white/80 text-xs font-medium tracking-wide">정비소 대표 이미지</span>
                 </div>
-                <span className="text-white/80 text-xs font-medium tracking-wide">정비소 대표 이미지</span>
-              </div>
+              )}
               {/* 유튜브 촬영 태그 */}
               <div className="absolute top-3 left-3 flex items-center gap-1.5 bg-red-500 text-white text-xs font-bold px-2.5 py-1 rounded-full shadow-sm">
                 <Youtube size={11} />
