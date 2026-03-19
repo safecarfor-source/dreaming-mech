@@ -59,8 +59,14 @@ function CallbackContent() {
           // PENDING/APPROVED/REJECTED → 사장님 대시보드
           router.replace('/owner');
         }
-      } catch {
-        router.replace('/login?error=profile_failed');
+      } catch (error: unknown) {
+        console.error('로그인 프로필 조회 실패:', error);
+        const err = error as { response?: { status?: number } };
+        if (err?.response?.status === 401) {
+          router.replace('/login?error=cookie_failed');
+        } else {
+          router.replace('/login?error=profile_failed');
+        }
       }
     };
 

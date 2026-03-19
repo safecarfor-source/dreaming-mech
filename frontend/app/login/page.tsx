@@ -67,7 +67,9 @@ function LoginContent() {
 
           {error && (
             <div className="mb-6 p-3 bg-red-50 border border-red-100 rounded-xl text-red-600 text-sm text-center">
-              로그인에 실패했습니다. 다시 시도해주세요.
+              {error === 'cookie_failed'
+                ? '인증 쿠키가 만료되었습니다. 다시 로그인해주세요.'
+                : '로그인에 실패했습니다. 다시 시도해주세요.'}
             </div>
           )}
 
