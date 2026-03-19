@@ -501,7 +501,7 @@ function InquiryContent() {
 
                   <button
                     onClick={handleSubmit}
-                    disabled={!phone || phone.replace(/[^\d]/g, '').length < 9 || !privacyAgreed || submitting}
+                    disabled={!phone || phone.replace(/[^\d]/g, '').length < 10 || !privacyAgreed || submitting}
                     className="w-full bg-[#7C4DFF] text-white px-6 py-4 rounded-xl font-bold text-lg
                       hover:bg-[#6B3FE0] transition-all disabled:opacity-50 disabled:cursor-not-allowed
                       flex items-center justify-center gap-2 shadow-lg"
@@ -555,17 +555,19 @@ function InquiryContent() {
                 </div>
 
                 {/* 카카오 오픈채팅 */}
-                <a
-                  href={process.env.NEXT_PUBLIC_KAKAO_OPENCHAT_URL || 'https://open.kakao.com/o/gXXXXXX'}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center justify-center gap-2 w-full bg-[#FEE500] text-gray-900
-                    px-6 py-4 rounded-xl font-bold text-base hover:bg-[#FDD835] transition-all mb-4"
-                >
-                  <span className="text-xl">💬</span>
-                  <span>카카오 오픈채팅 참여하기</span>
-                  <span className="text-xs font-normal text-gray-600 ml-1">진행상황 안내</span>
-                </a>
+                {process.env.NEXT_PUBLIC_KAKAO_OPENCHAT_URL && (
+                  <a
+                    href={process.env.NEXT_PUBLIC_KAKAO_OPENCHAT_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center gap-2 w-full bg-[#FEE500] text-gray-900
+                      px-6 py-4 rounded-xl font-bold text-base hover:bg-[#FDD835] transition-all mb-4"
+                  >
+                    <span className="text-xl">💬</span>
+                    <span>카카오 오픈채팅 참여하기</span>
+                    <span className="text-xs font-normal text-gray-600 ml-1">진행상황 안내</span>
+                  </a>
+                )}
 
                 <button
                   onClick={resetFunnel}

@@ -395,53 +395,52 @@ export default function SharedInquiryPage() {
                 )}
               </div>
 
-              {/* 소셜 프루프 + 혜택 섹션 (비로그인 시만) */}
+              {/* 소셜 프루프 + 혜택 섹션 + 하단 안내 (전화번호 비공개 시만) */}
               {!inquiry.phone && (
-                <div className="bg-gradient-to-br from-[#7C4DFF]/5 to-[#F5F3FF] rounded-2xl p-6 mb-4">
-                  <div className="text-center mb-4">
-                    <p className="text-sm font-bold text-gray-900">
-                      <span className="text-[#7C4DFF]">꿈꾸는정비사</span>
-                    </p>
-                    <p className="text-xs text-gray-500 mt-1">
-                      유튜브 5.3만 구독자가 운영하는 정비소 매칭 플랫폼
-                    </p>
-                  </div>
-
-                  {recentCount > 0 && (
-                    <div className="bg-white/80 rounded-lg p-3 mb-4 text-center">
-                      <p className="text-sm font-medium text-gray-800">
-                        이번 주 <span className="text-[#7C4DFF] font-bold">{recentCount}건</span>의 고객 문의 접수 중
+                <>
+                  <div className="bg-gradient-to-br from-[#7C4DFF]/5 to-[#F5F3FF] rounded-2xl p-6 mb-4">
+                    <div className="text-center mb-4">
+                      <p className="text-sm font-bold text-gray-900">
+                        <span className="text-[#7C4DFF]">꿈꾸는정비사</span>
+                      </p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        유튜브 5.3만 구독자가 운영하는 정비소 매칭 플랫폼
                       </p>
                     </div>
-                  )}
 
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-3 bg-white/60 rounded-lg p-3">
-                      <CheckCircle size={18} className="text-green-500 flex-shrink-0" />
-                      <span className="text-sm text-gray-700">고객 직접 연결 · 중개수수료 없음</span>
-                    </div>
-                    <div className="flex items-center gap-3 bg-white/60 rounded-lg p-3">
-                      <CheckCircle size={18} className="text-green-500 flex-shrink-0" />
-                      <span className="text-sm text-gray-700">카카오 3초 가입 · 무료</span>
-                    </div>
-                    <div className="flex items-center gap-3 bg-white/60 rounded-lg p-3">
-                      <CheckCircle size={18} className="text-green-500 flex-shrink-0" />
-                      <span className="text-sm text-gray-700">전화번호 바로 확인 가능</span>
+                    {recentCount > 0 && (
+                      <div className="bg-white/80 rounded-lg p-3 mb-4 text-center">
+                        <p className="text-sm font-medium text-gray-800">
+                          이번 주 <span className="text-[#7C4DFF] font-bold">{recentCount}건</span>의 고객 문의 접수 중
+                        </p>
+                      </div>
+                    )}
+
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-3 bg-white/60 rounded-lg p-3">
+                        <CheckCircle size={18} className="text-green-500 flex-shrink-0" />
+                        <span className="text-sm text-gray-700">고객 직접 연결 · 중개수수료 없음</span>
+                      </div>
+                      <div className="flex items-center gap-3 bg-white/60 rounded-lg p-3">
+                        <CheckCircle size={18} className="text-green-500 flex-shrink-0" />
+                        <span className="text-sm text-gray-700">카카오 3초 가입 · 무료</span>
+                      </div>
+                      <div className="flex items-center gap-3 bg-white/60 rounded-lg p-3">
+                        <CheckCircle size={18} className="text-green-500 flex-shrink-0" />
+                        <span className="text-sm text-gray-700">전화번호 바로 확인 가능</span>
+                      </div>
                     </div>
                   </div>
-                </div>
-              )}
 
-              {/* 하단 안내 (비로그인 시) */}
-              {!inquiry.phone && (
-                <div className="text-center">
-                  <Link
-                    href="/for-mechanics"
-                    className="text-[#7C4DFF] text-sm font-semibold hover:underline"
-                  >
-                    정비사 혜택 더 알아보기 →
-                  </Link>
-                </div>
+                  <div className="text-center">
+                    <Link
+                      href="/for-mechanics"
+                      className="text-[#7C4DFF] text-sm font-semibold hover:underline"
+                    >
+                      정비사 혜택 더 알아보기 →
+                    </Link>
+                  </div>
+                </>
               )}
             </motion.div>
           )}
