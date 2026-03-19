@@ -469,6 +469,93 @@
 
     .inbox-delete:hover { color: var(--red); }
 
+    /* ── 사진 업로드 ── */
+    .photo-section {
+      margin-top: 16px;
+    }
+
+    .photo-upload-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 14px;
+      background: var(--surface2);
+      border: 1px dashed var(--border);
+      border-radius: var(--radius);
+      color: var(--text-dim);
+      font-family: inherit;
+      font-size: 12px;
+      cursor: pointer;
+      transition: border-color 0.15s, color 0.15s;
+    }
+
+    .photo-upload-btn:hover {
+      border-color: var(--purple-dim);
+      color: var(--text);
+    }
+
+    .photo-preview-wrap {
+      position: relative;
+      margin-top: 10px;
+      display: inline-block;
+      max-width: 100%;
+    }
+
+    .photo-preview-img {
+      display: block;
+      max-width: 100%;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+    }
+
+    .photo-delete-btn {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      background: rgba(0,0,0,0.7);
+      border: none;
+      color: #fff;
+      font-size: 13px;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.15s;
+    }
+
+    .photo-delete-btn:hover { background: var(--red); }
+
+    /* ── 인박스 사진 ── */
+    .inbox-photo-btn {
+      background: none;
+      border: none;
+      color: var(--text-dim);
+      cursor: pointer;
+      font-size: 16px;
+      padding: 4px 6px;
+      border-radius: 4px;
+      transition: color 0.15s, background 0.15s;
+      flex-shrink: 0;
+    }
+
+    .inbox-photo-btn:hover {
+      color: var(--purple);
+      background: var(--surface2);
+    }
+
+    .inbox-item-img {
+      display: block;
+      max-width: 100%;
+      max-height: 160px;
+      border-radius: 4px;
+      margin-top: 6px;
+      border: 1px solid var(--border);
+      cursor: pointer;
+    }
+
     /* ── 스크롤바 ── */
     ::-webkit-scrollbar { width: 4px; height: 4px; }
     ::-webkit-scrollbar-track { background: transparent; }
@@ -531,6 +618,15 @@
       <div id="detail-note-display" title="클릭하여 편집"></div>
       <textarea id="detail-note-edit" placeholder="메모를 입력하세요..."></textarea>
       <div class="note-hint">클릭하여 메모 편집 · Enter 2회 또는 포커스 이탈 시 저장</div>
+
+      <!-- 사진 섹션 -->
+      <hr class="detail-divider" />
+      <div class="detail-label">사진</div>
+      <div class="photo-section">
+        <button class="photo-upload-btn" onclick="triggerPhotoUpload()">📷 사진 추가</button>
+        <input type="file" id="photo-file-input" accept="image/*" style="display:none" onchange="handlePhotoUpload(this)" />
+        <div id="photo-preview-area"></div>
+      </div>
     </div>
   </div>
 </div>
@@ -545,20 +641,24 @@
   <div id="inbox-body">
     <div id="inbox-input-row">
       <input id="inbox-input" type="text" placeholder="새 아이디어 입력 후 Enter 또는 추가 버튼..." />
+      <button class="inbox-photo-btn" title="사진 첨부" onclick="triggerInboxPhotoUpload()">📷</button>
+      <input type="file" id="inbox-photo-input" accept="image/*" style="display:none" onchange="handleInboxPhotoUpload(this)" />
       <button class="btn-primary" onclick="addInboxItem()">추가</button>
     </div>
+    <div id="inbox-pending-photo" style="display:none;padding:6px 0;"></div>
     <div id="inbox-list"></div>
   </div>
 </div>
 
 <script>
 // ── 상태 ──────────────────────────────────────────────────
-const LS_KEY = 'missioncontrol_v11';  // v11: 체크박스 선택 + Claude에게 복사
-const DATA_VERSION = 8;
+const LS_KEY = 'missioncontrol_v12';  // v12: 사진 업로드 (노드 + 인박스)
+const DATA_VERSION = 9;
 let state = { nodes: {}, inbox: [], lastUpdated: '', version: 0 };
 let selectedId = null;
 let expandedIds = new Set();
 let checkedIds = new Set(); // 체크된 작업 ID
+let inboxPendingPhoto = null; // 인박스에 첨부 대기 중인 Base64 이미지
 // 이전 버전 캐시 전부 삭제
 localStorage.removeItem('missioncontrol_v2');
 localStorage.removeItem('missioncontrol_v3');
@@ -569,6 +669,7 @@ localStorage.removeItem('missioncontrol_v7');
 localStorage.removeItem('missioncontrol_v8');
 localStorage.removeItem('missioncontrol_v9');
 localStorage.removeItem('missioncontrol_v10');
+localStorage.removeItem('missioncontrol_v11');
 
 // ── 내장 데이터 ───────────────────────────────────────────
 const EMBEDDED_DATA = {"lastUpdated":"2026-03-18T23:30:00+09:00","nodes":[
@@ -918,6 +1019,7 @@ function backToList() {
   document.querySelectorAll('.node-row').forEach(r => r.classList.remove('selected'));
   document.getElementById('detail-content').classList.remove('visible');
   document.getElementById('detail-empty').style.display = 'block';
+  document.getElementById('photo-preview-area').innerHTML = '';
   renderPendingList();
 }
 
@@ -964,6 +1066,9 @@ function renderDetail(id) {
 
   // note
   showNoteDisplay(node.note || '');
+
+  // 사진 미리보기
+  renderPhotoPreview(node.imageData || null);
 }
 
 function showNoteDisplay(text) {
@@ -1059,9 +1164,14 @@ function renderInbox() {
     const realIdx = items.length - 1 - revIdx;
     const el = document.createElement('div');
     el.className = 'inbox-item';
+    el.style.alignItems = 'flex-start';
+    const imgHtml = item.imageData
+      ? `<img class="inbox-item-img" src="${item.imageData}" alt="첨부 사진" onclick="openPhotoFull(this.src)" title="클릭하면 원본 크기로 보기" />`
+      : '';
     el.innerHTML = `
-      <div style="flex:1">
+      <div style="flex:1;min-width:0;">
         <div class="inbox-item-text">${escHtml(item.text)}</div>
+        ${imgHtml}
         <div class="inbox-item-date">${item.date || ''}</div>
       </div>
       <button class="inbox-delete" title="삭제" onclick="deleteInboxItem(${realIdx})">✕</button>
@@ -1073,13 +1183,17 @@ function renderInbox() {
 function addInboxItem() {
   const input = document.getElementById('inbox-input');
   const text  = input.value.trim();
-  if (!text) return;
+  if (!text && !inboxPendingPhoto) return;
   if (!state.inbox) state.inbox = [];
-  state.inbox.push({
-    text,
+  const item = {
+    text: text || '(사진 첨부)',
     date: new Date().toLocaleDateString('ko-KR', { month:'numeric', day:'numeric', hour:'2-digit', minute:'2-digit' })
-  });
+  };
+  if (inboxPendingPhoto) item.imageData = inboxPendingPhoto;
+  state.inbox.push(item);
   input.value = '';
+  inboxPendingPhoto = null;
+  renderInboxPendingPhoto(null);
   saveState();
   renderInbox();
 }
@@ -1093,6 +1207,126 @@ function deleteInboxItem(idx) {
 document.getElementById('inbox-input').addEventListener('keydown', e => {
   if (e.key === 'Enter') addInboxItem();
 });
+
+// ── 사진 처리 공통 유틸 ───────────────────────────────────
+/**
+ * File 객체를 받아 500px 너비로 리사이즈 후 Base64(JPEG, quality 0.75)를 반환.
+ * localStorage 5MB 제한 고려.
+ */
+function resizeImageToBase64(file, maxWidth, quality) {
+  maxWidth = maxWidth || 500;
+  quality  = quality  || 0.75;
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const scale  = img.width > maxWidth ? maxWidth / img.width : 1;
+        const w = Math.round(img.width  * scale);
+        const h = Math.round(img.height * scale);
+        const canvas = document.createElement('canvas');
+        canvas.width  = w;
+        canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.onerror = reject;
+      img.src = e.target.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+// ── 노드 사진 업로드 ──────────────────────────────────────
+function triggerPhotoUpload() {
+  const input = document.getElementById('photo-file-input');
+  input.value = '';
+  input.click();
+}
+
+async function handlePhotoUpload(input) {
+  if (!selectedId || !input.files || !input.files[0]) return;
+  const file = input.files[0];
+  try {
+    const base64 = await resizeImageToBase64(file, 500, 0.75);
+    state.nodes[selectedId].imageData = base64;
+    saveState();
+    renderPhotoPreview(base64);
+  } catch(e) {
+    alert('이미지 처리 중 오류가 발생했습니다: ' + e.message);
+  }
+}
+
+function renderPhotoPreview(base64) {
+  const area = document.getElementById('photo-preview-area');
+  if (!base64) {
+    area.innerHTML = '';
+    return;
+  }
+  area.innerHTML = `
+    <div class="photo-preview-wrap">
+      <img class="photo-preview-img" src="${base64}" alt="첨부 사진" onclick="openPhotoFull(this.src)" title="클릭하면 원본 크기로 보기" />
+      <button class="photo-delete-btn" title="사진 삭제" onclick="deleteNodePhoto()">✕</button>
+    </div>
+  `;
+}
+
+function deleteNodePhoto() {
+  if (!selectedId) return;
+  if (!confirm('사진을 삭제하시겠습니까?')) return;
+  delete state.nodes[selectedId].imageData;
+  saveState();
+  renderPhotoPreview(null);
+}
+
+function openPhotoFull(src) {
+  const w = window.open('', '_blank', 'width=900,height=700,resizable=yes,scrollbars=yes');
+  w.document.write(`<!DOCTYPE html><html><body style="margin:0;background:#111;display:flex;justify-content:center;align-items:flex-start;min-height:100vh;">
+    <img src="${src}" style="max-width:100%;height:auto;" /></body></html>`);
+  w.document.close();
+}
+
+// ── 인박스 사진 업로드 ────────────────────────────────────
+function triggerInboxPhotoUpload() {
+  const input = document.getElementById('inbox-photo-input');
+  input.value = '';
+  input.click();
+}
+
+async function handleInboxPhotoUpload(input) {
+  if (!input.files || !input.files[0]) return;
+  const file = input.files[0];
+  try {
+    const base64 = await resizeImageToBase64(file, 500, 0.75);
+    inboxPendingPhoto = base64;
+    renderInboxPendingPhoto(base64);
+  } catch(e) {
+    alert('이미지 처리 중 오류가 발생했습니다: ' + e.message);
+  }
+}
+
+function renderInboxPendingPhoto(base64) {
+  const wrap = document.getElementById('inbox-pending-photo');
+  if (!base64) {
+    wrap.style.display = 'none';
+    wrap.innerHTML = '';
+    return;
+  }
+  wrap.style.display = 'block';
+  wrap.innerHTML = `
+    <div style="display:inline-flex;align-items:center;gap:8px;padding:6px 10px;background:var(--surface2);border-radius:6px;border:1px solid var(--border);">
+      <img src="${base64}" style="width:40px;height:40px;object-fit:cover;border-radius:4px;cursor:pointer;" onclick="openPhotoFull(this.src)" title="클릭하면 원본 크기로 보기" />
+      <span style="font-size:12px;color:var(--text-dim);">사진 첨부됨</span>
+      <button onclick="clearInboxPendingPhoto()" style="background:none;border:none;color:var(--gray);cursor:pointer;font-size:13px;" title="첨부 취소">✕</button>
+    </div>
+  `;
+}
+
+function clearInboxPendingPhoto() {
+  inboxPendingPhoto = null;
+  renderInboxPendingPhoto(null);
+}
 
 function escHtml(s) {
   return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');

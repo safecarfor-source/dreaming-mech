@@ -21,7 +21,7 @@ export class AuthController {
 
     res.cookie('admin_token', result.access_token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: process.env.NODE_ENV !== 'development',
       sameSite: 'lax',
       maxAge: 24 * 60 * 60 * 1000,
       path: '/',
@@ -101,7 +101,7 @@ export class AuthController {
 
       res.cookie('user_token', result.access_token, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
+        secure: process.env.NODE_ENV !== 'development',
         sameSite: 'lax',
         maxAge: 24 * 60 * 60 * 1000,
         path: '/',

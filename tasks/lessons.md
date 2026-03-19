@@ -168,4 +168,33 @@
 
 ---
 
-*마지막 업데이트: 2026-03-17 (사이트 크래시 교훈 + 대장님 원칙 제정)*
+## 마이그레이션 배포 교훈 (2026-03-19 502 사고) 🚨 치명적
+
+### 원인: git에 이미 서버 적용된 마이그레이션 파일 추가 → 서버에서 중복 실행 시도 → 충돌 → 백엔드 사망 → 502
+1. **이미 서버에 적용된 마이그레이션 파일을 git에 새로 추가하면 안 됨**: `prisma migrate deploy`가 "이미 DB에 있는 테이블을 다시 만들려고" 시도 → 실패 → 백엔드 무한 재시작
+2. **마이그레이션 파일은 로컬에서 `prisma migrate dev`로 생성 → 즉시 커밋해야 함**: 나중에 한꺼번에 추가하면 서버 DB 상태와 충돌
+3. **배포 전 반드시 확인**: `git diff --cached` 에서 `prisma/migrations/` 폴더에 새 파일이 있으면, 서버 DB에 이미 적용된 건지 확인
+4. **복구 방법**: `docker exec postgres psql -c "UPDATE _prisma_migrations SET finished_at=NOW(), applied_steps_count=1 WHERE finished_at IS NULL"` → 백엔드 재시작
+5. **프론트엔드 컨테이너도 확인**: 백엔드가 죽으면 헬스체크 실패로 프론트엔드도 안 뜰 수 있음. `docker compose up -d frontend` 별도 실행
+
+### 예방 규칙
+- **커밋 전**: `git diff --cached --name-only | grep migrations` 로 마이그레이션 파일 포함 여부 확인
+- **포함되면**: 서버에서 `SELECT migration_name FROM _prisma_migrations` 대조
+- **이미 적용됐으면**: git에서 제외 (`git reset HEAD backend/prisma/migrations/해당폴더`)
+
+## 인센티브 페이지 구조 교훈 (2026-03-19)
+
+### 단일 HTML 파일의 한계
+1. **frontend-incentive/index.html 한 파일에 모든 기능**: 로그인/검색/차트/시재관리/계정관리가 전부 한 파일 → 한 줄 에러 = 전체 페이지 마비
+2. **장기적으로 Next.js 이전 필요**: 모듈 격리, 에러 바운더리, 코드 분할 → 한 기능 깨져도 다른 기능 정상
+
+## 극동 자동 동기화 교훈 (2026-03-19)
+
+### 윈도우 작업 스케줄러 불안정
+1. **SYSTEM 계정 권한 문제**: 작업 스케줄러가 SYSTEM으로 실행해도 python 경로/네트워크 접근 실패 가능
+2. **해결: 상주형 데몬으로 전환**: 파이썬 스크립트 내부에서 3분 루프 + watchdog.vbs로 시작 프로그램 등록 → 작업 스케줄러 완전 제거
+3. **수동 업로드 바로가기**: 바탕화면에 `GD_ManualUpload` 아이콘 → 퇴근 전 더블클릭으로 수동 업로드
+
+---
+
+*마지막 업데이트: 2026-03-19 (502 사고 + 인센티브 구조 + 극동 동기화)*
