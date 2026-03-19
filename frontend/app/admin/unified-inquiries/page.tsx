@@ -70,11 +70,17 @@ export default function UnifiedInquiriesPage() {
       const typeParam = filter !== 'ALL' ? filter : undefined;
       const res = await unifiedInquiryApi.getAll(page, 20, typeParam);
       const data = res.data;
-      setInquiries(data.data);
-      setTotal(data.total);
-      setTotalPages(data.totalPages);
-    } catch (error) {
-      console.error('통합 문의 로딩 실패:', error);
+      const items = Array.isArray(data.data) ? data.data : Array.isArray(data) ? data : [];
+      setInquiries(items);
+      setTotal(data.total || items.length);
+      setTotalPages(data.totalPages || 1);
+    } catch (error: any) {
+      console.error('통합 문의 로딩 실패:', error?.response?.status, error?.message);
+      if (error?.response?.status === 401) {
+        alert('인증이 만료되었습니다. 다시 로그인해주세요.');
+        window.location.href = '/admin/login';
+        return;
+      }
     } finally {
       setLoading(false);
     }
