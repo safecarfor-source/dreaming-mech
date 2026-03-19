@@ -1,0 +1,1107 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>꿈꾸는정비사 미션 컨트롤</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:         #0f0f23;
+      --surface:    #1a1a3e;
+      --surface2:   #242450;
+      --border:     #2e2e60;
+      --purple:     #7C4DFF;
+      --purple-dim: #4a2db0;
+      --text:       #e2e2f0;
+      --text-dim:   #8888bb;
+      --green:      #22c55e;
+      --yellow:     #eab308;
+      --red:        #ef4444;
+      --blue:       #3b82f6;
+      --gray:       #4b5563;
+      --radius:     8px;
+    }
+
+    body {
+      font-family: 'Noto Sans KR', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    /* ── 헤더 ── */
+    #header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 24px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    #header-top {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+
+    #header h1 {
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+      flex: 1;
+      min-width: 200px;
+    }
+
+    .stat-badges {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .stat-badge {
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 500;
+      border: 1px solid;
+    }
+
+    .badge-total   { color: var(--text-dim); border-color: var(--border); background: var(--surface2); }
+    .badge-done    { color: var(--green);    border-color: #166534; background: #052e16; }
+    .badge-p0      { color: var(--red);      border-color: #7f1d1d; background: #2d0a0a; }
+    .badge-updated { color: var(--text-dim); border-color: var(--border); background: transparent; font-size: 11px; }
+
+    /* 진행률 바 */
+    #progress-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    #progress-bar-bg {
+      flex: 1;
+      height: 6px;
+      background: var(--border);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    #progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--purple-dim), var(--purple));
+      border-radius: 3px;
+      transition: width 0.4s ease;
+    }
+
+    #progress-label {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--purple);
+      min-width: 36px;
+      text-align: right;
+    }
+
+    /* ── 메인 레이아웃 ── */
+    #main {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+      height: calc(100vh - 105px);
+    }
+
+    /* ── 트리 패널 ── */
+    #tree-panel {
+      width: 60%;
+      border-right: 1px solid var(--border);
+      overflow-y: auto;
+      padding: 16px 8px;
+    }
+
+    /* ── 상세 패널 ── */
+    #detail-panel {
+      width: 40%;
+      overflow-y: auto;
+      padding: 20px;
+      background: var(--surface);
+    }
+
+    /* ── 트리 노드 ── */
+    .tree-node { user-select: none; }
+
+    .node-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 8px;
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: background 0.15s, border-left-color 0.15s;
+      border-left: 3px solid transparent;
+      margin-bottom: 1px;
+    }
+
+    .node-row:hover { background: var(--surface2); }
+
+    .node-row.selected {
+      background: var(--surface2);
+      border-left-color: var(--purple);
+    }
+
+    .toggle-btn {
+      width: 16px;
+      height: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-dim);
+      font-size: 10px;
+      flex-shrink: 0;
+      transition: transform 0.2s;
+    }
+
+    .toggle-btn.open { transform: rotate(90deg); }
+    .toggle-placeholder { width: 16px; flex-shrink: 0; }
+
+    .node-icon { font-size: 14px; flex-shrink: 0; }
+
+    .node-name {
+      flex: 1;
+      font-size: 13px;
+      font-weight: 400;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .node-row.depth-0 .node-name { font-weight: 700; font-size: 14px; }
+    .node-row.depth-1 .node-name { font-weight: 500; }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .dot-done         { background: var(--green); }
+    .dot-in_progress  { background: var(--yellow); box-shadow: 0 0 4px var(--yellow); }
+    .dot-not_started  { background: var(--gray); }
+    .dot-active       { background: var(--blue); box-shadow: 0 0 4px var(--blue); }
+
+    .priority-tag {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 1px 5px;
+      border-radius: 4px;
+      flex-shrink: 0;
+    }
+
+    .p0 { background: #450a0a; color: var(--red); }
+    .p1 { background: #422006; color: var(--yellow); }
+    .p2 { background: #1e3a5f; color: var(--blue); }
+
+    .children-wrap {
+      overflow: hidden;
+      transition: max-height 0.2s ease;
+    }
+
+    /* ── 상세 패널 내용 ── */
+    #detail-empty {
+      color: var(--text-dim);
+      text-align: left;
+      margin-top: 0;
+      padding: 0;
+      font-size: 13px;
+    }
+
+    .pending-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 10px 12px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      margin-bottom: 6px;
+      cursor: pointer;
+      transition: border-color 0.15s;
+    }
+    .pending-item:hover { border-color: var(--purple-dim); }
+    .pending-item.checked { border-color: var(--purple); background: rgba(124,77,255,0.1); }
+    .pending-item-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+    .pending-item-body { flex: 1; min-width: 0; }
+    .pending-item-name { font-size: 13px; font-weight: 500; color: var(--text); margin-bottom: 2px; }
+    .pending-item-path { font-size: 11px; color: var(--text-dim); }
+    .pending-item-right { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0; }
+
+    #detail-content { display: none; }
+    #detail-content.visible { display: block; }
+
+    #detail-icon-name {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    #detail-icon { font-size: 28px; }
+
+    #detail-name {
+      font-size: 18px;
+      font-weight: 700;
+      line-height: 1.3;
+    }
+
+    .detail-badges {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+
+    .status-badge {
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      border: 1px solid;
+      transition: opacity 0.15s;
+    }
+
+    .status-badge:hover { opacity: 0.8; }
+
+    .sb-done         { background: #052e16; color: var(--green);   border-color: #166534; }
+    .sb-in_progress  { background: #422006; color: var(--yellow);  border-color: #854d0e; }
+    .sb-not_started  { background: #1f2937; color: var(--text-dim);border-color: var(--gray); }
+    .sb-active       { background: #1e3a5f; color: var(--blue);    border-color: #1d4ed8; }
+
+    #detail-url {
+      display: none;
+      margin-bottom: 14px;
+    }
+
+    #detail-url a {
+      color: var(--purple);
+      text-decoration: none;
+      font-size: 13px;
+      word-break: break-all;
+    }
+
+    #detail-url a:hover { text-decoration: underline; }
+
+    .detail-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 6px;
+    }
+
+    #detail-note-display {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 10px 12px;
+      font-size: 13px;
+      line-height: 1.65;
+      color: var(--text);
+      margin-bottom: 8px;
+      min-height: 40px;
+      white-space: pre-wrap;
+      cursor: pointer;
+      transition: border-color 0.15s;
+    }
+
+    #detail-note-display:hover { border-color: var(--purple-dim); }
+
+    #detail-note-edit {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--purple);
+      border-radius: var(--radius);
+      padding: 10px 12px;
+      font-size: 13px;
+      line-height: 1.65;
+      color: var(--text);
+      resize: vertical;
+      min-height: 80px;
+      font-family: inherit;
+      outline: none;
+      display: none;
+      margin-bottom: 8px;
+    }
+
+    .note-hint {
+      font-size: 11px;
+      color: var(--text-dim);
+      margin-bottom: 16px;
+    }
+
+    /* ── 구분선 ── */
+    .detail-divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 16px 0;
+    }
+
+    /* ── Inbox ── */
+    #inbox-panel {
+      border-top: 1px solid var(--border);
+      background: var(--surface);
+      padding: 12px 24px;
+    }
+
+    #inbox-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+      cursor: pointer;
+    }
+
+    #inbox-header span {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-dim);
+    }
+
+    #inbox-toggle-icon {
+      color: var(--text-dim);
+      font-size: 11px;
+      transition: transform 0.2s;
+    }
+
+    #inbox-toggle-icon.open { transform: rotate(180deg); }
+
+    #inbox-body { display: none; }
+    #inbox-body.open { display: block; }
+
+    #inbox-input-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    #inbox-input {
+      flex: 1;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 8px 12px;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 13px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    #inbox-input:focus { border-color: var(--purple); }
+    #inbox-input::placeholder { color: var(--text-dim); }
+
+    .btn-primary {
+      padding: 8px 16px;
+      background: var(--purple);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius);
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: opacity 0.15s;
+      white-space: nowrap;
+    }
+
+    .btn-primary:hover { opacity: 0.85; }
+
+    #inbox-list {
+      max-height: 130px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .inbox-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      padding: 6px 10px;
+      background: var(--surface2);
+      border-radius: 6px;
+      font-size: 12px;
+      color: var(--text-dim);
+    }
+
+    .inbox-item-text { flex: 1; line-height: 1.5; }
+
+    .inbox-item-date {
+      font-size: 10px;
+      color: var(--gray);
+      white-space: nowrap;
+      margin-top: 2px;
+    }
+
+    .inbox-delete {
+      background: none;
+      border: none;
+      color: var(--gray);
+      cursor: pointer;
+      font-size: 14px;
+      padding: 0;
+      line-height: 1;
+      transition: color 0.15s;
+      flex-shrink: 0;
+    }
+
+    .inbox-delete:hover { color: var(--red); }
+
+    /* ── 스크롤바 ── */
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--purple-dim); }
+
+    /* ── 반응형 ── */
+    @media (max-width: 680px) {
+      #main { flex-direction: column; height: auto; overflow: visible; }
+      #tree-panel  { width: 100%; height: auto; border-right: none; border-bottom: 1px solid var(--border); }
+      #detail-panel { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- 헤더 -->
+<header id="header">
+  <div id="header-top">
+    <h1>🏢 꿈꾸는정비사 미션 컨트롤</h1>
+    <div class="stat-badges">
+      <span class="stat-badge badge-total" id="stat-total">전체 0개</span>
+      <span class="stat-badge badge-done"  id="stat-done">완료 0%</span>
+      <span class="stat-badge badge-p0"    id="stat-p0">P0 미해결 0</span>
+      <span class="stat-badge badge-updated" id="stat-updated">업데이트 —</span>
+    </div>
+  </div>
+  <div id="progress-wrap">
+    <div id="progress-bar-bg"><div id="progress-bar-fill" style="width:0%"></div></div>
+    <span id="progress-label">0%</span>
+  </div>
+</header>
+
+<!-- 메인 -->
+<div id="main">
+  <!-- 트리 -->
+  <div id="tree-panel"></div>
+
+  <!-- 상세 -->
+  <div id="detail-panel">
+    <div id="detail-empty">
+      <div style="font-size:14px;font-weight:700;margin-bottom:12px;color:var(--text);">📋 대기 중인 작업</div>
+      <div id="pending-list"></div>
+    </div>
+    <div id="detail-content">
+      <div id="back-to-list" onclick="backToList()" style="display:flex;align-items:center;gap:6px;color:var(--purple);cursor:pointer;font-size:13px;margin-bottom:12px;padding:6px 0;">
+        <span style="font-size:16px;">←</span> 대기 목록으로
+      </div>
+      <div id="detail-icon-name">
+        <span id="detail-icon"></span>
+        <span id="detail-name"></span>
+      </div>
+      <div class="detail-badges">
+        <span id="detail-status-badge" class="status-badge" title="클릭하여 상태 변경"></span>
+        <span id="detail-priority-badge" class="priority-tag" style="display:none"></span>
+      </div>
+      <div id="detail-url"><span style="color:var(--text-dim);font-size:12px;">🔗 </span><a id="detail-url-link" href="#" target="_blank"></a></div>
+      <hr class="detail-divider" />
+      <div class="detail-label">메모</div>
+      <div id="detail-note-display" title="클릭하여 편집"></div>
+      <textarea id="detail-note-edit" placeholder="메모를 입력하세요..."></textarea>
+      <div class="note-hint">클릭하여 메모 편집 · Enter 2회 또는 포커스 이탈 시 저장</div>
+    </div>
+  </div>
+</div>
+
+<!-- Inbox -->
+<div id="inbox-panel">
+  <div id="inbox-header" onclick="toggleInbox()">
+    <span>💡 아이디어 인박스</span>
+    <span id="inbox-count" class="stat-badge badge-total" style="font-size:11px;padding:2px 8px;"></span>
+    <span id="inbox-toggle-icon">▲</span>
+  </div>
+  <div id="inbox-body">
+    <div id="inbox-input-row">
+      <input id="inbox-input" type="text" placeholder="새 아이디어 입력 후 Enter 또는 추가 버튼..." />
+      <button class="btn-primary" onclick="addInboxItem()">추가</button>
+    </div>
+    <div id="inbox-list"></div>
+  </div>
+</div>
+
+<script>
+// ── 상태 ──────────────────────────────────────────────────
+const LS_KEY = 'missioncontrol_v11';  // v11: 체크박스 선택 + Claude에게 복사
+const DATA_VERSION = 8;
+let state = { nodes: {}, inbox: [], lastUpdated: '', version: 0 };
+let selectedId = null;
+let expandedIds = new Set();
+let checkedIds = new Set(); // 체크된 작업 ID
+// 이전 버전 캐시 전부 삭제
+localStorage.removeItem('missioncontrol_v2');
+localStorage.removeItem('missioncontrol_v3');
+localStorage.removeItem('missioncontrol_v4');
+localStorage.removeItem('missioncontrol_v5');
+localStorage.removeItem('missioncontrol_v6');
+localStorage.removeItem('missioncontrol_v7');
+localStorage.removeItem('missioncontrol_v8');
+localStorage.removeItem('missioncontrol_v9');
+localStorage.removeItem('missioncontrol_v10');
+
+// ── 내장 데이터 ───────────────────────────────────────────
+const EMBEDDED_DATA = {"lastUpdated":"2026-03-18T23:30:00+09:00","nodes":[
+  {"id":"root","name":"꿈꾸는정비사","icon":"🏢","status":"active","children":["platform","admin","incentive","marketing"]},
+  {"id":"platform","name":"정비소 플랫폼","icon":"🌐","url":"dreammechaniclab.com/","status":"active","children":["platform-mechanic","platform-consumer","platform-community","platform-youtube","platform-seo"]},
+  {"id":"platform-mechanic","name":"정비사 탭","icon":"🔧","status":"in_progress","children":["pm-register","pm-detail","pm-dashboard","pm-auth","pm-map-bug"]},
+  {"id":"pm-register","name":"정비소 등록 플로우","icon":"📝","status":"in_progress","priority":"P0","note":"카카오 가입→사업자 인증→정비소 등록 3단계. 온보딩 리다이렉트 수정 완료(3/18)"},
+  {"id":"pm-detail","name":"정비소 상세 페이지","icon":"📄","status":"done","note":"저장 에러 상세 표시 + 전화번호 유연화 완료(3/18)"},
+  {"id":"pm-dashboard","name":"사장님 대시보드","icon":"📊","status":"done","note":"/owner 대시보드 구현 완료. 거절 사유 표시 완료."},
+  {"id":"pm-auth","name":"사업자 인증","icon":"🔑","status":"done","note":"카카오 로그인 + 사업자등록증 업로드 + PENDING/APPROVED 승인제"},
+  {"id":"pm-map-bug","name":"🔴 지도: 제주만 활성화 버그","icon":"🗺️","status":"not_started","priority":"P1","note":"#상황판 (3/18) [사진첨부]\n\n정비소 9개가 들어가있고 지역별로도 있는데\n제주도만 활성화되어있어\n그이유가 궁금하다.\n뭔가 오류가 있으니 너가 직접 체크해봐"},
+  {"id":"platform-consumer","name":"소비자 탭","icon":"👤","status":"in_progress","children":["pc-funnel","pc-region","pc-kakao","pc-login-design"]},
+  {"id":"pc-funnel","name":"4단계 문의 퍼널","icon":"🔄","status":"done","note":"지역→서비스→연락처→완료. 정비소 썸네일 카드 추가(3/18)"},
+  {"id":"pc-region","name":"지역별 검색","icon":"🗺️","status":"in_progress","priority":"P1","note":"지도 깃발 표시 대기 (대장님 이미지 필요)"},
+  {"id":"pc-kakao","name":"카카오 로그인","icon":"💬","status":"done"},
+  {"id":"pc-login-design","name":"🔴 로그인 설계: 정비사/소비자 분기","icon":"🔑","status":"not_started","priority":"P1","note":"#상황판 (3/18)\n\n카카오톡으로 회원가입 하고 로그인을 했는데\n아무런 일이 발생하지않고, 다시 로그인을누르면 그대로 같은일이 반복되\n우선 우리가 로그인 설계를 해야해\n1. 정비사 회원가입\n2. 일반 소비자 회원가입\n이걸 어떻게 나눠야 할지 기획부터하자.\n우리에게는 소비자가 2개층이야"},
+  {"id":"platform-community","name":"커뮤니티 Q&A","icon":"💬","status":"done","note":"Post/Comment/PostLike + 정비사 매장 정보 노출"},
+  {"id":"platform-youtube","name":"유튜브 연동","icon":"🎥","status":"done","note":"/about 랜딩 + GA4 21개 이벤트"},
+  {"id":"platform-seo","name":"SEO/마케팅","icon":"📊","status":"done","note":"구조화 데이터 6종 + sitemap + 네이버/구글 등록"},
+  {"id":"admin","name":"정비소 플랫폼 관리자","icon":"⚙️","url":"dreammechaniclab.com/admin/","status":"active","children":["admin-inquiry","admin-mechanic","admin-customer","admin-stats","admin-erp"]},
+  {"id":"admin-inquiry","name":"문의 관리","icon":"📨","status":"done","note":"서버사이드 필터링 완료(3/18). P0 버그 수정됨."},
+  {"id":"admin-mechanic","name":"정비사 관리","icon":"🔧","status":"done","note":"CRUD + 승인제 + 배지 실시간 갱신"},
+  {"id":"admin-customer","name":"고객 관리","icon":"👥","status":"done"},
+  {"id":"admin-stats","name":"통계","icon":"📈","status":"done","note":"selectedYear 의존성 + hydration 버그 수정(3/18)"},
+  {"id":"admin-erp","name":"ERP 연동","icon":"🏭","status":"in_progress","priority":"P1","note":"극동 차량/상품/고객 조회 구현. 리마인더 미완."},
+  {"id":"incentive","name":"인센티브","icon":"💰","url":"dreammechaniclab.com/incentive/","status":"active","children":["inc-team","inc-manager","inc-cash","inc-vehicle","inc-autocalc"]},
+  {"id":"inc-team","name":"팀 인센티브","icon":"👥","status":"done","note":"최소수량 + 목표달성 시뮬 + 매출예측 + 오늘의매출(3/18)"},
+  {"id":"inc-manager","name":"매니저/부장 인센티브","icon":"👔","status":"done"},
+  {"id":"inc-cash","name":"시재관리","icon":"💵","status":"done","note":"이월시재 완전자동화(3/18). 극동과 530,000원 일치."},
+  {"id":"inc-vehicle","name":"차량/상품 조회","icon":"🚗","status":"done"},
+  {"id":"inc-autocalc","name":"자동계산","icon":"🤖","status":"done","note":"계산 이력 선입선출(3/18). 계정관리 PIN 추가."},
+  {"id":"marketing","name":"마케팅","icon":"📣","status":"in_progress","children":["mkt-youtube","mkt-seo","mkt-social"]},
+  {"id":"mkt-youtube","name":"유튜브 전략","icon":"🎬","status":"in_progress","priority":"P0","note":"인기 영상 설명란 링크 추가 + 커뮤니티 탭 포스트 (대장님 담당)"},
+  {"id":"mkt-seo","name":"지역별 SEO","icon":"🔍","status":"not_started","priority":"P1","note":"/region/서울 등 지역별 랜딩 페이지"},
+  {"id":"mkt-social","name":"소셜 미디어","icon":"📱","status":"not_started","priority":"P2"},
+  {"id":"mc-nav-bug","name":"상황판: 메인보드 복귀 안됨","icon":"🖥️","status":"not_started","priority":"P1","note":"#상황판 (3/18)\n\n대기중인 작업을 클릭하면 화면이 옮겨지는데 첫 메인보드 화면으로 돌아오지 않아.\n이걸 해결할 아이디어를"},
+  {"id":"mc-rebuild","name":"상황판: 도메인화 + 사진 업로드 + 구조 개편","icon":"🏗️","status":"not_started","priority":"P0","note":"#상황판 (3/18)\n\n우리 웹에 사진을 업로드할 수 있도록 구조 자체를 바꾼다.\n\n이또한 로컬이 아니라 어디서든 볼 수 있도록 도메인화 할꺼다.\n\n구조도는 이렇다\n\n1번 레이어 상황판\n2번 레이어\n-정비소 플랫폼\n-정비소 플랫폼 관리자\n-인센티브\n-마케팅\n\n3번 레이어\n2번레이어에서의 하위"}
+],"inbox":[]};
+
+// ── 데이터 로드 ───────────────────────────────────────────
+function loadData() {
+  const saved = localStorage.getItem(LS_KEY);
+  if (saved) {
+    try {
+      state = JSON.parse(saved);
+      if (Array.isArray(state.checkedIds)) {
+        checkedIds = new Set(state.checkedIds);
+      }
+      buildUI();
+      return;
+    } catch(e) {}
+  }
+  // 내장 데이터 사용 (file:// 프로토콜 호환)
+  state.nodes = {};
+  for (const n of EMBEDDED_DATA.nodes) state.nodes[n.id] = n;
+  state.inbox = EMBEDDED_DATA.inbox || [];
+  state.lastUpdated = EMBEDDED_DATA.lastUpdated || '';
+  buildUI();
+}
+
+function saveState() {
+  state.lastUpdated = new Date().toISOString();
+  state.checkedIds = Array.from(checkedIds);
+  localStorage.setItem(LS_KEY, JSON.stringify(state));
+}
+
+// ── 트리 빌드 ─────────────────────────────────────────────
+function buildUI() {
+  renderStats();
+  renderTree();
+  renderInbox();
+  renderPendingList();
+  if (selectedId) renderDetail(selectedId);
+}
+
+function renderStats() {
+  const nodes = Object.values(state.nodes);
+  const total  = nodes.length;
+  const done   = nodes.filter(n => n.status === 'done').length;
+  const pct    = total ? Math.round(done / total * 100) : 0;
+  const p0open = nodes.filter(n => n.priority === 'P0' && n.status !== 'done').length;
+
+  document.getElementById('stat-total').textContent   = `전체 ${total}개`;
+  document.getElementById('stat-done').textContent    = `완료 ${pct}%`;
+  document.getElementById('stat-p0').textContent      = `P0 미해결 ${p0open}`;
+  document.getElementById('progress-bar-fill').style.width = pct + '%';
+  document.getElementById('progress-label').textContent    = pct + '%';
+
+  let upd = state.lastUpdated;
+  if (upd) {
+    try {
+      const d = new Date(upd);
+      upd = d.toLocaleDateString('ko-KR') + ' ' + d.toLocaleTimeString('ko-KR', { hour:'2-digit', minute:'2-digit' });
+    } catch(e) {}
+  }
+  document.getElementById('stat-updated').textContent = upd ? '🕒 ' + upd : '';
+}
+
+function renderTree() {
+  const panel = document.getElementById('tree-panel');
+  panel.innerHTML = '';
+  const root = state.nodes['root'];
+  if (!root) return;
+  panel.appendChild(buildNodeEl(root, 0));
+}
+
+function buildNodeEl(node, depth) {
+  const wrap = document.createElement('div');
+  wrap.className = 'tree-node';
+  wrap.style.paddingLeft = depth > 0 ? (depth * 16 + 'px') : '4px';
+
+  const hasChildren = node.children && node.children.length > 0;
+  const isOpen = expandedIds.has(node.id) || depth === 0;
+
+  // row
+  const row = document.createElement('div');
+  row.className = 'node-row depth-' + depth + (selectedId === node.id ? ' selected' : '');
+  row.dataset.id = node.id;
+  row.onclick = () => onNodeClick(node.id);
+
+  // toggle
+  if (hasChildren) {
+    const tog = document.createElement('div');
+    tog.className = 'toggle-btn' + (isOpen ? ' open' : '');
+    tog.textContent = '▶';
+    tog.onclick = (e) => { e.stopPropagation(); toggleNode(node.id); };
+    row.appendChild(tog);
+  } else {
+    const ph = document.createElement('div');
+    ph.className = 'toggle-placeholder';
+    row.appendChild(ph);
+  }
+
+  // icon
+  const icon = document.createElement('span');
+  icon.className = 'node-icon';
+  icon.textContent = node.icon || '📌';
+  row.appendChild(icon);
+
+  // name
+  const name = document.createElement('span');
+  name.className = 'node-name';
+  name.textContent = node.name;
+  row.appendChild(name);
+
+  // url link
+  if (node.url) {
+    const link = document.createElement('a');
+    link.href = node.url.startsWith('http') ? node.url : 'https://' + node.url;
+    link.target = '_blank';
+    link.textContent = '🔗';
+    link.title = node.url;
+    link.style.cssText = 'font-size:12px;text-decoration:none;opacity:0.6;flex-shrink:0;';
+    link.onmouseover = () => link.style.opacity = '1';
+    link.onmouseout = () => link.style.opacity = '0.6';
+    link.onclick = (e) => e.stopPropagation();
+    row.appendChild(link);
+  }
+
+  // priority
+  if (node.priority) {
+    const p = document.createElement('span');
+    p.className = 'priority-tag ' + node.priority.toLowerCase();
+    p.textContent = node.priority;
+    row.appendChild(p);
+  }
+
+  // status dot
+  const dot = document.createElement('div');
+  dot.className = 'status-dot dot-' + (node.status || 'not_started');
+  row.appendChild(dot);
+
+  wrap.appendChild(row);
+
+  // children
+  if (hasChildren) {
+    const childWrap = document.createElement('div');
+    childWrap.className = 'children-wrap';
+    childWrap.id = 'children-' + node.id;
+    childWrap.style.maxHeight = isOpen ? '9999px' : '0';
+
+    for (const childId of node.children) {
+      const child = state.nodes[childId];
+      if (child) childWrap.appendChild(buildNodeEl(child, depth + 1));
+    }
+
+    wrap.appendChild(childWrap);
+  }
+
+  return wrap;
+}
+
+function toggleNode(id) {
+  if (expandedIds.has(id)) {
+    expandedIds.delete(id);
+  } else {
+    expandedIds.add(id);
+  }
+  renderTree();
+  if (selectedId) {
+    const row = document.querySelector(`.node-row[data-id="${selectedId}"]`);
+    if (row) row.classList.add('selected');
+  }
+}
+
+function onNodeClick(id) {
+  selectedId = id;
+  // update selected styling
+  document.querySelectorAll('.node-row').forEach(r => r.classList.remove('selected'));
+  const row = document.querySelector(`.node-row[data-id="${id}"]`);
+  if (row) row.classList.add('selected');
+  renderDetail(id);
+}
+
+// ── 상세 패널 ─────────────────────────────────────────────
+const STATUS_CYCLE = ['done', 'in_progress', 'not_started', 'active'];
+const STATUS_LABEL = { done: '완료', in_progress: '진행 중', not_started: '미착수', active: '활성' };
+const STATUS_CLASS = { done: 'sb-done', in_progress: 'sb-in_progress', not_started: 'sb-not_started', active: 'sb-active' };
+
+function renderPendingList() {
+  const list = document.getElementById('pending-list');
+  if (!list) return;
+  const nodes = Object.values(state.nodes);
+  const pending = nodes.filter(n =>
+    (n.status === 'not_started' || n.status === 'in_progress') &&
+    !n.children // 리프 노드만
+  ).sort((a, b) => {
+    const pOrder = { P0: 0, P1: 1, P2: 2 };
+    const pa = pOrder[a.priority] ?? 3;
+    const pb = pOrder[b.priority] ?? 3;
+    if (pa !== pb) return pa - pb;
+    return a.status === 'not_started' ? -1 : 1;
+  });
+
+  if (pending.length === 0) {
+    list.innerHTML = '<div style="color:var(--green);text-align:center;margin-top:20px;">✅ 모든 작업 완료!</div>';
+    return;
+  }
+
+  list.innerHTML = pending.map(n => {
+    const path = getNodePath(n.id);
+    const stClass = n.status === 'not_started' ? 'dot-not_started' : 'dot-in_progress';
+    const stLabel = n.status === 'not_started' ? '미착수' : '진행중';
+    const prTag = n.priority ? `<span class="priority-tag ${n.priority.toLowerCase()}" style="font-size:10px;">${n.priority}</span>` : '';
+    const checked = checkedIds.has(n.id);
+    return `<div class="pending-item${checked ? ' checked' : ''}" style="display:flex;align-items:center;">
+      <input type="checkbox" ${checked ? 'checked' : ''} onclick="event.stopPropagation();toggleCheck('${n.id}')" style="width:18px;height:18px;margin-right:8px;accent-color:var(--purple);cursor:pointer;flex-shrink:0;" />
+      <div style="flex:1;display:flex;align-items:center;gap:8px;cursor:pointer;" onclick="onNodeClick('${n.id}');expandToNode('${n.id}')">
+        <span class="pending-item-icon">${n.icon || '📌'}</span>
+        <div class="pending-item-body">
+          <div class="pending-item-name">${escHtml(n.name)}</div>
+          <div class="pending-item-path">${escHtml(path)}</div>
+        </div>
+      </div>
+      <div class="pending-item-right">
+        ${prTag}
+        <div style="display:flex;align-items:center;gap:4px;">
+          <div class="status-dot ${stClass}" style="width:6px;height:6px;"></div>
+          <span style="font-size:10px;color:var(--text-dim);">${stLabel}</span>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  // 체크 카운터 + 복사 버튼
+  const checkedCount = checkedIds.size;
+  const actionBar = document.getElementById('pending-action-bar');
+  if (actionBar) actionBar.remove();
+  if (checkedCount > 0) {
+    const bar = document.createElement('div');
+    bar.id = 'pending-action-bar';
+    bar.style.cssText = 'position:sticky;bottom:0;padding:12px;background:var(--surface);border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;';
+    bar.innerHTML = `<span style="color:var(--purple);font-weight:700;">${checkedCount}개 선택됨</span>
+      <button onclick="copyChecked()" style="background:var(--purple);color:white;border:none;padding:8px 16px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:500;">📋 Claude에게 복사</button>`;
+    list.parentElement.appendChild(bar);
+  }
+}
+
+function toggleCheck(id) {
+  if (checkedIds.has(id)) checkedIds.delete(id);
+  else checkedIds.add(id);
+  renderPendingList();
+}
+
+function copyChecked() {
+  if (checkedIds.size === 0) return;
+  const lines = [];
+  let i = 1;
+  for (const id of checkedIds) {
+    const n = state.nodes[id];
+    if (!n) continue;
+    const path = getNodePath(id);
+    const pr = n.priority ? `[${n.priority}]` : '';
+    const note = n.note ? `\n   ${n.note}` : '';
+    lines.push(`${i}. ${pr} ${n.name}\n   위치: ${path}${note}`);
+    i++;
+  }
+  const text = `상황판에서 선택한 ${checkedIds.size}개 작업:\n\n${lines.join('\n\n')}`;
+  navigator.clipboard.writeText(text).then(() => {
+    alert(`${checkedIds.size}개 작업이 클립보드에 복사되었습니다.\nClaude Code에 붙여넣기하세요!`);
+  }).catch(() => {
+    // file:// 에서 clipboard 안 될 수 있음 — 프롬프트로 표시
+    prompt('아래 내용을 복사하세요:', text);
+  });
+}
+
+function getNodePath(id) {
+  const parts = [];
+  for (const [pid, pnode] of Object.entries(state.nodes)) {
+    if (pnode.children && pnode.children.includes(id)) {
+      parts.unshift(pnode.name);
+      // 한 레벨 더
+      for (const [gid, gnode] of Object.entries(state.nodes)) {
+        if (gnode.children && gnode.children.includes(pid)) {
+          parts.unshift(gnode.name);
+          break;
+        }
+      }
+      break;
+    }
+  }
+  return parts.join(' → ');
+}
+
+function expandToNode(id) {
+  // 부모들을 찾아서 펼침
+  for (const [pid, pnode] of Object.entries(state.nodes)) {
+    if (pnode.children && pnode.children.includes(id)) {
+      expandedIds.add(pid);
+      for (const [gid, gnode] of Object.entries(state.nodes)) {
+        if (gnode.children && gnode.children.includes(pid)) {
+          expandedIds.add(gid);
+          break;
+        }
+      }
+      break;
+    }
+  }
+  expandedIds.add('root');
+  renderTree();
+  const row = document.querySelector(`.node-row[data-id="${id}"]`);
+  if (row) { row.classList.add('selected'); row.scrollIntoView({block:'center'}); }
+}
+
+function backToList() {
+  selectedId = null;
+  document.querySelectorAll('.node-row').forEach(r => r.classList.remove('selected'));
+  document.getElementById('detail-content').classList.remove('visible');
+  document.getElementById('detail-empty').style.display = 'block';
+  renderPendingList();
+}
+
+function renderDetail(id) {
+  const node = state.nodes[id];
+  if (!node) return;
+
+  document.getElementById('detail-empty').style.display = 'none';
+  const content = document.getElementById('detail-content');
+  content.classList.add('visible');
+
+  document.getElementById('detail-icon').textContent = node.icon || '📌';
+  document.getElementById('detail-name').textContent = node.name;
+
+  // status badge
+  const sb = document.getElementById('detail-status-badge');
+  const st = node.status || 'not_started';
+  sb.textContent = STATUS_LABEL[st] || st;
+  sb.className = 'status-badge ' + (STATUS_CLASS[st] || 'sb-not_started');
+  sb.onclick = () => cycleStatus(id);
+  sb.title = '클릭하여 상태 변경';
+
+  // priority badge
+  const pb = document.getElementById('detail-priority-badge');
+  if (node.priority) {
+    pb.textContent = node.priority;
+    pb.className = 'priority-tag ' + node.priority.toLowerCase();
+    pb.style.display = 'inline-block';
+  } else {
+    pb.style.display = 'none';
+  }
+
+  // url
+  const urlWrap = document.getElementById('detail-url');
+  const urlLink = document.getElementById('detail-url-link');
+  if (node.url) {
+    const href = node.url.startsWith('http') ? node.url : 'https://' + node.url;
+    urlLink.href = href;
+    urlLink.textContent = node.url;
+    urlWrap.style.display = 'block';
+  } else {
+    urlWrap.style.display = 'none';
+  }
+
+  // note
+  showNoteDisplay(node.note || '');
+}
+
+function showNoteDisplay(text) {
+  const display = document.getElementById('detail-note-display');
+  const edit    = document.getElementById('detail-note-edit');
+  display.textContent = text || '(메모 없음 — 클릭하여 추가)';
+  display.style.color = text ? 'var(--text)' : 'var(--text-dim)';
+  display.style.display = 'block';
+  edit.style.display    = 'none';
+}
+
+function showNoteEdit(text) {
+  const display = document.getElementById('detail-note-display');
+  const edit    = document.getElementById('detail-note-edit');
+  edit.value         = text;
+  display.style.display = 'none';
+  edit.style.display    = 'block';
+  edit.focus();
+}
+
+document.getElementById('detail-note-display').onclick = function() {
+  if (!selectedId) return;
+  const note = state.nodes[selectedId]?.note || '';
+  showNoteEdit(note);
+};
+
+document.getElementById('detail-note-edit').onblur = function() {
+  if (!selectedId) return;
+  saveNote();
+};
+
+document.getElementById('detail-note-edit').onkeydown = function(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    // double enter 감지: 마지막 두 글자가 \n\n
+    const v = this.value;
+    if (v.endsWith('\n')) {
+      e.preventDefault();
+      saveNote();
+    }
+  }
+  if (e.key === 'Escape') {
+    const note = state.nodes[selectedId]?.note || '';
+    showNoteDisplay(note);
+  }
+};
+
+function saveNote() {
+  if (!selectedId) return;
+  const edit = document.getElementById('detail-note-edit');
+  const newNote = edit.value.trim();
+  state.nodes[selectedId].note = newNote;
+  saveState();
+  showNoteDisplay(newNote);
+  renderStats();
+}
+
+function cycleStatus(id) {
+  const node = state.nodes[id];
+  const cur  = node.status || 'not_started';
+  const idx  = STATUS_CYCLE.indexOf(cur);
+  const next = STATUS_CYCLE[(idx + 1) % STATUS_CYCLE.length];
+  node.status = next;
+  saveState();
+  renderStats();
+  renderTree();
+  // restore selection
+  const row = document.querySelector(`.node-row[data-id="${id}"]`);
+  if (row) row.classList.add('selected');
+  renderDetail(id);
+}
+
+// ── 인박스 ────────────────────────────────────────────────
+function toggleInbox() {
+  const body = document.getElementById('inbox-body');
+  const icon = document.getElementById('inbox-toggle-icon');
+  const open = body.classList.toggle('open');
+  icon.classList.toggle('open', open);
+}
+
+function renderInbox() {
+  const list  = document.getElementById('inbox-list');
+  const count = document.getElementById('inbox-count');
+  const items = state.inbox || [];
+  count.textContent = items.length + '개';
+  list.innerHTML = '';
+
+  if (items.length === 0) {
+    list.innerHTML = '<div class="inbox-item"><span class="inbox-item-text" style="color:var(--gray);">아직 아이디어가 없습니다.</span></div>';
+    return;
+  }
+
+  items.slice().reverse().forEach((item, revIdx) => {
+    const realIdx = items.length - 1 - revIdx;
+    const el = document.createElement('div');
+    el.className = 'inbox-item';
+    el.innerHTML = `
+      <div style="flex:1">
+        <div class="inbox-item-text">${escHtml(item.text)}</div>
+        <div class="inbox-item-date">${item.date || ''}</div>
+      </div>
+      <button class="inbox-delete" title="삭제" onclick="deleteInboxItem(${realIdx})">✕</button>
+    `;
+    list.appendChild(el);
+  });
+}
+
+function addInboxItem() {
+  const input = document.getElementById('inbox-input');
+  const text  = input.value.trim();
+  if (!text) return;
+  if (!state.inbox) state.inbox = [];
+  state.inbox.push({
+    text,
+    date: new Date().toLocaleDateString('ko-KR', { month:'numeric', day:'numeric', hour:'2-digit', minute:'2-digit' })
+  });
+  input.value = '';
+  saveState();
+  renderInbox();
+}
+
+function deleteInboxItem(idx) {
+  state.inbox.splice(idx, 1);
+  saveState();
+  renderInbox();
+}
+
+document.getElementById('inbox-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') addInboxItem();
+});
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ── 초기화 ────────────────────────────────────────────────
+expandedIds.add('root');
+
+loadData();
+</script>
+</body>
+</html>
