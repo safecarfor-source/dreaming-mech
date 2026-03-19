@@ -1,4 +1,5 @@
 import type { Mechanic } from '@/types';
+import { ALL_REGIONS } from './regions';
 
 export interface Region {
   id: string;
@@ -27,17 +28,57 @@ export const REGIONS: Region[] = [
   { id: 'jeju', name: '제주', fullName: '제주특별자치도', locationPrefixes: ['제주'] },
 ];
 
+// sido → regionId 매핑 (ALL_REGIONS 활용)
+const SIDO_TO_REGION: Record<string, string> = {
+  '서울특별시': 'seoul', '인천광역시': 'incheon', '경기도': 'gyeonggi',
+  '강원특별자치도': 'gangwon', '세종특별자치시': 'sejong', '대전광역시': 'daejeon',
+  '충청북도': 'chungbuk', '충청남도': 'chungnam', '전북특별자치도': 'jeonbuk',
+  '전라남도': 'jeonnam', '광주광역시': 'gwangju', '경상북도': 'gyeongbuk',
+  '경상남도': 'gyeongnam', '대구광역시': 'daegu', '부산광역시': 'busan',
+  '울산광역시': 'ulsan', '제주특별자치도': 'jeju',
+};
+
+// 구/군/시 이름 → regionId 역매핑 테이블 (ALL_REGIONS에서 자동 생성)
+const SIGUNGU_TO_REGION: Record<string, string> = {};
+for (const r of ALL_REGIONS) {
+  const regionId = SIDO_TO_REGION[r.sido];
+  if (regionId) {
+    SIGUNGU_TO_REGION[r.sigungu] = regionId;
+  }
+}
+
 /**
  * 정비소의 location 필드에서 지역 ID를 찾습니다.
- * 예: "전북 전주시" → "jeonbuk", "인천 남동구" → "incheon"
+ * 다양한 형식 지원:
+ *   "서울 강남구" → "seoul" (접두사 매칭)
+ *   "남동구"      → "incheon" (구/군/시 역매핑)
+ *   "제주 제주시"  → "jeju" (접두사 매칭)
+ *   "과천시"      → "gyeonggi" (시 역매핑)
  */
 export function getRegionForMechanic(location: string): string | null {
+  // 1차: 첫 단어로 시/도 매칭 ("서울 강남구", "인천 남동구", "경기 수원시")
   const prefix = location.split(' ')[0];
   for (const region of REGIONS) {
     if (region.locationPrefixes.includes(prefix)) {
       return region.id;
     }
   }
+
+  // 2차: 구/군/시 이름으로 역매핑 ("남동구" → incheon, "과천시" → gyeonggi)
+  const words = location.split(/[\s]+/);
+  for (const word of words) {
+    if (SIGUNGU_TO_REGION[word]) {
+      return SIGUNGU_TO_REGION[word];
+    }
+  }
+
+  // 3차: 부분 문자열 매칭 (최후 수단)
+  for (const region of REGIONS) {
+    if (region.locationPrefixes.some(p => location.includes(p))) {
+      return region.id;
+    }
+  }
+
   return null;
 }
 
