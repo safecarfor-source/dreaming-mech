@@ -2505,16 +2505,44 @@ function renderInsightDashboard(summary, dirMonthly, salesTarget, cashflows, yea
         <div class="mi-stat-value">${fmtMan(dailyAvg)}원</div>
         <div class="mi-stat-sub" style="color:#888">${elapsed}일 경과</div>
       </div>
-      <div class="mi-stat-card">
-        <div class="mi-stat-label">전월 대비</div>
-        <div class="mi-stat-value" style="color:${pmChange >= 0 ? 'var(--green)' : 'var(--red)'}">${pmChange >= 0 ? '+' : ''}${pmChange}%</div>
+      <div class="mi-stat-card" id="dir-today-revenue">
+        <div class="mi-stat-label">오늘 매출</div>
+        <div class="mi-stat-value">로딩중...</div>
       </div>
-      <div class="mi-stat-card">
-        <div class="mi-stat-label">전년 동월 대비</div>
-        <div class="mi-stat-value" style="color:${pyChange >= 0 ? 'var(--green)' : 'var(--red)'}">${pyChange >= 0 ? '+' : ''}${pyChange}%</div>
+      <div class="mi-stat-card" id="dir-cash-balance">
+        <div class="mi-stat-label">시재 잔액</div>
+        <div class="mi-stat-value">로딩중...</div>
       </div>
     </div>
   </div>`;
+
+  // 오늘 매출 + 시재 잔액 비동기 로드
+  (async () => {
+    try {
+      const today = new Date();
+      const kstDate = new Date(today.getTime() + 9 * 60 * 60 * 1000).toISOString().slice(0, 10);
+      const [todayRes, cashRes] = await Promise.all([
+        api('/gd/daily-revenue?date=' + kstDate).catch(() => null),
+        api('/cashflow/latest').catch(() => null)
+      ]);
+      const todayEl = document.getElementById('dir-today-revenue');
+      if (todayEl && todayRes) {
+        const rev = todayRes.totalRevenue || 0;
+        const cnt = todayRes.repairCount || 0;
+        todayEl.innerHTML = `<div class="mi-stat-label">오늘 매출 (${kstDate.slice(5)})</div><div class="mi-stat-value">${fmtMan(rev)}원</div><div class="mi-stat-sub" style="color:#888">${cnt}건</div>`;
+      } else if (todayEl) {
+        todayEl.innerHTML = `<div class="mi-stat-label">오늘 매출</div><div class="mi-stat-value" style="font-size:13px;color:#999">데이터 없음</div>`;
+      }
+      const cashEl = document.getElementById('dir-cash-balance');
+      if (cashEl && cashRes && cashRes.balance !== undefined) {
+        const bal = cashRes.balance;
+        const color = bal >= 0 ? 'var(--green)' : 'var(--red)';
+        cashEl.innerHTML = `<div class="mi-stat-label">시재 잔액</div><div class="mi-stat-value" style="color:${color}">${Number(bal).toLocaleString()}원</div>`;
+      } else if (cashEl) {
+        cashEl.innerHTML = `<div class="mi-stat-label">시재 잔액</div><div class="mi-stat-value" style="font-size:13px;color:#999">데이터 없음</div>`;
+      }
+    } catch(e) { console.error('dir stats load error', e); }
+  })();
 
   // 카드 2: 월별 매출 추이 (최근 12개월 CSS 바 차트)
   const recent12 = (dirMonthly || []).slice(-12);
