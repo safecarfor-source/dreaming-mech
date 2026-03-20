@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { mechanicsApi, serviceInquiryApi } from '@/lib/api';
 import { getTrackingCode } from '@/lib/tracking';
 import { useModalStore } from '@/lib/store';
+import { generateSlug } from '@/lib/slug';
 import {
   countMechanicsByRegion,
   getMechanicsByRegion,
@@ -797,7 +798,7 @@ function HomeContent() {
                     >
                       <MechanicCard
                         mechanic={mechanic}
-                        onClick={() => openModal(mechanic)}
+                        onClick={() => router.push(`/shop/${generateSlug(mechanic.location || '', mechanic.name)}`)}
                       />
                     </AnimatedSection>
                   ))}
@@ -821,7 +822,7 @@ function HomeContent() {
                           >
                             <MechanicCard
                               mechanic={mechanic}
-                              onClick={() => openModal(mechanic)}
+                              onClick={() => router.push(`/shop/${generateSlug(mechanic.location || '', mechanic.name)}`)}
                               isPremium
                             />
                           </AnimatedSection>
@@ -847,12 +848,23 @@ function HomeContent() {
                         >
                           <MechanicCard
                             mechanic={mechanic}
-                            onClick={() => openModal(mechanic)}
+                            onClick={() => router.push(`/shop/${generateSlug(mechanic.location || '', mechanic.name)}`)}
                           />
                         </AnimatedSection>
                       ))}
                     </div>
                   </div>
+                </div>
+
+                {/* 정비사 등록 유도 링크 */}
+                <div className="mt-8 text-center">
+                  <a
+                    href="/pro/"
+                    className="inline-flex items-center gap-2 text-[#7C4DFF] text-base font-semibold
+                      hover:underline hover:text-[#6D3FE0] transition-colors"
+                  >
+                    정비사 사장님이신가요? 내 정비소 등록하기 →
+                  </a>
                 </div>
               </motion.div>
             </AnimatePresence>
