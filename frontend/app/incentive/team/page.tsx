@@ -343,6 +343,57 @@ function TodayRevenueCard() {
   );
 }
 
+// 목표 미설정 항목 현황 카드 (이달의 목표와 동일 레이아웃)
+function NoTargetItemsCard({
+  items,
+  minQtyItems,
+}: {
+  items: Record<string, { sales: number; qty: number }>;
+  minQtyItems: TeamIncentiveData['minQtyCheck']['items'];
+}) {
+  const targetKeys = new Set(minQtyItems.map((i) => i.itemKey));
+  const noTargetItems = Object.entries(items)
+    .filter(([key]) => !targetKeys.has(key))
+    .filter(([, val]) => val.qty > 0)
+    .sort((a, b) => b[1].qty - a[1].qty);
+
+  if (noTargetItems.length === 0) return null;
+
+  return (
+    <div style={cardStyle}>
+      <div style={cardTitleStyle}>기타 항목 현황</div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+        {noTargetItems.map(([key, val]) => (
+          <div key={key}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+              <span style={{ fontSize: 13, fontWeight: 600, color: '#1A1A1A' }}>
+                {ITEM_LABELS[key] ?? key} ({val.qty}건)
+              </span>
+            </div>
+            <div style={{ height: 10, background: '#EEEEEE', borderRadius: 6, overflow: 'hidden', marginBottom: 3 }}>
+              <div style={{
+                height: '100%',
+                width: '100%',
+                background: '#B0BEC5',
+                borderRadius: 6,
+                opacity: 0.5,
+              }} />
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <span style={{ fontSize: 11, color: '#999', fontWeight: 600 }}>
+                목표 미설정
+              </span>
+              <span style={{ fontSize: 11, color: '#999' }}>
+                {fmtWon(val.sales)}
+              </span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // 데이터 업데이트 시간 표시
 function UpdateTimeCard({ editedAt }: { editedAt: string }) {
   const dt = new Date(editedAt);
@@ -538,7 +589,10 @@ export default function IncentiveTeamPage() {
           {/* 5. 이 달의 목표 */}
           <MonthlyGoalCard mqc={teamData.minQtyCheck} />
 
-          {/* 6. 데이터 업데이트 시간 */}
+          {/* 6. 기타 항목 현황 (목표 미설정) */}
+          <NoTargetItemsCard items={teamData.items} minQtyItems={teamData.minQtyCheck.items} />
+
+          {/* 7. 데이터 업데이트 시간 */}
           {lastCalcAt && <UpdateTimeCard editedAt={lastCalcAt} />}
         </div>
       )}
