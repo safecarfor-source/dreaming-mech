@@ -513,24 +513,24 @@ export default function IncentiveTeamPage() {
       {/* 메인 콘텐츠 */}
       {!loading && !error && teamData && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          {/* 1. 인센티브 금액 */}
-          <IncentiveAmountCard inc={teamData.incentive} />
-
-          {/* 2. 최소수량 + 달성 시 인센티브 */}
-          <MinQtyCard
-            mqc={teamData.minQtyCheck}
-            simIncentive={calcSimIncentive(teamData)}
-            actualIncentive={teamData.incentive.actual}
-            isLoss={teamData.incentive.lost > 0}
-          />
-
-          {/* 3. 매출 예측 (stData 있을 때만) */}
+          {/* 1. 매출 예측 (최상단) */}
           {stData && (
             <SalesForecastCard
               monthNum={extractMonthNum(selectedMonth)}
               stData={stData}
             />
           )}
+
+          {/* 2. 인센티브 금액 */}
+          <IncentiveAmountCard inc={teamData.incentive} />
+
+          {/* 3. 최소수량 + 달성 시 인센티브 */}
+          <MinQtyCard
+            mqc={teamData.minQtyCheck}
+            simIncentive={calcSimIncentive(teamData)}
+            actualIncentive={teamData.incentive.actual}
+            isLoss={teamData.incentive.lost > 0}
+          />
 
           {/* 4. 이 달의 목표 */}
           <MonthlyGoalCard mqc={teamData.minQtyCheck} />
