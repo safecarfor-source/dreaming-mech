@@ -73,9 +73,9 @@ export default function AboutPage() {
       {/* ══════════════════════════════════════════════
           섹션 1: 히어로 — 유튜브에서 온 방문자 환영
       ══════════════════════════════════════════════ */}
-      <section className="min-h-[90vh] flex items-center relative overflow-hidden bg-gradient-to-br from-[#1A0A2E] via-[#0f0520] to-[#0a0a14] pt-16 md:pt-20">
+      <section className="min-h-[90vh] flex items-center relative overflow-hidden bg-gradient-to-br from-[#111827] via-[#1a0d1a] to-[#0a0a14] pt-16 md:pt-20">
         {/* 배경 글로우 */}
-        <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-brand-500/10 rounded-full blur-[120px]" />
+        <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-consumer-500/10 rounded-full blur-[120px]" />
         <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-accent-500/10 rounded-full blur-[100px]" />
 
         <div className="container mx-auto px-5 md:px-6 relative z-10">
@@ -104,7 +104,7 @@ export default function AboutPage() {
             >
               내 차 정비,
               <br />
-              <span className="bg-gradient-to-r from-brand-400 to-brand-300 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-[#FF6B8A] to-[#FF9BB0] bg-clip-text text-transparent">
                 믿을 수 있는 곳
               </span>
               에서.
@@ -124,9 +124,9 @@ export default function AboutPage() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.5 }}
-                className="text-brand-300/80 text-sm mb-8 md:mb-10"
+                className="text-[#FF6B8A]/80 text-sm mb-8 md:mb-10"
               >
-                최근 7일간 <span className="font-bold text-brand-300">{recentCount}건</span>의 정비 문의가 접수되었습니다
+                최근 7일간 <span className="font-bold text-[#FF6B8A]">{recentCount}건</span>의 정비 문의가 접수되었습니다
               </motion.p>
             )}
 
@@ -134,7 +134,7 @@ export default function AboutPage() {
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
               <button
                 onClick={scrollToInquiry}
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-brand-500 hover:bg-brand-600 text-white px-7 py-3.5 md:px-8 md:py-4 rounded-xl md:rounded-2xl font-bold text-sm md:text-base transition-all shadow-lg shadow-brand-500/25 cursor-pointer"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-consumer-500 hover:bg-consumer-600 text-white px-7 py-3.5 md:px-8 md:py-4 rounded-xl md:rounded-2xl font-bold text-sm md:text-base transition-all shadow-lg shadow-consumer-500/25 cursor-pointer"
               >
                 <Phone size={18} />
                 바로 문의하기
@@ -180,7 +180,7 @@ export default function AboutPage() {
         <div className="container mx-auto px-5 md:px-6">
           <AnimatedSection animation="slideUp" duration={0.7}>
             <div className="text-center mb-8 md:mb-14">
-              <p className="text-brand-500 text-xs font-semibold tracking-[0.2em] mb-3">
+              <p className="text-consumer-500 text-xs font-semibold tracking-[0.2em] mb-3">
                 FOR EVERYONE
               </p>
               <h2
@@ -196,8 +196,8 @@ export default function AboutPage() {
             {/* 고객용 카드 — 클릭 시 페이지 내 문의폼으로 스크롤 */}
             <AnimatedSection animation="slideUp" delay={0} duration={0.5}>
               <button onClick={scrollToInquiry} className="block group w-full text-left">
-                <div className="relative bg-gradient-to-br from-brand-50 to-white border-2 border-brand-100 hover:border-brand-300 rounded-2xl p-6 md:p-8 transition-all duration-200 hover:shadow-lg hover:shadow-brand-100/50">
-                  <div className="w-12 h-12 bg-brand-500 rounded-xl flex items-center justify-center mb-4 shadow-sm shadow-brand-500/20">
+                <div className="relative bg-gradient-to-br from-consumer-50 to-white border-2 border-consumer-100 hover:border-consumer-500 rounded-2xl p-6 md:p-8 transition-all duration-200 hover:shadow-lg hover:shadow-consumer-100/50">
+                  <div className="w-12 h-12 bg-consumer-500 rounded-xl flex items-center justify-center mb-4 shadow-sm shadow-consumer-500/20">
                     <Phone size={22} className="text-white" />
                   </div>
                   <h3 className="text-xl font-bold text-[#111] mb-2">차량 정비가 필요해요</h3>
@@ -209,12 +209,12 @@ export default function AboutPage() {
                   <ul className="space-y-2 mb-5">
                     {['엔진오일·타이어·브레이크 등', '전국 어디서나 가능', '전화번호만 있으면 OK'].map((item) => (
                       <li key={item} className="flex items-center gap-2 text-sm text-gray-600">
-                        <CheckCircle2 size={14} className="text-brand-500 flex-shrink-0" />
+                        <CheckCircle2 size={14} className="text-consumer-500 flex-shrink-0" />
                         {item}
                       </li>
                     ))}
                   </ul>
-                  <div className="flex items-center gap-1 text-brand-500 font-semibold text-sm group-hover:gap-2 transition-all">
+                  <div className="flex items-center gap-1 text-consumer-500 font-semibold text-sm group-hover:gap-2 transition-all">
                     아래에서 바로 문의하기
                     <ArrowRight size={16} />
                   </div>
@@ -261,14 +261,14 @@ export default function AboutPage() {
         <div className="container mx-auto px-5 md:px-6">
           <AnimatedSection animation="slideUp" duration={0.7}>
             <div className="text-center mb-8 md:mb-14">
-              <p className="text-brand-500 text-xs font-semibold tracking-[0.2em] mb-3">
+              <p className="text-consumer-500 text-xs font-semibold tracking-[0.2em] mb-3">
                 WHY US
               </p>
               <h2
                 className="font-black text-[#111] break-keep leading-tight"
                 style={{ fontSize: 'clamp(1.375rem, 4vw, 2.5rem)' }}
               >
-                왜 <span className="text-brand-500">꿈꾸는정비사</span>인가요?
+                왜 <span className="text-consumer-500">꿈꾸는정비사</span>인가요?
               </h2>
             </div>
           </AnimatedSection>
@@ -278,10 +278,10 @@ export default function AboutPage() {
             <AnimatedSection animation="slideUp" delay={0.1} duration={0.6}>
               <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-5 mb-8 md:mb-12">
                 {[
-                  { icon: <Eye size={22} />, value: stats.totalViews, label: '누적 조회수', color: 'text-brand-500' },
-                  { icon: <Users size={22} />, value: stats.subscribers, label: '유튜브 구독자', color: 'text-brand-500' },
-                  { icon: <TrendingUp size={22} />, value: stats.monthlyViewers, label: '월간 시청자', color: 'text-brand-500' },
-                  { icon: <Clock size={22} />, value: stats.watchTimeHours, label: '총 시청 시간', color: 'text-brand-500' },
+                  { icon: <Eye size={22} />, value: stats.totalViews, label: '누적 조회수', color: 'text-consumer-500' },
+                  { icon: <Users size={22} />, value: stats.subscribers, label: '유튜브 구독자', color: 'text-consumer-500' },
+                  { icon: <TrendingUp size={22} />, value: stats.monthlyViewers, label: '월간 시청자', color: 'text-consumer-500' },
+                  { icon: <Clock size={22} />, value: stats.watchTimeHours, label: '총 시청 시간', color: 'text-consumer-500' },
                 ].map((s, i) => (
                   <div key={i} className="bg-white rounded-xl p-4 md:p-5 text-center border border-gray-100 shadow-sm">
                     <div className={`${s.color} flex justify-center mb-2`}>{s.icon}</div>
@@ -299,19 +299,19 @@ export default function AboutPage() {
                   icon: <Shield size={24} />,
                   title: '20년 경력의 검증',
                   desc: '영상에서만 보던 정비사가 직접 검증한 정비소. 실력 있는 곳만 등록됩니다.',
-                  gradient: 'from-brand-500 to-brand-600',
+                  gradient: 'from-consumer-500 to-consumer-600',
                 },
                 {
                   icon: <Zap size={24} />,
                   title: '30초 만에 문의',
                   desc: '회원가입 없이 전화번호만 입력하면 끝. 정비사가 먼저 연락드립니다.',
-                  gradient: 'from-brand-500 to-brand-600',
+                  gradient: 'from-consumer-500 to-consumer-600',
                 },
                 {
                   icon: <MapPin size={24} />,
                   title: '전국 어디서나',
                   desc: '서울부터 제주까지. 내 지역의 검증된 정비소를 바로 찾을 수 있습니다.',
-                  gradient: 'from-brand-500 to-brand-600',
+                  gradient: 'from-consumer-500 to-consumer-600',
                 },
               ].map((item, i) => (
                 <AnimatedSection key={i} animation="slideUp" delay={i * 0.1} duration={0.5}>
@@ -333,7 +333,7 @@ export default function AboutPage() {
           섹션 4: 소셜 프루프 — 신뢰 강화
       ══════════════════════════════════════════════ */}
       <section className="bg-[#111] py-12 md:py-20 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-80 h-80 bg-brand-500/10 rounded-full blur-[100px]" />
+        <div className="absolute top-0 right-0 w-80 h-80 bg-consumer-500/10 rounded-full blur-[100px]" />
         <div className="absolute bottom-0 left-0 w-60 h-60 bg-accent-500/10 rounded-full blur-[80px]" />
 
         <div className="container mx-auto px-5 md:px-6 relative z-10">
@@ -353,7 +353,7 @@ export default function AboutPage() {
                 <br />
                 그래서 <span className="text-white font-semibold">직접 플랫폼을 만들었습니다</span>.
                 <br />
-                정비사와 고객을 <span className="text-brand-300 font-semibold">직접 연결</span>하기 위해.
+                정비사와 고객을 <span className="text-[#FF6B8A] font-semibold">직접 연결</span>하기 위해.
               </p>
 
               <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
@@ -382,18 +382,18 @@ export default function AboutPage() {
       {/* ══════════════════════════════════════════════
           섹션 5: 문의 폼 — 페이지 내 직접 접수
       ══════════════════════════════════════════════ */}
-      <section id="inquiry-section" className="bg-[#F8F7FC] py-12 md:py-20 scroll-mt-16">
+      <section id="inquiry-section" className="bg-[#FFF1F5] py-12 md:py-20 scroll-mt-16">
         <div className="container mx-auto px-5 md:px-6">
           <AnimatedSection animation="slideUp" duration={0.7}>
             <div className="text-center mb-8 md:mb-10">
-              <p className="text-brand-500 text-xs font-semibold tracking-[0.2em] mb-3">
+              <p className="text-consumer-500 text-xs font-semibold tracking-[0.2em] mb-3">
                 QUICK INQUIRY
               </p>
               <h2
                 className="font-black text-[#111] break-keep leading-tight mb-2"
                 style={{ fontSize: 'clamp(1.375rem, 4vw, 2.5rem)' }}
               >
-                지금 바로 <span className="text-brand-500">문의</span>하세요
+                지금 바로 <span className="text-consumer-500">문의</span>하세요
               </h2>
               <p className="text-gray-500 text-sm">
                 회원가입 없이 30초면 접수 완료 · 검증된 정비사가 직접 연락드립니다
@@ -410,7 +410,7 @@ export default function AboutPage() {
       {/* ══════════════════════════════════════════════
           섹션 6: 정비사 가입 CTA
       ══════════════════════════════════════════════ */}
-      <section className="bg-gradient-to-br from-brand-500 to-brand-600 py-12 md:py-16">
+      <section className="bg-gradient-to-br from-consumer-500 to-consumer-600 py-12 md:py-16">
         <div className="container mx-auto px-5 md:px-6">
           <AnimatedSection animation="slideUp" duration={0.7}>
             <div className="text-center max-w-lg mx-auto">
@@ -425,7 +425,7 @@ export default function AboutPage() {
               </p>
               <Link
                 href="/owner/login"
-                className="inline-flex items-center justify-center gap-2 bg-white text-brand-600 hover:bg-gray-50 px-7 py-3.5 md:px-8 md:py-4 rounded-xl md:rounded-2xl font-bold text-sm md:text-base transition-all shadow-lg"
+                className="inline-flex items-center justify-center gap-2 bg-white text-consumer-600 hover:bg-gray-50 px-7 py-3.5 md:px-8 md:py-4 rounded-xl md:rounded-2xl font-bold text-sm md:text-base transition-all shadow-lg"
               >
                 <Wrench size={18} />
                 카카오로 3초 가입
@@ -446,7 +446,7 @@ export default function AboutPage() {
           <div className="flex gap-2">
             <button
               onClick={scrollToInquiry}
-              className="flex-1 flex items-center justify-center gap-1.5 bg-brand-500 hover:bg-brand-600 text-white py-3 rounded-xl font-bold text-sm transition-colors cursor-pointer"
+              className="flex-1 flex items-center justify-center gap-1.5 bg-consumer-500 hover:bg-consumer-600 text-white py-3 rounded-xl font-bold text-sm transition-colors cursor-pointer"
             >
               <Phone size={14} />
               바로 문의

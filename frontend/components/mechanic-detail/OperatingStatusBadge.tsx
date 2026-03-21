@@ -104,7 +104,7 @@ export default function OperatingStatusBadge({ operatingHours, holidays }: Props
               <div
                 key={day}
                 className={`flex justify-between text-[var(--text-caption)] ${
-                  isToday ? 'font-bold text-brand-500' : 'text-text-secondary'
+                  isToday ? 'font-bold text-consumer-500' : 'text-text-secondary'
                 }`}
               >
                 <span>{DAY_LABELS[day]}{isToday ? ' (오늘)' : ''}</span>

@@ -24,8 +24,8 @@ interface Props {
 
 const menuItems = [
   { href: '/admin', label: '대시보드', icon: LayoutDashboard },
-  { href: '/admin/mechanics', label: '정비사 관리', icon: Users, badgeKey: 'mechanics' as const },
-  { href: '/admin/users', label: '회원 관리', icon: UserCheck, badgeKey: 'owners' as const },
+  { href: '/admin/mechanics', label: '등록된 정비소', icon: Users, badgeKey: 'mechanics' as const },
+  { href: '/admin/users', label: '사업자 승인', icon: UserCheck, badgeKey: 'owners' as const },
   { href: '/admin/unified-inquiries', label: '문의 관리', icon: MessageSquare, badgeKey: 'unified' as const },
   { href: '/admin/reviews', label: '리뷰 관리', icon: Star, badgeKey: 'reviews' as const },
   { href: '/admin/erp', label: 'ERP 관리', icon: Wrench },

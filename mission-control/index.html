@@ -652,8 +652,8 @@
 
 <script>
 // ── 상태 ──────────────────────────────────────────────────
-const LS_KEY = 'missioncontrol_v12';  // v12: 사진 업로드 (노드 + 인박스)
-const DATA_VERSION = 9;
+const LS_KEY = 'missioncontrol_v16';  // v16: 커뮤니티 활성화 전략 항목 추가
+const DATA_VERSION = 10;
 let state = { nodes: {}, inbox: [], lastUpdated: '', version: 0 };
 let selectedId = null;
 let expandedIds = new Set();
@@ -670,17 +670,20 @@ localStorage.removeItem('missioncontrol_v8');
 localStorage.removeItem('missioncontrol_v9');
 localStorage.removeItem('missioncontrol_v10');
 localStorage.removeItem('missioncontrol_v11');
+localStorage.removeItem('missioncontrol_v14');
+localStorage.removeItem('missioncontrol_v15');
+localStorage.removeItem('missioncontrol_v16');
 
 // ── 내장 데이터 ───────────────────────────────────────────
-const EMBEDDED_DATA = {"lastUpdated":"2026-03-18T23:30:00+09:00","nodes":[
-  {"id":"root","name":"꿈꾸는정비사","icon":"🏢","status":"active","children":["platform","admin","incentive","marketing"]},
+const EMBEDDED_DATA = {"lastUpdated":"2026-03-19T13:50:00+09:00","nodes":[
+  {"id":"root","name":"꿈꾸는정비사","icon":"🏢","status":"active","children":["platform","admin","incentive","marketing","admin-mechanic-overlap","kmong-analysis","inc-vehicle-bug","platform-fulltest","region-search-alias","region-search-short","erp-domain","member-mgmt","onboarding-nav","for-mechanics-thumb","admin-inquiry-bug","platform-rebrand","web-detail-plan","web-core-design","mc-redesign","community-activation"]},
   {"id":"platform","name":"정비소 플랫폼","icon":"🌐","url":"dreammechaniclab.com/","status":"active","children":["platform-mechanic","platform-consumer","platform-community","platform-youtube","platform-seo"]},
   {"id":"platform-mechanic","name":"정비사 탭","icon":"🔧","status":"in_progress","children":["pm-register","pm-detail","pm-dashboard","pm-auth","pm-map-bug"]},
   {"id":"pm-register","name":"정비소 등록 플로우","icon":"📝","status":"in_progress","priority":"P0","note":"카카오 가입→사업자 인증→정비소 등록 3단계. 온보딩 리다이렉트 수정 완료(3/18)"},
   {"id":"pm-detail","name":"정비소 상세 페이지","icon":"📄","status":"done","note":"저장 에러 상세 표시 + 전화번호 유연화 완료(3/18)"},
   {"id":"pm-dashboard","name":"사장님 대시보드","icon":"📊","status":"done","note":"/owner 대시보드 구현 완료. 거절 사유 표시 완료."},
   {"id":"pm-auth","name":"사업자 인증","icon":"🔑","status":"done","note":"카카오 로그인 + 사업자등록증 업로드 + PENDING/APPROVED 승인제"},
-  {"id":"pm-map-bug","name":"🔴 지도: 제주만 활성화 버그","icon":"🗺️","status":"not_started","priority":"P1","note":"#상황판 (3/18) [사진첨부]\n\n정비소 9개가 들어가있고 지역별로도 있는데\n제주도만 활성화되어있어\n그이유가 궁금하다.\n뭔가 오류가 있으니 너가 직접 체크해봐"},
+  {"id":"pm-map-bug","name":"✅ 지도: 제주만 활성화 버그","icon":"🗺️","status":"done","priority":"P1","note":"✅ 해결완료(3/19) regionMap.ts에 구/군→시도 역매핑 추가"},
   {"id":"platform-consumer","name":"소비자 탭","icon":"👤","status":"in_progress","children":["pc-funnel","pc-region","pc-kakao","pc-login-design"]},
   {"id":"pc-funnel","name":"4단계 문의 퍼널","icon":"🔄","status":"done","note":"지역→서비스→연락처→완료. 정비소 썸네일 카드 추가(3/18)"},
   {"id":"pc-region","name":"지역별 검색","icon":"🗺️","status":"in_progress","priority":"P1","note":"지도 깃발 표시 대기 (대장님 이미지 필요)"},
@@ -705,8 +708,23 @@ const EMBEDDED_DATA = {"lastUpdated":"2026-03-18T23:30:00+09:00","nodes":[
   {"id":"mkt-youtube","name":"유튜브 전략","icon":"🎬","status":"in_progress","priority":"P0","note":"인기 영상 설명란 링크 추가 + 커뮤니티 탭 포스트 (대장님 담당)"},
   {"id":"mkt-seo","name":"지역별 SEO","icon":"🔍","status":"not_started","priority":"P1","note":"/region/서울 등 지역별 랜딩 페이지"},
   {"id":"mkt-social","name":"소셜 미디어","icon":"📱","status":"not_started","priority":"P2"},
-  {"id":"mc-nav-bug","name":"상황판: 메인보드 복귀 안됨","icon":"🖥️","status":"not_started","priority":"P1","note":"#상황판 (3/18)\n\n대기중인 작업을 클릭하면 화면이 옮겨지는데 첫 메인보드 화면으로 돌아오지 않아.\n이걸 해결할 아이디어를"},
-  {"id":"mc-rebuild","name":"상황판: 도메인화 + 사진 업로드 + 구조 개편","icon":"🏗️","status":"not_started","priority":"P0","note":"#상황판 (3/18)\n\n우리 웹에 사진을 업로드할 수 있도록 구조 자체를 바꾼다.\n\n이또한 로컬이 아니라 어디서든 볼 수 있도록 도메인화 할꺼다.\n\n구조도는 이렇다\n\n1번 레이어 상황판\n2번 레이어\n-정비소 플랫폼\n-정비소 플랫폼 관리자\n-인센티브\n-마케팅\n\n3번 레이어\n2번레이어에서의 하위"}
+  {"id":"mc-rebuild","name":"✅ 상황판: 도메인화 + 사진 업로드","icon":"🏗️","status":"done","note":"✅ 완료(3/19) dreammechaniclab.com/mission/ 라이브 + 사진 업로드 구현"},
+  {"id":"admin-mechanic-overlap","name":"🔴 정비사 관리 두개 겹침","icon":"👥","status":"not_started","priority":"P1","note":"#상황판 (3/19)\n\n정비사 관리가 두개가 겹쳐 있는 느낌이야.\n\n정비사가 회원가입한것,\n등록된 정비소\n\n분류를 해야겠어."},
+  {"id":"kmong-analysis","name":"🔴 크몽 웹사이트 스택 분석","icon":"🔍","status":"not_started","priority":"P1","note":"#상황판 (3/19)\n\n크몽 웹사이트의 스텍을 분석해볼 수 있니?\n\n어떤 아키텍쳐로 지어졌는지"},
+  {"id":"inc-vehicle-bug","name":"🔴 인센티브 차량조회 상세 안됨","icon":"🚗","status":"not_started","priority":"P1","note":"#상황판 (3/19)\n\n검색이 안되는데 이유 확인하고 다시는 일이 발생안하게 안전조취를 취해야해\n먼저 왜 일어났는지\n구조적으로 분석하고\n\n새롭게 설계하자"},
+  {"id":"platform-fulltest","name":"🔴 플랫폼 전수검사","icon":"🔬","status":"not_started","priority":"P0","note":"#상황판 (3/18)\n\n우리 정비소 플랫폼 메인 페이지 오류 전수검사할꺼야.\n\n일반고객 회원가입 오류도 있고,\n정비사 회원가입 오류도 있고,\n총체적으로 무기력화되어있어"},
+  {"id":"region-search-alias","name":"🔴 지역검색 약칭+일산","icon":"🔍","status":"not_started","priority":"P1","note":"#상황판 (3/19)\n\n지역검색중 일산이 안되는데 일산뿐아니라 다른데는 문제가 없나?\n이유 원인 파악 및 계획 설꼐까지"},
+  {"id":"region-search-short","name":"🔴 의정부 약칭 검색","icon":"🔍","status":"not_started","priority":"P1","note":"#상황판 (3/19)\n\n의정부만 검색해도 경기 의정부시가 되도록 해줘"},
+  {"id":"erp-domain","name":"🔴 ERP 새 도메인 분리","icon":"🌐","status":"not_started","priority":"P1","note":"#상황판 (3/19)\n\nERP관리는 새로운 도매인으로 자체 관리를 해야겠어.\n0. 상황판\n1. 정비소 플랫폼\n2. 정비소 플랫폼 관리자\n3. 인센티브\n4. 극동 프로그램\n이렇게 만들어낼거야. ERP를 4번으로 넣을거고 도메인을 만들어줘"},
+  {"id":"member-mgmt","name":"🔴 일반회원/정비사 관리 분리","icon":"👥","status":"not_started","priority":"P1","note":"#상황판 (3/19)\n\n중복될 수도 있지만\n일반 회원과 정비사 관리를 따로 할건데\n정비사가 회원가입할때에는 어디로 와야 관리가 적합할까?"},
+  {"id":"onboarding-nav","name":"🔴 온보딩 메인 복귀 탭","icon":"🔙","status":"not_started","priority":"P1","note":"#상황판 (3/19)\n\n해당 페이지에서 메인으로 돌아가는 탭이 있어야겠어."},
+  {"id":"for-mechanics-thumb","name":"🔴 정비사 소개 실제 썸네일","icon":"📸","status":"not_started","priority":"P1","note":"#상황판 (3/19)\n\n실제 내 썸네일을 띄어줘"},
+  {"id":"admin-inquiry-bug","name":"🔴 문의관리 알람은 뜨지만 내용 안나옴","icon":"📨","status":"not_started","priority":"P0","note":"#상황판 (3/19)\n\n테스트 문의롤 넣어서 보니까 알람은 뜨지만 무슨 문의인지 나오지 않음"},
+  {"id":"platform-rebrand","name":"🔴 정비소 웹사이트 리브랜딩 필요","icon":"🎨","status":"not_started","priority":"P1","note":"#상황판 (3/20)\n\n정비소 웹사이트 리브랜딩 필요"},
+  {"id":"web-detail-plan","name":"🔴 웹사이트 디테일 수정 기획/설계","icon":"📋","status":"not_started","priority":"P0","note":"#상황판 (3/20)\n\n우리 웹사이트 디테일한 수정을 위한 수정 기획/설계\n기초가 다져진 웹사이트를 업그레이드하는 과정.\n질문과 대답 그리고 설계/기획을 기초로 진행."},
+  {"id":"web-core-design","name":"🔴 웹 코어 디자인 설계 (유튜브 벤치마킹)","icon":"🎨","status":"not_started","priority":"P0","note":"#상황판 (3/20)\n\n웹 코어 디자인 설계 - 유튜브를 벤치마킹.\n이걸 먼저 기획해서 진행할 예정.\n기초가 다져진 웹사이트를 업그레이드하는 과정.\n브랜드 컬러: #E4015C (소비자)"},
+  {"id":"mc-redesign","name":"🔴 상황판 기획/설계 재시작","icon":"📡","status":"in_progress","priority":"P0","note":"#상황판 (3/20)\n\n상황판 워크플로우 분석.\n현재 상황판 업데이트가 안되고 있다.\n기획/설계를 다시 시작. 전문가 기준 완성형 상상 후 기초부터."},
+  {"id":"community-activation","name":"🔴 커뮤니티 활성화 전략 (글쓰기 시점에 재논의)","icon":"💬","status":"not_started","priority":"P1","note":"#상황판 (3/21)\n\n커뮤니티 활성화 전략 기획 완료.\n글쓰기 실행 시점에 다시 논의 예정.\n\n분류: 정보전달 + 가치입증\n시딩 30개 → 주 2개 작성\n유튜브 영상 연결\n정비소 대표님 글 포함"}
 ],"inbox":[]};
 
 // ── 데이터 로드 ───────────────────────────────────────────

@@ -52,7 +52,7 @@ export default function HeroSection({ totalMechanics, totalClicks }: Props) {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.6, ease: 'easeOut' }}
-            className="font-black leading-[1.15] text-[#B388FF]"
+            className="font-black leading-[1.15] text-[#FF6B8A]"
           >
             신뢰를 리프팅합니다
           </motion.h1>

@@ -64,14 +64,39 @@ export class MechanicService {
         '전라남도': '전남', '경상북도': '경북', '경상남도': '경남',
         '제주특별자치도': '제주',
       };
+      // 시군구 약칭 매핑 (일산→고양시, 분당→성남시 등)
+      const SIGUNGU_ALIASES: Record<string, string[]> = {
+        '고양시': ['고양', '일산', '일산서구', '일산동구', '덕양구'],
+        '성남시': ['성남', '분당', '판교', '수정구', '중원구'],
+        '용인시': ['용인', '수지', '기흥', '처인구'],
+        '수원시': ['수원', '영통', '권선', '장안구', '팔달구'],
+        '화성시': ['화성', '동탄'],
+        '안양시': ['안양', '평촌', '만안구', '동안구'],
+        '안산시': ['안산', '단원구', '상록구'],
+        '남양주시': ['남양주', '별내', '다산'],
+        '파주시': ['파주', '운정'],
+        '의정부시': ['의정부'],
+        '부천시': ['부천'],
+        '시흥시': ['시흥'],
+        '평택시': ['평택'],
+        '창원시': ['창원', '마산', '진해'],
+        '천안시': ['천안', '쌍용', '불당'],
+        '청주시': ['청주'],
+        '전주시': ['전주'],
+      };
       const regionConditions: any[] = [];
       if (sigungu) {
         regionConditions.push({ location: { contains: sigungu, mode: 'insensitive' } });
+        // 시군구 약칭으로도 검색 (고양시 → 일산, 고양 등)
+        const aliases = SIGUNGU_ALIASES[sigungu];
+        if (aliases) {
+          for (const alias of aliases) {
+            regionConditions.push({ location: { contains: alias, mode: 'insensitive' } });
+          }
+        }
       }
       if (sido) {
-        // 정식명으로 검색
         regionConditions.push({ location: { contains: sido, mode: 'insensitive' } });
-        // 약칭으로도 검색 (충청남도 → 충남)
         const alias = SIDO_ALIAS[sido];
         if (alias) {
           regionConditions.push({ location: { contains: alias, mode: 'insensitive' } });

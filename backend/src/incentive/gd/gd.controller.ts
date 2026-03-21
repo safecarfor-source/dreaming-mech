@@ -16,11 +16,22 @@ export class GdController {
     return this.gdService.searchVehicles(q, parseInt(page), parseInt(limit));
   }
 
+  // 기존 path parameter 방식 (하위 호환 유지)
   @Get('vehicles/:code/repairs')
-  getVehicleRepairs(
+  getVehicleRepairsByPath(
     @Query('page') page: string = '1',
     @Query('limit') limit: string = '20',
     @Param('code') code: string,
+  ) {
+    return this.gdService.getVehicleRepairs(code, parseInt(page), parseInt(limit));
+  }
+
+  // 슬래시 등 특수문자 포함 차량코드 대응 — query parameter 방식
+  @Get('vehicle-repairs')
+  getVehicleRepairs(
+    @Query('code') code: string,
+    @Query('page') page: string = '1',
+    @Query('limit') limit: string = '20',
   ) {
     return this.gdService.getVehicleRepairs(code, parseInt(page), parseInt(limit));
   }

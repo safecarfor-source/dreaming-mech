@@ -325,6 +325,29 @@ export class DashboardService {
     };
   }
 
+  // 월초 이월시재 조회
+  async getOpeningCash(year: number, month: number) {
+    const data = await this.prisma.cashFlow.findUnique({
+      where: { year_month: { year, month } },
+    });
+    return {
+      year,
+      month,
+      openingCash: data?.openingCash != null ? Number(data.openingCash) : null,
+    };
+  }
+
+  // 월초 이월시재 설정
+  async setOpeningCash(year: number, month: number, openingCash: number) {
+    const value = BigInt(Math.round(openingCash));
+    await this.prisma.cashFlow.upsert({
+      where: { year_month: { year, month } },
+      create: { year, month, openingCash: value },
+      update: { openingCash: value },
+    });
+    return { year, month, openingCash: Number(value) };
+  }
+
   // 현금흐름 데이터 저장 (upsert)
   async saveCashFlow(
     year: number,

@@ -33,7 +33,7 @@ function RepairDetail({ code }: RepairDetailProps) {
       setError(false);
       try {
         const res = await incentiveApi.get<{ repairs: GdRepair[]; total: number }>(
-          `/gd/vehicles/${encodeURIComponent(code)}/repairs?page=1&limit=20`
+          `/gd/vehicle-repairs?code=${encodeURIComponent(code)}&page=1&limit=20`
         );
         if (!cancelled) {
           setRepairs(res.data.repairs || []);
@@ -55,7 +55,7 @@ function RepairDetail({ code }: RepairDetailProps) {
     try {
       const nextPage = page + 1;
       const res = await incentiveApi.get<{ repairs: GdRepair[]; total: number }>(
-        `/gd/vehicles/${encodeURIComponent(code)}/repairs?page=${nextPage}&limit=20`
+        `/gd/vehicle-repairs?code=${encodeURIComponent(code)}&page=${nextPage}&limit=20`
       );
       setRepairs((prev) => [...prev, ...(res.data.repairs || [])]);
       setPage(nextPage);

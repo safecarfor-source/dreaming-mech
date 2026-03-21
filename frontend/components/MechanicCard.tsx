@@ -27,10 +27,10 @@ export default function MechanicCard({ mechanic, onClick, isPremium }: Props) {
       onClick={handleClick}
       className={`bg-white rounded-xl overflow-hidden cursor-pointer group transition-all duration-300 ${
         isPremium
-          ? 'shadow-[0_2px_12px_rgba(124,92,252,0.15)] hover:shadow-md'
-          : 'border border-gray-200 shadow-sm hover:shadow-md hover:border-[#7C4DFF]/30'
+          ? 'shadow-[0_2px_12px_rgba(228,1,92,0.15)] hover:shadow-md'
+          : 'border border-gray-200 shadow-sm hover:shadow-md hover:border-consumer-500/30'
       }`}
-      style={isPremium ? { border: '1.5px solid rgba(124, 92, 252, 0.2)' } : undefined}
+      style={isPremium ? { border: '1.5px solid rgba(228, 1, 92, 0.2)' } : undefined}
     >
       {/* 이미지 — 프리미엄은 16:9, 일반은 1:1 */}
       <div className={`${isPremium ? 'aspect-video' : 'aspect-square'} bg-gray-100 relative overflow-hidden`}>
@@ -44,8 +44,8 @@ export default function MechanicCard({ mechanic, onClick, isPremium }: Props) {
             sizes={isPremium ? "(max-width: 768px) 100vw, 25vw" : "(max-width: 768px) 50vw, (max-width: 1024px) 25vw, 16vw"}
           />
         ) : (
-          <div className="w-full h-full bg-gradient-to-br from-purple-50 to-purple-100 flex items-center justify-center">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-purple-300">
+          <div className="w-full h-full bg-gradient-to-br from-consumer-50 to-consumer-100 flex items-center justify-center">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-[#FF6B8A]">
               <path d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0H5m14 0h2m-16 0H3" strokeLinecap="round" strokeLinejoin="round" />
               <path d="M9 7h.01M9 11h.01M9 15h.01M13 7h.01M13 11h.01M13 15h.01" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
@@ -65,7 +65,7 @@ export default function MechanicCard({ mechanic, onClick, isPremium }: Props) {
           <div className="absolute top-2 left-2 z-10 md:hidden">
             <span
               className="text-white text-[9px] font-bold rounded px-1.5 py-0.5"
-              style={{ background: 'linear-gradient(135deg, #7c5cfc, #a855f7)' }}
+              style={{ background: 'linear-gradient(135deg, #E4015C, #FF6B8A)' }}
             >
               PREMIUM
             </span>
@@ -76,7 +76,7 @@ export default function MechanicCard({ mechanic, onClick, isPremium }: Props) {
       {/* 정보 — 컴팩트 */}
       <div className="p-2 sm:p-2.5">
         <h3 className="text-[11px] sm:text-xs font-bold text-gray-900 mb-1
-          group-hover:text-[#7C4DFF] transition-colors line-clamp-1">
+          group-hover:text-consumer-500 transition-colors line-clamp-1">
           {sanitizeText(mechanic.name)}
         </h3>
 

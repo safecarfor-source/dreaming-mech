@@ -69,7 +69,7 @@ export default function CommunityWritePage() {
                     onClick={() => setCategory(cat.value)}
                     className={`px-4 py-2 rounded-xl text-sm font-semibold transition-colors ${
                       category === cat.value
-                        ? 'bg-[#7C4DFF] text-white'
+                        ? 'bg-[#E4015C] text-white'
                         : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                     }`}
                   >
@@ -90,7 +90,7 @@ export default function CommunityWritePage() {
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="궁금한 점을 간략하게 적어주세요"
                 maxLength={100}
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#7C4DFF] transition-all"
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#E4015C] transition-all"
               />
               <p className="text-xs text-gray-400 mt-1 text-right">{title.length}/100</p>
             </div>
@@ -105,14 +105,14 @@ export default function CommunityWritePage() {
                 onChange={(e) => setContent(e.target.value)}
                 placeholder="차종, 증상, 궁금한 점 등을 자세히 적어주세요"
                 rows={8}
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#7C4DFF] transition-all resize-none"
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#E4015C] transition-all resize-none"
               />
             </div>
 
             {/* 안내 */}
-            <div className="bg-[#F5F3FF] rounded-xl p-4 text-sm text-[#7C4DFF]">
+            <div className="bg-[#FFF1F5] rounded-xl p-4 text-sm text-[#E4015C]">
               <p className="font-semibold mb-1">게시글 작성 안내</p>
-              <ul className="text-[#7C4DFF]/80 space-y-1 text-xs">
+              <ul className="text-[#E4015C]/80 space-y-1 text-xs">
                 <li>• 카카오 로그인 후 게시글을 작성할 수 있습니다</li>
                 <li>• 정비사가 댓글을 달면 매장 정보가 함께 표시됩니다</li>
                 <li>• 개인정보(전화번호 등)는 본문에 적지 마세요</li>
@@ -123,7 +123,7 @@ export default function CommunityWritePage() {
             <button
               onClick={handleSubmit}
               disabled={submitting || !title.trim() || !content.trim()}
-              className="w-full bg-[#7C4DFF] text-white py-4 rounded-xl font-bold text-lg hover:bg-[#6B3FE0] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-[#E4015C] text-white py-4 rounded-xl font-bold text-lg hover:bg-[#C70150] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {submitting ? '등록 중...' : '질문 등록하기'}
             </button>

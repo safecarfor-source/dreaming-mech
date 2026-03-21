@@ -42,6 +42,25 @@
 - 본문 텍스트에 컬러 사용 금지 (--color-text-primary 또는 --color-text-secondary만 사용)
 - 배경에 진한 컬러 직접 사용 금지 → 50/100 단계 틴트 사용
 - 그라데이션은 버튼, 뱃지 등 소형 요소에만 허용. 큰 영역에 그라데이션 금지
+
+### 소비자 브랜드 컬러 (#E4015C 계열)
+소비자(고객) 향 페이지에서 사용. 정비사/관리자 페이지는 기존 보라색 유지.
+
+60-30-10 법칙:
+- 60% 지배색: #FFFFFF + #F9FAFB (화이트/연회색)
+- 30% 보조색: #111827 + #E5E7EB (텍스트/보더)
+- 10% 강조색: #E4015C (CTA, 버튼, 링크)
+
+CSS 변수:
+```css
+--consumer-50:  #FFF1F5  /* 배경 틴트 */
+--consumer-100: #FFE0EA  /* 호버 배경 */
+--consumer-500: #E4015C  /* 메인 */
+--consumer-600: #C70150  /* 호버 */
+--consumer-700: #A50143  /* 액티브 */
+```
+
+Tailwind 토큰: `bg-consumer-50`, `text-consumer-500`, `bg-consumer-600` 등으로 사용
 -----
 ## 3. 타이포그래피
 ### 폰트
@@ -51,7 +70,21 @@ font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-se
 - 한글: Pretendard (필수 — CDN: https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css)
 - 영문/숫자: Pretendard가 커버 (별도 영문 폰트 불필요)
 - 시스템 기본 폰트(맑은고딕, 굴림 등) 절대 사용 금지
-### 텍스트 크기 체계
+### 소비자 페이지 텍스트 크기 (5단계 엄격)
+| 단계 | 용도 | PC | 모바일 | 굵기 | line-height |
+|:---:|------|:---:|:---:|:---:|:---:|
+| 1 | 히어로 제목 | 36px | 28px | 800 | 1.2 |
+| 2 | 섹션 제목 | 24px | 22px | 700 | 1.3 |
+| 3 | 카드 제목 | 20px | 18px | 600 | 1.4 |
+| 4 | 본문 | 18px | 17px | 400 | 1.7 |
+| 5 | 보조 텍스트 | 14px | 13px | 400 | 1.5 |
+
+CSS 변수: `--text-hero` / `--text-section` / `--text-card` / `--text-body` / `--text-sub`
+
+⚠️ 이 5단계 외 글씨 크기 사용 금지 (소비자 페이지)
+타겟 고객: 45세+ 남성 (노안 고려)
+
+### 관리자/인센티브 페이지 텍스트 크기 (기존 유지)
 | 용도 | 크기 | 굵기 | line-height |
 |------|------|------|-------------|
 | 페이지 타이틀 (H1) | 28px | 800 (ExtraBold) | 1.3 |
@@ -61,6 +94,8 @@ font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-se
 | 본문 | 14px | 400 (Regular) | 1.6 |
 | 캡션/보조텍스트 | 12px | 400 (Regular) | 1.5 |
 | 뱃지/태그 | 11px | 600 (SemiBold) | 1 |
+
+CSS 변수: `--text-display` / `--text-h1` ~ `--text-h5` / `--text-body` / `--text-caption` / `--text-small`
 ### 타이포 규칙
 - 제목에만 Bold 이상 사용. 본문에서 Bold 남용 금지
 - 자간(letter-spacing): 한글은 0 ~ -0.01em, 영문 대문자 태그는 0.05em
@@ -295,7 +330,20 @@ transition: box-shadow 0.2s ease, transform 0.2s ease;
 | 툴팁 | 8px | 0 4px 12px rgba(0,0,0,0.1) | 8px 12px |
 | 네비게이션 | 0 | 0 1px 0 var(--color-border) | 16px 24px |
 -----
-## 12. 디자인 의사결정 원칙
+## 12. 시각적 리듬 (섹션 구분)
+유튜브 스타일로 섹션 간 심리적 구분:
+- 섹션 A: `bg-white` → (48px 여백) → 섹션 B: `bg-[#F9FAFB]` → (48px 여백) → 섹션 C: `bg-white`
+- 구분선(border) 사용하지 않음
+- 배경색 교대 + 여백으로 자연스럽게 구분
+- 각 섹션 제목: 24px Bold, 좌측 정렬
+-----
+## 13. 하단 탭바 (소비자 모바일)
+- 3탭: 홈 | 정비소 찾기 | 문의하기
+- 활성: `#E4015C` (`text-consumer-500`) / 비활성: `#9CA3AF` (`text-text-muted`)
+- 높이: 56px
+- 모바일에서만 표시 (`md` 이상 숨김 — `md:hidden`)
+-----
+## 14. 디자인 의사결정 원칙
 새로운 UI를 만들 때 판단 기준:
 1. **단순함 우선**: 장식보다 정보 전달이 먼저. 요소를 추가할 때마다 "이게 없으면 사용자가 불편한가?" 질문
 2. **일관성**: 이 문서에 정의된 값만 사용. 임의의 색상/크기/간격 생성 금지

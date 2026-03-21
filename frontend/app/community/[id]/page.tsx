@@ -167,13 +167,13 @@ export default function CommunityPostPage() {
     if (!userOrOwner || !userOrOwner.mechanics || userOrOwner.mechanics.length === 0) return null;
     const shop = userOrOwner.mechanics[0];
     return (
-      <div className="mt-3 bg-[#F5F3FF] rounded-xl p-3 border border-[#7C4DFF]/20">
+      <div className="mt-3 bg-consumer-50 rounded-xl p-3 border border-consumer-500/20">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-[#7C4DFF] rounded-lg flex items-center justify-center">
+          <div className="w-8 h-8 bg-consumer-500 rounded-lg flex items-center justify-center">
             <span className="text-white text-xs font-bold">정</span>
           </div>
           <div>
-            <p className="font-semibold text-[#7C4DFF] text-sm">{shop.name}</p>
+            <p className="font-semibold text-consumer-500 text-sm">{shop.name}</p>
             <p className="text-xs text-gray-500 flex items-center gap-1">
               <MapPin size={10} /> {shop.address}
             </p>
@@ -190,13 +190,13 @@ export default function CommunityPostPage() {
       <div className="py-4 border-b border-gray-50 last:border-0">
         <div className="flex items-center gap-2 mb-2">
           <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${
-            commentIsApproved ? 'bg-[#7C4DFF] text-white' : 'bg-gray-200 text-gray-600'
+            commentIsApproved ? 'bg-consumer-500 text-white' : 'bg-gray-200 text-gray-600'
           }`}>
             {getAuthorName(comment)[0]}
           </div>
           <span className="font-semibold text-sm text-gray-900">{getAuthorName(comment)}</span>
           {commentIsApproved && (
-            <span className="px-1.5 py-0.5 bg-[#7C4DFF]/10 text-[#7C4DFF] text-xs font-semibold rounded">정비사</span>
+            <span className="px-1.5 py-0.5 bg-consumer-500/10 text-consumer-500 text-xs font-semibold rounded">정비사</span>
           )}
           <span className="text-xs text-gray-400 ml-auto">{timeAgo(comment.createdAt)}</span>
         </div>
@@ -205,7 +205,7 @@ export default function CommunityPostPage() {
         {!isReply && (
           <button
             onClick={() => setReplyTo(replyTo === comment.id ? null : comment.id)}
-            className="mt-2 text-xs text-gray-400 hover:text-[#7C4DFF] transition-colors"
+            className="mt-2 text-xs text-gray-400 hover:text-consumer-500 transition-colors"
           >
             {replyTo === comment.id ? '취소' : '답글 달기'}
           </button>
@@ -217,13 +217,13 @@ export default function CommunityPostPage() {
               value={commentText}
               onChange={(e) => setCommentText(e.target.value)}
               placeholder="답글을 입력하세요..."
-              className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#7C4DFF]"
+              className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-consumer-500/30"
               onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleComment()}
             />
             <button
               onClick={handleComment}
               disabled={submittingComment || !commentText.trim()}
-              className="px-3 py-2 bg-[#7C4DFF] text-white rounded-lg hover:bg-[#6B3FE0] transition-colors disabled:opacity-50"
+              className="px-3 py-2 bg-consumer-500 text-white rounded-lg hover:bg-consumer-600 transition-colors disabled:opacity-50"
             >
               <Send size={14} />
             </button>
@@ -238,7 +238,7 @@ export default function CommunityPostPage() {
   if (loading) {
     return (
       <Layout>
-        <div className="min-h-screen bg-[#F8F7FC] flex items-center justify-center">
+        <div className="min-h-screen bg-[#FFF1F5] flex items-center justify-center">
           <div className="text-gray-500">로딩 중...</div>
         </div>
       </Layout>
@@ -249,7 +249,7 @@ export default function CommunityPostPage() {
 
   return (
     <Layout>
-      <div className="min-h-screen bg-[#F8F7FC]">
+      <div className="min-h-screen bg-[#FFF1F5]">
         <div className="bg-white border-b border-gray-200">
           <div className="container mx-auto px-4 md:px-6 py-4 flex items-center gap-4">
             <button onClick={() => router.push('/community')} className="text-gray-500 hover:text-gray-900">
@@ -267,13 +267,13 @@ export default function CommunityPostPage() {
             <h1 className="text-xl md:text-2xl font-bold text-gray-900 mb-3">{post.title}</h1>
             <div className="flex items-center gap-3 text-sm text-gray-500 mb-4 pb-4 border-b border-gray-100">
               <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
-                isApprovedBusiness(post) ? 'bg-[#7C4DFF] text-white' : 'bg-gray-200 text-gray-600'
+                isApprovedBusiness(post) ? 'bg-consumer-500 text-white' : 'bg-gray-200 text-gray-600'
               }`}>
                 {getAuthorName(post)[0]}
               </div>
               <span className="font-medium text-gray-700">{getAuthorName(post)}</span>
               {isApprovedBusiness(post) && (
-                <span className="px-1.5 py-0.5 bg-[#7C4DFF]/10 text-[#7C4DFF] text-xs font-semibold rounded">정비사</span>
+                <span className="px-1.5 py-0.5 bg-consumer-500/10 text-consumer-500 text-xs font-semibold rounded">정비사</span>
               )}
               <span className="ml-auto">{timeAgo(post.createdAt)}</span>
             </div>
@@ -319,14 +319,14 @@ export default function CommunityPostPage() {
                   onChange={(e) => setCommentText(e.target.value)}
                   placeholder="댓글을 입력하세요 (로그인 필요)"
                   rows={3}
-                  className="flex-1 px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#7C4DFF] resize-none"
+                  className="flex-1 px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-consumer-500/30 resize-none"
                 />
               </div>
               <div className="flex justify-end mt-2">
                 <button
                   onClick={handleComment}
                   disabled={submittingComment || !commentText.trim()}
-                  className="flex items-center gap-2 px-5 py-2.5 bg-[#7C4DFF] text-white rounded-xl font-semibold hover:bg-[#6B3FE0] transition-colors disabled:opacity-50 text-sm"
+                  className="flex items-center gap-2 px-5 py-2.5 bg-consumer-500 text-white rounded-xl font-semibold hover:bg-consumer-600 transition-colors disabled:opacity-50 text-sm"
                 >
                   <Send size={14} />
                   {submittingComment ? '등록 중...' : '댓글 등록'}

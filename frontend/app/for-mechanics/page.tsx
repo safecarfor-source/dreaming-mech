@@ -67,7 +67,7 @@ export default function ForMechanicsPage() {
       <section className="min-h-screen flex flex-col items-center justify-center relative overflow-hidden bg-[#0a0a0a] pt-20 pb-16 md:pt-24 md:pb-20">
         {/* 배경 그라디언트 장식 */}
         <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-[#7C4DFF]/10 rounded-full blur-[120px]" />
+          <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-consumer-500/10 rounded-full blur-[120px]" />
         </div>
 
         <div className="container mx-auto px-5 md:px-6 relative z-10 flex flex-col items-center text-center">
@@ -97,7 +97,7 @@ export default function ForMechanicsPage() {
           >
             사장님의 실력,
             <br />
-            <span className="text-[#7C4DFF]">4,041만 시청자</span>에게
+            <span className="text-consumer-500">4,041만 시청자</span>에게
             <br />
             알립니다
           </motion.h1>
@@ -164,7 +164,7 @@ export default function ForMechanicsPage() {
         <div className="container mx-auto px-5 md:px-6">
           <AnimatedSection animation="slideUp" duration={0.6}>
             <div className="text-center mb-10 md:mb-16">
-              <p className="text-[#7C4DFF] text-xs font-semibold tracking-[0.15em] mb-3 uppercase">
+              <p className="text-consumer-500 text-xs font-semibold tracking-[0.15em] mb-3 uppercase">
                 Benefits
               </p>
               <h2
@@ -180,7 +180,7 @@ export default function ForMechanicsPage() {
             {benefits.map((benefit, i) => (
               <AnimatedSection key={i} animation="slideUp" delay={i * 0.08} duration={0.5}>
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-7 h-full">
-                  <div className="w-11 h-11 md:w-12 md:h-12 bg-[#F5F3FF] rounded-xl flex items-center justify-center text-[#7C4DFF] mb-4">
+                  <div className="w-11 h-11 md:w-12 md:h-12 bg-consumer-50 rounded-xl flex items-center justify-center text-consumer-500 mb-4">
                     {benefit.icon}
                   </div>
                   <h3 className="text-gray-900 font-bold text-base md:text-lg leading-[1.3] mb-2 break-keep">
@@ -197,13 +197,13 @@ export default function ForMechanicsPage() {
       </section>
 
       {/* ══════════════════════════════════════════════
-          섹터 3 — 3단계 프로세스 (연한 퍼플 배경 #F5F3FF)
+          섹터 3 — 3단계 프로세스 (연한 핑크 배경 consumer-50)
       ══════════════════════════════════════════════ */}
-      <section className="bg-[#F5F3FF] py-16 md:py-24">
+      <section className="bg-consumer-50 py-16 md:py-24">
         <div className="container mx-auto px-5 md:px-6">
           <AnimatedSection animation="slideUp" duration={0.6}>
             <div className="text-center mb-10 md:mb-16">
-              <p className="text-[#7C4DFF] text-xs font-semibold tracking-[0.15em] mb-3 uppercase">
+              <p className="text-consumer-500 text-xs font-semibold tracking-[0.15em] mb-3 uppercase">
                 How It Works
               </p>
               <h2
@@ -222,10 +222,10 @@ export default function ForMechanicsPage() {
                   <div className="flex md:flex-col md:items-center md:text-center flex-1 relative">
                     {/* 연결선 (데스크탑) */}
                     {i < steps.length - 1 && (
-                      <div className="hidden md:block absolute top-6 left-[calc(50%+24px)] w-[calc(100%-48px)] h-px bg-[#7C4DFF]/20" />
+                      <div className="hidden md:block absolute top-6 left-[calc(50%+24px)] w-[calc(100%-48px)] h-px bg-consumer-500/20" />
                     )}
                     {/* 번호 원 */}
-                    <div className="w-12 h-12 rounded-full bg-[#7C4DFF] flex items-center justify-center flex-shrink-0 shadow-md shadow-[#7C4DFF]/25 md:mb-4 mr-4 md:mr-0 relative z-10">
+                    <div className="w-12 h-12 rounded-full bg-consumer-500 flex items-center justify-center flex-shrink-0 shadow-md shadow-consumer-500/25 md:mb-4 mr-4 md:mr-0 relative z-10">
                       <span className="text-white font-black text-lg">{item.step}</span>
                     </div>
                     {/* 텍스트 */}
@@ -250,7 +250,7 @@ export default function ForMechanicsPage() {
       ══════════════════════════════════════════════ */}
       <section className="bg-[#0a0a0a] py-16 md:py-24 relative overflow-hidden">
         <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[500px] h-[300px] bg-[#7C4DFF]/12 rounded-full blur-[100px]" />
+          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[500px] h-[300px] bg-consumer-500/12 rounded-full blur-[100px]" />
         </div>
         <div className="container mx-auto px-5 md:px-6 relative z-10">
           <AnimatedSection animation="slideUp" duration={0.6}>

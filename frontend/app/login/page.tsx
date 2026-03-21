@@ -31,7 +31,7 @@ function LoginContent() {
         {/* 로고 */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/80 backdrop-blur-sm rounded-full shadow-sm border border-purple-100/50 mb-6">
-            <Shield size={16} className="text-[#7C4DFF]" />
+            <Shield size={16} className="text-[#E4015C]" />
             <span className="text-sm font-medium text-gray-700">꿈꾸는정비사 검증 플랫폼</span>
           </div>
         </div>
@@ -58,7 +58,7 @@ function LoginContent() {
                 { icon: ArrowRight, text: '바로 전화 연결 가능' },
               ].map(({ icon: Icon, text }) => (
                 <div key={text} className="flex items-center gap-3 px-4 py-2.5 bg-purple-50/60 rounded-xl">
-                  <Icon size={16} className="text-[#7C4DFF] flex-shrink-0" />
+                  <Icon size={16} className="text-[#E4015C] flex-shrink-0" />
                   <span className="text-sm text-gray-700">{text}</span>
                 </div>
               ))}
@@ -102,7 +102,7 @@ function LoginContent() {
 
         {/* 메인으로 돌아가기 */}
         <div className="mt-6 text-center">
-          <a href="/" className="text-sm text-gray-500 hover:text-[#7C4DFF] transition-colors">
+          <a href="/" className="text-sm text-gray-500 hover:text-[#E4015C] transition-colors">
             메인으로 돌아가기
           </a>
         </div>

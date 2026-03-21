@@ -174,10 +174,10 @@ export default function QuickInquiry({ mechanics, onSelectMechanic }: QuickInqui
                     <button
                       key={category.id}
                       onClick={() => handleCategoryClick(category.id)}
-                      className="group bg-bg-secondary hover:border-brand-200 border-2 border-transparent rounded-2xl p-6 sm:p-8 transition-all duration-[var(--duration-normal)] hover:shadow-[var(--shadow-md)]"
+                      className="group bg-bg-secondary hover:border-consumer-100 border-2 border-transparent rounded-2xl p-6 sm:p-8 transition-all duration-[var(--duration-normal)] hover:shadow-[var(--shadow-md)]"
                     >
                       <div className="flex flex-col items-center text-center gap-4">
-                        <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-brand-50 group-hover:bg-brand-500 text-brand-500 group-hover:text-white flex items-center justify-center transition-all duration-[var(--duration-normal)]">
+                        <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-consumer-50 group-hover:bg-consumer-500 text-consumer-500 group-hover:text-white flex items-center justify-center transition-all duration-[var(--duration-normal)]">
                           <Icon className="w-8 h-8 sm:w-10 sm:h-10" />
                         </div>
                         <span className="text-[var(--text-h5)] font-bold text-text-primary">
@@ -204,7 +204,7 @@ export default function QuickInquiry({ mechanics, onSelectMechanic }: QuickInqui
                 {/* Back button */}
                 <button
                   onClick={handleBack}
-                  className="flex items-center gap-2 text-text-tertiary hover:text-brand-500 transition-colors"
+                  className="flex items-center gap-2 text-text-tertiary hover:text-consumer-500 transition-colors"
                 >
                   <ArrowLeft className="w-5 h-5" />
                   <span className="text-[var(--text-body)] font-medium">뒤로</span>
@@ -224,7 +224,7 @@ export default function QuickInquiry({ mechanics, onSelectMechanic }: QuickInqui
                         key={region.id}
                         onClick={() => handleRegionClick(region.id)}
                         disabled={count === 0}
-                        className="px-5 py-3 bg-bg-secondary hover:bg-brand-50 hover:border-brand-200 border-2 border-transparent rounded-xl transition-all duration-[var(--duration-fast)] disabled:opacity-40 disabled:cursor-not-allowed"
+                        className="px-5 py-3 bg-bg-secondary hover:bg-consumer-50 hover:border-consumer-100 border-2 border-transparent rounded-xl transition-all duration-[var(--duration-fast)] disabled:opacity-40 disabled:cursor-not-allowed"
                       >
                         <span className="text-[var(--text-body)] font-semibold text-text-primary">
                           {region.name}
@@ -255,7 +255,7 @@ export default function QuickInquiry({ mechanics, onSelectMechanic }: QuickInqui
                 {/* Back button */}
                 <button
                   onClick={handleBack}
-                  className="flex items-center gap-2 text-text-tertiary hover:text-brand-500 transition-colors"
+                  className="flex items-center gap-2 text-text-tertiary hover:text-consumer-500 transition-colors"
                 >
                   <ArrowLeft className="w-5 h-5" />
                   <span className="text-[var(--text-body)] font-medium">뒤로</span>
@@ -304,7 +304,7 @@ export default function QuickInquiry({ mechanics, onSelectMechanic }: QuickInqui
                         required
                         value={formData.customerName}
                         onChange={(e) => setFormData({ ...formData, customerName: e.target.value })}
-                        className="w-full px-4 py-3 bg-white border border-[var(--border)] rounded-xl text-gray-900 placeholder-text-muted focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500/20 transition-colors"
+                        className="w-full px-4 py-3 bg-white border border-[var(--border)] rounded-xl text-gray-900 placeholder-text-muted focus:outline-none focus:border-consumer-500 focus:ring-1 focus:ring-consumer-500/20 transition-colors"
                         placeholder="홍길동"
                       />
                     </div>
@@ -318,7 +318,7 @@ export default function QuickInquiry({ mechanics, onSelectMechanic }: QuickInqui
                         required
                         value={formData.customerPhone}
                         onChange={(e) => setFormData({ ...formData, customerPhone: e.target.value })}
-                        className="w-full px-4 py-3 bg-white border border-[var(--border)] rounded-xl text-gray-900 placeholder-text-muted focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500/20 transition-colors"
+                        className="w-full px-4 py-3 bg-white border border-[var(--border)] rounded-xl text-gray-900 placeholder-text-muted focus:outline-none focus:border-consumer-500 focus:ring-1 focus:ring-consumer-500/20 transition-colors"
                         placeholder="010-1234-5678"
                       />
                     </div>
@@ -332,7 +332,7 @@ export default function QuickInquiry({ mechanics, onSelectMechanic }: QuickInqui
                         required
                         value={formData.carModel}
                         onChange={(e) => setFormData({ ...formData, carModel: e.target.value })}
-                        className="w-full px-4 py-3 bg-white border border-[var(--border)] rounded-xl text-gray-900 placeholder-text-muted focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500/20 transition-colors"
+                        className="w-full px-4 py-3 bg-white border border-[var(--border)] rounded-xl text-gray-900 placeholder-text-muted focus:outline-none focus:border-consumer-500 focus:ring-1 focus:ring-consumer-500/20 transition-colors"
                         placeholder="예: 현대 아반떼 2020년식"
                       />
                     </div>
@@ -347,7 +347,7 @@ export default function QuickInquiry({ mechanics, onSelectMechanic }: QuickInqui
                         rows={4}
                         value={formData.description}
                         onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                        className="w-full px-4 py-3 bg-white border border-[var(--border)] rounded-xl text-gray-900 placeholder-text-muted focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500/20 transition-colors resize-none"
+                        className="w-full px-4 py-3 bg-white border border-[var(--border)] rounded-xl text-gray-900 placeholder-text-muted focus:outline-none focus:border-consumer-500 focus:ring-1 focus:ring-consumer-500/20 transition-colors resize-none"
                         placeholder="엔진에서 이상한 소리가 나요. 확인 부탁드립니다."
                       />
                       <p className="text-[var(--text-caption)] text-text-muted mt-2">
@@ -401,7 +401,7 @@ export default function QuickInquiry({ mechanics, onSelectMechanic }: QuickInqui
                         <button
                           key={mechanic.id}
                           onClick={() => onSelectMechanic(mechanic)}
-                          className="w-full text-left p-4 bg-bg-secondary hover:bg-brand-50 hover:border-brand-200 border-2 border-transparent rounded-xl transition-all duration-[var(--duration-fast)]"
+                          className="w-full text-left p-4 bg-bg-secondary hover:bg-consumer-50 hover:border-consumer-100 border-2 border-transparent rounded-xl transition-all duration-[var(--duration-fast)]"
                         >
                           <div className="font-semibold text-text-primary text-[var(--text-body)] mb-1">
                             {mechanic.name}
@@ -419,7 +419,7 @@ export default function QuickInquiry({ mechanics, onSelectMechanic }: QuickInqui
                 <div className="text-center pt-4">
                   <button
                     onClick={handleReset}
-                    className="text-[var(--text-body)] text-text-tertiary hover:text-brand-500 underline transition-colors"
+                    className="text-[var(--text-body)] text-text-tertiary hover:text-consumer-500 underline transition-colors"
                   >
                     처음부터 다시 하기
                   </button>

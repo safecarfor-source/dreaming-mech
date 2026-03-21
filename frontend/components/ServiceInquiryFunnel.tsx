@@ -153,7 +153,7 @@ export default function ServiceInquiryFunnel({ compact = false, onComplete }: Se
             <div
               className={`w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center font-bold text-sm md:text-base transition-all ${
                 step >= s
-                  ? 'bg-brand-500 text-white'
+                  ? 'bg-consumer-500 text-white'
                   : 'bg-gray-300 text-gray-500'
               }`}
             >
@@ -162,7 +162,7 @@ export default function ServiceInquiryFunnel({ compact = false, onComplete }: Se
             {s < 4 && (
               <div
                 className={`w-8 md:w-12 h-1 mx-1 transition-all ${
-                  step > s ? 'bg-brand-500' : 'bg-gray-300'
+                  step > s ? 'bg-consumer-500' : 'bg-gray-300'
                 }`}
               />
             )}
@@ -193,7 +193,7 @@ export default function ServiceInquiryFunnel({ compact = false, onComplete }: Se
                 value={regionSearchQuery}
                 onChange={(e) => setRegionSearchQuery(e.target.value)}
                 placeholder="지역명 검색 (예: 수원시, 강남구)"
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-200 focus:border-brand-500 outline-none transition-all"
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-consumer-500/20 focus:border-consumer-500 outline-none transition-all"
               />
               {regionSearchResults.length > 0 && (
                 <div className="absolute top-full mt-2 w-full bg-white border border-gray-200 rounded-xl shadow-xl z-10 max-h-64 overflow-y-auto">
@@ -201,7 +201,7 @@ export default function ServiceInquiryFunnel({ compact = false, onComplete }: Se
                     <button
                       key={idx}
                       onClick={() => handleRegionSelect(region)}
-                      className="w-full text-left px-4 py-3 hover:bg-brand-50 transition-colors border-b border-gray-100 last:border-0"
+                      className="w-full text-left px-4 py-3 hover:bg-consumer-50 transition-colors border-b border-gray-100 last:border-0"
                     >
                       {region.display}
                     </button>
@@ -217,8 +217,8 @@ export default function ServiceInquiryFunnel({ compact = false, onComplete }: Se
                 <button
                   key={idx}
                   onClick={() => handleRegionSelect(region)}
-                  className="px-4 py-3 border border-brand-500/30 text-brand-500 rounded-xl
-                    hover:bg-brand-500 hover:text-white hover:border-brand-500 transition-all font-semibold text-sm"
+                  className="px-4 py-3 border border-consumer-500/30 text-consumer-500 rounded-xl
+                    hover:bg-consumer-500 hover:text-white hover:border-consumer-500 transition-all font-semibold text-sm"
                 >
                   {region.display}
                 </button>
@@ -238,7 +238,7 @@ export default function ServiceInquiryFunnel({ compact = false, onComplete }: Se
           >
             <button
               onClick={() => setStep(1)}
-              className="text-brand-500 text-sm font-semibold mb-4 hover:underline"
+              className="text-consumer-500 text-sm font-semibold mb-4 hover:underline"
             >
               ← 지역 변경
             </button>
@@ -246,7 +246,7 @@ export default function ServiceInquiryFunnel({ compact = false, onComplete }: Se
               어떤 서비스가 필요하신가요?
             </h2>
             <p className="text-gray-500 text-sm mb-5">
-              선택하신 지역: <span className="font-bold text-brand-500">{selectedRegion?.display}</span>
+              선택하신 지역: <span className="font-bold text-consumer-500">{selectedRegion?.display}</span>
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -254,11 +254,11 @@ export default function ServiceInquiryFunnel({ compact = false, onComplete }: Se
                 <button
                   key={service.type}
                   onClick={() => handleServiceSelect(service.type)}
-                  className="p-5 border border-gray-200 rounded-xl hover:border-brand-500 hover:bg-brand-50 hover:shadow-md
+                  className="p-5 border border-gray-200 rounded-xl hover:border-consumer-500 hover:bg-consumer-50 hover:shadow-md
                     transition-all group"
                 >
                   <div className="text-3xl mb-1.5">{service.icon}</div>
-                  <div className="text-base font-bold text-gray-900 group-hover:text-brand-500">
+                  <div className="text-base font-bold text-gray-900 group-hover:text-consumer-500">
                     {service.label}
                   </div>
                 </button>
@@ -278,7 +278,7 @@ export default function ServiceInquiryFunnel({ compact = false, onComplete }: Se
           >
             <button
               onClick={() => setStep(2)}
-              className="text-brand-500 text-sm font-semibold mb-4 hover:underline"
+              className="text-consumer-500 text-sm font-semibold mb-4 hover:underline"
             >
               ← 서비스 변경
             </button>
@@ -300,7 +300,7 @@ export default function ServiceInquiryFunnel({ compact = false, onComplete }: Se
                   value={dong}
                   onChange={(e) => setDong(e.target.value)}
                   placeholder="예: 화곡동, 삼산면"
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-200 focus:border-brand-500 outline-none transition-all"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-consumer-500/20 focus:border-consumer-500 outline-none transition-all"
                 />
                 <p className="text-xs text-gray-400 mt-1">정확한 지역의 정비소를 연결해드립니다</p>
               </div>
@@ -317,7 +317,7 @@ export default function ServiceInquiryFunnel({ compact = false, onComplete }: Se
                       onClick={() => setSelectedMechanicId(null)}
                       className={`w-full text-left px-4 py-3 rounded-lg transition-all text-sm ${
                         selectedMechanicId === null
-                          ? 'border-2 border-brand-500 bg-brand-50 text-brand-500 font-semibold'
+                          ? 'border-2 border-consumer-500 bg-consumer-50 text-consumer-500 font-semibold'
                           : 'border border-gray-200 hover:border-gray-300 text-gray-600'
                       }`}
                     >
@@ -330,27 +330,27 @@ export default function ServiceInquiryFunnel({ compact = false, onComplete }: Se
                         onClick={() => setSelectedMechanicId(mechanic.id)}
                         className={`w-full text-left px-4 py-3 rounded-lg transition-all ${
                           selectedMechanicId === mechanic.id
-                            ? 'border-2 border-brand-500 bg-brand-50'
-                            : 'border border-gray-200 hover:border-brand-500 hover:bg-brand-50/50'
+                            ? 'border-2 border-consumer-500 bg-consumer-50'
+                            : 'border border-gray-200 hover:border-consumer-500 hover:bg-consumer-50/50'
                         }`}
                       >
                         <div className="flex items-start gap-2">
                           <span className="text-lg">🔧</span>
                           <div>
-                            <p className={`font-semibold text-sm ${selectedMechanicId === mechanic.id ? 'text-brand-500' : 'text-gray-800'}`}>
+                            <p className={`font-semibold text-sm ${selectedMechanicId === mechanic.id ? 'text-consumer-500' : 'text-gray-800'}`}>
                               {mechanic.name}
                             </p>
                             <p className="text-xs text-gray-500 mt-0.5">{mechanic.address}</p>
                           </div>
                           {selectedMechanicId === mechanic.id && (
-                            <span className="ml-auto text-brand-500">✓</span>
+                            <span className="ml-auto text-consumer-500">✓</span>
                           )}
                         </div>
                       </button>
                     ))}
                   </div>
                   {selectedMechanicId && (
-                    <p className="text-xs text-brand-500 mt-1">
+                    <p className="text-xs text-consumer-500 mt-1">
                       ✓ 선택하신 정비소에 직접 문의가 전달됩니다
                     </p>
                   )}
@@ -371,7 +371,7 @@ export default function ServiceInquiryFunnel({ compact = false, onComplete }: Se
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="홍길동"
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-200 focus:border-brand-500 outline-none transition-all"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-consumer-500/20 focus:border-consumer-500 outline-none transition-all"
                 />
               </div>
 
@@ -385,7 +385,7 @@ export default function ServiceInquiryFunnel({ compact = false, onComplete }: Se
                   onChange={handlePhoneChange}
                   placeholder="010-0000-0000"
                   maxLength={13}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-200 focus:border-brand-500 outline-none transition-all"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-consumer-500/20 focus:border-consumer-500 outline-none transition-all"
                 />
               </div>
 
@@ -398,7 +398,7 @@ export default function ServiceInquiryFunnel({ compact = false, onComplete }: Se
                   value={vehicleNumber}
                   onChange={(e) => setVehicleNumber(e.target.value)}
                   placeholder="예: 12가 3456"
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-200 focus:border-brand-500 outline-none transition-all"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-consumer-500/20 focus:border-consumer-500 outline-none transition-all"
                 />
               </div>
 
@@ -411,7 +411,7 @@ export default function ServiceInquiryFunnel({ compact = false, onComplete }: Se
                   value={vehicleModel}
                   onChange={(e) => setVehicleModel(e.target.value)}
                   placeholder="예: 현대 아반떼, 기아 K5"
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-200 focus:border-brand-500 outline-none transition-all"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-consumer-500/20 focus:border-consumer-500 outline-none transition-all"
                 />
               </div>
 
@@ -424,20 +424,20 @@ export default function ServiceInquiryFunnel({ compact = false, onComplete }: Se
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="예: 타이어 사이즈, 증상 등"
                   rows={3}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-200 focus:border-brand-500 outline-none transition-all resize-none"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-consumer-500/20 focus:border-consumer-500 outline-none transition-all resize-none"
                 />
               </div>
 
               {/* 개인정보 수집 동의 */}
               <div
                 className={`rounded-xl border-2 p-4 cursor-pointer transition-all ${
-                  privacyAgreed ? 'border-brand-500 bg-brand-50' : 'border-gray-200 bg-gray-50'
+                  privacyAgreed ? 'border-consumer-500 bg-consumer-50' : 'border-gray-200 bg-gray-50'
                 }`}
                 onClick={() => setPrivacyAgreed(!privacyAgreed)}
               >
                 <div className="flex items-start gap-3">
                   <div className={`flex-shrink-0 w-5 h-5 mt-0.5 rounded border-2 flex items-center justify-center transition-all ${
-                    privacyAgreed ? 'bg-brand-500 border-brand-500' : 'border-gray-300 bg-white'
+                    privacyAgreed ? 'bg-consumer-500 border-consumer-500' : 'border-gray-300 bg-white'
                   }`}>
                     {privacyAgreed && (
                       <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
@@ -462,8 +462,8 @@ export default function ServiceInquiryFunnel({ compact = false, onComplete }: Se
               <button
                 onClick={handleSubmit}
                 disabled={!phone || phone.length < 12 || !privacyAgreed || submitting}
-                className="w-full bg-brand-500 text-white px-6 py-4 rounded-xl font-bold text-lg
-                  hover:bg-brand-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed
+                className="w-full bg-consumer-500 text-white px-6 py-4 rounded-xl font-bold text-lg
+                  hover:bg-consumer-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed
                   flex items-center justify-center gap-2 shadow-lg"
               >
                 {submitting ? (
@@ -504,7 +504,7 @@ export default function ServiceInquiryFunnel({ compact = false, onComplete }: Se
               꿈꾸는정비사가 빠르게 연락드리겠습니다
             </p>
 
-            <div className="bg-brand-50 rounded-xl p-5 mb-5">
+            <div className="bg-consumer-50 rounded-xl p-5 mb-5">
               <p className="text-sm text-gray-600 mb-2">접수 내용</p>
               <div className="space-y-1 text-left">
                 <p className="font-semibold">📍 지역: {selectedRegion?.display || '확인 중'}</p>
@@ -529,8 +529,8 @@ export default function ServiceInquiryFunnel({ compact = false, onComplete }: Se
 
             <button
               onClick={resetFunnel}
-              className="bg-brand-500 text-white px-8 py-3 rounded-lg font-bold
-                hover:bg-brand-600 transition-all w-full"
+              className="bg-consumer-500 text-white px-8 py-3 rounded-lg font-bold
+                hover:bg-consumer-600 transition-all w-full"
             >
               새로운 문의하기
             </button>

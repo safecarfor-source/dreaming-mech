@@ -169,7 +169,7 @@ export default function SharedInquiryPage() {
           ) : error || !inquiry ? (
             <div className="bg-white rounded-2xl p-8 shadow-sm text-center">
               <p className="text-gray-500 text-lg mb-2">문의를 찾을 수 없습니다.</p>
-              <Link href="/" className="text-[#7C4DFF] font-medium">
+              <Link href="/" className="text-[#E4015C] font-medium">
                 메인으로 돌아가기
               </Link>
             </div>
@@ -321,7 +321,7 @@ export default function SharedInquiryPage() {
                         animate={{ opacity: 1, y: 0 }}
                         className="mt-4 pt-4 border-t border-gray-100"
                       >
-                        <p className="text-center text-sm font-bold text-[#7C4DFF] mb-3">
+                        <p className="text-center text-sm font-bold text-[#E4015C] mb-3">
                           가입을 환영합니다!
                         </p>
                         <p className="text-center text-xs text-gray-500 mb-4">
@@ -330,9 +330,9 @@ export default function SharedInquiryPage() {
                         <div className="space-y-2">
                           <Link
                             href="/owner"
-                            className="flex items-center gap-3 w-full p-3 bg-[#F5F3FF] rounded-xl hover:bg-[#EDE9FF] transition-colors"
+                            className="flex items-center gap-3 w-full p-3 bg-[#FFF1F5] rounded-xl hover:bg-[#EDE9FF] transition-colors"
                           >
-                            <Store size={18} className="text-[#7C4DFF]" />
+                            <Store size={18} className="text-[#E4015C]" />
                             <span className="text-sm font-medium text-gray-800">내 정비소 등록하기</span>
                           </Link>
                           <Link
@@ -369,7 +369,7 @@ export default function SharedInquiryPage() {
                       </p>
                     </div>
 
-                    <div className="bg-[#F5F3FF] rounded-xl p-4 mb-4">
+                    <div className="bg-[#FFF1F5] rounded-xl p-4 mb-4">
                       <p className="text-sm text-gray-700 font-medium mb-1">
                         회원 정비사만 고객 연락처를 확인할 수 있습니다
                       </p>
@@ -381,13 +381,13 @@ export default function SharedInquiryPage() {
                     {/* 메인 CTA — /owner/login 직접 연결 */}
                     <button
                       onClick={handleSignupClick}
-                      className="inline-flex items-center gap-2 w-full justify-center bg-[#7C4DFF] text-white px-6 py-4 rounded-xl font-bold text-base hover:bg-[#6D3FE0] transition-all shadow-lg cursor-pointer"
+                      className="inline-flex items-center gap-2 w-full justify-center bg-[#E4015C] text-white px-6 py-4 rounded-xl font-bold text-base hover:bg-[#C70150] transition-all shadow-lg cursor-pointer"
                     >
                       카카오로 3초 가입 → 전화번호 확인
                     </button>
                     <p className="text-xs text-gray-400 mt-3">
                       이미 회원이신가요?{' '}
-                      <button onClick={handleLoginClick} className="text-[#7C4DFF] font-medium cursor-pointer">
+                      <button onClick={handleLoginClick} className="text-[#E4015C] font-medium cursor-pointer">
                         로그인
                       </button>
                     </p>
@@ -398,10 +398,10 @@ export default function SharedInquiryPage() {
               {/* 소셜 프루프 + 혜택 섹션 + 하단 안내 (전화번호 비공개 시만) */}
               {!inquiry.phone && (
                 <>
-                  <div className="bg-gradient-to-br from-[#7C4DFF]/5 to-[#F5F3FF] rounded-2xl p-6 mb-4">
+                  <div className="bg-gradient-to-br from-[#E4015C]/5 to-[#FFF1F5] rounded-2xl p-6 mb-4">
                     <div className="text-center mb-4">
                       <p className="text-sm font-bold text-gray-900">
-                        <span className="text-[#7C4DFF]">꿈꾸는정비사</span>
+                        <span className="text-[#E4015C]">꿈꾸는정비사</span>
                       </p>
                       <p className="text-xs text-gray-500 mt-1">
                         유튜브 5.3만 구독자가 운영하는 정비소 매칭 플랫폼
@@ -411,7 +411,7 @@ export default function SharedInquiryPage() {
                     {recentCount > 0 && (
                       <div className="bg-white/80 rounded-lg p-3 mb-4 text-center">
                         <p className="text-sm font-medium text-gray-800">
-                          이번 주 <span className="text-[#7C4DFF] font-bold">{recentCount}건</span>의 고객 문의 접수 중
+                          이번 주 <span className="text-[#E4015C] font-bold">{recentCount}건</span>의 고객 문의 접수 중
                         </p>
                       </div>
                     )}
@@ -435,7 +435,7 @@ export default function SharedInquiryPage() {
                   <div className="text-center">
                     <Link
                       href="/for-mechanics"
-                      className="text-[#7C4DFF] text-sm font-semibold hover:underline"
+                      className="text-[#E4015C] text-sm font-semibold hover:underline"
                     >
                       정비사 혜택 더 알아보기 →
                     </Link>

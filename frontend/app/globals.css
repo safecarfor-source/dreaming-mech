@@ -63,6 +63,20 @@
   --duration-slow:   300ms;
   --ease-default: cubic-bezier(0.4, 0, 0.2, 1);
 
+  /* ── 소비자 브랜드 (신규) ── */
+  --consumer-50:  #FFF1F5;
+  --consumer-100: #FFE0EA;
+  --consumer-500: #E4015C;
+  --consumer-600: #C70150;
+  --consumer-700: #A50143;
+
+  /* ── 타이포그래피 스케일 (5단계 엄격, 소비자 페이지용) ── */
+  --text-hero:    2.25rem;    /* 36px - 히어로 제목 */
+  --text-section: 1.5rem;     /* 24px - 섹션 제목 */
+  --text-card:    1.25rem;    /* 20px - 카드 제목 */
+  --text-body:    1.125rem;   /* 18px - 본문 */
+  --text-sub:     0.875rem;   /* 14px - 보조 텍스트 */
+
   /* ── 호환성: 관리자 페이지용 (기존 변수 유지) ── */
   --brand-primary: #7C4DFF;
   --brand-primary-light: #A78BFA;
@@ -107,6 +121,12 @@
   --color-accent: var(--accent);
   --color-accent-light: var(--accent-light);
   --color-accent-dark: var(--accent-dark);
+
+  --color-consumer-50: var(--consumer-50);
+  --color-consumer-100: var(--consumer-100);
+  --color-consumer-500: var(--consumer-500);
+  --color-consumer-600: var(--consumer-600);
+  --color-consumer-700: var(--consumer-700);
 
   --font-sans: 'Pretendard', system-ui, sans-serif;
 }

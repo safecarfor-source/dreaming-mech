@@ -163,14 +163,16 @@ export class GdService {
     return { data, total, page, limit };
   }
 
-  // 시재관리 (현금 출납부)
-  // 현금 입금: IO=2, productCode=]000000000001 (현금수금)
-  // 현금 출금: IO=1 ]100000000001 (현금결제) + IO=3 Z7%(경비)/Z1000011~12(은행)
-  async getCashLedger(startDate: string, endDate: string) {
-    // --- 이월시재 계산 (startDate 이전 모든 현금 입출금 누계) ---
-    const carryOverEntries = await this.prisma.$queryRaw<
-      Array<{ total: number }>
-    >`
+  // 현금 출납부 SQL 조건 (재사용)
+  private readonly CASH_FILTER = `
+    ("productCode" = ']000000000001'
+     OR "productCode" = ']100000000001'
+     OR ("saleType" = '3' AND ("customerCode" LIKE 'Z7%' OR "customerCode" IN ('Z1000011','Z1000012'))))
+  `;
+
+  // 특정 기간의 현금 입출금 순액 계산
+  private async calcCashNet(from: string, to: string): Promise<number> {
+    const result = await this.prisma.$queryRaw<Array<{ total: number }>>`
       SELECT COALESCE(SUM(
         CASE
           WHEN "productCode" = ']000000000001' THEN ABS(amount)
@@ -180,14 +182,57 @@ export class GdService {
         END
       ), 0) AS total
       FROM "GdSaleDetail"
-      WHERE "saleDate" < ${startDate}
+      WHERE "saleDate" >= ${from}
+        AND "saleDate" < ${to}
         AND (
           "productCode" = ']000000000001'
           OR "productCode" = ']100000000001'
           OR ("saleType" = '3' AND ("customerCode" LIKE 'Z7%' OR "customerCode" IN ('Z1000011','Z1000012')))
         )
     `;
-    const carryOver = Number(carryOverEntries[0]?.total ?? 0);
+    return Number(result[0]?.total ?? 0);
+  }
+
+  // 이월시재 자동 계산: 가장 가까운 openingCash 기준점을 찾아 체인 계산
+  private async resolveCarryOver(startDate: string): Promise<{ carryOver: number; hasBaseline: boolean }> {
+    const startYear = parseInt(startDate.slice(0, 4));
+    const startMonth = parseInt(startDate.slice(5, 7));
+
+    // 최대 24개월 뒤로 탐색하여 openingCash가 설정된 월 찾기
+    let y = startYear;
+    let m = startMonth;
+    for (let i = 0; i < 24; i++) {
+      const cf = await this.prisma.cashFlow.findUnique({
+        where: { year_month: { year: y, month: m } },
+      });
+      if (cf?.openingCash != null) {
+        // 기준점 발견! 기준점 월초 → startDate까지 거래 누적
+        const baseDate = `${y}-${String(m).padStart(2, '0')}-01`;
+        const baseAmount = Number(cf.openingCash);
+        if (baseDate >= startDate) {
+          // 기준점이 startDate 이후면 역방향 계산 불가 → 기준점 그대로
+          return { carryOver: baseAmount, hasBaseline: true };
+        }
+        const net = await this.calcCashNet(baseDate, startDate);
+        return { carryOver: baseAmount + net, hasBaseline: true };
+      }
+      // 이전 달로 이동
+      m--;
+      if (m < 1) { m = 12; y--; }
+    }
+
+    // 기준점 없음: 올해 1/1부터 계산 (12년 합산 방지)
+    const yearStart = `${startYear}-01-01`;
+    const net = await this.calcCashNet(yearStart, startDate);
+    return { carryOver: net, hasBaseline: false };
+  }
+
+  // 시재관리 (현금 출납부)
+  // 현금 입금: IO=2, productCode=]000000000001 (현금수금)
+  // 현금 출금: IO=1 ]100000000001 (현금결제) + IO=3 Z7%(경비)/Z1000011~12(은행)
+  async getCashLedger(startDate: string, endDate: string) {
+    // --- 이월시재 자동 계산 ---
+    const { carryOver, hasBaseline } = await this.resolveCarryOver(startDate);
 
     // --- 기간 내 현금 관련 항목 전체 조회 ---
     const rawEntries = await this.prisma.$queryRaw<
@@ -284,7 +329,7 @@ export class GdService {
 
     const currentBalance = carryOver + totalCashIn - totalCashOut;
 
-    return { carryOver, totalCashIn, totalCashOut, currentBalance, dailyEntries };
+    return { carryOver, totalCashIn, totalCashOut, currentBalance, dailyEntries, hasBaseline };
   }
 
   // 일별 매출 조회 (극동 GdSaleDetail 기반)

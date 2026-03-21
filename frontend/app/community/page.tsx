@@ -82,7 +82,7 @@ export default function CommunityPage() {
   const getAuthorBadge = (post: PostItem) => {
     if (isApprovedBusiness(post)) {
       return (
-        <span className="inline-block px-1.5 py-0.5 bg-[#7C4DFF]/10 text-[#7C4DFF] text-xs font-semibold rounded">
+        <span className="inline-block px-1.5 py-0.5 bg-consumer-500/10 text-consumer-500 text-xs font-semibold rounded">
           정비사
         </span>
       );
@@ -103,7 +103,7 @@ export default function CommunityPage() {
 
   return (
     <Layout>
-      <div className="min-h-screen bg-[#F8F7FC] pt-14 md:pt-16">
+      <div className="min-h-screen bg-[#FFF1F5] pt-14 md:pt-16">
         {/* 헤더 */}
         <div className="bg-white border-b border-gray-200">
           <div className="container mx-auto px-4 md:px-6 py-6">
@@ -114,7 +114,7 @@ export default function CommunityPage() {
               </div>
               <Link
                 href="/community/write"
-                className="flex items-center gap-2 bg-[#7C4DFF] text-white px-5 py-2.5 rounded-xl font-semibold hover:bg-[#6B3FE0] transition-colors shadow-sm"
+                className="flex items-center gap-2 bg-consumer-500 text-white px-5 py-2.5 rounded-xl font-semibold hover:bg-consumer-600 transition-colors shadow-sm"
               >
                 <PenSquare size={16} />
                 글쓰기
@@ -129,7 +129,7 @@ export default function CommunityPage() {
                   onClick={() => setCategory(cat.value)}
                   className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-semibold transition-colors ${
                     category === cat.value
-                      ? 'bg-[#7C4DFF] text-white'
+                      ? 'bg-consumer-500 text-white'
                       : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                   }`}
                 >
@@ -153,7 +153,7 @@ export default function CommunityPage() {
               <MessageCircle size={48} className="mx-auto text-gray-300 mb-3" />
               <p className="text-gray-500 font-medium">아직 게시글이 없습니다</p>
               <p className="text-gray-400 text-sm mt-1">첫 번째 질문을 올려보세요!</p>
-              <Link href="/community/write" className="inline-block mt-4 bg-[#7C4DFF] text-white px-6 py-2.5 rounded-xl font-semibold hover:bg-[#6B3FE0] transition-colors">
+              <Link href="/community/write" className="inline-block mt-4 bg-consumer-500 text-white px-6 py-2.5 rounded-xl font-semibold hover:bg-consumer-600 transition-colors">
                 글쓰기
               </Link>
             </div>

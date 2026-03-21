@@ -228,7 +228,7 @@ export interface GdVehicle {
   plateNumber: string;
   carModel?: string;
   color?: string;
-  modelYear?: number;
+  modelYear?: string;
   ownerName?: string;
   phone?: string;
 }

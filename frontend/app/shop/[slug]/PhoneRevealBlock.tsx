@@ -31,13 +31,13 @@ export default function PhoneRevealBlock({ mechanicId, mechanicName, phone }: Pr
 
   return (
     <div className="bg-gray-50 rounded-2xl p-7 text-center">
-      <div className="text-4xl mb-3 text-[#7C4DFF]">📞</div>
+      <div className="text-4xl mb-3 text-[#E4015C]">📞</div>
       <p className="text-[16px] text-gray-500 mb-4">전화번호</p>
       {revealed ? (
         <div>
           <a
             href={`tel:${phone}`}
-            className="text-[36px] font-black text-[#7C4DFF] tracking-wider hover:text-[#6D3FE0] transition-colors"
+            className="text-[36px] font-black text-[#E4015C] tracking-wider hover:text-[#C70150] transition-colors"
           >
             {phone}
           </a>
@@ -55,7 +55,7 @@ export default function PhoneRevealBlock({ mechanicId, mechanicName, phone }: Pr
             onClick={handleReveal}
             className="absolute inset-0 flex items-center justify-center"
           >
-            <span className="bg-[#7C4DFF] hover:bg-[#6D3FE0] text-white text-[18px] font-bold
+            <span className="bg-[#E4015C] hover:bg-[#C70150] text-white text-[18px] font-bold
               px-8 py-4 rounded-full shadow-md transition-colors whitespace-nowrap">
               👆 터치하여 전화번호 확인
             </span>

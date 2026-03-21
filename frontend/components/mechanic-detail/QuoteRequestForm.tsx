@@ -100,7 +100,7 @@ export default function QuoteRequestForm({ mechanicId, mechanicName, onClose }: 
         </p>
         <button
           onClick={onClose}
-          className="mt-4 px-6 py-3 bg-[#7C4DFF] hover:bg-[#5B3FBF] text-white rounded-xl font-medium transition-colors"
+          className="mt-4 px-6 py-3 bg-[#E4015C] hover:bg-[#C70150] text-white rounded-xl font-medium transition-colors"
         >
           확인
         </button>
@@ -129,7 +129,7 @@ export default function QuoteRequestForm({ mechanicId, mechanicName, onClose }: 
           value={customerName}
           onChange={(e) => setCustomerName(e.target.value)}
           placeholder="홍길동"
-          className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-[#7C4DFF] text-gray-900"
+          className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-[#E4015C] text-gray-900"
         />
       </div>
 
@@ -141,7 +141,7 @@ export default function QuoteRequestForm({ mechanicId, mechanicName, onClose }: 
           value={customerPhone}
           onChange={(e) => setCustomerPhone(e.target.value)}
           placeholder="010-1234-5678"
-          className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-[#7C4DFF] text-gray-900"
+          className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-[#E4015C] text-gray-900"
         />
       </div>
 
@@ -153,7 +153,7 @@ export default function QuoteRequestForm({ mechanicId, mechanicName, onClose }: 
           value={carModel}
           onChange={(e) => setCarModel(e.target.value)}
           placeholder="예: 현대 아반떼 2023"
-          className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-[#7C4DFF] text-gray-900"
+          className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-[#E4015C] text-gray-900"
         />
       </div>
 
@@ -165,7 +165,7 @@ export default function QuoteRequestForm({ mechanicId, mechanicName, onClose }: 
           value={carYear}
           onChange={(e) => setCarYear(e.target.value)}
           placeholder="예: 2023"
-          className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-[#7C4DFF] text-gray-900"
+          className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-[#E4015C] text-gray-900"
         />
       </div>
 
@@ -179,7 +179,7 @@ export default function QuoteRequestForm({ mechanicId, mechanicName, onClose }: 
           onChange={(e) => setDescription(e.target.value.slice(0, 1000))}
           rows={4}
           placeholder="차량 증상이나 정비 요청 내용을 자세히 적어주세요 (최소 10자)"
-          className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm resize-none focus:outline-none focus:border-[#7C4DFF] text-gray-900"
+          className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm resize-none focus:outline-none focus:border-[#E4015C] text-gray-900"
         />
       </div>
 

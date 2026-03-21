@@ -48,4 +48,27 @@ export class DashboardController {
   ) {
     return this.dashboardService.saveCashFlow(year, month, body);
   }
+
+  // GET /incentive/opening-cash/:year/:month
+  // 월초 이월시재 조회
+  @Get('opening-cash/:year/:month')
+  getOpeningCash(
+    @Param('year', ParseIntPipe) year: number,
+    @Param('month', ParseIntPipe) month: number,
+  ) {
+    return this.dashboardService.getOpeningCash(year, month);
+  }
+
+  // PUT /incentive/opening-cash/:year/:month
+  // 월초 이월시재 설정 (admin 전용)
+  @Put('opening-cash/:year/:month')
+  @UseGuards(RolesGuard)
+  @Roles('admin')
+  setOpeningCash(
+    @Param('year', ParseIntPipe) year: number,
+    @Param('month', ParseIntPipe) month: number,
+    @Body() body: { openingCash: number },
+  ) {
+    return this.dashboardService.setOpeningCash(year, month, body.openingCash);
+  }
 }

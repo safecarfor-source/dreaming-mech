@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { MapPin, Share2, ChevronLeft, ChevronRight, BadgeCheck } from 'lucide-react';
+import { MapPin, Share2, ChevronLeft, ChevronRight, BadgeCheck, Heart, Phone } from 'lucide-react';
 import { mechanicsApi } from '@/lib/api';
 import { parseSlug, generateSlug } from '@/lib/slug';
 import { sanitizeText, sanitizeBasicHTML, sanitizePhone } from '@/lib/sanitize';
@@ -63,7 +63,7 @@ export default function ShopDetailClient({ slug }: Props) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
-          <div className="w-12 h-12 border-4 border-[#7C4DFF] border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <div className="w-12 h-12 border-4 border-[#E4015C] border-t-transparent rounded-full animate-spin mx-auto mb-4" />
           <p className="text-gray-500 text-lg">정비소 정보를 불러오는 중...</p>
         </div>
       </div>
@@ -79,7 +79,7 @@ export default function ShopDetailClient({ slug }: Props) {
           <p className="text-gray-500 mb-6">주소를 다시 확인해주세요.</p>
           <button
             onClick={() => router.push('/')}
-            className="bg-[#7C4DFF] text-white px-6 py-3 rounded-xl font-bold hover:bg-[#6D3FE0] transition-colors"
+            className="bg-[#E4015C] text-white px-6 py-3 rounded-xl font-bold hover:bg-[#C70150] transition-colors"
           >
             전체 정비소 보기
           </button>
@@ -115,7 +115,7 @@ export default function ShopDetailClient({ slug }: Props) {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* 상단 네비 */}
-      <div className="sticky top-0 z-30 bg-[#7C4DFF] text-white">
+      <div className="sticky top-0 z-30 bg-[#E4015C] text-white">
         <div className="max-w-xl mx-auto flex items-center px-4 py-4 gap-3">
           <button
             onClick={() => router.back()}
@@ -189,21 +189,21 @@ export default function ShopDetailClient({ slug }: Props) {
             )}
           </div>
         ) : (
-          <div className="h-64 bg-gradient-to-br from-[#7C4DFF] to-[#9C6FFF] flex items-center justify-center">
+          <div className="h-64 bg-gradient-to-br from-[#E4015C] to-[#FF5CA0] flex items-center justify-center">
             <span className="text-7xl">🔧</span>
           </div>
         )}
 
         {/* 기본 정보 — 중앙 정렬 */}
         <div className="px-5 pt-7 pb-5 text-center border-b border-gray-100">
-          <h2 className="text-[28px] font-black text-gray-900 mb-3 leading-tight">
+          <h2 className="text-[24px] md:text-[28px] font-bold text-gray-900 mb-3 leading-tight">
             {sanitizeText(mechanic.name)}
           </h2>
 
           {/* 배지 */}
           <div className="flex gap-2 mb-4 flex-wrap justify-center">
             {mechanic.isVerified && (
-              <span className="inline-flex items-center gap-1.5 px-4 py-2 bg-purple-50 text-[#7C4DFF] rounded-lg text-[15px] font-semibold">
+              <span className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#FFF1F5] text-[#E4015C] rounded-lg text-[15px] font-semibold">
                 <BadgeCheck size={16} />
                 검증된 정비소
               </span>
@@ -222,7 +222,7 @@ export default function ShopDetailClient({ slug }: Props) {
 
           {/* 주소 */}
           <div className="flex items-center justify-center gap-1.5 text-[17px] text-gray-600 mb-2">
-            <MapPin size={18} className="text-[#7C4DFF] flex-shrink-0" />
+            <MapPin size={18} className="text-[#E4015C] flex-shrink-0" />
             <span>{sanitizeText(mechanic.address)}</span>
           </div>
 
@@ -275,7 +275,7 @@ export default function ShopDetailClient({ slug }: Props) {
           <>
             <div className="px-5 py-6">
               <h3 className="text-[20px] font-bold text-gray-900 mb-4 text-center">소개</h3>
-              <p className="text-[17px] leading-[1.8] text-gray-600 text-center">
+              <p className="text-[17px] md:text-[18px] leading-[1.7] text-gray-600 text-center">
                 {sanitizeBasicHTML(mechanic.description)}
               </p>
             </div>
@@ -343,7 +343,7 @@ export default function ShopDetailClient({ slug }: Props) {
               window.open(url, '_blank');
             }}
             className="mt-4 w-full py-3.5 border-2 border-gray-200 rounded-xl text-[16px] font-semibold
-              text-gray-600 hover:border-[#7C4DFF] hover:text-[#7C4DFF] transition-colors"
+              text-gray-600 hover:border-[#E4015C] hover:text-[#E4015C] transition-colors"
           >
             네이버 지도에서 길찾기
           </button>
@@ -358,31 +358,28 @@ export default function ShopDetailClient({ slug }: Props) {
         </div>
       </div>
 
-      {/* 하단 고정 CTA */}
-      <div className="fixed bottom-0 left-0 right-0 z-30 bg-white border-t border-gray-200">
-        <div className="max-w-xl mx-auto px-4 py-3 flex gap-3">
-          {/* 전화 버튼 */}
+      {/* 하단 고정 CTA 바 */}
+      <div className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-[#E5E7EB] px-4 py-3 md:hidden">
+        <div className="flex items-center gap-3 max-w-lg mx-auto">
+          <button className="flex items-center justify-center w-11 h-11 rounded-xl border border-[#E5E7EB] text-[#9CA3AF]">
+            <Heart size={20} />
+          </button>
+          <button
+            onClick={handleShare}
+            className="flex items-center justify-center w-11 h-11 rounded-xl border border-[#E5E7EB] text-[#9CA3AF]"
+          >
+            <Share2 size={20} />
+          </button>
           <a
             href={`tel:${sanitizePhone(mechanic.phone)}`}
             onClick={() => gtagEvent.mechanicPhoneReveal(mechanic.id, mechanic.name)}
-            className="flex-none w-14 h-14 rounded-2xl border-2 border-[#7C4DFF] flex items-center justify-center
-              text-[#7C4DFF] hover:bg-[#7C4DFF] hover:text-white transition-colors text-2xl"
-            aria-label="전화하기"
+            className="flex-1 flex items-center justify-center gap-2 bg-[#E4015C] hover:bg-[#C70150] text-white rounded-xl h-11 text-[16px] font-semibold transition-colors"
           >
-            📞
+            <Phone size={18} />
+            전화하기
           </a>
-          {/* 문의하기 버튼 */}
-          <button
-            onClick={() => {
-              const funnelUrl = `/?region=${encodeURIComponent(mechanic.location || '')}&mechanic=${mechanic.id}#inquiry-funnel`;
-              router.push(funnelUrl);
-            }}
-            className="flex-1 h-14 rounded-2xl bg-[#7C4DFF] text-white text-[20px] font-bold
-              hover:bg-[#6D3FE0] transition-colors"
-          >
-            문의하기
-          </button>
         </div>
+        <div className="h-[env(safe-area-inset-bottom)]" />
       </div>
     </div>
   );

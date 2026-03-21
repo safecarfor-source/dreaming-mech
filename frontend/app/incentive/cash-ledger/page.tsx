@@ -64,7 +64,49 @@ export default function CashLedgerPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // 이월시재 설정
+  const [openingCash, setOpeningCash] = useState<number | null>(null);
+  const [openingCashInput, setOpeningCashInput] = useState('');
+  const [openingCashSaving, setOpeningCashSaving] = useState(false);
+  const [showOpeningSetting, setShowOpeningSetting] = useState(false);
+
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // 이월시재 조회
+  const fetchOpeningCash = useCallback(async (start: string) => {
+    const y = parseInt(start.slice(0, 4));
+    const m = parseInt(start.slice(5, 7));
+    try {
+      const res = await incentiveApi.get(`/opening-cash/${y}/${m}`);
+      const val = res.data.openingCash;
+      setOpeningCash(val);
+      if (val != null) setOpeningCashInput(String(val));
+      else setOpeningCashInput('');
+    } catch {
+      setOpeningCash(null);
+      setOpeningCashInput('');
+    }
+  }, []);
+
+  // 이월시재 저장
+  const saveOpeningCash = async () => {
+    const y = parseInt(startDate.slice(0, 4));
+    const m = parseInt(startDate.slice(5, 7));
+    const val = parseInt(openingCashInput.replace(/,/g, ''));
+    if (isNaN(val)) return;
+    setOpeningCashSaving(true);
+    try {
+      await incentiveApi.put(`/opening-cash/${y}/${m}`, { openingCash: val });
+      setOpeningCash(val);
+      setShowOpeningSetting(false);
+      // 다시 fetch해서 이월시재 반영
+      fetchData(startDate, endDate);
+    } catch {
+      alert('저장 실패');
+    } finally {
+      setOpeningCashSaving(false);
+    }
+  };
 
   const fetchData = useCallback(async (start: string, end: string) => {
     if (!start || !end) return;
@@ -104,11 +146,12 @@ export default function CashLedgerPage() {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
       fetchData(startDate, endDate);
+      fetchOpeningCash(startDate);
     }, 300);
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
-  }, [startDate, endDate, fetchData, isAdmin]);
+  }, [startDate, endDate, fetchData, fetchOpeningCash, isAdmin]);
 
   // 권한 없음
   if (!isAdmin) {
@@ -197,6 +240,46 @@ export default function CashLedgerPage() {
           </div>
         </div>
       </div>
+
+      {/* 이월시재 초기 설정 (hasBaseline=false일 때만 표시) */}
+      {!loading && tableData && !(tableData as any).hasBaseline && (
+        <div style={{
+          background: '#FFF8E1',
+          borderRadius: 16,
+          padding: '14px 20px',
+          boxShadow: '0 2px 12px rgba(0,0,0,0.07)',
+          border: '1px solid #FFB74D',
+          marginBottom: 12,
+        }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: '#E65100', marginBottom: 8 }}>
+            이월시재 초기 설정 (1회만)
+          </div>
+          <div style={{ fontSize: 12, color: '#795548', marginBottom: 10 }}>
+            극동 현금출납부에서 이번 달 이월시재를 확인 후 입력하세요. 이후 매월 자동 계산됩니다.
+          </div>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            <input
+              type="text"
+              inputMode="numeric"
+              placeholder="이월시재 금액"
+              value={openingCashInput}
+              onChange={(e) => setOpeningCashInput(e.target.value.replace(/[^0-9]/g, ''))}
+              style={{ ...inputStyle, maxWidth: 200 }}
+            />
+            <button
+              onClick={saveOpeningCash}
+              disabled={openingCashSaving}
+              style={{
+                background: '#F57F17', color: '#FFFFFF', border: 'none', borderRadius: 8,
+                padding: '8px 16px', fontSize: 13, fontWeight: 700, cursor: 'pointer',
+                opacity: openingCashSaving ? 0.5 : 1, whiteSpace: 'nowrap',
+              }}
+            >
+              {openingCashSaving ? '...' : '저장'}
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* 로딩 */}
       {loading && (

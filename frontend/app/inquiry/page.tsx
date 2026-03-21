@@ -141,7 +141,7 @@ function InquiryContent() {
   return (
     <Layout>
       {/* 상단 헤더 */}
-      <section className="bg-[#7C4DFF] text-white py-12 text-center">
+      <section className="bg-consumer-500 text-white py-12 text-center">
         <div className="container mx-auto px-4 md:px-6">
           <motion.div
             initial={{ opacity: 0, y: 16 }}
@@ -159,7 +159,7 @@ function InquiryContent() {
       </section>
 
       {/* 퍼널 섹션 */}
-      <section className="bg-[#F8F7FC] py-12 md:py-20">
+      <section className="bg-[#FFF1F5] py-12 md:py-20">
         <div className="container mx-auto px-4 md:px-6 max-w-4xl">
           {/* 스텝 인디케이터 */}
           <div className="flex items-center justify-center mb-8 md:mb-12 gap-2">
@@ -168,7 +168,7 @@ function InquiryContent() {
                 <div
                   className={`w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center font-bold text-sm md:text-base transition-all ${
                     step >= s
-                      ? 'bg-[#7C4DFF] text-white'
+                      ? 'bg-consumer-500 text-white'
                       : 'bg-gray-300 text-gray-500'
                   }`}
                 >
@@ -177,7 +177,7 @@ function InquiryContent() {
                 {s < 4 && (
                   <div
                     className={`w-8 md:w-12 h-1 mx-1 transition-all ${
-                      step > s ? 'bg-[#7C4DFF]' : 'bg-gray-300'
+                      step > s ? 'bg-consumer-500' : 'bg-gray-300'
                     }`}
                   />
                 )}
@@ -208,7 +208,7 @@ function InquiryContent() {
                     value={regionSearchQuery}
                     onChange={(e) => setRegionSearchQuery(e.target.value)}
                     placeholder="지역명 검색 (예: 수원시, 강남구)"
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-200 focus:border-[#7C4DFF] outline-none transition-all"
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-consumer-500/20 focus:border-consumer-500 outline-none transition-all"
                   />
                   {regionSearchResults.length > 0 && (
                     <div className="absolute top-full mt-2 w-full bg-white border border-gray-200 rounded-xl shadow-xl z-10 max-h-64 overflow-y-auto">
@@ -216,7 +216,7 @@ function InquiryContent() {
                         <button
                           key={idx}
                           onClick={() => handleRegionSelect(region)}
-                          className="w-full text-left px-4 py-3 hover:bg-[#F5F3FF] transition-colors border-b border-gray-100 last:border-0"
+                          className="w-full text-left px-4 py-3 hover:bg-consumer-50 transition-colors border-b border-gray-100 last:border-0"
                         >
                           {region.display}
                         </button>
@@ -232,8 +232,8 @@ function InquiryContent() {
                     <button
                       key={idx}
                       onClick={() => handleRegionSelect(region)}
-                      className="px-4 py-3 border border-[#7C4DFF]/30 text-[#7C4DFF] rounded-xl
-                        hover:bg-[#7C4DFF] hover:text-white hover:border-[#7C4DFF] transition-all font-semibold text-sm"
+                      className="px-4 py-3 border border-consumer-500/30 text-consumer-500 rounded-xl
+                        hover:bg-consumer-500 hover:text-white hover:border-consumer-500 transition-all font-semibold text-sm"
                     >
                       {region.display}
                     </button>
@@ -253,7 +253,7 @@ function InquiryContent() {
               >
                 <button
                   onClick={() => setStep(1)}
-                  className="text-[#7C4DFF] text-sm font-semibold mb-4 hover:underline"
+                  className="text-consumer-500 text-sm font-semibold mb-4 hover:underline"
                 >
                   ← 지역 변경
                 </button>
@@ -261,7 +261,7 @@ function InquiryContent() {
                   어떤 서비스가 필요하신가요?
                 </h2>
                 <p className="text-gray-500 mb-6">
-                  선택하신 지역: <span className="font-bold text-[#7C4DFF]">{selectedRegion?.display}</span>
+                  선택하신 지역: <span className="font-bold text-consumer-500">{selectedRegion?.display}</span>
                 </p>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -269,11 +269,11 @@ function InquiryContent() {
                     <button
                       key={service.type}
                       onClick={() => handleServiceSelect(service.type)}
-                      className="p-6 border border-gray-200 rounded-xl hover:border-[#7C4DFF] hover:bg-[#F5F3FF] hover:shadow-md
+                      className="p-6 border border-gray-200 rounded-xl hover:border-consumer-500 hover:bg-consumer-50 hover:shadow-md
                         transition-all group"
                     >
                       <div className="text-4xl mb-2">{service.icon}</div>
-                      <div className="text-lg font-bold text-gray-900 group-hover:text-[#7C4DFF]">
+                      <div className="text-lg font-bold text-gray-900 group-hover:text-consumer-500">
                         {service.label}
                       </div>
                     </button>
@@ -293,7 +293,7 @@ function InquiryContent() {
               >
                 <button
                   onClick={() => setStep(2)}
-                  className="text-[#7C4DFF] text-sm font-semibold mb-4 hover:underline"
+                  className="text-consumer-500 text-sm font-semibold mb-4 hover:underline"
                 >
                   ← 서비스 변경
                 </button>
@@ -315,7 +315,7 @@ function InquiryContent() {
                       value={dong}
                       onChange={(e) => setDong(e.target.value)}
                       placeholder="예: 화곡동, 삼산면"
-                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-200 focus:border-[#7C4DFF] outline-none transition-all"
+                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-consumer-500/20 focus:border-consumer-500 outline-none transition-all"
                     />
                     <p className="text-xs text-gray-400 mt-1">정확한 지역의 정비소를 연결해드립니다</p>
                   </div>
@@ -333,7 +333,7 @@ function InquiryContent() {
                         onClick={() => setSelectedMechanicId(null)}
                         className={`w-full text-left px-4 py-3 rounded-xl transition-all text-sm mb-3 ${
                           selectedMechanicId === null
-                            ? 'border-2 border-[#7C4DFF] bg-[#F5F3FF] text-[#7C4DFF] font-semibold'
+                            ? 'border-2 border-consumer-500 bg-consumer-50 text-consumer-500 font-semibold'
                             : 'border border-gray-200 hover:border-gray-300 text-gray-600'
                         }`}
                       >
@@ -351,8 +351,8 @@ function InquiryContent() {
                               onClick={() => setSelectedMechanicId(mechanic.id)}
                               className={`text-left rounded-xl overflow-hidden transition-all shadow-sm ${
                                 isSelected
-                                  ? 'border-2 border-[#7C4DFF] shadow-md'
-                                  : 'border border-gray-200 hover:border-[#7C4DFF]/50 hover:shadow-md'
+                                  ? 'border-2 border-consumer-500 shadow-md'
+                                  : 'border border-gray-200 hover:border-consumer-500/50 hover:shadow-md'
                               }`}
                             >
                               {/* 썸네일 */}
@@ -368,7 +368,7 @@ function InquiryContent() {
                                 )}
                                 {/* 선택 시 체크마크 오버레이 */}
                                 {isSelected && (
-                                  <div className="absolute top-2 right-2 w-6 h-6 bg-[#7C4DFF] rounded-full flex items-center justify-center shadow">
+                                  <div className="absolute top-2 right-2 w-6 h-6 bg-consumer-500 rounded-full flex items-center justify-center shadow">
                                     <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                                       <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                                     </svg>
@@ -377,7 +377,7 @@ function InquiryContent() {
                               </div>
                               {/* 정비소 정보 */}
                               <div className="p-3">
-                                <p className={`font-bold text-sm leading-snug ${isSelected ? 'text-[#7C4DFF]' : 'text-gray-900'}`}>
+                                <p className={`font-bold text-sm leading-snug ${isSelected ? 'text-consumer-500' : 'text-gray-900'}`}>
                                   {mechanic.name}
                                 </p>
                                 <p className="text-xs text-gray-500 mt-0.5 leading-relaxed line-clamp-2">
@@ -390,7 +390,7 @@ function InquiryContent() {
                       </div>
 
                       {selectedMechanicId && (
-                        <p className="text-xs text-[#7C4DFF] mt-2">
+                        <p className="text-xs text-consumer-500 mt-2">
                           ✓ 선택하신 정비소에 직접 문의가 전달됩니다
                         </p>
                       )}
@@ -411,7 +411,7 @@ function InquiryContent() {
                       value={name}
                       onChange={(e) => setName(e.target.value)}
                       placeholder="홍길동"
-                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-200 focus:border-[#7C4DFF] outline-none transition-all"
+                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-consumer-500/20 focus:border-consumer-500 outline-none transition-all"
                     />
                   </div>
 
@@ -425,7 +425,7 @@ function InquiryContent() {
                       onChange={handlePhoneChange}
                       placeholder="010-0000-0000"
                       maxLength={13}
-                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-200 focus:border-[#7C4DFF] outline-none transition-all"
+                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-consumer-500/20 focus:border-consumer-500 outline-none transition-all"
                     />
                   </div>
 
@@ -438,7 +438,7 @@ function InquiryContent() {
                       value={vehicleNumber}
                       onChange={(e) => setVehicleNumber(e.target.value)}
                       placeholder="예: 12가 3456"
-                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-200 focus:border-[#7C4DFF] outline-none transition-all"
+                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-consumer-500/20 focus:border-consumer-500 outline-none transition-all"
                     />
                   </div>
 
@@ -451,7 +451,7 @@ function InquiryContent() {
                       value={vehicleModel}
                       onChange={(e) => setVehicleModel(e.target.value)}
                       placeholder="예: 현대 아반떼, 기아 K5"
-                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-200 focus:border-[#7C4DFF] outline-none transition-all"
+                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-consumer-500/20 focus:border-consumer-500 outline-none transition-all"
                     />
                   </div>
 
@@ -464,20 +464,20 @@ function InquiryContent() {
                       onChange={(e) => setDescription(e.target.value)}
                       placeholder="예: 타이어 사이즈, 증상 등"
                       rows={3}
-                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-200 focus:border-[#7C4DFF] outline-none transition-all resize-none"
+                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-consumer-500/20 focus:border-consumer-500 outline-none transition-all resize-none"
                     />
                   </div>
 
                   {/* 개인정보 수집 동의 */}
                   <div
                     className={`rounded-xl border-2 p-4 cursor-pointer transition-all ${
-                      privacyAgreed ? 'border-[#7C4DFF] bg-purple-50' : 'border-gray-200 bg-gray-50'
+                      privacyAgreed ? 'border-consumer-500 bg-consumer-50' : 'border-gray-200 bg-gray-50'
                     }`}
                     onClick={() => setPrivacyAgreed(!privacyAgreed)}
                   >
                     <div className="flex items-start gap-3">
                       <div className={`flex-shrink-0 w-5 h-5 mt-0.5 rounded border-2 flex items-center justify-center transition-all ${
-                        privacyAgreed ? 'bg-[#7C4DFF] border-[#7C4DFF]' : 'border-gray-300 bg-white'
+                        privacyAgreed ? 'bg-consumer-500 border-consumer-500' : 'border-gray-300 bg-white'
                       }`}>
                         {privacyAgreed && (
                           <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
@@ -502,8 +502,8 @@ function InquiryContent() {
                   <button
                     onClick={handleSubmit}
                     disabled={!phone || phone.replace(/[^\d]/g, '').length < 10 || !privacyAgreed || submitting}
-                    className="w-full bg-[#7C4DFF] text-white px-6 py-4 rounded-xl font-bold text-lg
-                      hover:bg-[#6B3FE0] transition-all disabled:opacity-50 disabled:cursor-not-allowed
+                    className="w-full bg-consumer-500 text-white px-6 py-4 rounded-xl font-bold text-lg
+                      hover:bg-consumer-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed
                       flex items-center justify-center gap-2 shadow-lg"
                   >
                     {submitting ? (
@@ -544,7 +544,7 @@ function InquiryContent() {
                   꿈꾸는정비사가 빠르게 연락드리겠습니다
                 </p>
 
-                <div className="bg-[#F5F3FF] rounded-xl p-6 mb-6">
+                <div className="bg-consumer-50 rounded-xl p-6 mb-6">
                   <p className="text-sm text-gray-600 mb-2">접수 내용</p>
                   <div className="space-y-1 text-left">
                     <p className="font-semibold">📍 지역: {selectedRegion?.display || '확인 중'}</p>
@@ -571,8 +571,8 @@ function InquiryContent() {
 
                 <button
                   onClick={resetFunnel}
-                  className="bg-[#7C4DFF] text-white px-8 py-3 rounded-lg font-bold
-                    hover:bg-[#6B3FE0] transition-all w-full"
+                  className="bg-consumer-500 text-white px-8 py-3 rounded-lg font-bold
+                    hover:bg-consumer-600 transition-all w-full"
                 >
                   새로운 문의하기
                 </button>

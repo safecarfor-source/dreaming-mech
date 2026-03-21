@@ -43,14 +43,14 @@ export default function PhoneReveal({ mechanicId, mechanicName, phone, variant, 
   if (variant === 'modal') {
     return (
       <div className="bg-bg-secondary rounded-2xl p-5 sm:p-6 text-center">
-        <Phone size={28} className="text-brand-500 mx-auto mb-2" />
+        <Phone size={28} className="text-consumer-500 mx-auto mb-2" />
         <p className="text-sm text-text-tertiary mb-3">전화번호</p>
         {revealed ? (
           <div>
             <a
               href={`tel:${phone}`}
               className="inline-flex items-center justify-center gap-3
-                text-[28px] sm:text-[34px] font-bold text-brand-500 hover:text-brand-600
+                text-[28px] sm:text-[34px] font-bold text-consumer-500 hover:text-consumer-600
                 transition-colors duration-[var(--duration-fast)]"
             >
               {phone}
@@ -69,7 +69,7 @@ export default function PhoneReveal({ mechanicId, mechanicName, phone, variant, 
               onClick={handleReveal}
               className="absolute inset-0 flex items-center justify-center"
             >
-              <span className="bg-brand-500 hover:bg-brand-600 text-white text-base px-6 py-3
+              <span className="bg-consumer-500 hover:bg-consumer-600 text-white text-base px-6 py-3
                 rounded-full font-bold shadow-[var(--shadow-md)] whitespace-nowrap
                 transition-colors duration-[var(--duration-fast)]">
                 👆 터치하여 전화번호 확인
@@ -125,8 +125,8 @@ export default function PhoneReveal({ mechanicId, mechanicName, phone, variant, 
           handleReveal();
         }}
       >
-        <Phone size={10} className="text-brand-500 flex-shrink-0" />
-        <span className="text-[10px] sm:text-[11px] text-brand-500 font-medium">
+        <Phone size={10} className="text-consumer-500 flex-shrink-0" />
+        <span className="text-[10px] sm:text-[11px] text-consumer-500 font-medium">
           전화번호 확인
         </span>
       </div>
