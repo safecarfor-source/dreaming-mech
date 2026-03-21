@@ -44,6 +44,9 @@ export class GdService {
 
   // 특정 차량의 정비 이력 (날짜 역순, 무한스크롤)
   async getVehicleRepairs(code: string, page = 1, limit = 20) {
+    if (!code) {
+      return { vehicle: null, repairs: [], total: 0 };
+    }
     const skip = (page - 1) * limit;
 
     const vehicle = await this.prisma.gdVehicle.findUnique({
@@ -99,7 +102,15 @@ export class GdService {
   }
 
   // 상품/타이어 검색
-  async searchProducts(q: string, page = 1, limit = 20) {
+  // 카테고리별 상품코드 접두사 매핑
+  private static readonly CATEGORY_PREFIXES: Record<string, string[]> = {
+    tire: ['TA', 'TH', 'THL', 'TM'],
+    battery: ['RK', 'BX', 'AGM', 'ZB', 'LN'],
+    lining: ['PH', 'FP', 'FH'],
+    wiper: ['HW'],
+  };
+
+  async searchProducts(q: string, page = 1, limit = 20, category?: string) {
     const skip = (page - 1) * limit;
 
     // 타이어 사이즈 숫자 검색 지원 (2355519 → 235/55R19)
@@ -120,7 +131,16 @@ export class GdService {
       );
     }
 
-    const where = searchTerms.OR.length > 0 ? searchTerms : {};
+    // 카테고리 필터 (코드 접두사 기반)
+    const prefixes = category ? GdService.CATEGORY_PREFIXES[category] : undefined;
+    const categoryFilter = prefixes
+      ? { OR: prefixes.map((p) => ({ code: { startsWith: p } })) }
+      : undefined;
+
+    const where = {
+      ...(searchTerms.OR.length > 0 ? searchTerms : {}),
+      ...(categoryFilter ?? {}),
+    };
 
     const [data, total] = await Promise.all([
       this.prisma.gdProduct.findMany({

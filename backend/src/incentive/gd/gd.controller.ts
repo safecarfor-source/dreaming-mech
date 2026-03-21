@@ -40,10 +40,11 @@ export class GdController {
   @Get('products')
   searchProducts(
     @Query('q') q: string = '',
+    @Query('category') category: string = '',
     @Query('page') page: string = '1',
     @Query('limit') limit: string = '20',
   ) {
-    return this.gdService.searchProducts(q, parseInt(page), parseInt(limit));
+    return this.gdService.searchProducts(q, parseInt(page), parseInt(limit), category || undefined);
   }
 
   @Get('customers')
