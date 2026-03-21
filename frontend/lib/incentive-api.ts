@@ -2,7 +2,7 @@ import axios from 'axios';
 import { useIncentiveAuthStore } from './incentive-auth';
 
 const incentiveApi = axios.create({
-  baseURL: (process.env.NEXT_PUBLIC_API_URL ?? '') + '/api/incentive',
+  baseURL: (process.env.NEXT_PUBLIC_API_URL ?? '') + '/incentive',
   headers: {
     'Content-Type': 'application/json',
   },
