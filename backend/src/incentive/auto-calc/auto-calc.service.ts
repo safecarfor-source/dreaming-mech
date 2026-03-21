@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
+import { nowKST } from '../utils/kst';
 
 interface ClassifiedRow {
   productCode: string;
@@ -215,7 +216,7 @@ export class AutoCalcService {
 
   /** 현재 월을 한국 형식으로 ("26년 3월") — 한국시간(KST) 기준 */
   private currentKrMonth(): string {
-    const now = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Seoul' }));
+    const now = nowKST();
     const y = String(now.getFullYear()).slice(2);
     const m = now.getMonth() + 1;
     return `${y}년 ${m}월`;

@@ -1,11 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
-
-const ITEM_RATES: Record<string, number> = {
-  brake_oil: 2.8, lining: 1.4, mission_oil: 2.8, diff_oil: 1.0,
-  wiper: 0.3, battery: 0.5, ac_filter: 1.0,
-  guardian_h3: 2.0, guardian_h5: 2.0, guardian_h7: 2.0,
-};
+import { ITEM_RATES } from '../constants/rates';
 
 @Injectable()
 export class TeamService {

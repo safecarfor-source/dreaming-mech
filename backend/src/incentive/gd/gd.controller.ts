@@ -1,6 +1,7 @@
 import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
 import { GdService } from './gd.service';
 import { IncentiveJwtGuard } from '../guards/incentive-auth.guard';
+import { todayKST } from '../utils/kst';
 
 @Controller('incentive/gd')
 @UseGuards(IncentiveJwtGuard)
@@ -61,10 +62,10 @@ export class GdController {
     @Query('startDate') startDate: string,
     @Query('endDate') endDate: string,
   ) {
-    // 기본값: 이번 달 1일 ~ 오늘
-    const now = new Date();
-    const defaultStart = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
-    const defaultEnd = now.toISOString().slice(0, 10);
+    // 기본값: 이번 달 1일 ~ 오늘 (KST 기준)
+    const today = todayKST();
+    const defaultStart = today.slice(0, 7) + '-01';
+    const defaultEnd = today;
     return this.gdService.getCashLedger(
       startDate || defaultStart,
       endDate || defaultEnd,
@@ -73,8 +74,7 @@ export class GdController {
 
   @Get('daily-revenue')
   getDailyRevenue(@Query('date') date?: string) {
-    const today = new Date().toISOString().slice(0, 10);
-    return this.gdService.getDailyRevenue(date || today);
+    return this.gdService.getDailyRevenue(date || todayKST());
   }
 
   @Get('sync-status')

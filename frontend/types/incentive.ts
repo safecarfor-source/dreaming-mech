@@ -6,7 +6,7 @@ export interface IncentiveUser {
   name: string;
   role: 'admin' | 'manager' | 'director' | 'viewer';
   pin?: string;
-  access: string[];
+  access: ('manager' | 'director' | 'admin' | 'team')[];
   plainPassword?: string;
 }
 

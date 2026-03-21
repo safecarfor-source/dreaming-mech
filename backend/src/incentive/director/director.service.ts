@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
+import { DEFAULT_DIRECTOR_RATES } from '../constants/rates';
 
 @Injectable()
 export class DirectorService {
@@ -75,11 +76,11 @@ export class DirectorService {
     });
     const map = Object.fromEntries(configs.map(c => [c.key, c.value]));
     return {
-      revenueRate: map['director_revenue_rate'] || 0.006,
-      wiperRate: map['director_wiper_rate'] || 0.003,
+      revenueRate: map['director_revenue_rate'] || DEFAULT_DIRECTOR_RATES.revenueRate,
+      wiperRate: map['director_wiper_rate'] || DEFAULT_DIRECTOR_RATES.wiperRate,
       batteryRate: map['director_battery_rate'] || 0.005,
       acFilterRate: map['director_acfilter_rate'] || 0.01,
-      breakeven: map['director_breakeven'] || 145000000,
+      breakeven: map['director_breakeven'] || DEFAULT_DIRECTOR_RATES.breakeven,
     };
   }
 

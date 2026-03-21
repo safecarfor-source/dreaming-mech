@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
+import { ITEM_RATES, BASE_SALARY } from '../constants/rates';
 
 @Injectable()
 export class ManagerService {
@@ -18,7 +19,7 @@ export class ManagerService {
     const tireIncentive = Math.round((data.tireSales + data.alignmentSales) * config.tireRate);
     const teamBonus = Math.round(teamIncentive.actual * config.teamMultiplier);
     const totalIncentive = tireIncentive + teamBonus;
-    const baseSalary = 3300000;
+    const baseSalary = BASE_SALARY;
     const totalSalary = baseSalary + totalIncentive;
 
     // 감액 없었을 때
@@ -89,15 +90,9 @@ export class ManagerService {
       where: { month, uploadDate: latest.uploadDate },
     });
 
-    const RATES: Record<string, number> = {
-      brake_oil: 2.8, lining: 1.4, mission_oil: 2.8, diff_oil: 1.0,
-      wiper: 0.3, battery: 0.5, ac_filter: 1.0,
-      guardian_h3: 2.0, guardian_h5: 2.0, guardian_h7: 2.0,
-    };
-
     let calculated = 0;
     for (const row of rows) {
-      calculated += row.sales * ((RATES[row.itemKey] || 0) / 100);
+      calculated += row.sales * ((ITEM_RATES[row.itemKey] || 0) / 100);
     }
     calculated = Math.round(calculated);
 

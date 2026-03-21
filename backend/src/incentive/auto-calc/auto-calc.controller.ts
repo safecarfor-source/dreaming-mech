@@ -1,28 +1,21 @@
-import {
-  Controller, Post, Get, Body, UseGuards,
-  UnauthorizedException, Headers,
-} from '@nestjs/common';
+import { Controller, Post, Get, Body, UseGuards } from '@nestjs/common';
 import { AutoCalcService } from './auto-calc.service';
 import { IncentiveJwtGuard, RolesGuard } from '../guards/incentive-auth.guard';
 import { Roles } from '../guards/roles.decorator';
 
 @Controller('incentive/auto-calc')
+@UseGuards(IncentiveJwtGuard)
 export class AutoCalcController {
   constructor(private autoCalcService: AutoCalcService) {}
 
   /**
    * gd_sync_server.py에서 동기화 완료 후 호출
-   * 시크릿 토큰으로 인증 (서버 내부 전용)
+   * JWT 인증 + admin 권한 필요
    */
   @Post('trigger')
-  async trigger(
-    @Body('month') month?: string,
-    @Headers('x-auto-calc-secret') secret?: string,
-  ) {
-    const expected = process.env.AUTO_CALC_SECRET;
-    if (expected && secret !== expected) {
-      throw new UnauthorizedException('잘못된 시크릿');
-    }
+  @UseGuards(IncentiveJwtGuard, RolesGuard)
+  @Roles('admin')
+  async trigger(@Body('month') month?: string) {
     return this.autoCalcService.calculateMonth(month);
   }
 
@@ -36,7 +29,6 @@ export class AutoCalcController {
 
   /** 최근 자동계산 이력 조회 */
   @Get('status')
-  @UseGuards(IncentiveJwtGuard)
   async status() {
     return this.autoCalcService.getStatus();
   }

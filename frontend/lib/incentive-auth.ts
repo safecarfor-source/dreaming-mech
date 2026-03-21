@@ -1,15 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-
-export interface IncentiveUser {
-  id?: number;
-  loginId: string;
-  name: string;
-  role: 'admin' | 'manager' | 'director' | 'viewer';
-  pin?: string;
-  access: string[];
-  plainPassword?: string;
-}
+import { IncentiveUser } from '@/types/incentive';
 
 interface IncentiveAuthState {
   token: string | null;

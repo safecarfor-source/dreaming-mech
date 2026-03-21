@@ -6,6 +6,9 @@ import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 import cookieParser from 'cookie-parser';
 
 async function bootstrap() {
+  // BigInt JSON 직렬화 지원
+  (BigInt.prototype as any).toJSON = function() { return Number(this); };
+
   // Validate environment variables before starting the application
   validateEnvironment();
 

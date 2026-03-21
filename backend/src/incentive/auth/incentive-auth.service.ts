@@ -24,13 +24,23 @@ export class IncentiveAuthService {
       { expiresIn: '7d' },
     );
 
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+
+    // 역할별 접근 가능 범위
+    const access: string[] = ['team'];
+    if (user.role === 'admin') access.push('manager', 'director', 'admin');
+    else if (user.role === 'manager') access.push('manager');
+    else if (user.role === 'director') access.push('director');
+
     return {
       token,
+      expiresAt,
       user: {
         id: user.id,
         loginId: user.loginId,
         name: user.name,
         role: user.role,
+        access,
       },
     };
   }
