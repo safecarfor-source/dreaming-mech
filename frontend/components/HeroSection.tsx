@@ -1,5 +1,7 @@
 'use client';
 
+import { useState, useEffect, useRef } from 'react';
+import Image from 'next/image';
 import { motion } from 'framer-motion';
 
 interface Props {
@@ -8,20 +10,47 @@ interface Props {
 }
 
 export default function HeroSection({ totalMechanics, totalClicks }: Props) {
+  const [showVideo, setShowVideo] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    // 모바일(768px 미만)은 포스터만 사용, 데스크탑은 영상 지연 로딩
+    const isMobile = window.innerWidth < 768;
+    if (isMobile) return;
+
+    // 페이지 로딩 완료 후 영상 로드 시작
+    const timer = setTimeout(() => {
+      setShowVideo(true);
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, []);
+
   return (
     <section className="min-h-screen flex items-center justify-center relative overflow-hidden pt-14 md:pt-16">
-      {/* Background Video */}
+      {/* Background: 포스터 이미지 (즉시 표시) + 영상 (지연 로딩) */}
       <div className="absolute inset-0 z-0">
-        <video
-          autoPlay
-          loop
-          muted
-          playsInline
-          poster="/hero-poster.jpg"
-          className="w-full h-full object-cover"
-        >
-          <source src="/title.mp4" type="video/mp4" />
-        </video>
+        <Image
+          src="/hero-poster.jpg"
+          alt="꿈꾸는정비사 히어로"
+          fill
+          priority
+          className="object-cover"
+          sizes="100vw"
+        />
+        {showVideo && (
+          <video
+            ref={videoRef}
+            autoPlay
+            loop
+            muted
+            playsInline
+            preload="metadata"
+            className="absolute inset-0 w-full h-full object-cover"
+          >
+            <source src="/title.mp4" type="video/mp4" />
+          </video>
+        )}
       </div>
 
       {/* Dark overlay */}

@@ -107,6 +107,7 @@ export default function RootLayout({
             }
           `}
         </Script>
+        <link rel="preconnect" href="https://cdn.jsdelivr.net" crossOrigin="anonymous" />
         <link
           rel="stylesheet"
           href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css"
@@ -174,11 +175,11 @@ export default function RootLayout({
           }}
         />
 
-        {/* Naver Maps API - 전역 로드 */}
+        {/* Naver Maps API - 필요 시 로드 (lazyOnload로 초기 렌더링 블록 방지) */}
         {naverMapClientId && (
           <Script
             src={`https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=${naverMapClientId}`}
-            strategy="beforeInteractive"
+            strategy="lazyOnload"
           />
         )}
         <PageViewTracker />

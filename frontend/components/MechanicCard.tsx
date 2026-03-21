@@ -38,10 +38,11 @@ export default function MechanicCard({ mechanic, onClick, isPremium }: Props) {
           <Image
             src={mechanic.mainImageUrl || mechanic.galleryImages![0]}
             alt={sanitizeText(mechanic.name)}
-            width={200}
-            height={200}
+            width={400}
+            height={isPremium ? 225 : 400}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
             sizes={isPremium ? "(max-width: 768px) 100vw, 25vw" : "(max-width: 768px) 50vw, (max-width: 1024px) 25vw, 16vw"}
+            loading="lazy"
           />
         ) : (
           <div className="w-full h-full bg-gradient-to-br from-consumer-50 to-consumer-100 flex items-center justify-center">

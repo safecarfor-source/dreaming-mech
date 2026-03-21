@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, ChevronLeft, ChevronRight } from 'lucide-react';
 
@@ -39,10 +40,14 @@ export default function GalleryCarousel({ images, name }: Props) {
               onClick={() => openViewer(i)}
               className="flex-shrink-0 w-24 h-24 md:w-32 md:h-32 rounded-xl overflow-hidden bg-gray-100 hover:opacity-80 transition-opacity"
             >
-              <img
+              <Image
                 src={url}
                 alt={`${name} 갤러리 ${i + 1}`}
+                width={128}
+                height={128}
                 className="w-full h-full object-cover"
+                loading="lazy"
+                sizes="(max-width: 768px) 96px, 128px"
               />
             </button>
           ))}
