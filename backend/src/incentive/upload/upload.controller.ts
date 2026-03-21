@@ -1,15 +1,18 @@
 import {
   Controller, Post, Get, Param, UseGuards, Request,
   UseInterceptors, UploadedFile, Body, ForbiddenException, BadRequestException,
+  UseFilters,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { UploadService } from './upload.service';
 import { IncentiveJwtGuard, RolesGuard } from '../guards/incentive-auth.guard';
 import { Roles } from '../guards/roles.decorator';
+import { IncentiveExceptionFilter } from '../filters/incentive-exception.filter';
 import * as path from 'path';
 
 @Controller('incentive/upload')
 @UseGuards(IncentiveJwtGuard)
+@UseFilters(IncentiveExceptionFilter)
 export class UploadController {
   constructor(private uploadService: UploadService) {}
 
@@ -19,6 +22,7 @@ export class UploadController {
     @UploadedFile() file: Express.Multer.File,
     @Body('month') month: string,
     @Body('dataDate') dataDate: string,
+    @Body('type') type: string,
     @Request() req: any,
   ) {
     if (!['admin', 'manager', 'director'].includes(req.user.role)) {
@@ -31,7 +35,9 @@ export class UploadController {
     if (ext !== '.xlsx') {
       throw new BadRequestException('.xlsx 파일만 업로드 가능합니다');
     }
-    return this.uploadService.parseExcel(file.buffer, month, req.user.userId, file.originalname, dataDate);
+    // type이 없으면 기본값 'team'으로 처리
+    const uploadType = type || 'team';
+    return this.uploadService.parseExcel(file.buffer, month, req.user.userId, file.originalname, dataDate, uploadType);
   }
 
   @Post('approve/:id')

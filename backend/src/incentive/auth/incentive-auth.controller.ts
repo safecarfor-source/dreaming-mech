@@ -1,13 +1,16 @@
-import { Controller, Post, Put, Get, Body, UseGuards, Request } from '@nestjs/common';
+import { Controller, Post, Put, Get, Body, UseGuards, Request, UseFilters } from '@nestjs/common';
 import { IncentiveAuthService } from './incentive-auth.service';
 import { IncentiveJwtGuard } from '../guards/incentive-auth.guard';
+import { LoginDto } from '../dto/login.dto';
+import { IncentiveExceptionFilter } from '../filters/incentive-exception.filter';
 
 @Controller('incentive/auth')
+@UseFilters(IncentiveExceptionFilter)
 export class IncentiveAuthController {
   constructor(private authService: IncentiveAuthService) {}
 
   @Post('login')
-  login(@Body() body: { loginId: string; password: string }) {
+  login(@Body() body: LoginDto) {
     return this.authService.login(body.loginId, body.password);
   }
 

@@ -6,13 +6,17 @@ import {
   Body,
   ParseIntPipe,
   UseGuards,
+  UseFilters,
 } from '@nestjs/common';
 import { DashboardService } from './dashboard.service';
 import { IncentiveJwtGuard, RolesGuard } from '../guards/incentive-auth.guard';
 import { Roles } from '../guards/roles.decorator';
+import { SetOpeningCashDto } from '../dto/opening-cash.dto';
+import { IncentiveExceptionFilter } from '../filters/incentive-exception.filter';
 
 @Controller('incentive')
 @UseGuards(IncentiveJwtGuard)
+@UseFilters(IncentiveExceptionFilter)
 export class DashboardController {
   constructor(private dashboardService: DashboardService) {}
 
@@ -67,7 +71,7 @@ export class DashboardController {
   setOpeningCash(
     @Param('year', ParseIntPipe) year: number,
     @Param('month', ParseIntPipe) month: number,
-    @Body() body: { openingCash: number },
+    @Body() body: SetOpeningCashDto,
   ) {
     return this.dashboardService.setOpeningCash(year, month, body.openingCash);
   }

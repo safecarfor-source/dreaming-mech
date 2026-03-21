@@ -16,8 +16,33 @@ export interface ParsedRow {
 export class UploadService {
   constructor(private prisma: PrismaService) {}
 
+  // CSV 업로드 순서 의존성 체크
+  // manager 업로드 전 팀 데이터 존재 여부 확인
+  // director 업로드 전 매니저 데이터 존재 여부 확인
+  private async checkUploadDependency(type: string, month: string) {
+    if (type === 'manager') {
+      const teamData = await this.prisma.incentiveData.findFirst({ where: { month } });
+      if (!teamData) {
+        throw new BadRequestException(
+          '매니저 인센티브 계산을 위해 팀 데이터가 먼저 필요합니다. 팀 CSV를 먼저 업로드해주세요.',
+        );
+      }
+    }
+    if (type === 'director') {
+      const managerData = await this.prisma.managerIncentiveData.findFirst({ where: { month } });
+      if (!managerData) {
+        throw new BadRequestException(
+          '부장 인센티브 계산을 위해 매니저 데이터가 먼저 필요합니다. 매니저 CSV를 먼저 업로드해주세요.',
+        );
+      }
+    }
+  }
+
   // 엑셀 파싱 + 자동 승인
-  async parseExcel(buffer: Buffer, month: string, uploaderId: string, fileName: string, dataDate?: string) {
+  async parseExcel(buffer: Buffer, month: string, uploaderId: string, fileName: string, dataDate?: string, type: string = 'team') {
+    // 업로드 순서 강제: manager → 팀 데이터 필요, director → 매니저 데이터 필요
+    await this.checkUploadDependency(type, month);
+
     const workbook = XLSX.read(buffer, { type: 'buffer' });
 
     // 시트 찾기

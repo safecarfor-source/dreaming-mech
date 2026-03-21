@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
+import { IncentiveExceptionFilter } from './filters/incentive-exception.filter';
 
 // Auth
 import { IncentiveAuthController } from './auth/incentive-auth.controller';
@@ -70,6 +71,7 @@ import { AutoCalcService } from './auto-calc/auto-calc.service';
     AutoCalcController,
   ],
   providers: [
+    IncentiveExceptionFilter,
     IncentiveAuthService,
     IncentiveJwtStrategy,
     TeamService,
