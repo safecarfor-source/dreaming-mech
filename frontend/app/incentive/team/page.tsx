@@ -353,7 +353,7 @@ function NoTargetItemsCard({
 }) {
   const targetKeys = new Set(minQtyItems.map((i) => i.itemKey));
   const noTargetItems = Object.entries(items)
-    .filter(([key]) => !targetKeys.has(key))
+    .filter(([key]) => !targetKeys.has(key) && key !== 'alignment')
     .filter(([, val]) => val.qty > 0)
     .sort((a, b) => b[1].qty - a[1].qty);
 
@@ -374,9 +374,8 @@ function NoTargetItemsCard({
               <div style={{
                 height: '100%',
                 width: '100%',
-                background: '#B0BEC5',
+                background: GREEN,
                 borderRadius: 6,
-                opacity: 0.5,
               }} />
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>

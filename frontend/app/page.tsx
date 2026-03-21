@@ -7,13 +7,11 @@ import Link from 'next/link';
 import { mechanicsApi } from '@/lib/api';
 import { generateSlug } from '@/lib/slug';
 import Layout from '@/components/Layout';
+import HeroSection from '@/components/HeroSection';
 import MechanicCard from '@/components/MechanicCard';
 import CardSkeleton from '@/components/ui/CardSkeleton';
 import ErrorMessage from '@/components/ui/ErrorMessage';
 import type { Mechanic } from '@/types';
-
-// VIDEO_ID는 대장님이 직접 지정
-const YOUTUBE_VIDEO_ID = 'VIDEO_ID_PLACEHOLDER';
 
 // URL 파라미터 체크 컴포넌트
 function InquiryStatusChecker({ setShowSuccess }: { setShowSuccess: (v: boolean) => void }) {
@@ -71,30 +69,8 @@ function HomeContent() {
         </div>
       )}
 
-      {/* 유튜브 영상 섹션 */}
-      <section className="bg-white px-4 pt-8 pb-12">
-        <div className="max-w-3xl mx-auto">
-          {/* 유튜브 영상 임베드 */}
-          <div className="aspect-video rounded-2xl overflow-hidden shadow-lg mb-6">
-            <iframe
-              src={`https://www.youtube.com/embed/${YOUTUBE_VIDEO_ID}`}
-              className="w-full h-full"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-              loading="lazy"
-              title="꿈꾸는정비사 대표 영상"
-            />
-          </div>
-
-          {/* 메인 메시지 */}
-          <h1 className="text-[28px] md:text-[36px] font-extrabold text-[#111827] text-center leading-[1.2]">
-            검증된 정비소를 만나보세요
-          </h1>
-          <p className="text-[17px] md:text-[18px] text-[#6B7280] text-center mt-3 leading-[1.6]">
-            20년차 정비사가 직접 검증한 전국 정비소 네트워크
-          </p>
-        </div>
-      </section>
+      {/* 히어로 영상 섹션 */}
+      <HeroSection totalMechanics={mechanics.length} totalClicks={0} />
 
       {/* 정비소 카드 섹션 */}
       <section id="shops" className="bg-[#F9FAFB] px-4 py-12">
