@@ -532,11 +532,11 @@ export default function IncentiveTeamPage() {
             isLoss={teamData.incentive.lost > 0}
           />
 
-          {/* 4. 이 달의 목표 */}
-          <MonthlyGoalCard mqc={teamData.minQtyCheck} />
-
-          {/* 5. 오늘의 매출 */}
+          {/* 4. 오늘의 매출 */}
           <TodayRevenueCard />
+
+          {/* 5. 이 달의 목표 */}
+          <MonthlyGoalCard mqc={teamData.minQtyCheck} />
 
           {/* 6. 데이터 업데이트 시간 */}
           {lastCalcAt && <UpdateTimeCard editedAt={lastCalcAt} />}
