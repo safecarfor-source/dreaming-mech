@@ -46,6 +46,10 @@ import { GdService } from './gd/gd.service';
 import { AutoCalcController } from './auto-calc/auto-calc.controller';
 import { AutoCalcService } from './auto-calc/auto-calc.service';
 
+// Calc Engine (단일 계산 소스)
+import { CalcController } from './calc/calc.controller';
+import { CalcEngineService } from './calc/calc-engine.service';
+
 @Module({
   imports: [
     PassportModule,
@@ -69,6 +73,7 @@ import { AutoCalcService } from './auto-calc/auto-calc.service';
     DashboardController,
     GdController,
     AutoCalcController,
+    CalcController,
   ],
   providers: [
     IncentiveExceptionFilter,
@@ -83,6 +88,7 @@ import { AutoCalcService } from './auto-calc/auto-calc.service';
     DashboardService,
     GdService,
     AutoCalcService,
+    CalcEngineService,
   ],
 })
 export class IncentiveModule {}

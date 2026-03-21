@@ -12,6 +12,7 @@ export const BASE_SALARY = 3_300_000;
 export const DEFAULT_DIRECTOR_RATES = {
   revenueRate: 0.006,
   wiperRate: 0.003,
-  batteryRate: 0.003,
+  batteryRate: 0.005,   // 실제 운영 데이터 기준 (0.003 → 0.005 수정)
+  acFilterRate: 0.01,   // rates.ts에 누락되어 있던 값 추가
   breakeven: 145_000_000,
 };

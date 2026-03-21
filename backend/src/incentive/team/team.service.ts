@@ -1,41 +1,41 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { ITEM_RATES } from '../constants/rates';
+import { CalcEngineService } from '../calc/calc-engine.service';
 
 @Injectable()
 export class TeamService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private calcEngine: CalcEngineService,
+  ) {}
 
   // 현재 월 데이터 (최신 uploadDate 기준 누적)
   async getCurrent(month?: string) {
     const targetMonth = month || await this.getLatestMonth();
     if (!targetMonth) return null;
 
-    const data = await this.getMonthData(targetMonth);
-    const targets = await this.getTargets(targetMonth);
+    const data = await this.calcEngine.fetchTeamData(targetMonth);
+    const targets = await this.calcEngine.fetchTargets(targetMonth);
     const prevMonth = await this.getPrevMonth(targetMonth);
-    const prevData = prevMonth ? await this.getMonthData(prevMonth) : null;
+    const prevData = prevMonth ? await this.calcEngine.fetchTeamData(prevMonth) : null;
 
-    const incentive = this.calcIncentive(data);
-    const prevIncentive = prevData ? this.calcIncentive(prevData) : null;
+    const prevIncentive = prevData ? this.calcEngine.sumIncentive(prevData) : null;
 
-    // 최소수량 체크
-    const minQtyCheck = this.checkMinQty(data, targets);
-    const penaltyRate = minQtyCheck.hasUnmet ? 0.5 : 1.0;
-    const actualIncentive = Math.round(incentive * penaltyRate);
-    const lostAmount = incentive - actualIncentive;
+    // CalcEngine에서 계산 (단일 소스)
+    const result = await this.calcEngine.calcTeam(targetMonth);
 
     return {
       month: targetMonth,
       items: data,
       targets,
       incentive: {
-        calculated: incentive,
-        penaltyRate,
-        actual: actualIncentive,
-        lost: lostAmount,
+        calculated: result.calculated,
+        penaltyRate: result.penaltyRate,
+        actual: result.actual,
+        lost: result.lost,
       },
-      minQtyCheck,
+      minQtyCheck: result.minQtyCheck,
       prevMonth: prevMonth ? {
         month: prevMonth,
         incentive: prevIncentive,
@@ -54,17 +54,12 @@ export class TeamService {
 
     const result: any[] = [];
     for (const { month } of months) {
-      const data = await this.getMonthData(month);
-      const targets = await this.getTargets(month);
-      const incentive = this.calcIncentive(data);
-      const minQtyCheck = this.checkMinQty(data, targets);
-      const penaltyRate = minQtyCheck.hasUnmet ? 0.5 : 1.0;
-
+      const calc = await this.calcEngine.calcTeam(month);
       result.push({
         month,
-        incentive: Math.round(incentive * penaltyRate),
-        fullIncentive: incentive,
-        penalized: minQtyCheck.hasUnmet,
+        incentive: calc.actual,
+        fullIncentive: calc.calculated,
+        penalized: calc.penalized,
       });
     }
     return result;
@@ -115,7 +110,7 @@ export class TeamService {
 
     const history: Array<{ month: string; items: Record<string, number> }> = [];
     for (const { month } of months.reverse()) {
-      const data = await this.getMonthData(month);
+      const data = await this.calcEngine.fetchTeamData(month);
       const items: Record<string, number> = {};
       for (const [key, val] of Object.entries(data)) {
         items[key] = val.qty;
@@ -148,86 +143,8 @@ export class TeamService {
 
   // --- 내부 헬퍼 ---
 
-  private async getMonthData(month: string) {
-    // 해당 월의 최신 uploadDate 데이터
-    const latest = await this.prisma.incentiveData.findFirst({
-      where: { month },
-      orderBy: { uploadDate: 'desc' },
-      select: { uploadDate: true },
-    });
-    if (!latest) return {};
-
-    const rows = await this.prisma.incentiveData.findMany({
-      where: { month, uploadDate: latest.uploadDate },
-    });
-
-    const result: Record<string, { sales: number; qty: number }> = {};
-    for (const row of rows) {
-      result[row.itemKey] = { sales: row.sales, qty: row.qty };
-    }
-    return result;
-  }
-
   async getTargetsOnly(month: string) {
-    const rows = await this.prisma.incentiveTarget.findMany({ where: { month } });
-    const result: Record<string, number> = {};
-    for (const row of rows) {
-      result[row.itemKey] = row.minQty;
-    }
-    return result;
-  }
-
-  private async getTargets(month: string) {
-    const rows = await this.prisma.incentiveTarget.findMany({ where: { month } });
-    const result: Record<string, number> = {};
-    for (const row of rows) {
-      result[row.itemKey] = row.minQty;
-    }
-    return result;
-  }
-
-  private calcIncentive(data: Record<string, { sales: number; qty: number }>) {
-    let total = 0;
-    for (const [key, val] of Object.entries(data)) {
-      const rate = ITEM_RATES[key] || 0;
-      total += val.sales * (rate / 100);
-    }
-    return Math.round(total);
-  }
-
-  private checkMinQty(
-    data: Record<string, { sales: number; qty: number }>,
-    targets: Record<string, number>,
-  ) {
-    const items: Array<{
-      itemKey: string;
-      current: number;
-      target: number;
-      met: boolean;
-      remaining: number;
-    }> = [];
-    let hasUnmet = false;
-
-    for (const [itemKey, minQty] of Object.entries(targets)) {
-      if (minQty <= 0) continue;
-      const current = data[itemKey]?.qty || 0;
-      const met = current >= minQty;
-      if (!met) hasUnmet = true;
-      items.push({
-        itemKey,
-        current,
-        target: minQty,
-        met,
-        remaining: met ? 0 : minQty - current,
-      });
-    }
-
-    return {
-      hasUnmet,
-      metCount: items.filter(i => i.met).length,
-      totalCount: items.length,
-      items,
-    };
+    return this.calcEngine.fetchTargets(month);
   }
 
   private async getLatestMonth() {

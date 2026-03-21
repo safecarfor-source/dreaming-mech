@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
-import { ITEM_RATES } from '../constants/rates';
+import { CalcEngineService } from '../calc/calc-engine.service';
 
 // 서비스 아이템 품목 키 (팀 인센티브 대상)
 const SERVICE_ITEM_KEYS = [
@@ -11,7 +11,10 @@ const SERVICE_ITEM_KEYS = [
 
 @Injectable()
 export class DashboardService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private calcEngine: CalcEngineService,
+  ) {}
 
   // year/month 숫자를 "26년 3월" 형식 문자열로 변환
   private toMonthStr(year: number, month: number): string {
@@ -27,116 +30,6 @@ export class DashboardService {
   // 작년 동월 year/month 계산
   private prevYearSameMonth(year: number, month: number): { year: number; month: number } {
     return { year: year - 1, month };
-  }
-
-  // 팀 인센티브 데이터 조회 (해당 월 최신 업로드 기준)
-  private async getTeamData(monthStr: string) {
-    const latest = await this.prisma.incentiveData.findFirst({
-      where: { month: monthStr },
-      orderBy: { uploadDate: 'desc' },
-      select: { uploadDate: true },
-    });
-    if (!latest) return {};
-
-    const rows = await this.prisma.incentiveData.findMany({
-      where: { month: monthStr, uploadDate: latest.uploadDate },
-    });
-
-    const result: Record<string, { sales: number; qty: number }> = {};
-    for (const row of rows) {
-      result[row.itemKey] = { sales: row.sales, qty: row.qty };
-    }
-    return result;
-  }
-
-  // 팀 인센티브 계산 (최소수량 페널티 포함)
-  private async calcTeamIncentive(monthStr: string) {
-    const data = await this.getTeamData(monthStr);
-    if (Object.keys(data).length === 0) {
-      return { calculated: 0, actual: 0, lost: 0 };
-    }
-
-    let calculated = 0;
-    for (const [key, val] of Object.entries(data)) {
-      const rate = ITEM_RATES[key] || 0;
-      calculated += val.sales * (rate / 100);
-    }
-    calculated = Math.round(calculated);
-
-    // 최소수량 체크
-    const targets = await this.prisma.incentiveTarget.findMany({
-      where: { month: monthStr },
-    });
-    let penalized = false;
-    for (const t of targets) {
-      if (t.minQty <= 0) continue;
-      const row = data[t.itemKey];
-      if (!row || row.qty < t.minQty) { penalized = true; break; }
-    }
-
-    const actual = penalized ? Math.round(calculated * 0.5) : calculated;
-    const lost = calculated - actual;
-    return { calculated, actual, lost };
-  }
-
-  // 매니저 인센티브 계산
-  private async calcManagerIncentive(monthStr: string) {
-    const data = await this.prisma.managerIncentiveData.findFirst({
-      where: { month: monthStr },
-      orderBy: { uploadDate: 'desc' },
-    });
-    if (!data) return { total: 0, tireSales: 0, alignmentSales: 0 };
-
-    const configs = await this.prisma.incentiveConfig.findMany({
-      where: { key: { in: ['manager_tire_rate', 'manager_team_multiplier'] } },
-    });
-    const map = Object.fromEntries(configs.map(c => [c.key, c.value]));
-    const tireRate = map['manager_tire_rate'] || 0.003;
-    const teamMultiplier = map['manager_team_multiplier'] || 1.5;
-
-    const teamIncentive = await this.calcTeamIncentive(monthStr);
-    const tireIncentive = Math.round((data.tireSales + data.alignmentSales) * tireRate);
-    const teamBonus = Math.round(teamIncentive.actual * teamMultiplier);
-    const total = tireIncentive + teamBonus;
-
-    return {
-      total,
-      tireSales: data.tireSales,
-      alignmentSales: data.alignmentSales,
-    };
-  }
-
-  // 부장(이정석) 인센티브 계산
-  private async calcDirectorIncentive(monthStr: string) {
-    const data = await this.prisma.directorIncentiveData.findFirst({
-      where: { month: monthStr },
-      orderBy: { uploadDate: 'desc' },
-    });
-    if (!data) return { amount: 0, totalRevenue: 0 };
-
-    const configs = await this.prisma.incentiveConfig.findMany({
-      where: {
-        key: {
-          in: [
-            'director_revenue_rate', 'director_wiper_rate',
-            'director_battery_rate', 'director_acfilter_rate',
-          ],
-        },
-      },
-    });
-    const map = Object.fromEntries(configs.map(c => [c.key, c.value]));
-    const revenueRate = map['director_revenue_rate'] || 0.006;
-    const wiperRate = map['director_wiper_rate'] || 0.003;
-    const batteryRate = map['director_battery_rate'] || 0.005;
-    const acFilterRate = map['director_acfilter_rate'] || 0.01;
-
-    const amount =
-      Math.round(data.totalRevenue * revenueRate) +
-      Math.round(data.wiperSales * wiperRate) +
-      Math.round(data.batterySales * batteryRate) +
-      Math.round(data.acFilterSales * acFilterRate);
-
-    return { amount, totalRevenue: data.totalRevenue };
   }
 
   // 월별 추이 데이터 (최근 N개월)
@@ -180,11 +73,10 @@ export class DashboardService {
       where: { month: monthStr },
       orderBy: { uploadDate: 'desc' },
     });
-
     const totalRevenue = directorData?.totalRevenue || 0;
 
     // 팀 서비스 아이템 데이터
-    const teamData = await this.getTeamData(monthStr);
+    const teamData = await this.calcEngine.fetchTeamData(monthStr);
     let serviceItemsTotal = 0;
     const itemDetails: Record<string, { sales: number; qty: number }> = {};
     for (const key of SERVICE_ITEM_KEYS) {
@@ -243,11 +135,8 @@ export class DashboardService {
     const prevInventory = Number(prevCashFlowData?.inventory || 0);
     const prevTotalAssets = prevCash + prevInvestment + prevInventory;
 
-    // 인센티브 계산
-    const teamIncentive = await this.calcTeamIncentive(monthStr);
-    const managerIncentive = await this.calcManagerIncentive(monthStr);
-    const directorIncentive = await this.calcDirectorIncentive(monthStr);
-    const grandTotal = teamIncentive.actual + managerIncentive.total + directorIncentive.amount;
+    // 인센티브 계산 — CalcEngine 단일 소스 사용
+    const dashboardCalc = await this.calcEngine.calcDashboard(monthStr);
 
     // 월별 추이
     const monthlyTrend = await this.getMonthlyTrend(year, month, 6);
@@ -286,10 +175,10 @@ export class DashboardService {
           : null,
       },
       incentive: {
-        team: teamIncentive,
-        manager: { total: managerIncentive.total },
-        director: { amount: directorIncentive.amount },
-        grandTotal,
+        team: dashboardCalc.team,
+        manager: dashboardCalc.manager,
+        director: dashboardCalc.director,
+        grandTotal: dashboardCalc.grandTotal,
       },
       monthlyTrend,
     };

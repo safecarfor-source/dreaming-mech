@@ -1,43 +1,20 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
-import { DEFAULT_DIRECTOR_RATES } from '../constants/rates';
+import { CalcEngineService } from '../calc/calc-engine.service';
 
 @Injectable()
 export class DirectorService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private calcEngine: CalcEngineService,
+  ) {}
 
   async getCurrent(month?: string) {
     const targetMonth = month || await this.getLatestMonth();
     if (!targetMonth) return null;
 
-    const data = await this.getLatestData(targetMonth);
-    if (!data) return null;
-
-    const config = await this.getConfig();
-
-    const revenueIncentive = Math.round(data.totalRevenue * config.revenueRate);
-    const wiperIncentive = Math.round(data.wiperSales * config.wiperRate);
-    const batteryIncentive = Math.round(data.batterySales * config.batteryRate);
-    const acFilterIncentive = Math.round(data.acFilterSales * config.acFilterRate);
-    const totalIncentive = revenueIncentive + wiperIncentive + batteryIncentive + acFilterIncentive;
-
-    const breakeven = config.breakeven;
-    const aboveBreakeven = data.totalRevenue >= breakeven;
-
-    return {
-      month: targetMonth,
-      totalRevenue: data.totalRevenue,
-      revenueIncentive,
-      extras: {
-        wiper: { sales: data.wiperSales, incentive: wiperIncentive },
-        battery: { sales: data.batterySales, incentive: batteryIncentive },
-        acFilter: { sales: data.acFilterSales, incentive: acFilterIncentive },
-      },
-      totalIncentive,
-      breakeven,
-      aboveBreakeven,
-      shortfall: aboveBreakeven ? 0 : breakeven - data.totalRevenue,
-    };
+    // CalcEngine에서 계산 (단일 소스)
+    return this.calcEngine.calcDirector(targetMonth);
   }
 
   async getMonthly() {
@@ -49,39 +26,10 @@ export class DirectorService {
 
     const result: any[] = [];
     for (const { month } of months) {
-      const data = await this.getCurrent(month);
-      if (data) result.push(data);
+      const data = await this.calcEngine.calcDirector(month);
+      result.push(data);
     }
     return result;
-  }
-
-  private async getLatestData(month: string) {
-    return this.prisma.directorIncentiveData.findFirst({
-      where: { month },
-      orderBy: { uploadDate: 'desc' },
-    });
-  }
-
-  private async getConfig() {
-    const configs = await this.prisma.incentiveConfig.findMany({
-      where: {
-        key: {
-          in: [
-            'director_revenue_rate', 'director_wiper_rate',
-            'director_battery_rate', 'director_acfilter_rate',
-            'director_breakeven',
-          ],
-        },
-      },
-    });
-    const map = Object.fromEntries(configs.map(c => [c.key, c.value]));
-    return {
-      revenueRate: map['director_revenue_rate'] || DEFAULT_DIRECTOR_RATES.revenueRate,
-      wiperRate: map['director_wiper_rate'] || DEFAULT_DIRECTOR_RATES.wiperRate,
-      batteryRate: map['director_battery_rate'] || 0.005,
-      acFilterRate: map['director_acfilter_rate'] || 0.01,
-      breakeven: map['director_breakeven'] || DEFAULT_DIRECTOR_RATES.breakeven,
-    };
   }
 
   private async getLatestMonth() {
