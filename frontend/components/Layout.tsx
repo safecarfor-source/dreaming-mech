@@ -74,22 +74,10 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           {/* 데스크톱 네비게이션 — 모바일 햄버거 없음 (하단 탭바가 대체) */}
           <nav className="hidden md:flex items-center gap-1">
             <Link
-              href="/about"
-              className="px-4 py-2 text-sm text-[#111827] hover:text-[#E4015C] hover:bg-[#FFF0F5] transition-colors duration-150 rounded-lg font-medium"
-            >
-              플랫폼 소개
-            </Link>
-            <Link
               href="/community"
               className="px-4 py-2 text-sm text-[#111827] hover:text-[#E4015C] hover:bg-[#FFF0F5] transition-colors duration-150 rounded-lg font-medium"
             >
               정비 Q&A
-            </Link>
-            <Link
-              href="/for-mechanics"
-              className="px-4 py-2 text-sm text-[#111827] hover:text-[#E4015C] hover:bg-[#FFF0F5] transition-colors duration-150 rounded-lg font-medium"
-            >
-              정비사 사장님
             </Link>
             {/* 로그인 / 내 정보 버튼 */}
             {isAuthenticated && user ? (
@@ -112,8 +100,22 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         </div>
       </header>
 
+      {/* 모바일 정비 Q&A 배너 */}
+      <div className="md:hidden fixed top-[56px] left-0 right-0 z-40 bg-[#FFF0F5] border-b border-[#FFE0EC]">
+        <Link
+          href="/community"
+          className="flex items-center justify-center gap-2 py-2 text-sm font-semibold text-[#E4015C]"
+        >
+          <span>🔧</span>
+          정비 Q&A — 궁금한 점을 물어보세요!
+          <span className="text-xs">→</span>
+        </Link>
+      </div>
+
       {/* 헤더 높이만큼 상단 여백 + 모바일 탭바 높이만큼 하단 여백 */}
-      <main className="flex-1 pt-[56px] pb-[72px] md:pb-0">
+      <main className="flex-1 pt-[56px] md:pt-[56px] pb-[72px] md:pb-0">
+        {/* 모바일 Q&A 배너 높이만큼 추가 여백 */}
+        <div className="h-[40px] md:hidden" />
         {children}
       </main>
 
