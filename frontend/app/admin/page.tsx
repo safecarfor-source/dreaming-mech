@@ -119,15 +119,15 @@ export default function AdminDashboard() {
                 >
                   <div className="flex items-center gap-4">
                     <div className="w-12 h-12 rounded-xl bg-gray-200 overflow-hidden">
-                      {mechanic.mainImageUrl ? (
+                      {(mechanic.mainImageUrl || mechanic.galleryImages?.[0]) ? (
                         <img
-                          src={mechanic.mainImageUrl}
+                          src={mechanic.mainImageUrl || mechanic.galleryImages![0]}
                           alt={mechanic.name}
                           className="w-full h-full object-cover"
                         />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">
-                          없음
+                        <div className="w-full h-full flex items-center justify-center text-gray-400 text-xl">
+                          🔧
                         </div>
                       )}
                     </div>

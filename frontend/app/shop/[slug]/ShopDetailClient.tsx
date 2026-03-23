@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { MapPin, Share2, ChevronLeft, ChevronRight, BadgeCheck, Heart, Phone } from 'lucide-react';
+import { MapPin, Share2, ChevronLeft, ChevronRight, BadgeCheck, Phone } from 'lucide-react';
 import { mechanicsApi } from '@/lib/api';
 import { sanitizeText, sanitizeBasicHTML, sanitizePhone } from '@/lib/sanitize';
 import { gtagEvent } from '@/lib/gtag-events';
@@ -26,7 +26,16 @@ export default function ShopDetailClient({ slug }: Props) {
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [galleryIndex, setGalleryIndex] = useState(0);
+  const [galleryFading, setGalleryFading] = useState(false);
   const touchStartX = useRef<number | null>(null);
+
+  const changeGalleryIndex = (next: number) => {
+    setGalleryFading(true);
+    setTimeout(() => {
+      setGalleryIndex(next);
+      setGalleryFading(false);
+    }, 150);
+  };
 
   useEffect(() => {
     async function load() {
@@ -142,9 +151,9 @@ export default function ShopDetailClient({ slug }: Props) {
               const diff = touchStartX.current - e.changedTouches[0].clientX;
               if (Math.abs(diff) >= 50) {
                 if (diff > 0) {
-                  setGalleryIndex((i) => (i < galleryImages.length - 1 ? i + 1 : 0));
+                  changeGalleryIndex(galleryIndex < galleryImages.length - 1 ? galleryIndex + 1 : 0);
                 } else {
-                  setGalleryIndex((i) => (i > 0 ? i - 1 : galleryImages.length - 1));
+                  changeGalleryIndex(galleryIndex > 0 ? galleryIndex - 1 : galleryImages.length - 1);
                 }
               }
               touchStartX.current = null;
@@ -154,7 +163,7 @@ export default function ShopDetailClient({ slug }: Props) {
               src={galleryImages[galleryIndex]}
               alt={`${sanitizeText(mechanic.name)} 사진 ${galleryIndex + 1}`}
               fill
-              className="object-cover"
+              className={`object-cover transition-opacity duration-300 ${galleryFading ? 'opacity-0' : 'opacity-100'}`}
               sizes="(max-width: 640px) 100vw, 640px"
               priority
             />
@@ -179,14 +188,14 @@ export default function ShopDetailClient({ slug }: Props) {
             {galleryImages.length > 1 && (
               <>
                 <button
-                  onClick={() => setGalleryIndex((i) => (i > 0 ? i - 1 : galleryImages.length - 1))}
+                  onClick={() => changeGalleryIndex(galleryIndex > 0 ? galleryIndex - 1 : galleryImages.length - 1)}
                   className="absolute left-3 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-black/60 text-white rounded-full p-1.5 transition-colors"
                   aria-label="이전 사진"
                 >
                   <ChevronLeft size={20} />
                 </button>
                 <button
-                  onClick={() => setGalleryIndex((i) => (i < galleryImages.length - 1 ? i + 1 : 0))}
+                  onClick={() => changeGalleryIndex(galleryIndex < galleryImages.length - 1 ? galleryIndex + 1 : 0)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-black/60 text-white rounded-full p-1.5 transition-colors"
                   aria-label="다음 사진"
                 >
@@ -258,7 +267,7 @@ export default function ShopDetailClient({ slug }: Props) {
         {(mechanic.youtubeLongUrl || mechanic.youtubeUrl) && (
           <>
             <div className="px-5 py-6">
-              <h3 className="text-[20px] font-bold text-gray-900 mb-1 text-center">꿈꾸는정비사가 직접 촬영</h3>
+              <h3 className="text-[20px] font-bold text-gray-900 mb-1 text-center">🎬 꿈꾸는정비사가 직접 촬영</h3>
               <p className="text-[14px] text-gray-400 text-center mb-4">정비소 소개 영상</p>
               {mechanic.youtubeLongUrl && (
                 <YouTubeEmbed url={mechanic.youtubeLongUrl} variant="long" />
@@ -276,7 +285,7 @@ export default function ShopDetailClient({ slug }: Props) {
           <>
             <div className="px-5 py-6">
               <h3 className="text-[20px] font-bold text-gray-900 mb-4 text-center">소개</h3>
-              <p className="text-[17px] md:text-[18px] leading-[1.7] text-gray-600 text-center">
+              <p className="text-[17px] md:text-[18px] leading-[1.7] text-gray-600 text-center whitespace-pre-line">
                 {sanitizeBasicHTML(mechanic.description)}
               </p>
             </div>
@@ -362,9 +371,6 @@ export default function ShopDetailClient({ slug }: Props) {
       {/* 하단 고정 CTA 바 */}
       <div className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-[#E5E7EB] px-4 py-3 md:hidden">
         <div className="flex items-center gap-3 max-w-lg mx-auto">
-          <button className="flex items-center justify-center w-11 h-11 rounded-xl border border-[#E5E7EB] text-[#9CA3AF]">
-            <Heart size={20} />
-          </button>
           <button
             onClick={handleShare}
             className="flex items-center justify-center w-11 h-11 rounded-xl border border-[#E5E7EB] text-[#9CA3AF]"

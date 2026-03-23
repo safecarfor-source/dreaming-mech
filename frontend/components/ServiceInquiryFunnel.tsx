@@ -519,12 +519,14 @@ export default function ServiceInquiryFunnel({ compact = false, onComplete }: Se
               href={process.env.NEXT_PUBLIC_KAKAO_OPENCHAT_URL || 'https://open.kakao.com/o/gZ95WMmi'}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center justify-center gap-2 w-full bg-[#FEE500] text-gray-900
-                px-6 py-4 rounded-xl font-bold text-base hover:bg-[#FDD835] transition-all mb-3"
+              className="flex flex-col items-center justify-center gap-1 w-full bg-[#FEE500] text-gray-900
+                px-6 py-4 rounded-xl font-bold hover:bg-[#FDD835] transition-all mb-3"
             >
-              <span className="text-xl">💬</span>
-              <span>카카오 오픈채팅 참여하기</span>
-              <span className="text-xs font-normal text-gray-600 ml-1">진행상황 안내</span>
+              <div className="flex items-center gap-2">
+                <span className="text-xl">💬</span>
+                <span className="text-[15px]">카카오 오픈채팅 참여하기</span>
+              </div>
+              <span className="text-xs font-normal text-gray-600">진행상황 안내받기</span>
             </a>
 
             <button
