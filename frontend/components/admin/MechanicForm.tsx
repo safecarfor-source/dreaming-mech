@@ -120,7 +120,7 @@ export default function MechanicForm({ mechanic, mode, apiBasePath, redirectPath
               }}
               className="px-8 py-3 bg-[#7C4DFF] hover:bg-[#6B3FE8] text-white rounded-xl font-medium focus:outline-none focus:ring-2 focus:ring-[#7C4DFF]/50 focus:ring-offset-2 transition-all shadow-sm"
             >
-              {mode === 'create' ? '추가하기' : '수정하기'}
+              사업자 등록증 제출
             </button>
           </>
         ) : draftMode ? (
