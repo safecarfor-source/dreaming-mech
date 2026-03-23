@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { MapPin, Share2, ChevronLeft, ChevronRight, BadgeCheck, Heart, Phone } from 'lucide-react';
 import { mechanicsApi } from '@/lib/api';
-import { parseSlug, generateSlug } from '@/lib/slug';
 import { sanitizeText, sanitizeBasicHTML, sanitizePhone } from '@/lib/sanitize';
 import { gtagEvent } from '@/lib/gtag-events';
 import type { Mechanic } from '@/types';
@@ -31,27 +30,19 @@ export default function ShopDetailClient({ slug }: Props) {
   useEffect(() => {
     async function load() {
       try {
-        const res = await mechanicsApi.getAll();
-        const all: Mechanic[] = res.data.data || [];
-
-        // slug 매칭: 모든 정비소의 slug를 생성해서 비교
-        const matched = all.find((m) => {
-          const generated = generateSlug(m.location || '', m.name);
-          return generated === slug;
-        });
-
-        if (!matched) {
-          setNotFound(true);
-          return;
-        }
-
+        const res = await mechanicsApi.getBySlug(slug);
+        const matched: Mechanic = res.data;
         setMechanic(matched);
 
         // 클릭수 증가 + GA
         gtagEvent.mechanicDetailView(matched.id, matched.name, matched.location || '');
         mechanicsApi.incrementClick(matched.id).catch(() => {});
-      } catch {
-        setNotFound(true);
+      } catch (err: any) {
+        if (err?.response?.status === 404) {
+          setNotFound(true);
+        } else {
+          setNotFound(true);
+        }
       } finally {
         setLoading(false);
       }

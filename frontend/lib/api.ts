@@ -59,6 +59,7 @@ export const mechanicsApi = {
     api.get<{ data: Array<{ id: number; name: string; address: string; location: string; mainImageUrl: string | null }> }>(
       `/mechanics?sido=${encodeURIComponent(sido)}&sigungu=${encodeURIComponent(sigungu)}`
     ),
+  getBySlug: (slug: string) => api.get<Mechanic>(`/mechanics/by-slug/${slug}`),
 };
 
 // Maps API

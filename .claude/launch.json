@@ -7,7 +7,7 @@
       "runtimeArgs": ["run", "dev"],
       "port": 3000,
       "autoPort": false,
-      "cwd": "/Users/shinjeayoun/dreaming-mech/frontend"
+      "cwd": "frontend"
     },
     {
       "name": "incentive",

@@ -380,6 +380,33 @@ export class MechanicService {
     });
   }
 
+  // slug로 정비사 조회 (프론트 lib/slug.ts와 동일한 slug 생성 로직 사용)
+  async findBySlug(slug: string) {
+    // slug 생성 함수 (프론트 lib/slug.ts와 동일)
+    const generateSlug = (location: string, name: string): string => {
+      const locationPart = location.split(' ').pop()?.replace(/시$|군$|구$/, '') ?? location;
+      const namePart = name.replace(/\s+/g, '');
+      return `${locationPart}-${namePart}`;
+    };
+
+    // 활성 정비소 전체에서 slug 매칭
+    const mechanics = await this.prisma.mechanic.findMany({
+      where: { isActive: true },
+      select: { id: true, location: true, name: true },
+    });
+
+    const matched = mechanics.find((m) => {
+      return generateSlug(m.location || '', m.name) === slug;
+    });
+
+    if (!matched) {
+      throw new NotFoundException(`Mechanic with slug "${slug}" not found`);
+    }
+
+    // findOne과 동일하게 상세 조회
+    return this.findOne(matched.id);
+  }
+
   // 정비사 순서 변경
   async reorder(orderedIds: number[]) {
     await this.prisma.$transaction(

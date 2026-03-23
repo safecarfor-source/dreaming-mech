@@ -31,11 +31,18 @@ export default function NaverMapView({ lat, lng, name }: Props) {
   useEffect(() => {
     if (!mapRef.current) return;
 
-    // 스크립트가 로드될 때까지 대기
+    // 스크립트가 로드될 때까지 대기 (최대 50회 = 5초)
+    let retryCount = 0;
+    const maxRetries = 50;
+
     const checkAndInitMap = () => {
       if (!window.naver || !window.naver.maps) {
-        // 아직 로드되지 않았으면 100ms 후 재시도
-        setTimeout(checkAndInitMap, 100);
+        if (retryCount++ < maxRetries) {
+          setTimeout(checkAndInitMap, 100);
+        } else {
+          setError('지도를 불러올 수 없습니다. 새로고침해주세요.');
+          setIsLoading(false);
+        }
         return;
       }
 

@@ -70,6 +70,12 @@ export class MechanicController {
     return this.mechanicService.reorder(reorderDto.orderedIds);
   }
 
+  // GET /mechanics/by-slug/:slug (반드시 /:id 보다 위에 선언)
+  @Get('by-slug/:slug')
+  findBySlug(@Param('slug') slug: string) {
+    return this.mechanicService.findBySlug(slug);
+  }
+
   // GET /mechanics/:id
   @Get(':id')
   findOne(@Param('id', ParseIntPipe) id: number) {
