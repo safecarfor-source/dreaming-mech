@@ -514,6 +514,14 @@ export const communityApi = {
     }>('/community/my', { params: limit ? { limit } : {} }),
 };
 
+// 관리자: Q&A 관리
+export const adminCommunityApi = {
+  getPosts: (page = 1, limit = 50) =>
+    api.get('/community/admin/posts', { params: { page, limit } }),
+  deletePost: (id: number) =>
+    api.delete(`/community/admin/posts/${id}`),
+};
+
 // 오너용: 지역 문의 (폴링)
 export const ownerRegionInquiriesApi = {
   getAll: (since?: string) =>

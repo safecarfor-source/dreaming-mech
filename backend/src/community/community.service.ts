@@ -260,4 +260,42 @@ export class CommunityService {
     await this.prisma.post.delete({ where: { id: postId } });
     return { message: '삭제되었습니다.' };
   }
+
+  // ── 관리자: 전체 게시글 목록 ──
+
+  async adminGetPosts(page = 1, limit = 50) {
+    const skip = (page - 1) * limit;
+
+    const [posts, total] = await Promise.all([
+      this.prisma.post.findMany({
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
+        select: {
+          id: true,
+          title: true,
+          content: true,
+          category: true,
+          viewCount: true,
+          likeCount: true,
+          commentCount: true,
+          isActive: true,
+          createdAt: true,
+          user: { select: { id: true, nickname: true, email: true, businessName: true } },
+        },
+      }),
+      this.prisma.post.count(),
+    ]);
+
+    return { data: posts, total, page, limit, totalPages: Math.ceil(total / limit) };
+  }
+
+  // ── 관리자: 게시글 삭제 ──
+
+  async adminDeletePost(postId: number) {
+    const post = await this.prisma.post.findUnique({ where: { id: postId } });
+    if (!post) throw new NotFoundException('게시글을 찾을 수 없습니다.');
+    await this.prisma.post.delete({ where: { id: postId } });
+    return { message: '삭제되었습니다.' };
+  }
 }

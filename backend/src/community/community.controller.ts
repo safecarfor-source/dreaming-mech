@@ -11,6 +11,7 @@ import {
   ParseIntPipe,
   HttpCode,
   HttpStatus,
+  ForbiddenException,
 } from '@nestjs/common';
 import { CommunityService } from './community.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -100,5 +101,34 @@ export class CommunityController {
     @Query('limit') limit?: string,
   ) {
     return this.communityService.getMyActivity(req.user.sub, limit ? parseInt(limit, 10) : 20);
+  }
+
+  // ── 관리자 전용 ──
+
+  // 관리자: 전체 게시글 목록 (비활성 포함)
+  @Get('admin/posts')
+  @UseGuards(JwtAuthGuard)
+  adminGetPosts(
+    @Request() req: { user: { role: string } },
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    if (req.user.role !== 'admin') throw new ForbiddenException();
+    return this.communityService.adminGetPosts(
+      page ? parseInt(page, 10) : 1,
+      limit ? parseInt(limit, 10) : 50,
+    );
+  }
+
+  // 관리자: 게시글 삭제
+  @Delete('admin/posts/:id')
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  adminDeletePost(
+    @Param('id', ParseIntPipe) postId: number,
+    @Request() req: { user: { role: string } },
+  ) {
+    if (req.user.role !== 'admin') throw new ForbiddenException();
+    return this.communityService.adminDeletePost(postId);
   }
 }
