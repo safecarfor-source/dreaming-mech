@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { MapPin, Share2, ChevronLeft, ChevronRight, BadgeCheck, Phone, Heart } from 'lucide-react';
+import { MapPin, Share2, ChevronLeft, ChevronRight, BadgeCheck, Phone, Heart, X } from 'lucide-react';
 import { mechanicsApi } from '@/lib/api';
 import { sanitizeText, sanitizeBasicHTML, sanitizePhone } from '@/lib/sanitize';
 import { gtagEvent } from '@/lib/gtag-events';
@@ -56,6 +56,8 @@ export default function ShopDetailClient({ slug }: Props) {
   const [galleryIndex, setGalleryIndex] = useState(0);
   const [galleryFading, setGalleryFading] = useState(false);
   const [hearted, setHearted] = useState(false);
+  const [loginModalOpen, setLoginModalOpen] = useState(false);
+  const [pendingAction, setPendingAction] = useState<(() => void) | null>(null);
   const touchStartX = useRef<number | null>(null);
 
   const changeGalleryIndex = (next: number) => {
@@ -129,14 +131,22 @@ export default function ShopDetailClient({ slug }: Props) {
   }
   const hasGallery = galleryImages.length > 0;
 
-  // 로그인 필요 시 카카오 로그인 유도
-  const requireLogin = (): boolean => {
+  // 로그인 필요 시 커스텀 모달 오픈
+  const requireLogin = (onConfirm?: () => void): boolean => {
     if (isAuthenticated) return true;
-    const confirmed = window.confirm('로그인이 필요합니다. 카카오로 로그인하시겠습니까?');
-    if (confirmed) {
-      window.location.href = '/login';
-    }
+    setPendingAction(() => onConfirm ?? null);
+    setLoginModalOpen(true);
     return false;
+  };
+
+  const handleKakaoLogin = () => {
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
+    window.location.href = `${apiUrl}/auth/kakao`;
+  };
+
+  const handleLoginModalClose = () => {
+    setLoginModalOpen(false);
+    setPendingAction(null);
   };
 
   const handleShare = async () => {
@@ -174,23 +184,62 @@ export default function ShopDetailClient({ slug }: Props) {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* 로그인 커스텀 모달 */}
+      {loginModalOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-6"
+          onClick={handleLoginModalClose}
+        >
+          <div
+            className="bg-white rounded-2xl w-full max-w-sm p-8 flex flex-col items-center gap-4 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* 로고 */}
+            <div className="text-[22px] font-black tracking-tight mb-1">
+              <span className="text-[#1F2937]">꿈꾸는</span>
+              <span className="text-[#E4015C]">정비사</span>
+            </div>
+            {/* 본문 */}
+            <p className="text-[16px] text-gray-700 font-medium text-center leading-[1.7]">
+              로그인이 필요한 서비스입니다
+            </p>
+            {/* 카카오 버튼 */}
+            <button
+              onClick={handleKakaoLogin}
+              className="w-full flex items-center justify-center gap-2 bg-[#FEE500] hover:bg-[#F5DC00] text-[#191919] font-bold rounded-xl py-3.5 text-[16px] transition-colors mt-1"
+            >
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path fillRule="evenodd" clipRule="evenodd" d="M10 2C5.582 2 2 4.866 2 8.4c0 2.21 1.388 4.154 3.493 5.275L4.6 17.1a.25.25 0 0 0 .363.281L9.19 14.77c.269.02.539.03.81.03 4.418 0 8-2.866 8-6.4S14.418 2 10 2z" fill="#191919"/>
+              </svg>
+              카카오로 1초 로그인
+            </button>
+            {/* 취소 */}
+            <button
+              onClick={handleLoginModalClose}
+              className="text-[14px] text-gray-400 hover:text-gray-600 transition-colors mt-1"
+            >
+              취소
+            </button>
+          </div>
+        </div>
+      )}
       {/* 상단 네비 */}
-      <div className="sticky top-0 z-30 bg-[#E4015C] text-white">
+      <div className="sticky top-0 z-30 bg-[#F9FAFB] border-b border-gray-200">
         <div className="max-w-xl mx-auto flex items-center px-4 py-4 gap-3">
           <button
             onClick={() => router.back()}
-            className="flex items-center gap-1 text-white/90 hover:text-white transition-colors flex-shrink-0"
+            className="flex items-center gap-1 text-gray-700 hover:text-gray-900 transition-colors flex-shrink-0"
             aria-label="뒤로가기"
           >
             <ChevronLeft size={24} />
             <span className="text-base font-semibold hidden sm:inline">목록으로</span>
           </button>
-          <h1 className="flex-1 text-center text-[17px] font-bold truncate">
+          <h1 className="flex-1 text-center text-[17px] font-bold truncate text-[#1F2937]">
             {sanitizeText(mechanic.name)}
           </h1>
           <button
             onClick={handleShare}
-            className="text-white/90 hover:text-white transition-colors flex-shrink-0"
+            className="text-gray-700 hover:text-gray-900 transition-colors flex-shrink-0"
             aria-label="공유"
           >
             <Share2 size={22} />
@@ -278,13 +327,13 @@ export default function ShopDetailClient({ slug }: Props) {
           {/* 배지 */}
           <div className="flex gap-2 mb-4 flex-wrap justify-center">
             {mechanic.isVerified && (
-              <span className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#FFF1F5] text-[#E4015C] rounded-lg text-[15px] font-semibold">
+              <span className="inline-flex items-center gap-1.5 px-4 py-2 bg-green-50 text-[#10B981] rounded-lg text-[15px] font-semibold">
                 <BadgeCheck size={16} />
                 검증된 정비소
               </span>
             )}
             {(mechanic.youtubeUrl || mechanic.youtubeLongUrl) && (
-              <span className="inline-flex items-center gap-1.5 px-4 py-2 bg-red-50 text-red-600 rounded-lg text-[15px] font-semibold">
+              <span className="inline-flex items-center gap-1.5 px-4 py-2 bg-green-50 text-[#10B981] rounded-lg text-[15px] font-semibold">
                 ▶ 유튜브 촬영
               </span>
             )}
