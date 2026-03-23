@@ -2,24 +2,17 @@
 
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { Home, Search, Phone, User } from 'lucide-react';
-import { useUserStore } from '@/lib/auth';
+import { Home, Search, Phone } from 'lucide-react';
+
+const tabs = [
+  { href: '/', label: '홈', icon: Home },
+  // /search 페이지 미구현 — 메인 정비소 목록 섹션 앵커로 연결
+  { href: '/#shops', label: '정비소 찾기', icon: Search },
+  { href: '/inquiry', label: '문의하기', icon: Phone },
+];
 
 export default function BottomTabBar() {
   const pathname = usePathname();
-  const { isAuthenticated } = useUserStore();
-
-  const tabs = [
-    { href: '/', label: '홈', icon: Home },
-    // /search 페이지 미구현 — 메인 정비소 목록 섹션 앵커로 연결
-    { href: '/#shops', label: '정비소 찾기', icon: Search },
-    { href: '/inquiry', label: '문의하기', icon: Phone },
-    {
-      href: isAuthenticated ? '/mypage' : '/login',
-      label: isAuthenticated ? '내 정보' : '로그인',
-      icon: User,
-    },
-  ];
 
   const isActive = (href: string) => {
     if (href === '/') return pathname === '/';
@@ -29,10 +22,10 @@ export default function BottomTabBar() {
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-50 bg-[#E8E4DC] border-t border-[#D5D0C8] shadow-[0_-2px_8px_rgba(0,0,0,0.06)] md:hidden"
-      style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+      className="fixed bottom-0 left-0 right-0 z-50 bg-[#E8E4DC] border-t border-[#D5D0C8] md:hidden"
+      style={{ height: '56px' }}
     >
-      <div className="flex items-center justify-around h-14 max-w-lg mx-auto">
+      <div className="flex items-center justify-around h-full max-w-lg mx-auto">
         {tabs.map((tab) => {
           const active = isActive(tab.href);
           const Icon = tab.icon;
@@ -52,6 +45,8 @@ export default function BottomTabBar() {
           );
         })}
       </div>
+      {/* iOS safe area */}
+      <div className="h-[env(safe-area-inset-bottom)]" />
     </nav>
   );
 }
