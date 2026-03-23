@@ -809,13 +809,21 @@ export class OwnerService {
     const user = await this.prisma.user.findUnique({ where: { id } });
     if (!user) throw new NotFoundException('사용자를 찾을 수 없습니다.');
 
-    // 관련 ServiceInquiry 먼저 삭제
+    // 연결된 Mechanic의 userId를 null로 해제 (정비소는 삭제하지 않고 보존)
+    await this.prisma.mechanic.updateMany({
+      where: { userId: id },
+      data: { userId: null },
+    });
+
+    // 연결된 ServiceInquiry 삭제 (외래키 제약)
     await this.prisma.serviceInquiry.deleteMany({
       where: { userId: id },
     });
 
+    // User 삭제 (Post/Comment/PostLike는 스키마 onDelete:SetNull으로 자동 처리)
     await this.prisma.user.delete({ where: { id } });
-    return { message: '사용자가 탈퇴 처리되었습니다.' };
+
+    return { success: true, message: '회원이 삭제되었습니다' };
   }
 
   // ── 관리자용: 배지 통합 조회 ──

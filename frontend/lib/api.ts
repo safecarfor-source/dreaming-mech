@@ -186,6 +186,7 @@ export const adminUserApi = {
   deactivate: (id: number) => api.patch(`/admin/users/${id}/deactivate`),
   reactivate: (id: number) => api.patch(`/admin/users/${id}/reactivate`),
   toggleProtected: (id: number) => api.patch(`/admin/users/${id}/toggle-protected`),
+  delete: (id: number) => api.delete(`/admin/users/${id}`),
 };
 
 // 하위 호환: adminOwnerApi → adminUserApi alias

@@ -23,6 +23,7 @@ import {
   ArrowUpDown,
   Users,
   RefreshCw,
+  Trash2,
 } from 'lucide-react';
 
 // businessStatus 필터 타입
@@ -51,6 +52,18 @@ export default function AdminUsersPage() {
   // 탈퇴 확인 모달 상태
   const [deactivateModalUser, setDeactivateModalUser] = useState<User | null>(null);
   const [deactivating, setDeactivating] = useState(false);
+
+  // 삭제 확인 모달 상태
+  const [deleteModalUser, setDeleteModalUser] = useState<User | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
+  // 토스트 상태
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+
+  const showToast = (message: string, type: 'success' | 'error' = 'success') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3000);
+  };
 
   const fetchUsers = async () => {
     try {
@@ -140,6 +153,25 @@ export default function AdminUsersPage() {
       refreshBadges();
     } catch {
       alert('복원에 실패했습니다.');
+    }
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteModalUser) return;
+    setDeleting(true);
+    try {
+      await adminUserApi.delete(deleteModalUser.id);
+      setDeleteModalUser(null);
+      setSelectedUser(null);
+      setUsers((prev) => prev.filter((u) => u.id !== deleteModalUser.id));
+      showToast('삭제되었습니다.');
+      refreshBadges();
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string } } };
+      const message = err?.response?.data?.message || '삭제에 실패했습니다.';
+      showToast(message, 'error');
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -557,6 +589,15 @@ export default function AdminUsersPage() {
                       <RotateCcw size={13} /> 복원
                     </button>
                   )}
+
+                  {/* 삭제 버튼 (모든 상태 공통) */}
+                  <button
+                    onClick={() => setDeleteModalUser(user)}
+                    className="p-2 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                    title="회원 삭제"
+                  >
+                    <Trash2 size={15} />
+                  </button>
                 </div>
               </div>
 
@@ -924,6 +965,82 @@ export default function AdminUsersPage() {
               </button>
             </div>
           </div>
+        </div>
+      )}
+      {/* 삭제 확인 모달 */}
+      {deleteModalUser && (
+        <div
+          className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4"
+          onClick={() => !deleting && setDeleteModalUser(null)}
+        >
+          <div
+            className="bg-white rounded-2xl max-w-md w-full p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <div className="w-9 h-9 rounded-full bg-red-100 flex items-center justify-center">
+                  <Trash2 size={18} className="text-red-600" />
+                </div>
+                <h3 className="text-lg font-bold text-gray-900">회원 삭제</h3>
+              </div>
+              <button
+                onClick={() => !deleting && setDeleteModalUser(null)}
+                className="text-gray-400 hover:text-gray-600"
+                disabled={deleting}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <p className="text-sm font-semibold text-gray-700 mb-1">정말 삭제하시겠습니까?</p>
+            <div className="bg-red-50 border border-red-100 rounded-xl p-4 mb-4 space-y-1.5">
+              <p className="text-sm text-gray-700">
+                <span className="font-semibold">{deleteModalUser.name || deleteModalUser.nickname || '(이름 없음)'}</span>
+                {deleteModalUser.email && (
+                  <span className="text-gray-500"> ({deleteModalUser.email})</span>
+                )}
+              </p>
+              <p className="text-xs text-red-600 font-semibold flex items-center gap-1">
+                <AlertCircle size={12} /> 이 작업은 되돌릴 수 없습니다.
+              </p>
+              <p className="text-xs text-red-500 flex items-center gap-1">
+                <AlertCircle size={12} /> 회원 데이터가 영구 삭제됩니다.
+              </p>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setDeleteModalUser(null)}
+                disabled={deleting}
+                className="flex-1 py-2.5 border border-gray-200 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors disabled:cursor-not-allowed"
+              >
+                취소
+              </button>
+              <button
+                onClick={handleDeleteConfirm}
+                disabled={deleting}
+                className="flex-1 py-2.5 bg-red-600 text-white rounded-xl text-sm font-semibold hover:bg-red-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+              >
+                <Trash2 size={15} />
+                {deleting ? '삭제 중...' : '삭제하기'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 토스트 알림 */}
+      {toast && (
+        <div
+          className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-[70] px-5 py-3 rounded-xl shadow-lg text-sm font-medium flex items-center gap-2 transition-all ${
+            toast.type === 'success'
+              ? 'bg-gray-900 text-white'
+              : 'bg-red-600 text-white'
+          }`}
+        >
+          {toast.type === 'success' ? <Check size={16} /> : <AlertCircle size={16} />}
+          {toast.message}
         </div>
       )}
     </AdminLayout>
