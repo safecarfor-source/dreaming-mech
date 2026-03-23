@@ -55,6 +55,17 @@ function CallbackContent() {
 
         // businessStatus에 따라 리다이렉트
         const status = userData.businessStatus || businessStatus;
+
+        // from=pro: PRO 랜딩에서 가입한 경우 → /owner로 (신규 가입이면 온보딩)
+        if (from === 'pro') {
+          if (status === 'NONE') {
+            router.replace('/owner/onboarding');
+          } else {
+            router.replace('/owner');
+          }
+          return;
+        }
+
         if (status === 'NONE') {
           // from=owner 파라미터가 있으면 정비사 온보딩으로, 없으면 홈으로
           if (from === 'owner') {

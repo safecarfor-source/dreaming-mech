@@ -7,6 +7,9 @@ import { ArrowRight, MapPin, Bell, Video, Search } from 'lucide-react';
 import { mechanicsApi } from '@/lib/api';
 import { Mechanic } from '@/types';
 
+// 카카오 로그인 URL (from=pro 파라미터 → 로그인 후 /owner로 리다이렉트)
+const KAKAO_LOGIN_URL = `${process.env.NEXT_PUBLIC_API_URL}/auth/kakao?from=pro`;
+
 // 지역별 한정 수량 데이터 (10석 기준)
 const REGION_QUOTA = 10;
 
@@ -166,20 +169,20 @@ export default function ProPage() {
             transition={{ duration: 0.5, delay: 0.3 }}
             className="flex flex-col gap-3"
           >
-            <Link
-              href="/pro/login"
+            <a
+              href={KAKAO_LOGIN_URL}
               className="flex items-center justify-center gap-2.5 py-4 rounded-2xl font-bold text-base transition-all duration-150"
               style={{ backgroundColor: '#D4AF37', color: '#1A1A1A' }}
             >
               카카오로 1초 가입
               <ArrowRight size={18} />
-            </Link>
-            <Link
-              href="/owner"
+            </a>
+            <a
+              href={KAKAO_LOGIN_URL}
               className="text-center text-sm text-white/40 hover:text-white/70 transition-colors py-2"
             >
               이미 가입하셨나요? 로그인
-            </Link>
+            </a>
           </motion.div>
         </div>
       </section>
@@ -326,14 +329,14 @@ export default function ProPage() {
         >
           <p className="text-white font-bold text-lg mb-2 break-keep">지금 자리를 확보하세요</p>
           <p className="text-white/45 text-sm mb-6 break-keep">가입은 무료입니다. 카카오 1초면 완료!</p>
-          <Link
-            href="/pro/login"
+          <a
+            href={KAKAO_LOGIN_URL}
             className="flex items-center justify-center gap-2.5 py-4 rounded-2xl font-bold text-base transition-all duration-150"
             style={{ backgroundColor: '#D4AF37', color: '#1A1A1A' }}
           >
             카카오로 1초 가입
             <ArrowRight size={18} />
-          </Link>
+          </a>
         </motion.div>
       </section>
     </div>

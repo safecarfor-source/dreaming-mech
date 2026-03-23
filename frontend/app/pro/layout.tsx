@@ -24,18 +24,18 @@ export default function ProLayout({ children }: Props) {
     setIsHydrated(true);
   }, []);
 
-  // 보호 경로 접근 시 미로그인이면 /pro/login으로
+  // 보호 경로 접근 시 미로그인이면 /pro로 (랜딩 페이지)
   const isProtected = PROTECTED_PATHS.some((p) => pathname?.startsWith(p));
   useEffect(() => {
     if (isHydrated && isProtected && !isAuthenticated) {
-      router.push('/pro/login');
+      router.push('/pro');
     }
   }, [isHydrated, isProtected, isAuthenticated, router]);
 
-  // 이미 로그인 상태에서 /pro/login 방문 시 대시보드로
+  // 이미 로그인 상태에서 /pro/login 방문 시 /owner로
   useEffect(() => {
     if (isHydrated && isAuthenticated && pathname === '/pro/login') {
-      router.replace('/pro/dashboard');
+      router.replace('/owner');
     }
   }, [isHydrated, isAuthenticated, pathname, router]);
 
@@ -92,9 +92,9 @@ export default function ProLayout({ children }: Props) {
                 {menuOpen ? <X size={20} /> : <Menu size={20} />}
               </button>
             ) : (
-              /* 비로그인: 가입 버튼 */
-              <Link
-                href="/pro/login"
+              /* 비로그인: 가입 버튼 → 카카오 로그인 직접 연결 */
+              <a
+                href={`${process.env.NEXT_PUBLIC_API_URL}/auth/kakao?from=pro`}
                 className="text-sm font-semibold px-4 py-1.5 rounded-full border transition-colors"
                 style={{
                   color: '#D4AF37',
@@ -102,7 +102,7 @@ export default function ProLayout({ children }: Props) {
                 }}
               >
                 가입하기
-              </Link>
+              </a>
             )}
           </div>
         </div>
@@ -112,7 +112,7 @@ export default function ProLayout({ children }: Props) {
           <div className="absolute top-14 right-0 left-0 bg-[#222] border-b border-[#D4AF37]/15">
             <div className="max-w-[520px] mx-auto px-5 py-3 flex flex-col gap-1">
               {[
-                { href: '/pro/dashboard', label: '대시보드', icon: LayoutDashboard },
+                { href: '/owner', label: '대시보드', icon: LayoutDashboard },
                 { href: '/owner/mechanics', label: '내 정비소', icon: Store },
                 { href: '/owner', label: '문의함', icon: MessageSquare },
               ].map((item) => (
