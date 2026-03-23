@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { MapPin, Share2, ChevronLeft, ChevronRight, BadgeCheck, Heart, Phone } from 'lucide-react';
@@ -26,6 +26,7 @@ export default function ShopDetailClient({ slug }: Props) {
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [galleryIndex, setGalleryIndex] = useState(0);
+  const touchStartX = useRef<number | null>(null);
 
   useEffect(() => {
     async function load() {
@@ -133,7 +134,22 @@ export default function ShopDetailClient({ slug }: Props) {
 
         {/* 갤러리 */}
         {hasGallery ? (
-          <div className="relative h-72 sm:h-80 bg-gray-200 overflow-hidden">
+          <div
+            className="relative h-72 sm:h-80 bg-gray-200 overflow-hidden"
+            onTouchStart={(e) => { touchStartX.current = e.touches[0].clientX; }}
+            onTouchEnd={(e) => {
+              if (touchStartX.current === null) return;
+              const diff = touchStartX.current - e.changedTouches[0].clientX;
+              if (Math.abs(diff) >= 50) {
+                if (diff > 0) {
+                  setGalleryIndex((i) => (i < galleryImages.length - 1 ? i + 1 : 0));
+                } else {
+                  setGalleryIndex((i) => (i > 0 ? i - 1 : galleryImages.length - 1));
+                }
+              }
+              touchStartX.current = null;
+            }}
+          >
             <Image
               src={galleryImages[galleryIndex]}
               alt={`${sanitizeText(mechanic.name)} 사진 ${galleryIndex + 1}`}
@@ -242,20 +258,14 @@ export default function ShopDetailClient({ slug }: Props) {
         {(mechanic.youtubeLongUrl || mechanic.youtubeUrl) && (
           <>
             <div className="px-5 py-6">
-              <h3 className="text-[20px] font-bold text-gray-900 mb-4 text-center">🎬 영상 소개</h3>
+              <h3 className="text-[20px] font-bold text-gray-900 mb-1 text-center">꿈꾸는정비사가 직접 촬영</h3>
+              <p className="text-[14px] text-gray-400 text-center mb-4">정비소 소개 영상</p>
               {mechanic.youtubeLongUrl && (
                 <YouTubeEmbed url={mechanic.youtubeLongUrl} variant="long" />
               )}
               {mechanic.youtubeUrl && !mechanic.youtubeLongUrl && (
                 <YouTubeEmbed url={mechanic.youtubeUrl} variant="short" />
               )}
-              <div className="flex items-center gap-3 mt-4 justify-center">
-                <span className="text-2xl">🎬</span>
-                <div>
-                  <p className="text-[15px] font-bold text-red-600">꿈꾸는정비사가 직접 촬영</p>
-                  <p className="text-[13px] text-gray-400">정비소 소개 영상</p>
-                </div>
-              </div>
             </div>
             <div className="h-2.5 bg-gray-50" />
           </>

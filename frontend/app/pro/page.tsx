@@ -239,15 +239,17 @@ export default function ProPage() {
                 >
                   {/* 사진 */}
                   <div className="aspect-[4/3] bg-white/5 relative">
-                    {m.mainImageUrl ? (
+                    {(m.mainImageUrl || m.galleryImages?.[0]) ? (
                       <img
-                        src={m.mainImageUrl}
+                        src={m.mainImageUrl || m.galleryImages![0]}
                         alt={m.name}
                         className="w-full h-full object-cover"
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center">
-                        <span className="text-white/20 text-3xl">🔧</span>
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-white/20">
+                          <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
                       </div>
                     )}
                     {/* PRO 배지 */}

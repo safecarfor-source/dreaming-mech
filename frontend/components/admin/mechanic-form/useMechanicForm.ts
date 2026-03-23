@@ -33,35 +33,53 @@ interface UseMechanicFormProps {
   mode: 'create' | 'edit';
   apiBasePath?: string;    // 기본: '/mechanics', Owner: '/owner/mechanics'
   redirectPath?: string;   // 기본: '/admin/mechanics', Owner: '/owner/mechanics'
+  draftKey?: string;       // localStorage 임시저장 키
 }
 
-export function useMechanicForm({ mechanic, mode, apiBasePath = '/mechanics', redirectPath = '/admin/mechanics' }: UseMechanicFormProps) {
+export function useMechanicForm({ mechanic, mode, apiBasePath = '/mechanics', redirectPath = '/admin/mechanics', draftKey }: UseMechanicFormProps) {
   const router = useRouter();
 
-  const [formData, setFormData] = useState<MechanicFormData>({
-    name: mechanic?.name || '',
-    location: mechanic?.location || '',
-    phone: mechanic?.phone || '',
-    description: mechanic?.description || '',
-    address: mechanic?.address || '',
-    mapLat: mechanic?.mapLat ? Number(mechanic.mapLat) : 37.5665,
-    mapLng: mechanic?.mapLng ? Number(mechanic.mapLng) : 126.978,
-    mainImageUrl: mechanic?.mainImageUrl || '',
-    youtubeUrl: mechanic?.youtubeUrl || '',
-    youtubeLongUrl: mechanic?.youtubeLongUrl || '',
-    isActive: mechanic?.isActive ?? true,
-    isPremium: mechanic?.isPremium ?? false,
-    // 상세 정보
-    operatingHours: mechanic?.operatingHours || null,
-    specialties: mechanic?.specialties || [],
-    isVerified: mechanic?.isVerified || false,
-    parkingAvailable: mechanic?.parkingAvailable ?? null,
-    paymentMethods: mechanic?.paymentMethods || [],
-    holidays: mechanic?.holidays || null,
-    galleryImages: mechanic?.galleryImages || [],
-    // 사장님 연결
-    ownerId: mechanic?.ownerId ?? null,
-  });
+  // localStorage 임시저장 데이터 불러오기 (신규 등록 + draftKey 있을 때만)
+  const getInitialFormData = (): MechanicFormData => {
+    const defaults: MechanicFormData = {
+      name: mechanic?.name || '',
+      location: mechanic?.location || '',
+      phone: mechanic?.phone || '',
+      description: mechanic?.description || '',
+      address: mechanic?.address || '',
+      mapLat: mechanic?.mapLat ? Number(mechanic.mapLat) : 37.5665,
+      mapLng: mechanic?.mapLng ? Number(mechanic.mapLng) : 126.978,
+      mainImageUrl: mechanic?.mainImageUrl || '',
+      youtubeUrl: mechanic?.youtubeUrl || '',
+      youtubeLongUrl: mechanic?.youtubeLongUrl || '',
+      isActive: mechanic?.isActive ?? true,
+      isPremium: mechanic?.isPremium ?? false,
+      operatingHours: mechanic?.operatingHours || null,
+      specialties: mechanic?.specialties || [],
+      isVerified: mechanic?.isVerified || false,
+      parkingAvailable: mechanic?.parkingAvailable ?? null,
+      paymentMethods: mechanic?.paymentMethods || [],
+      holidays: mechanic?.holidays || null,
+      galleryImages: mechanic?.galleryImages || [],
+      ownerId: mechanic?.ownerId ?? null,
+    };
+
+    if (mode === 'create' && draftKey) {
+      try {
+        const raw = typeof window !== 'undefined' ? localStorage.getItem(draftKey) : null;
+        if (raw) {
+          const parsed = JSON.parse(raw) as Partial<MechanicFormData>;
+          return { ...defaults, ...parsed };
+        }
+      } catch {
+        // 파싱 실패 시 기본값 사용
+      }
+    }
+
+    return defaults;
+  };
+
+  const [formData, setFormData] = useState<MechanicFormData>(getInitialFormData);
 
   const [isSearching, setIsSearching] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -218,6 +236,10 @@ export function useMechanicForm({ mechanic, mode, apiBasePath = '/mechanics', re
         throw new Error(errData?.message || '저장 실패');
       }
 
+      // 임시저장 데이터 삭제
+      if (draftKey) {
+        localStorage.removeItem(draftKey);
+      }
       alert(mode === 'create' ? '정비사가 추가되었습니다!' : '수정되었습니다!');
       router.push(redirectPath);
     } catch (error: any) {

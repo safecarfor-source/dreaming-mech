@@ -1,11 +1,12 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import OwnerLayout from '@/components/owner/OwnerLayout';
 import { ownerMechanicsApi, userAuthApi, ownerInquiriesApi } from '@/lib/api';
 import { Mechanic, User as UserType } from '@/types';
 import Link from 'next/link';
-import { Plus, Store, Eye, X, ChevronRight, Clock, MapPin, Wrench, Car, Phone, User, Link2, MessageSquare, FileText, ArrowRight, BarChart2 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { Plus, Store, Eye, X, ChevronRight, Clock, MapPin, Wrench, Car, Phone, User, Link2, MessageSquare, FileText, ArrowRight, BarChart2, CheckCircle2 } from 'lucide-react';
 
 type OwnerInquiry = {
   id: number;
@@ -27,6 +28,8 @@ type OwnerInquiry = {
 };
 
 export default function OwnerDashboardPage() {
+  const router = useRouter();
+  const phoneInputRef = useRef<HTMLInputElement>(null);
   const [mechanics, setMechanics] = useState<Mechanic[]>([]);
   const [loading, setLoading] = useState(true);
   const [owner, setOwner] = useState<UserType | null>(null);
@@ -106,6 +109,41 @@ export default function OwnerDashboardPage() {
     }
   };
 
+  // 프로필 완성도 계산
+  const profileItems = [
+    {
+      key: 'phone',
+      label: '전화번호 등록',
+      done: !!(owner?.phone && owner.phone.replace(/[^\d]/g, '').length === 11),
+    },
+    {
+      key: 'business',
+      label: '사업자 정보 제출',
+      done: !!(owner?.businessLicenseUrl),
+    },
+    {
+      key: 'mechanic',
+      label: '정비소 등록',
+      done: mechanics.length > 0,
+    },
+  ];
+  const completedCount = profileItems.filter((i) => i.done).length;
+  const completionPercent = Math.round((completedCount / profileItems.length) * 100);
+
+  // 프로필 완성도 카드 클릭 시 첫 번째 미완성 항목으로 이동
+  const handleProfileCardClick = () => {
+    const firstIncomplete = profileItems.find((i) => !i.done);
+    if (!firstIncomplete) return;
+    if (firstIncomplete.key === 'phone') {
+      phoneInputRef.current?.focus();
+      phoneInputRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    } else if (firstIncomplete.key === 'business') {
+      router.push('/owner/onboarding');
+    } else if (firstIncomplete.key === 'mechanic') {
+      router.push('/owner/mechanics/new');
+    }
+  };
+
   const formatDateTime = (dateStr: string) => {
     const d = new Date(dateStr);
     const year = d.getFullYear();
@@ -149,10 +187,66 @@ export default function OwnerDashboardPage() {
 
   return (
     <OwnerLayout>
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">대시보드</h1>
-        <p className="text-gray-500 mt-1">내 매장을 관리하세요</p>
+      <div className="mb-6 px-1">
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-900 break-keep">대시보드</h1>
+        <p className="text-gray-500 mt-1 text-sm sm:text-base break-keep">내 매장을 관리하세요</p>
       </div>
+
+      {/* 프로필 완성도 카드 */}
+      {!loading && (
+        <button
+          onClick={handleProfileCardClick}
+          className="w-full mb-6 bg-white rounded-xl p-5 shadow-sm border border-gray-100 hover:shadow-md hover:border-[#7C4DFF]/30 transition-all cursor-pointer text-left group"
+        >
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-bold text-gray-900">프로필 완성도</span>
+              <span
+                className={`text-xs font-bold px-2 py-0.5 rounded-full ${
+                  completionPercent === 100
+                    ? 'bg-green-100 text-green-700'
+                    : 'bg-[#7C4DFF]/10 text-[#7C4DFF]'
+                }`}
+              >
+                {completionPercent}%
+              </span>
+            </div>
+            {completionPercent < 100 && (
+              <span className="text-xs text-[#7C4DFF] font-semibold flex items-center gap-0.5 group-hover:underline">
+                완성하기
+                <ChevronRight size={14} />
+              </span>
+            )}
+          </div>
+
+          {/* 게이지 바 */}
+          <div className="w-full bg-gray-100 rounded-full h-2 mb-4 overflow-hidden">
+            <div
+              className={`h-2 rounded-full transition-all duration-500 ${
+                completionPercent === 100 ? 'bg-green-500' : 'bg-[#7C4DFF]'
+              }`}
+              style={{ width: `${completionPercent}%` }}
+            />
+          </div>
+
+          {/* 항목 목록 */}
+          <div className="flex flex-wrap gap-3">
+            {profileItems.map((item) => (
+              <div
+                key={item.key}
+                className={`flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full ${
+                  item.done
+                    ? 'bg-green-50 text-green-700'
+                    : 'bg-gray-50 text-gray-500'
+                }`}
+              >
+                <CheckCircle2 size={13} className={item.done ? 'text-green-500' : 'text-gray-300'} />
+                {item.label}
+              </div>
+            ))}
+          </div>
+        </button>
+      )}
 
       {/* PENDING 상태: 사업자 정보 제출 유도 카드 */}
       {owner?.businessStatus === 'PENDING' && !owner?.businessLicenseUrl && (
@@ -193,32 +287,33 @@ export default function OwnerDashboardPage() {
       )}
 
       {/* 알림톡 수신 설정 */}
-      <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 mb-6">
-        <div className="flex items-center gap-2 mb-4">
+      <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-gray-100 mb-6">
+        <div className="flex items-center gap-2 mb-3 flex-wrap">
           <span className="text-xl">📱</span>
-          <h2 className="text-lg font-bold text-gray-900">알림톡 수신 설정</h2>
+          <h2 className="text-base sm:text-lg font-bold text-gray-900">알림톡 수신 설정</h2>
           <span className="text-xs bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded-full">
             새 문의 알림
           </span>
         </div>
-        <p className="text-sm text-gray-500 mb-4">
+        <p className="text-sm text-gray-500 mb-4 leading-relaxed">
           전화번호를 등록하면 내 지역에 새 고객 문의가 들어올 때 카카오 알림톡으로 알려드려요.
         </p>
 
         {/* 전화번호 입력 폼 */}
-        <div className="flex gap-3">
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
           <input
-            type="text"
+            ref={phoneInputRef}
+            type="tel"
             value={phone}
             onChange={handlePhoneChange}
             placeholder="010-0000-0000"
             maxLength={13}
-            className="flex-1 border border-gray-200 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-purple-200 focus:border-[#7C4DFF] outline-none transition-all"
+            className="flex-1 min-w-0 border border-gray-200 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-purple-200 focus:border-[#7C4DFF] outline-none transition-all text-sm"
           />
           <button
             onClick={handleSavePhone}
             disabled={isSaving}
-            className={`px-6 py-2.5 rounded-lg font-medium transition-all ${
+            className={`w-full sm:w-auto px-6 py-2.5 rounded-lg font-medium transition-all text-sm whitespace-nowrap ${
               isSaving
                 ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                 : 'bg-[#7C4DFF] text-white hover:bg-[#6B3FE0]'

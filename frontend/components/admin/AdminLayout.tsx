@@ -15,7 +15,6 @@ import {
   LogOut,
   Menu,
   X,
-  Wrench,
 } from 'lucide-react';
 
 interface Props {
@@ -28,7 +27,6 @@ const menuItems = [
   { href: '/admin/users', label: '사업자 승인', icon: UserCheck, badgeKey: 'owners' as const },
   { href: '/admin/unified-inquiries', label: '문의 관리', icon: MessageSquare, badgeKey: 'unified' as const },
   { href: '/admin/reviews', label: '리뷰 관리', icon: Star, badgeKey: 'reviews' as const },
-  { href: '/admin/erp', label: 'ERP 관리', icon: Wrench },
   { href: '/admin/tracking', label: '추적 링크', icon: Link2 },
   { href: '/admin/stats', label: '통계', icon: BarChart3 },
 ];

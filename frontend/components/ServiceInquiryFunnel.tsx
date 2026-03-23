@@ -516,7 +516,7 @@ export default function ServiceInquiryFunnel({ compact = false, onComplete }: Se
 
             {/* 카카오 오픈채팅 */}
             <a
-              href={process.env.NEXT_PUBLIC_KAKAO_OPENCHAT_URL || 'https://open.kakao.com/o/gXXXXXX'}
+              href={process.env.NEXT_PUBLIC_KAKAO_OPENCHAT_URL || 'https://open.kakao.com/o/gZ95WMmi'}
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center justify-center gap-2 w-full bg-[#FEE500] text-gray-900

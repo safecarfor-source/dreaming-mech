@@ -15,9 +15,13 @@ interface MechanicFormProps {
   mode: 'create' | 'edit';
   apiBasePath?: string;
   redirectPath?: string;
+  // 임시저장 관련
+  draftKey?: string;
+  draftMode?: boolean;
+  onDraftSave?: () => void;
 }
 
-export default function MechanicForm({ mechanic, mode, apiBasePath, redirectPath }: MechanicFormProps) {
+export default function MechanicForm({ mechanic, mode, apiBasePath, redirectPath, draftKey, draftMode = false, onDraftSave }: MechanicFormProps) {
   const router = useRouter();
   const {
     formData,
@@ -28,7 +32,7 @@ export default function MechanicForm({ mechanic, mode, apiBasePath, redirectPath
     handleAddressSearch,
     handleMarkerDragEnd,
     handleSubmit,
-  } = useMechanicForm({ mechanic, mode, apiBasePath, redirectPath });
+  } = useMechanicForm({ mechanic, mode, apiBasePath, redirectPath, draftKey });
 
   const isAdmin = !apiBasePath?.includes('owner');
 
@@ -88,13 +92,28 @@ export default function MechanicForm({ mechanic, mode, apiBasePath, redirectPath
         >
           취소
         </button>
-        <button
-          type="submit"
-          disabled={isSaving}
-          className="px-8 py-3 bg-[#7C4DFF] hover:bg-[#6B3FE8] disabled:bg-gray-400 text-white rounded-xl font-medium focus:outline-none focus:ring-2 focus:ring-[#7C4DFF]/50 focus:ring-offset-2 transition-all shadow-sm"
-        >
-          {isSaving ? '저장 중...' : mode === 'create' ? '추가하기' : '수정하기'}
-        </button>
+        {draftMode ? (
+          <button
+            type="button"
+            onClick={() => {
+              if (draftKey) {
+                localStorage.setItem(draftKey, JSON.stringify(formData));
+              }
+              onDraftSave?.();
+            }}
+            className="px-8 py-3 bg-amber-500 hover:bg-amber-600 text-white rounded-xl font-medium focus:outline-none focus:ring-2 focus:ring-amber-400/50 focus:ring-offset-2 transition-all shadow-sm"
+          >
+            임시저장
+          </button>
+        ) : (
+          <button
+            type="submit"
+            disabled={isSaving}
+            className="px-8 py-3 bg-[#7C4DFF] hover:bg-[#6B3FE8] disabled:bg-gray-400 text-white rounded-xl font-medium focus:outline-none focus:ring-2 focus:ring-[#7C4DFF]/50 focus:ring-offset-2 transition-all shadow-sm"
+          >
+            {isSaving ? '저장 중...' : mode === 'create' ? '추가하기' : '수정하기'}
+          </button>
+        )}
       </div>
     </form>
   );

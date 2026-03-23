@@ -561,7 +561,7 @@ export default function AdminUsersPage() {
               </div>
 
               {/* 카드 정보 */}
-              {(user.businessName || user.phone || user.address) && (
+              {(user.businessName || user.phone || user.address || user.businessStatus === 'PENDING') && (
                 <div className="border-t border-gray-50 px-4 py-2.5 bg-gray-50/60 flex items-center gap-4 flex-wrap">
                   {user.businessName && (
                     <span className="text-xs font-semibold text-gray-700 flex items-center gap-1">
@@ -580,6 +580,18 @@ export default function AdminUsersPage() {
                       <MapPin size={12} className="text-gray-400" />
                       {user.address}
                     </span>
+                  )}
+                  {/* 사업자 등록증 제출 여부 뱃지 (PENDING 탭에서 구분용) */}
+                  {user.businessStatus === 'PENDING' && (
+                    user.businessLicenseUrl ? (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full">
+                        <Check size={10} /> 사업자 등록증 제출됨
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-semibold bg-gray-100 text-gray-400 border border-gray-200 rounded-full">
+                        미제출
+                      </span>
+                    )
                   )}
                 </div>
               )}
