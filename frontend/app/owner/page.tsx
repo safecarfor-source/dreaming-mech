@@ -282,6 +282,23 @@ export default function OwnerDashboardPage() {
         <p className="text-gray-500 mt-1 text-sm sm:text-base break-keep">내 매장을 관리하세요</p>
       </div>
 
+      {/* 매장 등록 CTA — 매장 없을 때 최상단에 노출 */}
+      {!loading && mechanics.length === 0 && (
+        <Link
+          href="/owner/mechanics/new"
+          className="mb-6 flex items-center gap-4 bg-gradient-to-r from-[#7C4DFF] to-[#9C6FFF] text-white rounded-2xl p-5 shadow-md hover:shadow-lg transition-all group"
+        >
+          <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center flex-shrink-0">
+            <Plus size={24} />
+          </div>
+          <div className="flex-1">
+            <p className="font-bold text-base">매장 등록하기</p>
+            <p className="text-white/70 text-sm mt-0.5">내 정비소 정보를 입력하고 고객을 만나세요</p>
+          </div>
+          <ChevronRight size={20} className="text-white/50 group-hover:translate-x-1 transition-transform" />
+        </Link>
+      )}
+
       {/* 프로필 완성도 카드 */}
       {!loading && (
         <button
