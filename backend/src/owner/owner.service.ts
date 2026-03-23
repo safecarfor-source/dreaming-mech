@@ -226,8 +226,9 @@ export class OwnerService {
       throw new BadRequestException('하나의 계정으로 정비소는 1개만 등록할 수 있습니다.');
     }
 
-    // Json? 필드의 null 처리
+    // Json? 필드의 null 처리 + ownerId 제거 (Prisma 스키마에 없음)
     const createData: any = { ...data };
+    delete createData.ownerId;
     if ('operatingHours' in createData) createData.operatingHours = toJsonField(createData.operatingHours);
     if ('holidays' in createData) createData.holidays = toJsonField(createData.holidays);
 

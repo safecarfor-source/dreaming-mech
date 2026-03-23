@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import OwnerLayout from '@/components/owner/OwnerLayout';
 import { ownerMechanicsApi, userAuthApi, ownerInquiriesApi, ownerRegionInquiriesApi } from '@/lib/api';
+import { useUserStore } from '@/lib/auth';
 import { Mechanic, User as UserType } from '@/types';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -54,10 +55,11 @@ export default function OwnerDashboardPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // 프로필은 반드시 필요
+        // 프로필은 반드시 필요 — Zustand도 동기화 (승인 상태 즉시 반영)
         const profileRes = await userAuthApi.getProfile();
         setOwner(profileRes.data);
         setPhone(profileRes.data.phone || '');
+        useUserStore.getState().login(profileRes.data);
 
         // 매장 + 문의는 APPROVED만 가능 → 개별 catch로 처리 (PENDING 403 방지)
         try {
