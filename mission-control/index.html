@@ -652,8 +652,8 @@
 
 <script>
 // ── 상태 ──────────────────────────────────────────────────
-const LS_KEY = 'missioncontrol_v16';  // v16: 커뮤니티 활성화 전략 항목 추가
-const DATA_VERSION = 10;
+const LS_KEY = 'missioncontrol_v17';  // v17: 메인사이트 디테일 + 인센티브 재기획
+const DATA_VERSION = 11;
 let state = { nodes: {}, inbox: [], lastUpdated: '', version: 0 };
 let selectedId = null;
 let expandedIds = new Set();
@@ -673,10 +673,11 @@ localStorage.removeItem('missioncontrol_v11');
 localStorage.removeItem('missioncontrol_v14');
 localStorage.removeItem('missioncontrol_v15');
 localStorage.removeItem('missioncontrol_v16');
+localStorage.removeItem('missioncontrol_v17');
 
 // ── 내장 데이터 ───────────────────────────────────────────
 const EMBEDDED_DATA = {"lastUpdated":"2026-03-19T13:50:00+09:00","nodes":[
-  {"id":"root","name":"꿈꾸는정비사","icon":"🏢","status":"active","children":["platform","admin","incentive","marketing","admin-mechanic-overlap","kmong-analysis","inc-vehicle-bug","platform-fulltest","region-search-alias","region-search-short","erp-domain","member-mgmt","onboarding-nav","for-mechanics-thumb","admin-inquiry-bug","platform-rebrand","web-detail-plan","web-core-design","mc-redesign","community-activation"]},
+  {"id":"root","name":"꿈꾸는정비사","icon":"🏢","status":"active","children":["platform","admin","incentive","marketing","admin-mechanic-overlap","kmong-analysis","inc-vehicle-bug","platform-fulltest","region-search-alias","region-search-short","erp-domain","member-mgmt","onboarding-nav","for-mechanics-thumb","admin-inquiry-bug","platform-rebrand","web-detail-plan","web-core-design","mc-redesign","community-activation","platform-detail-fix","incentive-replanning"]},
   {"id":"platform","name":"정비소 플랫폼","icon":"🌐","url":"dreammechaniclab.com/","status":"active","children":["platform-mechanic","platform-consumer","platform-community","platform-youtube","platform-seo"]},
   {"id":"platform-mechanic","name":"정비사 탭","icon":"🔧","status":"in_progress","children":["pm-register","pm-detail","pm-dashboard","pm-auth","pm-map-bug"]},
   {"id":"pm-register","name":"정비소 등록 플로우","icon":"📝","status":"in_progress","priority":"P0","note":"카카오 가입→사업자 인증→정비소 등록 3단계. 온보딩 리다이렉트 수정 완료(3/18)"},
@@ -724,7 +725,9 @@ const EMBEDDED_DATA = {"lastUpdated":"2026-03-19T13:50:00+09:00","nodes":[
   {"id":"web-detail-plan","name":"🔴 웹사이트 디테일 수정 기획/설계","icon":"📋","status":"not_started","priority":"P0","note":"#상황판 (3/20)\n\n우리 웹사이트 디테일한 수정을 위한 수정 기획/설계\n기초가 다져진 웹사이트를 업그레이드하는 과정.\n질문과 대답 그리고 설계/기획을 기초로 진행."},
   {"id":"web-core-design","name":"🔴 웹 코어 디자인 설계 (유튜브 벤치마킹)","icon":"🎨","status":"not_started","priority":"P0","note":"#상황판 (3/20)\n\n웹 코어 디자인 설계 - 유튜브를 벤치마킹.\n이걸 먼저 기획해서 진행할 예정.\n기초가 다져진 웹사이트를 업그레이드하는 과정.\n브랜드 컬러: #E4015C (소비자)"},
   {"id":"mc-redesign","name":"🔴 상황판 기획/설계 재시작","icon":"📡","status":"in_progress","priority":"P0","note":"#상황판 (3/20)\n\n상황판 워크플로우 분석.\n현재 상황판 업데이트가 안되고 있다.\n기획/설계를 다시 시작. 전문가 기준 완성형 상상 후 기초부터."},
-  {"id":"community-activation","name":"🔴 커뮤니티 활성화 전략 (글쓰기 시점에 재논의)","icon":"💬","status":"not_started","priority":"P1","note":"#상황판 (3/21)\n\n커뮤니티 활성화 전략 기획 완료.\n글쓰기 실행 시점에 다시 논의 예정.\n\n분류: 정보전달 + 가치입증\n시딩 30개 → 주 2개 작성\n유튜브 영상 연결\n정비소 대표님 글 포함"}
+  {"id":"community-activation","name":"🔴 커뮤니티 활성화 전략 (글쓰기 시점에 재논의)","icon":"💬","status":"not_started","priority":"P1","note":"#상황판 (3/21)\n\n커뮤니티 활성화 전략 기획 완료.\n글쓰기 실행 시점에 다시 논의 예정.\n\n분류: 정보전달 + 가치입증\n시딩 30개 → 주 2개 작성\n유튜브 영상 연결\n정비소 대표님 글 포함"},
+  {"id":"platform-detail-fix","name":"🔴 메인 사이트(플랫폼) 디테일 수정","icon":"🌐","status":"not_started","priority":"P0","note":"#상황판 (3/21)\n\n메인 사이트(플랫폼) 디테일 수정"},
+  {"id":"incentive-replanning","name":"🔴 인센티브 페이지 기획부터 차근차근 다시 시작","icon":"💰","status":"not_started","priority":"P0","note":"#상황판 (3/21)\n\n인센티브 페이지 기획부터 차근차근 다시 시작"}
 ],"inbox":[]};
 
 // ── 데이터 로드 ───────────────────────────────────────────

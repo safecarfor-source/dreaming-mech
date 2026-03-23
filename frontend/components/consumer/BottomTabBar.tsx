@@ -2,17 +2,24 @@
 
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { Home, Search, Phone } from 'lucide-react';
-
-const tabs = [
-  { href: '/', label: '홈', icon: Home },
-  // /search 페이지 미구현 — 메인 정비소 목록 섹션 앵커로 연결
-  { href: '/#shops', label: '정비소 찾기', icon: Search },
-  { href: '/inquiry', label: '문의하기', icon: Phone },
-];
+import { Home, Search, Phone, User } from 'lucide-react';
+import { useUserStore } from '@/lib/auth';
 
 export default function BottomTabBar() {
   const pathname = usePathname();
+  const { isAuthenticated } = useUserStore();
+
+  const tabs = [
+    { href: '/', label: '홈', icon: Home },
+    // /search 페이지 미구현 — 메인 정비소 목록 섹션 앵커로 연결
+    { href: '/#shops', label: '정비소 찾기', icon: Search },
+    { href: '/inquiry', label: '문의하기', icon: Phone },
+    {
+      href: isAuthenticated ? '/mypage' : '/login',
+      label: isAuthenticated ? '내 정보' : '로그인',
+      icon: User,
+    },
+  ];
 
   const isActive = (href: string) => {
     if (href === '/') return pathname === '/';

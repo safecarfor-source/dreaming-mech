@@ -248,7 +248,7 @@ export default function OwnerDashboardPage() {
         </button>
       )}
 
-      {/* PENDING 상태: 사업자 정보 제출 유도 카드 */}
+      {/* 사업자 미제출: 제출 유도 배너 */}
       {owner?.businessStatus === 'PENDING' && !owner?.businessLicenseUrl && (
         <div className="mb-6 bg-gradient-to-r from-[#F5F3FF] to-white border-2 border-[#7C4DFF]/20 rounded-2xl p-6">
           <div className="flex items-start gap-4">
@@ -256,16 +256,16 @@ export default function OwnerDashboardPage() {
               <FileText size={24} className="text-[#7C4DFF]" />
             </div>
             <div className="flex-1">
-              <h3 className="font-bold text-gray-900 mb-1">사업자 정보를 제출해주세요</h3>
+              <h3 className="font-bold text-gray-900 mb-1">사업자 등록증을 제출하면 정비소를 공개할 수 있습니다</h3>
               <p className="text-sm text-gray-500 leading-relaxed mb-4">
-                사업자등록증, 상호, 전화번호를 제출하면 정비소를 등록할 수 있습니다.<br />
+                사업자등록증, 상호, 전화번호를 제출하고 승인받으면 정비소가 메인 페이지에 노출됩니다.<br />
                 <span className="text-amber-600 font-medium">팩트 체크를 위한 정보이며, 외부에 공개되지 않습니다.</span>
               </p>
               <Link
                 href="/owner/onboarding"
                 className="inline-flex items-center gap-2 bg-[#7C4DFF] text-white px-5 py-2.5 rounded-xl font-semibold text-sm hover:bg-[#6B3FE0] transition-colors"
               >
-                사업자 정보 제출하기
+                사업자 등록증 제출하기
                 <ArrowRight size={16} />
               </Link>
             </div>
@@ -273,7 +273,7 @@ export default function OwnerDashboardPage() {
         </div>
       )}
 
-      {/* PENDING 상태: 이미 제출했지만 승인 대기 중 */}
+      {/* 사업자 제출 완료 + 승인 대기 중 */}
       {owner?.businessStatus === 'PENDING' && owner?.businessLicenseUrl && (
         <div className="mb-6 bg-amber-50 border border-amber-200 rounded-2xl p-5 flex items-center gap-4">
           <div className="w-10 h-10 bg-amber-100 rounded-xl flex items-center justify-center flex-shrink-0">
@@ -281,7 +281,7 @@ export default function OwnerDashboardPage() {
           </div>
           <div>
             <h3 className="font-semibold text-amber-800">관리자 검토 중입니다</h3>
-            <p className="text-sm text-amber-600">사업자 정보가 접수되었습니다. 승인 후 정비소를 등록할 수 있습니다.</p>
+            <p className="text-sm text-amber-600">사업자 정보가 접수되었습니다. 승인 후 정비소를 공개할 수 있습니다.</p>
           </div>
         </div>
       )}

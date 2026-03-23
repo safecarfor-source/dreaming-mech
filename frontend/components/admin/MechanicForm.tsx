@@ -19,9 +19,11 @@ interface MechanicFormProps {
   draftKey?: string;
   draftMode?: boolean;
   onDraftSave?: () => void;
+  // 사업자 미승인 시 publish 차단 콜백 (데이터를 임시저장 후 팝업 열기)
+  onPublishBlocked?: (formData: object) => void;
 }
 
-export default function MechanicForm({ mechanic, mode, apiBasePath, redirectPath, draftKey, draftMode = false, onDraftSave }: MechanicFormProps) {
+export default function MechanicForm({ mechanic, mode, apiBasePath, redirectPath, draftKey, draftMode = false, onDraftSave, onPublishBlocked }: MechanicFormProps) {
   const router = useRouter();
   const {
     formData,
@@ -92,7 +94,37 @@ export default function MechanicForm({ mechanic, mode, apiBasePath, redirectPath
         >
           취소
         </button>
-        {draftMode ? (
+
+        {onPublishBlocked ? (
+          // 사업자 미승인: 임시저장 버튼 + 추가하기(팝업) 버튼
+          <>
+            <button
+              type="button"
+              onClick={() => {
+                if (draftKey) {
+                  localStorage.setItem(draftKey, JSON.stringify(formData));
+                }
+                onDraftSave?.();
+              }}
+              className="px-8 py-3 bg-amber-500 hover:bg-amber-600 text-white rounded-xl font-medium focus:outline-none focus:ring-2 focus:ring-amber-400/50 focus:ring-offset-2 transition-all shadow-sm"
+            >
+              임시저장
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                if (draftKey) {
+                  localStorage.setItem(draftKey, JSON.stringify(formData));
+                }
+                onPublishBlocked(formData);
+              }}
+              className="px-8 py-3 bg-[#7C4DFF] hover:bg-[#6B3FE8] text-white rounded-xl font-medium focus:outline-none focus:ring-2 focus:ring-[#7C4DFF]/50 focus:ring-offset-2 transition-all shadow-sm"
+            >
+              {mode === 'create' ? '추가하기' : '수정하기'}
+            </button>
+          </>
+        ) : draftMode ? (
+          // 임시저장 전용 모드 (onPublishBlocked 없음)
           <button
             type="button"
             onClick={() => {
@@ -106,6 +138,7 @@ export default function MechanicForm({ mechanic, mode, apiBasePath, redirectPath
             임시저장
           </button>
         ) : (
+          // 일반 submit
           <button
             type="submit"
             disabled={isSaving}

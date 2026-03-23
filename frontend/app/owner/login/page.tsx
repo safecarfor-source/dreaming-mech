@@ -9,7 +9,7 @@ function OwnerLoginContent() {
 
   useEffect(() => {
     const from = searchParams.get('from');
-    const destination = from ? `/login?from=${from}` : '/login';
+    const destination = from ? `/pro/login?from=${from}` : '/pro/login';
     router.replace(destination);
   }, [router, searchParams]);
 

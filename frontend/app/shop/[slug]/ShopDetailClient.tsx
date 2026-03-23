@@ -20,6 +20,33 @@ interface Props {
   slug: string;
 }
 
+// localStorage 찜 관련 유틸
+function getFavorites(): Array<{ id: number; name: string; address: string; slug: string }> {
+  if (typeof window === 'undefined') return [];
+  try {
+    const raw = localStorage.getItem('favorite_shops');
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+function isFavorited(id: number): boolean {
+  return getFavorites().some((s) => s.id === id);
+}
+
+function toggleFavorite(shop: { id: number; name: string; address: string; slug: string }): boolean {
+  const list = getFavorites();
+  const exists = list.some((s) => s.id === shop.id);
+  if (exists) {
+    localStorage.setItem('favorite_shops', JSON.stringify(list.filter((s) => s.id !== shop.id)));
+    return false;
+  } else {
+    localStorage.setItem('favorite_shops', JSON.stringify([...list, shop]));
+    return true;
+  }
+}
+
 export default function ShopDetailClient({ slug }: Props) {
   const router = useRouter();
   const { isAuthenticated } = useUserStore();
@@ -28,6 +55,7 @@ export default function ShopDetailClient({ slug }: Props) {
   const [notFound, setNotFound] = useState(false);
   const [galleryIndex, setGalleryIndex] = useState(0);
   const [galleryFading, setGalleryFading] = useState(false);
+  const [hearted, setHearted] = useState(false);
   const touchStartX = useRef<number | null>(null);
 
   const changeGalleryIndex = (next: number) => {
@@ -44,7 +72,8 @@ export default function ShopDetailClient({ slug }: Props) {
         const res = await mechanicsApi.getBySlug(slug);
         const matched: Mechanic = res.data;
         setMechanic(matched);
-
+        // 찜 상태 초기화
+        setHearted(isFavorited(matched.id));
         // 클릭수 증가 + GA
         gtagEvent.mechanicDetailView(matched.id, matched.name, matched.location || '');
         mechanicsApi.incrementClick(matched.id).catch(() => {});
@@ -133,7 +162,14 @@ export default function ShopDetailClient({ slug }: Props) {
 
   const handleHeart = () => {
     if (!requireLogin()) return;
-    alert('준비 중입니다.');
+    if (!mechanic) return;
+    const next = toggleFavorite({
+      id: mechanic.id,
+      name: mechanic.name,
+      address: mechanic.address,
+      slug,
+    });
+    setHearted(next);
   };
 
   return (
@@ -387,10 +423,14 @@ export default function ShopDetailClient({ slug }: Props) {
         <div className="flex items-center gap-3 max-w-lg mx-auto">
           <button
             onClick={handleHeart}
-            className="flex items-center justify-center w-11 h-11 rounded-xl border border-[#E5E7EB] text-[#9CA3AF] hover:text-[#E4015C] hover:border-[#E4015C] transition-colors"
-            aria-label="찜하기"
+            className={`flex items-center justify-center w-11 h-11 rounded-xl border transition-colors ${
+              hearted
+                ? 'border-[#E4015C] text-[#E4015C] bg-[#FFF0F5]'
+                : 'border-[#E5E7EB] text-[#9CA3AF] hover:text-[#E4015C] hover:border-[#E4015C]'
+            }`}
+            aria-label={hearted ? '찜 해제' : '찜하기'}
           >
-            <Heart size={20} />
+            <Heart size={20} fill={hearted ? 'currentColor' : 'none'} />
           </button>
           <button
             onClick={handleShare}

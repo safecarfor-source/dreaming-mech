@@ -17,6 +17,7 @@ export default function HeroSection({ totalMechanics, totalClicks }: Props) {
           loop
           muted
           playsInline
+          preload="auto"
           poster="/hero-poster.jpg"
           className="w-full h-full object-cover"
         >

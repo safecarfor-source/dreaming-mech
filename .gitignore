@@ -81,4 +81,5 @@ backups/
 !backend/prisma/migrations/**/*.sql
 
 # SSL Certificates (Let's Encrypt)
-certbot/
+certbot/frontend/public/title_original.mp4
+.claude/worktrees/

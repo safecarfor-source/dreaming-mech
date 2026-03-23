@@ -7,7 +7,7 @@ import { ArrowLeft } from 'lucide-react';
 
 function KakaoButton() {
   const searchParams = useSearchParams();
-  const from = searchParams.get('from') ?? 'owner';
+  const from = searchParams.get('from') ?? 'pro';
 
   const kakaoLoginUrl = `${process.env.NEXT_PUBLIC_API_URL}/auth/kakao?from=${from}`;
 

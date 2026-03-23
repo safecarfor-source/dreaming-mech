@@ -197,4 +197,41 @@
 
 ---
 
-*마지막 업데이트: 2026-03-19 (502 사고 + 인센티브 구조 + 극동 동기화)*
+## 배포 캐시 교훈 (2026-03-21) 🚨 반복 발생
+
+### Docker BuildKit 캐시 = 배포 반영 안 됨
+1. **`--no-cache`만으로는 부족**: Dockerfile 레이어 캐시는 무시되지만 **BuildKit 내부 빌드 캐시**는 별도로 남아있음. `docker builder prune -af`로 완전 삭제 필요
+2. **배포 후 반영 안 되면 의심 순서**:
+   - ① 서버 소스코드 확인 (`grep` 으로 서버 파일 직접 확인)
+   - ② Docker 컨테이너 안의 빌드 결과 확인 (`docker exec ... cat`)
+   - ③ Nginx 캐시 삭제 (`sudo rm -rf /var/cache/nginx/*`)
+   - ④ BuildKit 캐시 삭제 (`docker builder prune -af`)
+   - ⑤ 브라우저 강제 새로고침 (Cmd+Shift+R)
+3. **프론트엔드 배포 안전 명령어 (정석)**:
+   ```bash
+   docker builder prune -af
+   docker compose -f docker-compose.prod.yml build --no-cache frontend
+   docker compose -f docker-compose.prod.yml up -d frontend --force-recreate
+   sudo rm -rf /var/cache/nginx/* && sudo nginx -s reload
+   ```
+4. **배포 후 반드시 직접 접속해서 확인**: 코드가 맞아도 캐시 때문에 반영 안 될 수 있음. Chrome에서 직접 페이지 열어서 눈으로 확인
+
+### 마이그레이션 권한 교훈 (P3009 사고)
+5. **`app_user`로 ALTER TABLE 불가**: CashFlow 테이블 소유자가 다르면 마이그레이션 실패 → 백엔드 무한 재시작 → 모든 API 죽음 → 로그인 불가
+6. **마이그레이션 전 테이블 소유권 확인**: `\dt "테이블명"` 으로 소유자 확인 → `ALTER TABLE OWNER TO migration_user` 선행
+7. **P3009 복구**: 실패한 마이그레이션을 수동 적용 후 `UPDATE _prisma_migrations SET finished_at=NOW(), applied_steps_count=1 WHERE migration_name='...'`
+
+### 인센티브 계산 로직 중복 (3곳 복사 사고)
+8. **같은 계산 로직이 3곳에 복사**: TeamService, ManagerService, DashboardService에 동일 로직 → 한 곳만 수정하면 나머지 불일치 → 숫자 오류
+9. **해결: CalcEngine 단일 소스**: 모든 계산은 `calc-engine.service.ts` 한 곳에만. 다른 서비스는 호출만
+
+## 오류 대응 루틴 (2026-03-21 제정) ⭐
+
+> 문제 발생 시 반드시 이 순서로 처리:
+> 1. **오류 파악** — 증상 확인 (스크린샷, 로그, 에러 메시지)
+> 2. **핵심 원인 (워크플로우 관점)** — 왜 이 문제가 발생했는지 근본 원인
+> 3. **비유적으로 대장에게 설명** — 정비소/군대 비유로 쉽게 설명
+> 4. **문제 해결** — 코드 수정 + 배포 + 직접 접속 확인
+> 5. **기록** — lessons.md에 기록하여 재발 방지
+
+*마지막 업데이트: 2026-03-21 (배포 캐시 + P3009 + CalcEngine + 오류 루틴)*

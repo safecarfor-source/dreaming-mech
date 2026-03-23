@@ -1,23 +1,29 @@
 'use client';
 
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { Suspense, useEffect, useState } from 'react';
 import { Shield, Phone, Clock, ArrowRight } from 'lucide-react';
 import { gtagEvent } from '@/lib/gtag-events';
 
 function LoginContent() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const error = searchParams.get('error');
   const from = searchParams.get('from');
   const apiUrl = process.env.NEXT_PUBLIC_API_URL;
   const [fromInquiry, setFromInquiry] = useState(false);
 
   useEffect(() => {
+    // 정비사용 from 파라미터이면 /pro/login으로 리다이렉트
+    if (from === 'owner' || from === 'pro') {
+      router.replace(`/pro/login?from=${from}`);
+      return;
+    }
     if (typeof window !== 'undefined') {
       const returnUrl = sessionStorage.getItem('mechanic_return_url');
       setFromInquiry(!!returnUrl);
     }
-  }, []);
+  }, [from, router]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-white via-purple-50/30 to-purple-100/40 flex items-center justify-center px-4 py-12">

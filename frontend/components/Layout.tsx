@@ -3,28 +3,63 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import BottomTabBar from './consumer/BottomTabBar';
+import { useUserStore } from '@/lib/auth';
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isForMechanics = pathname === '/for-mechanics';
+  const isPro = pathname?.startsWith('/pro');
+  const isConsumer = !isPro;
+  const { isAuthenticated, user } = useUserStore();
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
       {/* 상단 헤더 — 56px 고정, 심플 화이트 */}
       <header className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-[#E5E7EB]" style={{ height: '56px' }}>
         <div className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 h-full flex items-center justify-between">
-          {/* 로고 */}
-          <div className="flex items-center gap-3">
-            <Link href="/" className="flex items-center gap-1">
+          {/* 로고 + 사이트 탭 */}
+          <div className="flex items-center gap-0">
+            {/* 꿈꾸는정비사 탭 */}
+            <Link
+              href="/"
+              className="flex items-center gap-1 px-3 py-1.5 relative group"
+            >
               <span className="text-base md:text-lg font-extrabold tracking-tight text-[#111827]">
                 꿈꾸는<span className="text-[#E4015C]">정비사</span>
               </span>
+              {/* 소비자 탭 활성 밑줄 */}
+              {isConsumer && (
+                <span className="absolute bottom-0 left-3 right-3 h-[2px] bg-[#E4015C] rounded-full" />
+              )}
+            </Link>
+
+            {/* 구분선 */}
+            <div className="w-px h-4 bg-[#E5E7EB] mx-1" />
+
+            {/* PRO 탭 */}
+            <Link
+              href="/pro"
+              className="flex flex-col items-start px-3 py-1.5 relative group"
+            >
+              <span
+                className="text-base md:text-lg font-black tracking-widest leading-none"
+                style={{ color: '#D4AF37' }}
+              >
+                PRO
+              </span>
+              <span className="text-[10px] leading-none font-medium text-[#9CA3AF] mt-0.5">
+                정비사 전용
+              </span>
+              {/* PRO 탭 활성 밑줄 */}
+              {isPro && (
+                <span className="absolute bottom-0 left-3 right-3 h-[2px] rounded-full" style={{ backgroundColor: '#D4AF37' }} />
+              )}
             </Link>
 
             {/* 정비사 전용 뱃지 — for-mechanics 페이지에서만 노출 */}
             {isForMechanics && (
               <>
-                <div className="w-px h-4 bg-[#E5E7EB]" />
+                <div className="w-px h-4 bg-[#E5E7EB] mx-1" />
                 <Link
                   href="/"
                   className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#E4015C] text-white"
@@ -56,6 +91,23 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             >
               정비사 사장님
             </Link>
+            {/* 로그인 / 내 정보 버튼 */}
+            {isAuthenticated && user ? (
+              <Link
+                href="/mypage"
+                className="ml-1 flex items-center gap-1.5 px-4 py-2 text-sm font-semibold text-[#E4015C] bg-[#FFF0F5] hover:bg-[#FFE0EC] transition-colors duration-150 rounded-lg"
+              >
+                <span className="text-base leading-none">👤</span>
+                내 정보
+              </Link>
+            ) : (
+              <Link
+                href="/login"
+                className="ml-1 px-4 py-2 text-sm font-semibold text-white bg-[#E4015C] hover:bg-[#C70150] transition-colors duration-150 rounded-lg"
+              >
+                로그인
+              </Link>
+            )}
           </nav>
         </div>
       </header>

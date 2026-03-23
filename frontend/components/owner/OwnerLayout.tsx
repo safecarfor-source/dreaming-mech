@@ -59,20 +59,10 @@ export default function OwnerLayout({ children }: Props) {
     }
   }, [isHydrated, isAuthenticated, router]);
 
-  // PENDING + 사업자 미제출 → /owner/mechanics 직접 접근 시 onboarding으로 리다이렉트
+  // PENDING 상태 관련 플래그 (리다이렉트 없이 대시보드/매장 등록 접근 허용)
   const isPending = user?.businessStatus === 'PENDING';
   const needsBusinessInfo = isPending && !user?.businessLicenseUrl;
   const waitingApproval = isPending && !!user?.businessLicenseUrl;
-
-  useEffect(() => {
-    if (isPending && pathname?.startsWith('/owner/mechanics')) {
-      if (needsBusinessInfo) {
-        router.replace('/owner/onboarding');
-      } else {
-        router.replace('/owner');
-      }
-    }
-  }, [isPending, needsBusinessInfo, pathname, router]);
 
   const handleLogout = async () => {
     try {
@@ -368,36 +358,7 @@ export default function OwnerLayout({ children }: Props) {
           <nav className="space-y-2">
             {menuItems.map((item) => {
               const isActive = pathname === item.href;
-              // PENDING + 매장 관리: 사업자 정보 미제출이면 제출 유도, 제출 완료면 승인 대기
-              const isMechanicsMenu = isPending && item.href === '/owner/mechanics';
-              if (isMechanicsMenu) {
-                const hasSubmitted = !!user?.businessLicenseUrl;
-                if (!hasSubmitted) {
-                  return (
-                    <Link
-                      key={item.href}
-                      href="/owner/onboarding"
-                      onClick={() => setSidebarOpen(false)}
-                      className="flex items-center gap-3 px-4 py-3 rounded-xl text-amber-400 hover:bg-amber-500/10 transition-colors"
-                    >
-                      <item.icon size={20} />
-                      <span>사업자 정보 제출</span>
-                      <span className="ml-auto text-xs bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded animate-pulse">제출 필요</span>
-                    </Link>
-                  );
-                }
-                return (
-                  <div
-                    key={item.href}
-                    title="관리자 승인 후 이용 가능합니다"
-                    className="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 cursor-not-allowed opacity-50"
-                  >
-                    <item.icon size={20} />
-                    <span>{item.label}</span>
-                    <span className="ml-auto text-xs bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded">승인 대기</span>
-                  </div>
-                );
-              }
+              // PENDING 상태에서도 매장 관리 메뉴 접근 허용
               return (
                 <Link
                   key={item.href}
