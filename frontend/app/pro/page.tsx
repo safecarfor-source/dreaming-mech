@@ -183,6 +183,12 @@ export default function ProPage() {
             >
               이미 가입하셨나요? 로그인
             </a>
+            <a
+              href="/"
+              className="text-center text-sm text-white/30 hover:text-white/50 transition-colors py-1"
+            >
+              일반 고객이신가요? 소비자 페이지로 →
+            </a>
           </motion.div>
         </div>
       </section>
