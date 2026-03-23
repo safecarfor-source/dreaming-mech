@@ -22,7 +22,7 @@ export default function BottomTabBar() {
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-[#E5E7EB] md:hidden"
+      className="fixed bottom-0 left-0 right-0 z-50 bg-[#E8E4DC] border-t border-[#D5D0C8] md:hidden"
       style={{ height: '56px' }}
     >
       <div className="flex items-center justify-around h-full max-w-lg mx-auto">

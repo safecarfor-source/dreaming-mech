@@ -266,7 +266,7 @@ export default function ShopDetailClient({ slug }: Props) {
           <>
             <div className="px-5 py-6">
               <h3 className="text-[20px] font-bold text-gray-900 mb-4 text-center">소개</h3>
-              <p className="text-[17px] md:text-[18px] leading-[1.7] text-gray-600 text-center">
+              <p className="text-[17px] md:text-[18px] leading-[1.7] text-gray-600 text-center whitespace-pre-line">
                 {sanitizeBasicHTML(mechanic.description)}
               </p>
             </div>
