@@ -100,22 +100,11 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         </div>
       </header>
 
-      {/* 모바일 정비 Q&A 배너 */}
-      <div className="md:hidden fixed top-[56px] left-0 right-0 z-40 bg-[#FFF0F5] border-b border-[#FFE0EC]">
-        <Link
-          href="/community"
-          className="flex items-center justify-center gap-2 py-2 text-sm font-semibold text-[#E4015C]"
-        >
-          <span>🔧</span>
-          정비 Q&A — 궁금한 점을 물어보세요!
-          <span className="text-xs">→</span>
-        </Link>
-      </div>
+      {/* Q&A 배너 제거됨 — PRO 헤더에 통합 */}
 
       {/* 헤더 높이만큼 상단 여백 + 모바일 탭바 높이만큼 하단 여백 */}
       <main className="flex-1 pt-[56px] md:pt-[56px] pb-[72px] md:pb-0">
-        {/* 모바일 Q&A 배너 높이만큼 추가 여백 */}
-        <div className="h-[40px] md:hidden" />
+        {/* Q&A 배너 제거됨 */}
         {children}
       </main>
 
