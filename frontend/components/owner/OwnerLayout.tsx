@@ -402,20 +402,21 @@ export default function OwnerLayout({ children }: Props) {
       </aside>
 
       <div className="lg:ml-64">
-        <header className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-          <button
-            onClick={() => setSidebarOpen(true)}
-            className="lg:hidden text-gray-600 hover:text-gray-900"
-          >
-            <Menu size={24} />
-          </button>
+        {/* 모바일 상단 헤더 */}
+        <header className="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between lg:px-6 lg:py-4">
+          <div className="flex items-center gap-2">
+            <Link href="/owner" className="text-base font-extrabold tracking-tight lg:hidden">
+              <span className="text-[#7C4DFF]">꿈꾸는</span><span className="text-[#111]">정비사</span>
+            </Link>
+            <button
+              onClick={() => setSidebarOpen(true)}
+              className="lg:hidden text-gray-600 hover:text-gray-900 hidden"
+            >
+              <Menu size={24} />
+            </button>
+          </div>
           <div className="flex items-center gap-2 text-sm text-gray-500">
             {user?.name || user?.nickname || '사장님'}
-            {user?.provider && (
-              <span className="text-xs text-purple-500 bg-purple-50 px-2 py-0.5 rounded-full">
-                {user.provider === 'naver' ? '네이버' : '카카오'}
-              </span>
-            )}
             {isPending && (
               <span className="text-xs text-amber-600 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full flex items-center gap-1">
                 <Clock size={11} />
@@ -425,11 +426,47 @@ export default function OwnerLayout({ children }: Props) {
           </div>
         </header>
 
-        <main className={`p-6 ${needsBusinessInfo ? 'pb-24' : waitingApproval ? 'pb-20' : ''}`}>{children}</main>
+        <main className={`p-4 lg:p-6 pb-[140px] lg:pb-6 ${needsBusinessInfo ? 'pb-[180px]' : waitingApproval ? 'pb-[160px]' : ''}`}>{children}</main>
+
+        {/* 모바일 하단 탭바 */}
+        <nav
+          className="fixed bottom-0 left-0 right-0 z-40 bg-[#E8E4DC] border-t border-[#D5D0C8] lg:hidden"
+          style={{ height: '56px' }}
+        >
+          <div className="flex items-center justify-around h-full max-w-lg mx-auto">
+            {menuItems.map((item) => {
+              const isActive = pathname === item.href;
+              const Icon = item.icon;
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`flex flex-col items-center justify-center gap-1 flex-1 h-full transition-colors ${
+                    isActive ? 'text-[#7C4DFF]' : 'text-[#9CA3AF]'
+                  }`}
+                >
+                  <Icon size={22} strokeWidth={isActive ? 2.5 : 2} />
+                  <span className={`text-[11px] leading-none ${isActive ? 'font-semibold' : 'font-normal'}`}>
+                    {item.label}
+                  </span>
+                </Link>
+              );
+            })}
+            {/* 로그아웃 탭 */}
+            <button
+              onClick={handleLogout}
+              className="flex flex-col items-center justify-center gap-1 flex-1 h-full transition-colors text-[#9CA3AF]"
+            >
+              <LogOut size={22} strokeWidth={2} />
+              <span className="text-[11px] leading-none font-normal">로그아웃</span>
+            </button>
+          </div>
+          <div className="h-[env(safe-area-inset-bottom)]" />
+        </nav>
 
         {/* 플로팅 배너: 사업자 정보 미제출 */}
         {needsBusinessInfo && pathname !== '/owner/onboarding' && (
-          <div className="fixed bottom-0 left-0 right-0 lg:left-64 z-30">
+          <div className="fixed bottom-[56px] lg:bottom-0 left-0 right-0 lg:left-64 z-30">
             <div className="bg-gradient-to-r from-[#7C4DFF] to-[#6B3FE0] text-white px-4 py-3 shadow-lg">
               <Link
                 href="/owner/onboarding"
@@ -455,7 +492,7 @@ export default function OwnerLayout({ children }: Props) {
 
         {/* 플로팅 배너: 승인 대기 중 */}
         {waitingApproval && (
-          <div className="fixed bottom-0 left-0 right-0 lg:left-64 z-30">
+          <div className="fixed bottom-[56px] lg:bottom-0 left-0 right-0 lg:left-64 z-30">
             <div className="bg-amber-50 border-t border-amber-200 text-amber-800 px-4 py-3">
               <div className="flex items-center justify-center gap-2 max-w-2xl mx-auto">
                 <Clock size={16} className="text-amber-500" />

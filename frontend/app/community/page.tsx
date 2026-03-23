@@ -5,7 +5,8 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import Layout from '@/components/Layout';
 import { communityApi } from '@/lib/api';
-import { MessageCircle, Heart, Eye, PenSquare, ChevronRight } from 'lucide-react';
+import { useUserStore } from '@/lib/auth';
+import { MessageCircle, Heart, Eye, PenSquare, ChevronRight, X } from 'lucide-react';
 
 const CATEGORIES = [
   { value: 'ALL', label: '전체' },
@@ -41,6 +42,8 @@ interface PostItem {
 
 export default function CommunityPage() {
   const router = useRouter();
+  const { isAuthenticated } = useUserStore();
+  const [showLoginModal, setShowLoginModal] = useState(false);
   const [posts, setPosts] = useState<PostItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [category, setCategory] = useState('ALL');
@@ -112,13 +115,19 @@ export default function CommunityPage() {
                 <h1 className="text-2xl md:text-3xl font-black text-gray-900">정비 Q&A</h1>
                 <p className="text-gray-500 text-sm mt-1">정비사와 고객이 함께 만드는 자동차 정비 커뮤니티</p>
               </div>
-              <Link
-                href="/community/write"
+              <button
+                onClick={() => {
+                  if (!isAuthenticated) {
+                    setShowLoginModal(true);
+                  } else {
+                    router.push('/community/write');
+                  }
+                }}
                 className="flex items-center gap-2 bg-consumer-500 text-white px-3 py-2 md:px-5 md:py-2.5 text-sm md:text-base rounded-xl font-semibold hover:bg-consumer-600 transition-colors shadow-sm whitespace-nowrap"
               >
                 <PenSquare size={16} />
                 글쓰기
-              </Link>
+              </button>
             </div>
 
             {/* 카테고리 필터 */}
@@ -203,6 +212,43 @@ export default function CommunityPage() {
           )}
         </div>
       </div>
+
+      {/* 로그인 모달 */}
+      {showLoginModal && (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 px-6"
+          onClick={() => setShowLoginModal(false)}
+        >
+          <div
+            className="bg-white rounded-2xl w-full max-w-sm p-8 flex flex-col items-center gap-4 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="text-[22px] font-black tracking-tight mb-1">
+              <span className="text-[#1F2937]">꿈꾸는</span>
+              <span className="text-[#E4015C]">정비사</span>
+            </div>
+            <p className="text-[16px] text-gray-700 font-medium text-center leading-[1.7]">
+              글쓰기는 로그인이 필요합니다
+            </p>
+            <button
+              onClick={() => {
+                const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
+                window.location.href = `${apiUrl}/auth/kakao`;
+              }}
+              className="w-full flex items-center justify-center gap-2 bg-[#FEE500] hover:bg-[#F5DC00] text-[#191919] font-bold rounded-xl py-3.5 text-[16px] transition-colors mt-1"
+            >
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path fillRule="evenodd" clipRule="evenodd" d="M10 2C5.582 2 2 4.866 2 8.4c0 2.21 1.388 4.154 3.493 5.275L4.6 17.1a.25.25 0 0 0 .363.281L9.19 14.77c.269.02.539.03.81.03 4.418 0 8-2.866 8-6.4S14.418 2 10 2z" fill="#191919"/></svg>
+              카카오로 1초 로그인
+            </button>
+            <button
+              onClick={() => setShowLoginModal(false)}
+              className="text-[14px] text-gray-400 hover:text-gray-600 transition-colors mt-1"
+            >
+              취소
+            </button>
+          </div>
+        </div>
+      )}
     </Layout>
   );
 }
