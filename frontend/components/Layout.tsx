@@ -71,6 +71,17 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             )}
           </div>
 
+          {/* 모바일 정비 Q&A 링크 */}
+          <div className="flex md:hidden items-center">
+            <Link
+              href="/community"
+              className="text-sm font-semibold"
+              style={{ color: '#E4015C' }}
+            >
+              정비 Q&A
+            </Link>
+          </div>
+
           {/* 데스크톱 네비게이션 — 모바일 햄버거 없음 (하단 탭바가 대체) */}
           <nav className="hidden md:flex items-center gap-1">
             <Link
