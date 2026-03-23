@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { MapPin, Share2, ChevronLeft, ChevronRight, BadgeCheck, Phone } from 'lucide-react';
+import { MapPin, Share2, ChevronLeft, ChevronRight, BadgeCheck, Phone, Heart } from 'lucide-react';
 import { mechanicsApi } from '@/lib/api';
 import { sanitizeText, sanitizeBasicHTML, sanitizePhone } from '@/lib/sanitize';
 import { gtagEvent } from '@/lib/gtag-events';
@@ -14,7 +14,7 @@ import ReviewSection from '@/components/mechanic-detail/ReviewSection';
 import QuickInfoRow from '@/components/mechanic-detail/QuickInfoRow';
 import YouTubeEmbed from '@/components/YouTubeEmbed';
 import NaverMapView from '@/components/NaverMapView';
-import PhoneRevealBlock from './PhoneRevealBlock';
+import { useUserStore } from '@/lib/auth';
 
 interface Props {
   slug: string;
@@ -22,6 +22,7 @@ interface Props {
 
 export default function ShopDetailClient({ slug }: Props) {
   const router = useRouter();
+  const { isAuthenticated } = useUserStore();
   const [mechanic, setMechanic] = useState<Mechanic | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
@@ -99,7 +100,18 @@ export default function ShopDetailClient({ slug }: Props) {
   }
   const hasGallery = galleryImages.length > 0;
 
+  // 로그인 필요 시 카카오 로그인 유도
+  const requireLogin = (): boolean => {
+    if (isAuthenticated) return true;
+    const confirmed = window.confirm('로그인이 필요합니다. 카카오로 로그인하시겠습니까?');
+    if (confirmed) {
+      window.location.href = '/login';
+    }
+    return false;
+  };
+
   const handleShare = async () => {
+    if (!requireLogin()) return;
     const shareData = {
       title: `${mechanic.name} — 꿈꾸는정비사 검증 정비소`,
       text: `${mechanic.location} ${mechanic.name}을 확인해보세요!`,
@@ -111,6 +123,17 @@ export default function ShopDetailClient({ slug }: Props) {
       await navigator.clipboard.writeText(window.location.href).catch(() => {});
       alert('링크가 복사되었습니다.');
     }
+  };
+
+  const handlePhone = () => {
+    if (!requireLogin()) return;
+    gtagEvent.mechanicPhoneReveal(mechanic.id, mechanic.name);
+    window.location.href = `tel:${sanitizePhone(mechanic.phone)}`;
+  };
+
+  const handleHeart = () => {
+    if (!requireLogin()) return;
+    alert('준비 중입니다.');
   };
 
   return (
@@ -251,15 +274,6 @@ export default function ShopDetailClient({ slug }: Props) {
           </div>
         </div>
 
-        {/* 전화번호 */}
-        <div className="px-5 py-5 border-b border-gray-100">
-          <PhoneRevealBlock
-            mechanicId={mechanic.id}
-            mechanicName={mechanic.name}
-            phone={sanitizePhone(mechanic.phone)}
-          />
-        </div>
-
         {/* 구분선 */}
         <div className="h-2.5 bg-gray-50" />
 
@@ -372,19 +386,26 @@ export default function ShopDetailClient({ slug }: Props) {
       <div className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-[#E5E7EB] px-4 py-3 md:hidden">
         <div className="flex items-center gap-3 max-w-lg mx-auto">
           <button
+            onClick={handleHeart}
+            className="flex items-center justify-center w-11 h-11 rounded-xl border border-[#E5E7EB] text-[#9CA3AF] hover:text-[#E4015C] hover:border-[#E4015C] transition-colors"
+            aria-label="찜하기"
+          >
+            <Heart size={20} />
+          </button>
+          <button
             onClick={handleShare}
-            className="flex items-center justify-center w-11 h-11 rounded-xl border border-[#E5E7EB] text-[#9CA3AF]"
+            className="flex items-center justify-center w-11 h-11 rounded-xl border border-[#E5E7EB] text-[#9CA3AF] hover:text-[#E4015C] hover:border-[#E4015C] transition-colors"
+            aria-label="공유"
           >
             <Share2 size={20} />
           </button>
-          <a
-            href={`tel:${sanitizePhone(mechanic.phone)}`}
-            onClick={() => gtagEvent.mechanicPhoneReveal(mechanic.id, mechanic.name)}
+          <button
+            onClick={handlePhone}
             className="flex-1 flex items-center justify-center gap-2 bg-[#E4015C] hover:bg-[#C70150] text-white rounded-xl h-11 text-[16px] font-semibold transition-colors"
           >
             <Phone size={18} />
             전화하기
-          </a>
+          </button>
         </div>
         <div className="h-[env(safe-area-inset-bottom)]" />
       </div>
