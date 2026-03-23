@@ -21,5 +21,6 @@
       "runtimeArgs": ["/tmp/mission-control-server.js"],
       "port": 5555
     }
-  ]
+  ],
+  "autoVerify": false
 }
