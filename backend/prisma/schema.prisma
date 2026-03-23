@@ -704,12 +704,25 @@ model CashFlow {
 
 // ========================================
 // 🔧 극동(PsimCarS) 데이터 모델
+// A/B 시소 슬롯 시스템: 모든 GD 테이블에 slot 컬럼
+// 활성 슬롯(A or B)만 서비스, 비활성 슬롯에 새 데이터 기록 후 전환
 // ========================================
+
+// 슬롯 설정 (A/B 시소 제어)
+model GdSlotConfig {
+  id            Int       @id @default(1)
+  activeSlot    String    @default("A")    // "A" | "B" — 현재 서비스 중인 슬롯
+  lastSyncAt    DateTime?                  // 마지막 동기화 시각
+  lastSyncSlot  String?                    // 마지막으로 데이터 쓴 슬롯
+  switchCount   Int       @default(0)      // 전환 횟수 (모니터링)
+  updatedAt     DateTime  @updatedAt
+}
 
 // 거래처 (극동 CUSTOMS 테이블)
 model GdCustomer {
   id            Int       @id @default(autoincrement())
-  code          String    @unique          // 극동 거래처 코드
+  code          String                     // 극동 거래처 코드
+  slot          String    @default("A")    // A/B 시소 슬롯
   name          String                     // 업체명
   ceo           String?                    // 대표자
   phone         String?                    // 전화번호
@@ -724,6 +737,8 @@ model GdCustomer {
 
   sales         GdSaleDetail[]
 
+  @@unique([code, slot])
+  @@index([slot])
   @@index([name])
   @@index([bizNumber])
   @@index([phone])
@@ -732,7 +747,8 @@ model GdCustomer {
 // 차량/고객 (극동 ASCUST 테이블)
 model GdVehicle {
   id            Int       @id @default(autoincrement())
-  code          String    @unique          // 극동 차량 코드
+  code          String                     // 극동 차량 코드
+  slot          String    @default("A")    // A/B 시소 슬롯
   plateNumber   String?                    // 차량번호 (IDNO)
   ownerName     String?                    // 고객명/차량명
   rep           String?                    // 담당자
@@ -749,8 +765,9 @@ model GdVehicle {
   updatedAt     DateTime  @updatedAt
 
   repairs       GdRepair[]
-  reminders     CustomerReminder[]
 
+  @@unique([code, slot])
+  @@index([slot])
   @@index([plateNumber])
   @@index([ownerName])
   @@index([phone])
@@ -760,7 +777,8 @@ model GdVehicle {
 // 상품 (극동 GOODS 테이블)
 model GdProduct {
   id            Int       @id @default(autoincrement())
-  code          String    @unique          // 극동 상품 코드
+  code          String                     // 극동 상품 코드
+  slot          String    @default("A")    // A/B 시소 슬롯
   name          String                     // 상품명
   altName       String?                    // 별칭 (XNAME)
   unit          String?                    // 단위 (EA, 리터 등)
@@ -777,6 +795,8 @@ model GdProduct {
 
   saleDetails   GdSaleDetail[]
 
+  @@unique([code, slot])
+  @@index([slot])
   @@index([name])
   @@index([code])
 }
@@ -785,21 +805,22 @@ model GdProduct {
 model GdSaleDetail {
   id            Int       @id @default(autoincrement())
   fno           String                     // 전표번호
+  slot          String    @default("A")    // A/B 시소 슬롯
   saleDate      String                     // 거래일자 (YYYY-MM-DD)
   saleType      String?                    // 입출고 구분 (1=입고, 2=판매, 3=반품)
   customerCode  String                     // 거래처 코드
-  customer      GdCustomer @relation(fields: [customerCode], references: [code])
+  customer      GdCustomer @relation(fields: [customerCode, slot], references: [code, slot])
   productCode   String                     // 상품 코드
-  product       GdProduct  @relation(fields: [productCode], references: [code])
+  product       GdProduct  @relation(fields: [productCode, slot], references: [code, slot])
   productName   String?                    // 품목명
   qty           Float      @default(0)     // 수량
   unitPrice     Float      @default(0)     // 단가
   amount        Float      @default(0)     // 금액
   createdAt     DateTime   @default(now())
 
-  @@index([saleDate])
-  @@index([customerCode])
-  @@index([productCode])
+  @@index([slot, saleDate])
+  @@index([slot, customerCode])
+  @@index([slot, productCode])
   @@index([customerCode, saleDate])
   @@index([fno])
 }
@@ -808,8 +829,9 @@ model GdSaleDetail {
 model GdRepair {
   id            Int        @id @default(autoincrement())
   fno           String?                    // 작업번호
+  slot          String     @default("A")   // A/B 시소 슬롯
   vehicleCode   String?                    // 거래처/차량 코드 (DATAS.CUST)
-  vehicle       GdVehicle? @relation(fields: [vehicleCode], references: [code])
+  vehicle       GdVehicle? @relation(fields: [vehicleCode, slot], references: [code, slot])
   customerCode  String?                    // 거래처 코드 (DATAS 원본 CUST)
   repairDate    String?                    // 날짜 (YYYY-MM-DD)
   productCode   String?                    // 상품 코드
@@ -822,17 +844,17 @@ model GdRepair {
   memo          String?                    // 비고
   createdAt     DateTime   @default(now())
 
-  @@index([vehicleCode])
-  @@index([customerCode])
-  @@index([repairDate])
+  @@index([slot, vehicleCode])
+  @@index([slot, customerCode])
+  @@index([slot, repairDate])
   @@index([vehicleCode, repairDate])
 }
 
 // 고객 리마인더 (자동 알림 시스템)
+// 슬롯과 무관 — 차량코드로 검색 시 활성 슬롯의 GdVehicle과 조인
 model CustomerReminder {
   id            Int       @id @default(autoincrement())
-  vehicleCode   String                     // 차량 코드 (GdVehicle.code)
-  vehicle       GdVehicle @relation(fields: [vehicleCode], references: [code])
+  vehicleCode   String                     // 차량 코드 (GdVehicle.code, 슬롯 무관)
   reminderType  String                     // "oil_change" | "tire_rotation" | "no_visit_3m" | "no_visit_6m" | "inspection" | "custom"
   dueDate       DateTime                   // 알림 예정일
   status        String    @default("pending") // "pending" | "sent" | "completed" | "dismissed"
@@ -850,10 +872,12 @@ model CustomerReminder {
 // 동기화 이력 (극동 데이터 임포트 기록)
 model GdSyncLog {
   id            Int       @id @default(autoincrement())
-  syncType      String                     // "full" | "incremental"
-  tableName     String                     // 동기화한 테이블명
+  syncType      String                     // "full" | "incremental" | "close"
+  tableName     String                     // 동기화한 테이블명 ("all" | 개별 테이블)
+  slot          String?                    // 임포트된 슬롯 ("A" | "B")
   rowCount      Int       @default(0)      // 처리 건수
   status        String    @default("running") // "running" | "completed" | "failed"
+  sourceHash    String?                    // GDB 파일 MD5 (중복 방지)
   errorMessage  String?   @db.Text
   startedAt     DateTime  @default(now())
   completedAt   DateTime?

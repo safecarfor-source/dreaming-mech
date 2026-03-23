@@ -1,0 +1,13 @@
+# 극동 GDB → PostgreSQL 동기화 서버 데몬 의존성
+# Ubuntu EC2 설치: pip3 install -r requirements-server.txt
+
+# PostgreSQL 클라이언트
+psycopg2-binary>=2.9.9
+
+# Firebird GDB 파싱 (극동 ERP)
+# Ubuntu에서 libfbclient2 패키지가 먼저 설치되어야 함:
+#   sudo apt-get install -y libfbclient2
+fdb>=2.0.2
+
+# Telegram 알림
+requests>=2.31.0

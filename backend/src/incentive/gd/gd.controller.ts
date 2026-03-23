@@ -1,11 +1,24 @@
-import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Param,
+  Query,
+  UseGuards,
+  InternalServerErrorException,
+  Logger,
+} from '@nestjs/common';
 import { GdService } from './gd.service';
-import { IncentiveJwtGuard } from '../guards/incentive-auth.guard';
+import { IncentiveJwtGuard, RolesGuard } from '../guards/incentive-auth.guard';
+import { Roles } from '../guards/roles.decorator';
 import { todayKST } from '../utils/kst';
+import { spawn } from 'child_process';
 
 @Controller('incentive/gd')
 @UseGuards(IncentiveJwtGuard)
 export class GdController {
+  private readonly logger = new Logger(GdController.name);
+
   constructor(private gdService: GdService) {}
 
   @Get('vehicles')
@@ -63,7 +76,6 @@ export class GdController {
     @Query('startDate') startDate: string,
     @Query('endDate') endDate: string,
   ) {
-    // 기본값: 이번 달 1일 ~ 오늘 (KST 기준)
     const today = todayKST();
     const defaultStart = today.slice(0, 7) + '-01';
     const defaultEnd = today;
@@ -81,5 +93,42 @@ export class GdController {
   @Get('sync-status')
   getSyncStatus() {
     return this.gdService.getSyncStatus();
+  }
+
+  // ─── 슬롯 현황 조회 ─────────────────────────────────────────────────────────
+  // GET /incentive/gd/slot-status
+  @Get('slot-status')
+  getSlotStatus() {
+    return this.gdService.getSlotStatus();
+  }
+
+  // ─── 동기화 수동 트리거 (admin 전용) ─────────────────────────────────────────
+  // POST /incentive/gd/trigger-sync
+  @Post('trigger-sync')
+  @UseGuards(RolesGuard)
+  @Roles('admin')
+  triggerSync(): Promise<{ message: string }> {
+    return new Promise((resolve, reject) => {
+      // gd_sync_server.py --trigger 를 subprocess로 실행
+      const child = spawn('python3', ['gd_sync_server.py', '--trigger'], {
+        cwd: process.env.GD_SYNC_DIR || '/home/ubuntu/dreaming-mech/sync',
+        detached: true,
+        stdio: 'ignore',
+      });
+
+      child.on('error', (err) => {
+        this.logger.error(`sync trigger 실패: ${err.message}`);
+        reject(new InternalServerErrorException('동기화 트리거 실행 실패'));
+      });
+
+      // 프로세스가 정상 스폰되면 즉시 응답 (백그라운드 실행)
+      child.unref();
+
+      // 슬롯 캐시 무효화 (새 데이터 반영을 위해)
+      this.gdService.invalidateSlotCache();
+
+      this.logger.log('동기화 트리거 요청 수신 → gd_sync_server.py --trigger 실행');
+      resolve({ message: '동기화 트리거가 백그라운드에서 시작되었습니다.' });
+    });
   }
 }
