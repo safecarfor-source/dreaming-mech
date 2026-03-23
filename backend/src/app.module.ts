@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { ScheduleModule } from '@nestjs/schedule';
 import { APP_GUARD } from '@nestjs/core';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -24,9 +25,12 @@ import { TrackingLinkModule } from './tracking-link/tracking-link.module';
 import { CommunityModule } from './community/community.module';
 import { IncentiveModule } from './incentive/incentive.module';
 import { ErpModule } from './erp/erp.module';
+import { TasksModule } from './tasks/tasks.module';
 
 @Module({
   imports: [
+    // 스케줄러 (Cron Job)
+    ScheduleModule.forRoot(),
     // Rate Limiting: 개발 환경에서는 완화, 프로덕션에서는 엄격
     ThrottlerModule.forRoot([
       {
@@ -55,6 +59,7 @@ import { ErpModule } from './erp/erp.module';
     CommunityModule,
     IncentiveModule,
     ErpModule,
+    TasksModule,
   ],
   controllers: [AppController],
   providers: [

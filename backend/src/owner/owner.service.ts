@@ -826,6 +826,43 @@ export class OwnerService {
     return { success: true, message: '회원이 삭제되었습니다' };
   }
 
+  // ── 관리자용: 사업자등록증 미승인(PENDING) 목록 조회 ──
+
+  async getPendingApprovalUsers() {
+    const now = Date.now();
+
+    const users = await this.prisma.user.findMany({
+      where: { businessStatus: 'PENDING' },
+      orderBy: { updatedAt: 'asc' }, // 오래된 순서 먼저
+      select: {
+        id: true,
+        email: true,
+        nickname: true,
+        profileImage: true,
+        businessName: true,
+        businessLicenseUrl: true,
+        phone: true,
+        address: true,
+        isProtected: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+
+    return users.map((u) => ({
+      ...u,
+      // updatedAt 기준 제출일 경과일수 (사업자 정보 제출 시 updatedAt 갱신)
+      submittedAt: u.updatedAt,
+      daysElapsedSinceSubmission: Math.floor(
+        (now - u.updatedAt.getTime()) / (24 * 60 * 60 * 1000),
+      ),
+      // 가입일 기준 가입 경과일수
+      daysElapsedSinceSignup: Math.floor(
+        (now - u.createdAt.getTime()) / (24 * 60 * 60 * 1000),
+      ),
+    }));
+  }
+
   // ── 관리자용: 배지 통합 조회 ──
 
   async getAdminBadges() {

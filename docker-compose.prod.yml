@@ -26,6 +26,7 @@ services:
         max-file: "3"
 
   backend:
+    image: dreaming-mech-backend:latest
     build:
       context: ./backend
       dockerfile: Dockerfile
@@ -81,6 +82,7 @@ services:
         max-file: "3"
 
   frontend:
+    image: dreaming-mech-frontend:latest
     build:
       context: ./frontend
       dockerfile: Dockerfile

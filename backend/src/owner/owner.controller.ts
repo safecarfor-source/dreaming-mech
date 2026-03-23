@@ -38,6 +38,12 @@ export class AdminOwnerController {
     return this.ownerService.findAll(status);
   }
 
+  // GET /admin/users/pending-approval — 사업자등록증 미승인 유저 목록
+  @Get('pending-approval')
+  getPendingApproval() {
+    return this.ownerService.getPendingApprovalUsers();
+  }
+
   @Get(':id')
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.ownerService.findOne(id);
