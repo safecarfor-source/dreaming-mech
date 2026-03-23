@@ -23,7 +23,19 @@ export class OwnerService {
   // ── 관리자용: 사용자 목록 (businessStatus 필터 지원) ──
 
   async findAll(status?: string) {
-    const where = status ? { businessStatus: status as any } : {};
+    let where: any = {};
+
+    if (status === 'DEACTIVATED') {
+      // 탈퇴 탭: deactivatedAt이 있는 유저
+      where = { deactivatedAt: { not: null } };
+    } else if (status) {
+      // 특정 상태 필터: 탈퇴 회원 제외
+      where = { businessStatus: status as any, deactivatedAt: null };
+    } else {
+      // 전체 탭: 탈퇴 회원 제외
+      where = { deactivatedAt: null };
+    }
+
     return this.prisma.user.findMany({
       where,
       orderBy: { updatedAt: 'desc' },

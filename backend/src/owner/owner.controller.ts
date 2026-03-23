@@ -34,7 +34,7 @@ export class AdminOwnerController {
   constructor(private ownerService: OwnerService) {}
 
   @Get()
-  findAll(@Query('status') status?: string) {
+  findAll(@Query('businessStatus') status?: string) {
     return this.ownerService.findAll(status);
   }
 

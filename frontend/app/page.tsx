@@ -2,10 +2,11 @@
 
 import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Phone } from 'lucide-react';
+import { Phone, X } from 'lucide-react';
 import Link from 'next/link';
 import { mechanicsApi } from '@/lib/api';
 import { generateSlug } from '@/lib/slug';
+import { useUserStore } from '@/lib/auth';
 import Layout from '@/components/Layout';
 import HeroSection from '@/components/HeroSection';
 import MechanicCard from '@/components/MechanicCard';
@@ -31,10 +32,24 @@ function InquiryStatusChecker({ setShowSuccess }: { setShowSuccess: (v: boolean)
 
 function HomeContent() {
   const router = useRouter();
+  const { isAuthenticated } = useUserStore();
   const [mechanics, setMechanics] = useState<Mechanic[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
+
+  const handleInquiryClick = (e: React.MouseEvent) => {
+    if (!isAuthenticated) {
+      e.preventDefault();
+      setShowLoginModal(true);
+    }
+  };
+
+  const handleKakaoLogin = () => {
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
+    window.location.href = `${apiUrl}/auth/kakao`;
+  };
 
   const fetchMechanics = async () => {
     try {
@@ -109,15 +124,28 @@ function HomeContent() {
             </div>
           )}
 
-          {/* 정비사 등록 유도 */}
+          {/* 정비사 등록 유도 배너 */}
           {!loading && !error && mechanics.length > 0 && (
-            <div className="mt-8 text-center">
+            <div className="mt-8">
               <a
-                href="/pro/"
-                className="inline-flex items-center gap-2 text-[#E4015C] text-[15px] font-semibold
-                  hover:underline hover:text-[#6D3FE0] transition-colors"
+                href="/pro"
+                className="flex items-center justify-between gap-4 rounded-2xl px-6 py-5 transition-opacity hover:opacity-90"
+                style={{ backgroundColor: '#1A1A1A' }}
               >
-                정비사 사장님이신가요? 내 정비소 등록하기 →
+                <div>
+                  <p className="text-[15px] font-bold leading-snug" style={{ color: '#D4A843' }}>
+                    정비사 사장님이신가요?
+                  </p>
+                  <p className="text-[13px] text-white/80 mt-0.5">
+                    검증된 플랫폼에 내 정비소를 등록하세요
+                  </p>
+                </div>
+                <span
+                  className="flex-shrink-0 text-[13px] font-bold px-4 py-2 rounded-xl whitespace-nowrap"
+                  style={{ backgroundColor: '#D4A843', color: '#1A1A1A' }}
+                >
+                  무료 등록하기 →
+                </span>
               </a>
             </div>
           )}
@@ -135,6 +163,7 @@ function HomeContent() {
           </p>
           <Link
             href="/inquiry"
+            onClick={handleInquiryClick}
             className="inline-flex items-center justify-center gap-2 bg-[#E4015C] hover:bg-[#C70150] text-white rounded-xl px-8 py-4 text-[18px] font-semibold transition-colors"
           >
             <Phone size={20} />
@@ -147,6 +176,59 @@ function HomeContent() {
       <Suspense fallback={null}>
         <InquiryStatusChecker setShowSuccess={setShowSuccess} />
       </Suspense>
+
+      {/* 로그인 유도 모달 */}
+      {showLoginModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4"
+          onClick={() => setShowLoginModal(false)}
+        >
+          <div
+            className="bg-white rounded-2xl p-8 max-w-sm w-full shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* 닫기 */}
+            <button
+              onClick={() => setShowLoginModal(false)}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
+              style={{ position: 'relative', float: 'right' }}
+            >
+              <X size={20} />
+            </button>
+
+            {/* 로고 */}
+            <div className="text-center mb-6">
+              <div className="inline-flex items-center gap-1.5 mb-4">
+                <span className="text-[#111827] font-bold text-lg">꿈꾸는정비사</span>
+              </div>
+              <h2 className="text-[18px] font-bold text-gray-900 leading-snug">
+                로그인이 필요한 서비스입니다
+              </h2>
+              <p className="text-sm text-gray-500 mt-2 leading-relaxed">
+                카카오 로그인 후 바로 문의할 수 있습니다
+              </p>
+            </div>
+
+            {/* 카카오 로그인 버튼 */}
+            <button
+              onClick={handleKakaoLogin}
+              className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl font-bold text-[15px] text-gray-900 transition-all hover:brightness-95"
+              style={{ backgroundColor: '#FEE500' }}
+            >
+              <span className="text-xl">💬</span>
+              카카오로 로그인
+            </button>
+
+            {/* 취소 버튼 */}
+            <button
+              onClick={() => setShowLoginModal(false)}
+              className="w-full mt-3 py-3 text-sm text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              취소
+            </button>
+          </div>
+        </div>
+      )}
     </Layout>
   );
 }

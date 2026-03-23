@@ -114,7 +114,7 @@ export default function CommunityPage() {
               </div>
               <Link
                 href="/community/write"
-                className="flex items-center gap-2 bg-consumer-500 text-white px-5 py-2.5 rounded-xl font-semibold hover:bg-consumer-600 transition-colors shadow-sm"
+                className="flex items-center gap-2 bg-consumer-500 text-white px-3 py-2 md:px-5 md:py-2.5 text-sm md:text-base rounded-xl font-semibold hover:bg-consumer-600 transition-colors shadow-sm whitespace-nowrap"
               >
                 <PenSquare size={16} />
                 글쓰기

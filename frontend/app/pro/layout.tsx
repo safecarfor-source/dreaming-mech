@@ -73,6 +73,15 @@ export default function ProLayout({ children }: Props) {
 
           {/* 우측 액션 */}
           <div className="flex items-center gap-3">
+            {/* 정비 Q&A 링크 — 항상 표시 */}
+            <Link
+              href="/community"
+              className="text-sm font-medium transition-colors"
+              style={{ color: '#D4AF37' }}
+            >
+              정비 Q&A
+            </Link>
+
             {isHydrated && isAuthenticated ? (
               /* 로그인 상태: 햄버거 메뉴 */
               <button
