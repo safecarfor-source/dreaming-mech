@@ -91,4 +91,14 @@ export class CommunityController {
   ) {
     return this.communityService.deletePost(postId, req.user.sub);
   }
+
+  // 내가 쓴 글+댓글 (인증 필요)
+  @Get('my')
+  @UseGuards(JwtAuthGuard)
+  getMyActivity(
+    @Request() req: { user: { sub: number; role: string } },
+    @Query('limit') limit?: string,
+  ) {
+    return this.communityService.getMyActivity(req.user.sub, limit ? parseInt(limit, 10) : 20);
+  }
 }

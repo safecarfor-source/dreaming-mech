@@ -1,12 +1,12 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import OwnerLayout from '@/components/owner/OwnerLayout';
-import { ownerMechanicsApi, userAuthApi, ownerInquiriesApi } from '@/lib/api';
+import { ownerMechanicsApi, userAuthApi, ownerInquiriesApi, ownerRegionInquiriesApi } from '@/lib/api';
 import { Mechanic, User as UserType } from '@/types';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Plus, Store, Eye, X, ChevronRight, Clock, MapPin, Wrench, Car, Phone, User, Link2, MessageSquare, FileText, ArrowRight, BarChart2, CheckCircle2 } from 'lucide-react';
+import { Plus, Store, Eye, X, ChevronRight, Clock, MapPin, Wrench, Car, Phone, User, Link2, MessageSquare, FileText, ArrowRight, BarChart2, CheckCircle2, Bell } from 'lucide-react';
 
 type OwnerInquiry = {
   id: number;
@@ -27,6 +27,14 @@ type OwnerInquiry = {
   createdAt: string;
 };
 
+type NewInquiryToast = {
+  id: number;
+  regionSido: string;
+  regionSigungu: string;
+  serviceType: string;
+  createdAt: string;
+};
+
 export default function OwnerDashboardPage() {
   const router = useRouter();
   const phoneInputRef = useRef<HTMLInputElement>(null);
@@ -39,6 +47,9 @@ export default function OwnerDashboardPage() {
   const [inquiries, setInquiries] = useState<OwnerInquiry[]>([]);
   const [loadingInquiries, setLoadingInquiries] = useState(true);
   const [selectedInquiry, setSelectedInquiry] = useState<OwnerInquiry | null>(null);
+  const [newInquiryToasts, setNewInquiryToasts] = useState<NewInquiryToast[]>([]);
+  const lastPolledAtRef = useRef<string | null>(null);
+  const pollingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -71,6 +82,57 @@ export default function OwnerDashboardPage() {
     };
     fetchData();
   }, []);
+
+  // 새 문의 폴링 (30초마다)
+  const pollNewInquiries = useCallback(async () => {
+    try {
+      const since = lastPolledAtRef.current;
+      const res = await ownerRegionInquiriesApi.getAll(since ?? undefined);
+      const items = res.data ?? [];
+
+      if (items.length > 0) {
+        // 최신 createdAt을 lastPolledAt으로 저장
+        const latest = items.reduce((a, b) =>
+          new Date(a.createdAt) > new Date(b.createdAt) ? a : b
+        );
+        lastPolledAtRef.current = latest.createdAt;
+
+        // 최초 폴링(since가 null)이면 토스트 없이 기준점만 설정
+        if (since !== null) {
+          const newOnes = items.map((inq) => ({
+            id: inq.id,
+            regionSido: inq.regionSido,
+            regionSigungu: inq.regionSigungu,
+            serviceType: inq.serviceType,
+            createdAt: inq.createdAt,
+          }));
+          setNewInquiryToasts((prev) => [...newOnes, ...prev].slice(0, 5));
+          // 5초 후 자동 제거
+          setTimeout(() => {
+            setNewInquiryToasts((prev) => prev.filter((t) => !newOnes.some((n) => n.id === t.id)));
+          }, 5000);
+        }
+      } else if (since === null) {
+        // 문의 없어도 기준점을 현재 시간으로 설정
+        lastPolledAtRef.current = new Date().toISOString();
+      }
+    } catch {
+      // 폴링 실패 시 무시
+    }
+  }, []);
+
+  useEffect(() => {
+    // 초기 폴링 실행
+    pollNewInquiries();
+    pollingIntervalRef.current = setInterval(pollNewInquiries, 30_000);
+    return () => {
+      if (pollingIntervalRef.current) clearInterval(pollingIntervalRef.current);
+    };
+  }, [pollNewInquiries]);
+
+  const dismissToast = (id: number) => {
+    setNewInquiryToasts((prev) => prev.filter((t) => t.id !== id));
+  };
 
   // 전화번호 포맷팅 (010-XXXX-XXXX)
   const formatPhoneNumber = (value: string) => {
@@ -187,6 +249,34 @@ export default function OwnerDashboardPage() {
 
   return (
     <OwnerLayout>
+      {/* 새 문의 토스트 알림 */}
+      {newInquiryToasts.length > 0 && (
+        <div className="fixed top-4 right-4 z-50 space-y-2 w-80 max-w-[calc(100vw-2rem)]">
+          {newInquiryToasts.map((toast) => (
+            <div
+              key={toast.id}
+              className="bg-white border border-[#7C4DFF]/30 rounded-xl shadow-lg px-4 py-3 flex items-start gap-3 animate-in slide-in-from-right duration-300"
+            >
+              <div className="w-8 h-8 bg-[#7C4DFF]/10 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
+                <Bell size={16} className="text-[#7C4DFF]" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-gray-900">새 고객 문의가 들어왔습니다</p>
+                <p className="text-xs text-gray-500 mt-0.5 truncate">
+                  {toast.regionSido} {toast.regionSigungu} · {getServiceTypeLabel(toast.serviceType)}
+                </p>
+              </div>
+              <button
+                onClick={() => dismissToast(toast.id)}
+                className="text-gray-400 hover:text-gray-600 flex-shrink-0"
+              >
+                <X size={14} />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
       <div className="mb-6 px-1">
         <h1 className="text-xl sm:text-2xl font-bold text-gray-900 break-keep">대시보드</h1>
         <p className="text-gray-500 mt-1 text-sm sm:text-base break-keep">내 매장을 관리하세요</p>

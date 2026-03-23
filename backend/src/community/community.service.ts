@@ -211,6 +211,42 @@ export class CommunityService {
     }
   }
 
+  // ── 내 활동: 내가 쓴 글 + 댓글 ──
+
+  async getMyActivity(userId: number, limit = 20) {
+    const [posts, comments] = await Promise.all([
+      this.prisma.post.findMany({
+        where: { userId, isActive: true },
+        orderBy: { createdAt: 'desc' },
+        take: limit,
+        select: {
+          id: true,
+          title: true,
+          category: true,
+          viewCount: true,
+          likeCount: true,
+          commentCount: true,
+          createdAt: true,
+        },
+      }),
+      this.prisma.comment.findMany({
+        where: { userId, isActive: true },
+        orderBy: { createdAt: 'desc' },
+        take: limit,
+        select: {
+          id: true,
+          content: true,
+          createdAt: true,
+          post: {
+            select: { id: true, title: true },
+          },
+        },
+      }),
+    ]);
+
+    return { posts, comments };
+  }
+
   // ── 게시글 삭제 (본인만) ──
 
   async deletePost(postId: number, authorId: number) {

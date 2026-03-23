@@ -493,6 +493,41 @@ export const communityApi = {
     api.post(`/community/posts/${postId}/comments`, data),
   toggleLike: (postId: number) => api.post(`/community/posts/${postId}/like`),
   deletePost: (id: number) => api.delete(`/community/posts/${id}`),
+  // 내가 쓴 글+댓글
+  getMyActivity: (limit?: number) =>
+    api.get<{
+      posts: Array<{
+        id: number;
+        title: string;
+        category: string;
+        viewCount: number;
+        likeCount: number;
+        commentCount: number;
+        createdAt: string;
+      }>;
+      comments: Array<{
+        id: number;
+        content: string;
+        createdAt: string;
+        post: { id: number; title: string };
+      }>;
+    }>('/community/my', { params: limit ? { limit } : {} }),
+};
+
+// 오너용: 지역 문의 (폴링)
+export const ownerRegionInquiriesApi = {
+  getAll: (since?: string) =>
+    api.get<Array<{
+      id: number;
+      regionSido: string;
+      regionSigungu: string;
+      serviceType: string;
+      status: string;
+      createdAt: string;
+      name: string | null;
+      description: string | null;
+      mechanic: { id: number; name: string } | null;
+    }>>('/owner/inquiries', { params: since ? { since } : {} }),
 };
 
 export default api;

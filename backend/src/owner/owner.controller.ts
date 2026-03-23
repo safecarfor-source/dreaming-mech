@@ -122,6 +122,15 @@ export class OwnerProfileController {
     return this.ownerService.getMyInquiries(req.user.sub);
   }
 
+  // GET /owner/inquiries — 내 지역 고객 문의 (폴링용)
+  @Get('inquiries')
+  getRegionInquiries(
+    @Request() req,
+    @Query('since') since?: string,
+  ) {
+    return this.ownerService.getRegionInquiries(req.user.sub, since);
+  }
+
   // GET /owner/service-inquiries/:id — 문의 상세
   @Get('service-inquiries/:id')
   getMyInquiryDetail(

@@ -719,6 +719,51 @@ export class OwnerService {
     return inquiry;
   }
 
+  // ── 사용자용: 내 지역의 고객 문의 (폴링용) ──
+  // 내 정비소가 위치한 location 값과 ServiceInquiry의 regionSigungu를 비교
+
+  async getRegionInquiries(userId: number, since?: string) {
+    // 내 정비소의 location(지역명) 목록 조회
+    const mechanics = await this.prisma.mechanic.findMany({
+      where: { userId, isActive: true },
+      select: { id: true, location: true },
+    });
+
+    if (mechanics.length === 0) return [];
+
+    // location 값으로 regionSigungu 필터링 (부분 매칭)
+    const locations = mechanics.map((m) => m.location).filter(Boolean);
+    const mechanicIds = mechanics.map((m) => m.id);
+
+    // 내 정비소를 선택한 문의 OR location이 겹치는 문의
+    const orConditions: any[] = [
+      { mechanicId: { in: mechanicIds } },
+      ...locations.map((loc) => ({ regionSigungu: { contains: loc } })),
+    ];
+
+    const where: any = { OR: orConditions };
+    if (since) {
+      where.createdAt = { gt: new Date(since) };
+    }
+
+    return this.prisma.serviceInquiry.findMany({
+      where,
+      orderBy: { createdAt: 'desc' },
+      take: 50,
+      select: {
+        id: true,
+        regionSido: true,
+        regionSigungu: true,
+        serviceType: true,
+        status: true,
+        createdAt: true,
+        name: true,
+        description: true,
+        mechanic: { select: { id: true, name: true } },
+      },
+    });
+  }
+
   // ── 사용자용: 공유 링크 클릭 수 증가 ──
 
   async incrementShareClick(inquiryId: number) {
