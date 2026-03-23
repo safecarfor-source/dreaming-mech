@@ -1,16 +1,28 @@
 'use client';
 
+import { useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import BottomTabBar from './consumer/BottomTabBar';
 import { useUserStore } from '@/lib/auth';
+import { userAuthApi } from '@/lib/api';
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isForMechanics = pathname === '/for-mechanics';
   const isPro = pathname?.startsWith('/pro');
   const isConsumer = !isPro;
-  const { isAuthenticated, user } = useUserStore();
+  const { isAuthenticated, user, logout } = useUserStore();
+
+  // 삭제된 계정 감지: 서버에 프로필 확인 → 401이면 자동 로그아웃
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    userAuthApi.getProfile().catch((err: any) => {
+      if (err?.response?.status === 401) {
+        logout();
+      }
+    });
+  }, []); // 마운트 시 1회만
 
   return (
     <div className="min-h-screen flex flex-col bg-white">

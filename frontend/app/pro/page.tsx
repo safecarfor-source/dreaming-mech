@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
-import { ArrowRight, MapPin, Bell, Video, Search } from 'lucide-react';
+import { ArrowRight, MapPin, Bell, Video, Search, Wrench, User, X } from 'lucide-react';
 import { mechanicsApi } from '@/lib/api';
 import { Mechanic } from '@/types';
 
@@ -51,6 +51,7 @@ export default function ProPage() {
   const [mechanics, setMechanics] = useState<Mechanic[]>([]);
   const [regionStats, setRegionStats] = useState<RegionStat[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showRoleModal, setShowRoleModal] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -169,25 +170,19 @@ export default function ProPage() {
             transition={{ duration: 0.5, delay: 0.3 }}
             className="flex flex-col gap-3"
           >
-            <a
-              href={KAKAO_LOGIN_URL}
-              className="flex items-center justify-center gap-2.5 py-4 rounded-2xl font-bold text-base transition-all duration-150"
+            <button
+              onClick={() => setShowRoleModal(true)}
+              className="flex items-center justify-center gap-2.5 py-4 rounded-2xl font-bold text-base transition-all duration-150 w-full"
               style={{ backgroundColor: '#D4AF37', color: '#1A1A1A' }}
             >
               카카오로 1초 가입
               <ArrowRight size={18} />
-            </a>
+            </button>
             <a
               href={KAKAO_LOGIN_URL}
               className="text-center text-sm text-white/40 hover:text-white/70 transition-colors py-2"
             >
               이미 가입하셨나요? 로그인
-            </a>
-            <a
-              href="/"
-              className="text-center text-sm text-white/30 hover:text-white/50 transition-colors py-1"
-            >
-              일반 고객이신가요? 소비자 페이지로 →
             </a>
           </motion.div>
         </div>
@@ -335,16 +330,81 @@ export default function ProPage() {
         >
           <p className="text-white font-bold text-lg mb-2 break-keep">지금 자리를 확보하세요</p>
           <p className="text-white/45 text-sm mb-6 break-keep">가입은 무료입니다. 카카오 1초면 완료!</p>
-          <a
-            href={KAKAO_LOGIN_URL}
-            className="flex items-center justify-center gap-2.5 py-4 rounded-2xl font-bold text-base transition-all duration-150"
+          <button
+            onClick={() => setShowRoleModal(true)}
+            className="flex items-center justify-center gap-2.5 py-4 rounded-2xl font-bold text-base transition-all duration-150 w-full"
             style={{ backgroundColor: '#D4AF37', color: '#1A1A1A' }}
           >
             카카오로 1초 가입
             <ArrowRight size={18} />
-          </a>
+          </button>
         </motion.div>
       </section>
+
+      {/* ── 역할 선택 모달 ── */}
+      {showRoleModal && (
+        <div
+          className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-5"
+          onClick={() => setShowRoleModal(false)}
+        >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            transition={{ duration: 0.25 }}
+            className="bg-[#1A1A1A] rounded-2xl w-full max-w-sm shadow-2xl border border-white/10 overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* 헤더 */}
+            <div className="px-6 pt-6 pb-4 text-center relative">
+              <button
+                onClick={() => setShowRoleModal(false)}
+                className="absolute top-4 right-4 text-white/30 hover:text-white/60 transition-colors"
+              >
+                <X size={20} />
+              </button>
+              <h3 className="text-white font-bold text-lg">어떤 분이신가요?</h3>
+              <p className="text-white/40 text-sm mt-1">맞춤 서비스를 안내해드립니다</p>
+            </div>
+
+            {/* 선택 카드 */}
+            <div className="px-5 pb-6 flex flex-col gap-3">
+              {/* 정비사 사장님 */}
+              <a
+                href={KAKAO_LOGIN_URL}
+                className="flex items-center gap-4 p-4 rounded-xl border transition-all duration-150 hover:border-[#D4AF37]/50 hover:bg-[#D4AF37]/5"
+                style={{ borderColor: 'rgba(212,175,55,0.25)', backgroundColor: 'rgba(212,175,55,0.03)' }}
+              >
+                <div
+                  className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0"
+                  style={{ backgroundColor: 'rgba(212,175,55,0.12)' }}
+                >
+                  <Wrench size={22} style={{ color: '#D4AF37' }} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-white font-bold text-[15px]">정비사 사장님</p>
+                  <p className="text-white/40 text-xs mt-0.5">내 정비소를 등록하고 고객을 만나세요</p>
+                </div>
+                <ArrowRight size={16} className="text-white/20 shrink-0" />
+              </a>
+
+              {/* 일반 고객 */}
+              <a
+                href="/"
+                className="flex items-center gap-4 p-4 rounded-xl border border-white/10 bg-white/[0.02] transition-all duration-150 hover:border-white/20 hover:bg-white/[0.05]"
+              >
+                <div className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0 bg-white/5">
+                  <User size={22} className="text-white/50" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-white font-bold text-[15px]">일반 고객</p>
+                  <p className="text-white/40 text-xs mt-0.5">정비소를 찾고 문의하기</p>
+                </div>
+                <ArrowRight size={16} className="text-white/20 shrink-0" />
+              </a>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 }

@@ -12,8 +12,8 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         // 요청 경로에 따라 적절한 쿠키 선택
         (req: Request) => {
           const path = req?.path || '';
-          // 관리자 전용 경로
-          if (path.startsWith('/admin')) {
+          // 관리자 전용 경로 (unified-inquiries도 관리자 API 포함)
+          if (path.startsWith('/admin') || path.startsWith('/unified-inquiries')) {
             return req?.cookies?.admin_token || null;
           }
           // 나머지 모든 경로는 user_token 사용 (하위 호환: owner_token, customer_token도 시도)

@@ -2,13 +2,13 @@
 
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { Home, Search, Phone } from 'lucide-react';
+import { Home, Search, Phone, User } from 'lucide-react';
 
 const tabs = [
   { href: '/', label: '홈', icon: Home },
-  // /search 페이지 미구현 — 메인 정비소 목록 섹션 앵커로 연결
   { href: '/#shops', label: '정비소 찾기', icon: Search },
   { href: '/inquiry', label: '문의하기', icon: Phone },
+  { href: '/mypage', label: '내정보', icon: User },
 ];
 
 export default function BottomTabBar() {
@@ -16,7 +16,7 @@ export default function BottomTabBar() {
 
   const isActive = (href: string) => {
     if (href === '/') return pathname === '/';
-    if (href === '/#shops') return false; // 앵커는 active 상태 없음
+    if (href === '/#shops') return false;
     return pathname.startsWith(href);
   };
 
