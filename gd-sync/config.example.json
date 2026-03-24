@@ -1,0 +1,16 @@
+{
+  "db_host": "172.18.0.4",
+  "db_port": 5432,
+  "db_name": "mechanic_db",
+  "db_user": "app_user",
+  "db_password": "YOUR_PASSWORD_HERE",
+  "gdb_path": "/home/ubuntu/gd-sync/incoming/TOTAL.GDB",
+  "slots_dir": "/home/ubuntu/gd-sync/slots",
+  "check_interval_business": 1800,
+  "check_interval_off": 3600,
+  "business_start": "08:30",
+  "business_end": "19:00",
+  "min_vehicles": 100,
+  "min_products": 50,
+  "min_sales": 1000
+}
