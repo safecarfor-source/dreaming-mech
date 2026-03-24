@@ -191,6 +191,7 @@ export default function IncentiveLayout({ children }: IncentiveLayoutProps) {
   const { user, isAuthenticated, isExpired, logout } = useIncentiveAuthStore();
   const [menuOpen, setMenuOpen] = useState(false);
   const [showChangePw, setShowChangePw] = useState(false);
+  const [syncTime, setSyncTime] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
   // 비인증 상태 리다이렉트
@@ -200,6 +201,25 @@ export default function IncentiveLayout({ children }: IncentiveLayoutProps) {
       router.replace('/incentive/login');
     }
   }, [isAuthenticated, isExpired, logout, router]);
+
+  // 동기화 시간 조회
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    incentiveApi.get('/gd/sync-status')
+      .then(res => {
+        if (res.data?.lastSync) {
+          const d = new Date(res.data.lastSync);
+          const now = new Date();
+          const isToday = d.toDateString() === now.toDateString();
+          const timeStr = String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+          const dateStr = isToday
+            ? '오늘 ' + timeStr
+            : (d.getMonth() + 1) + '/' + d.getDate() + ' ' + timeStr;
+          setSyncTime(dateStr);
+        }
+      })
+      .catch(() => { /* 동기화 API 없으면 무시 */ });
+  }, [isAuthenticated]);
 
   // 외부 클릭 시 모바일 메뉴 닫기
   useEffect(() => {
@@ -358,8 +378,24 @@ export default function IncentiveLayout({ children }: IncentiveLayoutProps) {
         </div>
       </div>
 
+      {/* 동기화 시간 바 */}
+      {syncTime && (
+        <div style={{
+          position: 'fixed', top: 52, left: 0, right: 0, zIndex: 99,
+          background: '#F8FAFB', borderBottom: '1px solid #E0E0E0',
+          padding: '4px 20px', fontSize: 12, color: '#666',
+          display: 'flex', alignItems: 'center', gap: 4,
+        }}>
+          <span style={{
+            display: 'inline-block', width: 6, height: 6,
+            borderRadius: '50%', background: '#2BA640',
+          }} />
+          극동 데이터: {syncTime} 업데이트
+        </div>
+      )}
+
       {/* 페이지 콘텐츠 */}
-      <div className="inc-content">
+      <div className="inc-content" style={syncTime ? { paddingTop: 92 } : undefined}>
         {children}
       </div>
 
