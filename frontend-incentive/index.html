@@ -3624,7 +3624,10 @@ async function gdProductSearch(q, reset) {
 
   try {
     const page = gdProductState.page;
-    const data = await api('/gd/products?q=' + encodeURIComponent(q) + '&page=' + page + '&limit=20');
+    // 검색 규칙: 숫자만 → 타이어, 영문 포함 → 배터리
+    const isDigitsOnly = /^\d+$/.test(q);
+    const category = isDigitsOnly ? 'tire' : 'battery';
+    const data = await api('/gd/products?q=' + encodeURIComponent(q) + '&category=' + category + '&page=' + page + '&limit=20');
     gdProductState.total = data.total || 0;
     const items = data.data || [];
     gdProductState.items = gdProductState.items.concat(items);
