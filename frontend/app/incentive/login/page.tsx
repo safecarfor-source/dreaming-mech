@@ -19,7 +19,7 @@ export default function IncentiveLoginPage() {
   // 이미 인증된 상태면 team으로 이동
   useEffect(() => {
     if (isAuthenticated && !isExpired()) {
-      router.replace('/incentive/team');
+      router.replace('/incentive/gd-vehicle');
     }
   }, [isAuthenticated, isExpired, router]);
 
@@ -37,7 +37,7 @@ export default function IncentiveLoginPage() {
       );
       const { token, user, expiresAt } = res.data;
       login(token, user, expiresAt);
-      router.replace('/incentive/team');
+      router.replace('/incentive/gd-vehicle');
     } catch (e: unknown) {
       const err = e as { response?: { data?: { message?: string } } };
       if (err.response) {
