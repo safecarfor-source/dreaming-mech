@@ -207,13 +207,17 @@ export default function IncentiveLayout({ children }: IncentiveLayoutProps) {
     incentiveApi.get('/gd/sync-status')
       .then(res => {
         if (res.data?.lastSync) {
+          // KST 기준으로 표시
           const d = new Date(res.data.lastSync);
+          const kst = new Date(d.getTime() + 9 * 60 * 60 * 1000);
           const now = new Date();
-          const isToday = d.toDateString() === now.toDateString();
-          const timeStr = String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+          const nowKst = new Date(now.getTime() + 9 * 60 * 60 * 1000);
+          const isToday = kst.getUTCDate() === nowKst.getUTCDate()
+            && kst.getUTCMonth() === nowKst.getUTCMonth();
+          const timeStr = String(kst.getUTCHours()).padStart(2, '0') + ':' + String(kst.getUTCMinutes()).padStart(2, '0');
           const dateStr = isToday
             ? '오늘 ' + timeStr
-            : (d.getMonth() + 1) + '/' + d.getDate() + ' ' + timeStr;
+            : (kst.getUTCMonth() + 1) + '/' + kst.getUTCDate() + ' ' + timeStr;
           setSyncTime(dateStr);
         }
       })
@@ -239,6 +243,7 @@ export default function IncentiveLayout({ children }: IncentiveLayoutProps) {
 
   function handleLogout() {
     logout();
+    sessionStorage.setItem('inc_just_logged_out', '1');
     router.replace('/incentive/login');
   }
 
