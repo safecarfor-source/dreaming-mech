@@ -16,12 +16,31 @@ export default function IncentiveLoginPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // 이미 인증된 상태면 team으로 이동
+  // 이미 인증된 상태면 차량조회로 이동
   useEffect(() => {
     if (isAuthenticated && !isExpired()) {
       router.replace('/incentive/gd-vehicle');
+      return;
+    }
+    // 662 자동 로그인: 미인증 상태면 662/662로 자동 시도
+    if (!isAuthenticated) {
+      autoLogin662();
     }
   }, [isAuthenticated, isExpired, router]);
+
+  async function autoLogin662() {
+    try {
+      const res = await incentiveApi.post<{ token: string; user: IncentiveUser; expiresAt?: string }>(
+        '/auth/login',
+        { loginId: '662', password: '662' },
+      );
+      const { token, user, expiresAt } = res.data;
+      login(token, user, expiresAt);
+      router.replace('/incentive/gd-vehicle');
+    } catch {
+      // 662 자동 로그인 실패 시 수동 로그인 화면 표시 (아무것도 안 함)
+    }
+  }
 
   async function handleLogin() {
     setError('');
