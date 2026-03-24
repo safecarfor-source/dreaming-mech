@@ -20,10 +20,9 @@ function getTabsForUser(user: {
 }): Tab[] {
   const tabs: Tab[] = [];
 
-  if (user.loginId === '662') {
-    tabs.push({ id: 'gd-vehicle', label: '차량조회', href: '/incentive/gd-vehicle' });
-    tabs.push({ id: 'gd-product', label: '상품조회', href: '/incentive/gd-product' });
-  }
+  // 모든 계정에서 차량조회/상품조회 표시
+  tabs.push({ id: 'gd-vehicle', label: '차량조회', href: '/incentive/gd-vehicle' });
+  tabs.push({ id: 'gd-product', label: '상품조회', href: '/incentive/gd-product' });
 
   tabs.push({ id: 'team', label: '팀 인센티브', href: '/incentive/team' });
 
