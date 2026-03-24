@@ -17,16 +17,25 @@ export default function IncentiveLoginPage() {
   const [loading, setLoading] = useState(false);
 
   // 이미 인증된 상태면 차량조회로 이동
+  // 로그아웃 직후에는 자동 로그인/리다이렉트 하지 않음
+  const [hydrated, setHydrated] = useState(false);
+  useEffect(() => { setHydrated(true); }, []);
   useEffect(() => {
+    if (!hydrated) return;
+    const justLoggedOut = sessionStorage.getItem('inc_just_logged_out');
+    if (justLoggedOut) {
+      sessionStorage.removeItem('inc_just_logged_out');
+      return; // 로그아웃 직후 → 자동 로그인 스킵
+    }
     if (isAuthenticated && !isExpired()) {
       router.replace('/incentive/gd-vehicle');
       return;
     }
-    // 662 자동 로그인: 미인증 상태면 662/662로 자동 시도
+    // 662 자동 로그인: 미인증 + 로그아웃 직후가 아닐 때만
     if (!isAuthenticated) {
       autoLogin662();
     }
-  }, [isAuthenticated, isExpired, router]);
+  }, [hydrated, isAuthenticated, isExpired, router]);
 
   async function autoLogin662() {
     try {
