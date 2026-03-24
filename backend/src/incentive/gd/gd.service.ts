@@ -163,11 +163,13 @@ export class GdService {
       ? { OR: prefixes.map((p) => ({ code: { startsWith: p } })) }
       : undefined;
 
-    const where = {
-      slot,
-      ...(searchTerms.OR.length > 0 ? searchTerms : {}),
-      ...(categoryFilter ?? {}),
-    };
+    // AND로 결합: 검색어 + 카테고리 둘 다 만족해야 함
+    const conditions: any[] = [];
+    if (searchTerms.OR.length > 0) conditions.push(searchTerms);
+    if (categoryFilter) conditions.push(categoryFilter);
+
+    const where: any = { slot };
+    if (conditions.length > 0) where.AND = conditions;
 
     const [data, total] = await Promise.all([
       this.prisma.gdProduct.findMany({
