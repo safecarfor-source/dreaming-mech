@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
 
 export default function IncentivePage() {
-  redirect('/incentive/team');
+  redirect('/incentive/gd-vehicle');
 }

@@ -142,23 +142,19 @@ export default function GdProductPage() {
   const { user, isAuthenticated, isExpired } = useIncentiveAuthStore();
 
   const [query, setQuery] = useState('');
-  const [category, setCategory] = useState('tire');
   const [products, setProducts] = useState<GdProduct[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
-  const [status, setStatus] = useState('검색어를 입력하세요');
+  const [status, setStatus] = useState('숫자 = 타이어 검색, 영문 = 배터리 검색');
   const [hasSearched, setHasSearched] = useState(false);
   const [openCode, setOpenCode] = useState<string | null>(null);
 
-  const CATEGORIES = [
-    { key: 'tire', label: '타이어' },
-    { key: 'battery', label: '밧데리' },
-    { key: 'lining', label: '라이닝' },
-    { key: 'wiper', label: '와이퍼' },
-    { key: '', label: '전체' },
-  ];
+  // 검색 규칙: 숫자만 → 타이어, 영문 포함 → 배터리
+  function autoCategory(q: string): string {
+    return /^\d+$/.test(q.trim()) ? 'tire' : 'battery';
+  }
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -189,9 +185,9 @@ export default function GdProductPage() {
     setHasSearched(true);
 
     try {
-      const catParam = category ? `&category=${category}` : '';
+      const cat = autoCategory(q);
       const res = await incentiveApi.get<{ data: GdProduct[]; total: number }>(
-        `/gd/products?q=${encodeURIComponent(q)}&page=${currentPage}&limit=20${catParam}`
+        `/gd/products?q=${encodeURIComponent(q)}&category=${cat}&page=${currentPage}&limit=20`
       );
       const items = res.data.data || [];
       const newTotal = res.data.total || 0;
@@ -220,7 +216,7 @@ export default function GdProductPage() {
       setLoading(false);
       setLoadingMore(false);
     }
-  }, [page, category]);
+  }, [page]);
 
   function handleInput(e: React.ChangeEvent<HTMLInputElement>) {
     const q = e.target.value;
@@ -233,16 +229,6 @@ export default function GdProductPage() {
       return;
     }
     debounceRef.current = setTimeout(() => search(q, true), 300);
-  }
-
-  function handleCategory(cat: string) {
-    setCategory(cat);
-    setProducts([]);
-    setPage(1);
-    setOpenCode(null);
-    if (query.trim()) {
-      setTimeout(() => search(query, true), 50);
-    }
   }
 
   function handleClear() {
@@ -268,30 +254,6 @@ export default function GdProductPage() {
         .gp-clear-btn { opacity: 0; pointer-events: none; transition: opacity 0.15s; }
         .gp-clear-btn.show { opacity: 1; pointer-events: auto; }
       `}</style>
-
-      {/* 카테고리 탭 */}
-      <div style={{
-        display: 'flex', gap: 6, marginBottom: 10,
-        overflowX: 'auto', WebkitOverflowScrolling: 'touch',
-      }}>
-        {CATEGORIES.map((c) => (
-          <button
-            key={c.key}
-            onClick={() => handleCategory(c.key)}
-            style={{
-              padding: '8px 16px', borderRadius: 20,
-              border: 'none', fontSize: 13, fontWeight: 700,
-              fontFamily: 'inherit', cursor: 'pointer',
-              whiteSpace: 'nowrap',
-              background: category === c.key ? ACCENT : '#F0F0F0',
-              color: category === c.key ? '#fff' : '#666',
-              transition: 'all 0.15s',
-            }}
-          >
-            {c.label}
-          </button>
-        ))}
-      </div>
 
       {/* 검색 전 스페이서 */}
       {!hasSearched && (
