@@ -419,7 +419,7 @@ async function main() {
   console.log(`[1/5] 거래처 ${customers.length}건 입력 중...`);
   for (const c of customers) {
     await prisma.gdCustomer.upsert({
-      where: { code: c.code },
+      where: { code_slot: { code: c.code, slot: 'A' } },
       update: {
         name: c.name,
         ceo: c.ceo,
@@ -447,7 +447,7 @@ async function main() {
   console.log(`[2/5] 차량 ${vehicles.length}건 입력 중...`);
   for (const v of vehicles) {
     await prisma.gdVehicle.upsert({
-      where: { code: v.code },
+      where: { code_slot: { code: v.code, slot: 'A' } },
       update: {
         plateNumber: v.plateNumber,
         ownerName: v.ownerName,
@@ -479,7 +479,7 @@ async function main() {
   console.log(`[3/5] 상품 ${products.length}건 입력 중...`);
   for (const p of products) {
     await prisma.gdProduct.upsert({
-      where: { code: p.code },
+      where: { code_slot: { code: p.code, slot: 'A' } },
       update: {
         name: p.name,
         altName: p.altName,

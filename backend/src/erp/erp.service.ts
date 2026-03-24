@@ -311,14 +311,10 @@ export class ErpService {
   // ========================================
   async getCustomerDetail(code: string) {
     const vehicle = await this.prisma.gdVehicle.findUnique({
-      where: { code },
+      where: { code_slot: { code, slot: 'A' } },
       include: {
         repairs: {
           orderBy: { repairDate: 'desc' },
-        },
-        reminders: {
-          where: { status: { in: ['pending', 'sent'] } },
-          orderBy: { dueDate: 'asc' },
         },
       },
     });
@@ -326,6 +322,12 @@ export class ErpService {
     if (!vehicle) {
       throw new NotFoundException(`차량 코드 ${code}를 찾을 수 없습니다.`);
     }
+
+    // 리마인더 별도 조회 (GdVehicle에 relation 없음)
+    const activeReminders = await this.prisma.customerReminder.findMany({
+      where: { vehicleCode: code, status: { in: ['pending', 'sent'] } },
+      orderBy: { dueDate: 'asc' },
+    });
 
     // 총 지출 계산
     const totalSpend = vehicle.repairs.reduce((s, r) => s + r.amount, 0);
@@ -370,7 +372,7 @@ export class ErpService {
           memo: r.memo,
         })),
         mileageHistory,
-        activeReminders: vehicle.reminders,
+        activeReminders,
       },
     };
   }
@@ -380,7 +382,7 @@ export class ErpService {
   // ========================================
   async predictNextVisit(code: string) {
     const vehicle = await this.prisma.gdVehicle.findUnique({
-      where: { code },
+      where: { code_slot: { code, slot: 'A' } },
       include: {
         repairs: {
           orderBy: { repairDate: 'desc' },
@@ -540,16 +542,6 @@ export class ErpService {
         skip,
         take: limit,
         orderBy: { dueDate: 'asc' },
-        include: {
-          vehicle: {
-            select: {
-              plateNumber: true,
-              ownerName: true,
-              phone: true,
-              carModel: true,
-            },
-          },
-        },
       }),
     ]);
 
@@ -573,33 +565,34 @@ export class ErpService {
     }[] = [];
 
     // 배치 처리: 100대씩 커서 페이지네이션
-    let cursor: string | undefined;
+    let cursor: number | undefined;
     const BATCH_SIZE = 100;
 
     while (true) {
       const vehicles = await this.prisma.gdVehicle.findMany({
         take: BATCH_SIZE,
-        ...(cursor ? { skip: 1, cursor: { code: cursor } } : {}),
-        orderBy: { code: 'asc' },
+        ...(cursor ? { skip: 1, cursor: { id: cursor } } : {}),
+        where: { slot: 'A' },
+        orderBy: { id: 'asc' },
         include: {
           repairs: {
             orderBy: { repairDate: 'desc' },
             take: 5,
           },
-          reminders: {
-            where: {
-              status: { in: ['pending', 'sent'] },
-            },
-          },
         },
       });
 
       if (vehicles.length === 0) break;
-      cursor = vehicles[vehicles.length - 1].code;
+      cursor = vehicles[vehicles.length - 1].id;
 
       for (const vehicle of vehicles) {
         const repairs = vehicle.repairs;
-        const existingTypes = new Set(vehicle.reminders.map(r => r.reminderType));
+        // 리마인더 별도 조회 (GdVehicle에 relation 없음)
+        const existingReminders = await this.prisma.customerReminder.findMany({
+          where: { vehicleCode: vehicle.code, status: { in: ['pending', 'sent'] } },
+          select: { reminderType: true },
+        });
+        const existingTypes = new Set(existingReminders.map(r => r.reminderType));
 
         if (repairs.length === 0) continue;
 
@@ -878,7 +871,7 @@ export class ErpService {
   async createRepair(dto: CreateRepairDto) {
     // 차량 존재 확인
     const vehicle = await this.prisma.gdVehicle.findUnique({
-      where: { code: dto.vehicleCode },
+      where: { code_slot: { code: dto.vehicleCode, slot: 'A' } },
       include: {
         repairs: {
           orderBy: { repairDate: 'desc' },
