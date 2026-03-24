@@ -132,14 +132,15 @@
 
 - [ ] **1. 영향 범위 확인**: BRAIN.md 구조도에서 이 변경이 어느 모듈에 속하는지 확인
 - [ ] **2. 벽 넘는지 확인**: 플랫폼↔인센티브 벽을 넘는 변경인가? → 양쪽 빌드 검증 필수
-- [ ] **3. 공유 테이블 변경인가?**: GD* 테이블 스키마 수정 → erp 모듈 + gd 모듈 + gd_sync_server.py 3곳 영향 체크
+- [ ] **3. 공유 테이블 변경인가?**: GD* 테이블 스키마 수정 → erp 모듈 + gd 모듈 + `gd-sync/gd_sync_server.py` 3곳 영향 체크
 - [ ] **4. 기존 API 응답 변경인가?**: 필드 추가는 OK, 필드 삭제/이름변경은 금지 (프론트 깨짐)
 - [ ] **5. 빌드 확인**: 변경 후 반드시 `tsc --noEmit` 또는 Docker 빌드로 전체 컴파일 확인
+- [ ] **6. 동기화 코드 영향 확인**: GD* 테이블 unique 제약/컬럼 변경 시 `gd-sync/gd_sync_server.py`의 INSERT/ON CONFLICT 구문 반드시 확인 (2026-03-24 3일 장애 원인)
 
 #### DB 스키마 변경 규칙
 - **새 테이블 추가**: 해당 모듈 영역에만 추가. 기존 테이블 수정 없음 → 안전
 - **기존 테이블에 컬럼 추가**: 반드시 `DEFAULT` 값 지정. 기존 코드가 깨지지 않음
-- **기존 컬럼 unique 변경**: 해당 컬럼을 `findUnique`/`upsert`하는 모든 코드 수정 필수
+- **기존 컬럼 unique 변경**: 해당 컬럼을 `findUnique`/`upsert`하는 모든 코드 수정 필수 + `gd-sync/gd_sync_server.py`의 ON CONFLICT 구문도 확인
 - **관계(relation) 변경**: FK 참조하는 모든 모듈 검색 후 수정 (오늘 사고 원인)
 - **컬럼 삭제/이름변경**: 금지. 새 컬럼 추가 후 점진적 마이그레이션
 
@@ -152,6 +153,12 @@
 - Prisma 스키마에서 `@unique` → `@@unique([code, slot])` 변경 시, 해당 code를 `findUnique`하는 **모든 파일** 검색 필수
 - 변경 전: `grep -r "findUnique.*code" backend/src/` 로 영향 범위 파악
 - erp 모듈이 GD 테이블을 공유하고 있어서 연쇄 파괴 발생
+
+#### 교훈 (2026-03-24 동기화 3일 장애)
+- `gd_sync_server.py`가 Git 밖에서 관리되어 스키마 변경과 불일치 → 3일간 동기화 중단 (아무도 모름)
+- **원인 3가지**: (1) 코드가 fdb 직접 접속으로 바뀌어 Firebird 버전 불일치 (2) config.json DB 호스트가 localhost→Docker IP 불일치 (3) ON CONFLICT (code)→UNIQUE(code, slot) 스키마 불일치
+- **대책**: gd_sync_server.py를 Git 레포에 포함 (`gd-sync/`), 스키마 변경 시 동기화 코드 동시 확인 규칙 추가
+- **데몬 관리**: 1회 실행 모드 + cron `*/30 * * * *`으로 운영. 데몬 모드 사용 시 중복 프로세스 주의
 
 ### 7. 점진적 확장 로드맵
 - Phase 1: 정비사 프로필 + 지도 (핵심 MVP)

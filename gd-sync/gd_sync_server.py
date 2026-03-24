@@ -393,16 +393,25 @@ def run_import(password):
 
 # ===== 인센티브 자동 계산 트리거 =====
 def trigger_auto_calc():
-    """GDB 동기화 완료 후 인센티브 자동 계산 API 호출"""
+    """GDB 동기화 완료 후 인센티브 자동 계산 API 호출 (JWT 인증 포함)"""
     import urllib.request
     import json
     try:
-        url = 'http://localhost:3001/incentive/auto-calc/trigger'
-        data = json.dumps({}).encode('utf-8')
-        req = urllib.request.Request(url, data=data, headers={'Content-Type': 'application/json'})
-        resp = urllib.request.urlopen(req, timeout=30)
+        base = 'http://localhost:3001/incentive'
+        # 1. 로그인하여 토큰 획득
+        login_data = json.dumps({'loginId': 'sjy', 'password': 'sksmsrldjqrk'}).encode('utf-8')
+        login_req = urllib.request.Request(base + '/auth/login', data=login_data, headers={'Content-Type': 'application/json'})
+        login_resp = urllib.request.urlopen(login_req, timeout=10)
+        token = json.loads(login_resp.read().decode())['token']
+        # 2. 자동계산 트리거 (토큰 포함)
+        calc_data = json.dumps({}).encode('utf-8')
+        calc_req = urllib.request.Request(base + '/auto-calc/trigger', data=calc_data, headers={
+            'Content-Type': 'application/json',
+            'Authorization': f'Bearer {token}'
+        })
+        resp = urllib.request.urlopen(calc_req, timeout=30)
         result = json.loads(resp.read().decode())
-        log(f'인센티브 자동 계산 완료: 정비 {result.get("repairCount", 0)}건, 총매출 {result.get("totalRevenue", 0):,}원')
+        log(f'인센티브 자동 계산 완료: 전표 {result.get("repairCount", 0)}건, 총매출 {result.get("totalRevenue", 0):,}원')
     except Exception as e:
         log(f'인센티브 자동 계산 트리거 실패 (무시): {e}')
 
