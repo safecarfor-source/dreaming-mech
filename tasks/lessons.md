@@ -247,4 +247,9 @@
 6. **관계(relation) 제거 시**: `include: { 관계명 }` 쓰는 모든 파일 검색. `grep -r "include.*reminders" backend/src/`
 7. **공유 테이블 변경 = 양쪽 모듈 빌드 검증**: BRAIN.md 구조도의 "벽" 양쪽 모두 `tsc --noEmit` 확인
 
-*마지막 업데이트: 2026-03-24 (A/B 시소 테스트 사고 + 스키마 연쇄 파괴)*
+### 시소 테스트 세션 추가 교훈
+8. **옛날 유니크 인덱스 잔존 문제**: Prisma 스키마에서 `@@unique([code, slot])` 추가해도, DB에 기존 `code_key` 유니크 인덱스가 남아있을 수 있음. `ALTER TABLE DROP CONSTRAINT` 뿐 아니라 `DROP INDEX`도 확인 필수. `pg_indexes` 테이블에서 직접 확인: `SELECT indexname FROM pg_indexes WHERE tablename='테이블명' AND indexdef LIKE '%UNIQUE%'`
+9. **FK가 옛날 유니크를 참조**: 단일 유니크 인덱스를 삭제하려면 해당 인덱스를 참조하는 FK를 먼저 삭제해야 함. 순서: FK 삭제 → 옛날 인덱스 삭제 → 새 compound FK 생성
+10. **테스트 4회 반복으로 안정성 확인**: 1회 통과는 우연일 수 있음. 최소 3회 연속 PASS + 데이터 무결성 변동 0건 확인이 "안정" 기준
+
+*마지막 업데이트: 2026-03-24 (A/B 시소 테스트 사고 + 스키마 연쇄 파괴 + 시소 테스트 4회 ALL PASS)*
