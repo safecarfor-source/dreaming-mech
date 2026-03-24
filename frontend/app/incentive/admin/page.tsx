@@ -446,6 +446,118 @@ function MappingSection() {
   );
 }
 
+// ===== 최소수량 목표 설정 섹션 =====
+
+function getRecentMonths(count: number): string[] {
+  const months: string[] = [];
+  const now = new Date();
+  for (let i = 0; i < count; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const yy = String(d.getFullYear()).slice(2);
+    const mm = d.getMonth() + 1;
+    months.push(`${yy}년 ${mm}월`);
+  }
+  return months;
+}
+
+const TARGET_ITEMS = Object.entries(ITEM_LABELS);
+
+function TargetSection() {
+  const monthOptions = getRecentMonths(6);
+  const [month, setMonth] = useState(monthOptions[0]);
+  const [targets, setTargets] = useState<Record<string, number>>(() =>
+    Object.fromEntries(TARGET_ITEMS.map(([k]) => [k, 0]))
+  );
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [msg, setMsg] = useState('');
+
+  const load = useCallback(async (m: string) => {
+    setLoading(true);
+    setMsg('');
+    try {
+      const res = await incentiveApi.get<Record<string, number>>('/team/targets', { params: { month: m } });
+      const data = res.data ?? {};
+      setTargets(Object.fromEntries(TARGET_ITEMS.map(([k]) => [k, data[k] ?? 0])));
+    } catch {
+      setTargets(Object.fromEntries(TARGET_ITEMS.map(([k]) => [k, 0])));
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { load(month); }, [load, month]);
+
+  async function handleSave() {
+    setSaving(true);
+    setMsg('');
+    try {
+      await incentiveApi.post('/team/targets', { month, targets });
+      setMsg('저장 완료!');
+    } catch {
+      setMsg('저장 실패');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div style={cardStyle}>
+      <div style={sectionTitleStyle}>최소수량 목표 설정</div>
+
+      {/* 월 선택 */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+        <span style={{ fontSize: 13, color: '#666', whiteSpace: 'nowrap' }}>대상 월</span>
+        <select
+          style={{ ...inputStyle, cursor: 'pointer' }}
+          value={month}
+          onChange={(e) => setMonth(e.target.value)}
+        >
+          {monthOptions.map((m) => (
+            <option key={m} value={m}>{m}</option>
+          ))}
+        </select>
+      </div>
+
+      {/* 품목 입력 그리드 */}
+      {loading ? (
+        <div style={{ color: '#999', fontSize: 13, marginBottom: 12 }}>로딩 중...</div>
+      ) : (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 8, marginBottom: 16 }}>
+          {TARGET_ITEMS.map(([key, label]) => (
+            <div key={key} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+              <span style={{ fontSize: 13, color: '#333', whiteSpace: 'nowrap' }}>{label}</span>
+              <input
+                type="number"
+                min="0"
+                style={{ ...inputStyle, width: 60, textAlign: 'right', padding: '6px 8px' }}
+                value={targets[key] ?? 0}
+                onChange={(e) => setTargets((prev) => ({ ...prev, [key]: Number(e.target.value) }))}
+              />
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* 저장 버튼 + 메시지 */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <button
+          style={{ ...btnStyle, background: GREEN }}
+          onClick={handleSave}
+          disabled={saving || loading}
+        >
+          {saving ? '저장 중...' : '저장'}
+        </button>
+        {msg && (
+          <span style={{ fontSize: 13, color: msg.includes('완료') ? GREEN : '#FF4E45' }}>
+            {msg}
+          </span>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ===== 메인 페이지 =====
 
 export default function IncentiveAdminPage() {
@@ -477,8 +589,8 @@ export default function IncentiveAdminPage() {
       {/* 계산 이력 */}
       <CalcHistorySection />
 
-      {/* 상품코드 매핑 */}
-      <MappingSection />
+      {/* 최소수량 설정 */}
+      <TargetSection />
     </div>
   );
 }
