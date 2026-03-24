@@ -1415,9 +1415,11 @@ function buildTabs() {
   const bar = document.getElementById('inlineTabs');
   bar.innerHTML = '';
   const tabs = [];
-  // 모든 계정: 차량조회 → 상품조회가 첫 탭
-  tabs.push({ id: 'gd-vehicle', label: '차량조회' });
-  tabs.push({ id: 'gd-product', label: '상품조회' });
+  // 662 계정: 차량조회 → 상품조회가 첫 탭
+  if (currentUser.loginId === '662') {
+    tabs.push({ id: 'gd-vehicle', label: '차량조회' });
+    tabs.push({ id: 'gd-product', label: '상품조회' });
+  }
   tabs.push({ id: 'team', label: '팀 인센티브' });
   if (currentUser.access.includes('manager')) tabs.push({ id: 'manager', label: '김권중' });
   if (currentUser.access.includes('director')) tabs.push({ id: 'director', label: '이정석' });
