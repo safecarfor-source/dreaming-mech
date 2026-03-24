@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
+import { GdService } from '../gd/gd.service';
 import { nowKST } from '../utils/kst';
 
 interface ClassifiedRow {
@@ -16,7 +17,10 @@ interface ClassifiedRow {
 export class AutoCalcService {
   private readonly logger = new Logger(AutoCalcService.name);
 
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private gdService: GdService,
+  ) {}
 
   /**
    * GdRepair 데이터 기반으로 인센티브 자동 계산
@@ -29,9 +33,13 @@ export class AutoCalcService {
 
     this.logger.log(`자동 계산 시작: ${month} (${yearMonth})`);
 
-    // 2. GdSaleDetail에서 해당 월 매출전표 데이터 조회 (DATAS 기반 — 극동 매출금액과 1원 단위 일치)
+    // 2. 활성 슬롯 확인 후 GdSaleDetail에서 해당 월 매출전표 데이터 조회
+    const slot = await this.gdService.getActiveSlot();
+    this.logger.log(`활성 슬롯: ${slot}`);
+
     const sales = await this.prisma.gdSaleDetail.findMany({
       where: {
+        slot,
         saleDate: { startsWith: yearMonth },
         saleType: '2', // IO=2 (출고/매출)만
       },
@@ -119,6 +127,7 @@ export class AutoCalcService {
         action: 'auto_calc',
         detail: JSON.stringify({
           month,
+          slot,
           totalRevenue,
           repairCount: sales.length,
           classifiedCount: classified.filter(c => c.category).length,
@@ -128,7 +137,7 @@ export class AutoCalcService {
     });
 
     this.logger.log(
-      `자동 계산 완료: ${month} | 전표 ${sales.length}건 | 총매출 ${totalRevenue.toLocaleString()}원 | 품목 ${Object.keys(summary.incentiveItems).length}개`,
+      `자동 계산 완료: ${month} (슬롯 ${slot}) | 전표 ${sales.length}건 | 총매출 ${totalRevenue.toLocaleString()}원 | 품목 ${Object.keys(summary.incentiveItems).length}개`,
     );
 
     return {
