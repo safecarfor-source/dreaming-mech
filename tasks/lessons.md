@@ -234,4 +234,17 @@
 > 4. **문제 해결** — 코드 수정 + 배포 + 직접 접속 확인
 > 5. **기록** — lessons.md에 기록하여 재발 방지
 
-*마지막 업데이트: 2026-03-21 (배포 캐시 + P3009 + CalcEngine + 오류 루틴)*
+## 테스트 스크립트 안전 규칙 (2026-03-24 데이터 삭제 사고) 🚨 치명적
+
+### 원인: 테스트 스크립트가 프로덕션 DB에서 WHERE 조건 없이 DELETE 실행
+1. **DELETE 쿼리에 반드시 TEST_ 필터**: `DELETE FROM table WHERE slot = 'A'` (전체 삭제) → 금지. `DELETE FROM table WHERE slot = 'A' AND fno LIKE 'TEST_%'` (테스트 데이터만) → 필수
+2. **프로덕션 DB에서 테스트 실행 시 트랜잭션 ROLLBACK 고려**: `BEGIN; ... ROLLBACK;` 으로 감싸거나, `--dry-run` 모드 기본값
+3. **DELETE 전 COUNT 확인**: 삭제 대상 건수를 먼저 출력하고, 예상과 다르면 중단
+4. **복원: 3단계 백업 덕분에 5분 내 복구 완료**: hourly 백업에서 `sed + COPY` 방식으로 특정 테이블만 추출 복원 가능
+
+### 스키마 변경 연쇄 파괴 (같은 날)
+5. **`@unique` → `@@unique([code, slot])` 변경 시**: `findUnique({ where: { code } })` 쓰는 **모든 파일** 검색 필수. `grep -r "findUnique.*code" backend/src/`
+6. **관계(relation) 제거 시**: `include: { 관계명 }` 쓰는 모든 파일 검색. `grep -r "include.*reminders" backend/src/`
+7. **공유 테이블 변경 = 양쪽 모듈 빌드 검증**: BRAIN.md 구조도의 "벽" 양쪽 모두 `tsc --noEmit` 확인
+
+*마지막 업데이트: 2026-03-24 (A/B 시소 테스트 사고 + 스키마 연쇄 파괴)*
