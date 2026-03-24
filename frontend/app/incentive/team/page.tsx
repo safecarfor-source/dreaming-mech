@@ -352,9 +352,12 @@ function NoTargetItemsCard({
   minQtyItems: TeamIncentiveData['minQtyCheck']['items'];
 }) {
   const targetKeys = new Set(minQtyItems.map((i) => i.itemKey));
-  const noTargetItems = Object.entries(items)
-    .filter(([key]) => !targetKeys.has(key) && key !== 'alignment')
-    .filter(([, val]) => val.qty > 0)
+
+  // ITEM_RATES에 정의된 모든 항목을 기준으로 표시 (qty=0이어도 표시)
+  const allItemKeys = Object.keys(ITEM_RATES);
+  const noTargetItems = allItemKeys
+    .filter((key) => !targetKeys.has(key) && key !== 'alignment')
+    .map((key) => [key, items[key] || { sales: 0, qty: 0 }] as [string, { sales: number; qty: number }])
     .sort((a, b) => b[1].qty - a[1].qty);
 
   if (noTargetItems.length === 0) return null;
