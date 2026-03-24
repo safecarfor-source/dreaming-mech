@@ -309,35 +309,45 @@ def test_active_slot_query():
 # 테스트 6: 비활성 슬롯 삭제 시뮬레이션
 # ============================================================
 def test_clear_inactive_slot():
-    section("Test 6: 비활성 슬롯 삭제 (동기화 전 클리어)")
+    section("Test 6: 비활성 슬롯 TEST_ 데이터만 삭제")
 
     try:
         rows = run_sql('SELECT "activeSlot" FROM "GdSlotConfig" WHERE id = 1;', fetch=True)
         active = rows[0] if rows else 'B'
         inactive = 'A' if active == 'B' else 'B'
 
-        info(f"비활성 슬롯({inactive}) 데이터 삭제 시뮬레이션...")
+        info(f"비활성 슬롯({inactive}) TEST_ 데이터만 삭제...")
 
-        # FK 역순 삭제 (Repair → SaleDetail → Product → Vehicle → Customer)
+        # 안전장치: TEST_ 프리픽스가 있는 데이터만 삭제
+        # GdRepair → fno LIKE 'TEST_%'
+        # GdSaleDetail → fno LIKE 'TEST_%'
+        # GdProduct/GdVehicle/GdCustomer → code LIKE 'TEST_%'
+        delete_filters = {
+            '"GdRepair"': "fno LIKE 'TEST_%'",
+            '"GdSaleDetail"': "fno LIKE 'TEST_%'",
+            '"GdProduct"': "code LIKE 'TEST_%'",
+            '"GdVehicle"': "code LIKE 'TEST_%'",
+            '"GdCustomer"': "code LIKE 'TEST_%'",
+        }
+
         for table in ['"GdRepair"', '"GdSaleDetail"', '"GdProduct"', '"GdVehicle"', '"GdCustomer"']:
-            rows_before = run_sql(f"SELECT COUNT(*) FROM {table} WHERE slot = '{inactive}';", fetch=True)
-            run_sql(f"DELETE FROM {table} WHERE slot = '{inactive}' AND code LIKE 'TEST_%';"
-                    if 'Customer' in table or 'Vehicle' in table or 'Product' in table
-                    else f"DELETE FROM {table} WHERE slot = '{inactive}';")
-            rows_after = run_sql(f"SELECT COUNT(*) FROM {table} WHERE slot = '{inactive}';", fetch=True)
-            info(f"  {table}: {rows_before[0] if rows_before else 0} → {rows_after[0] if rows_after else 0}")
+            filter_col = delete_filters[table]
+            # 삭제 전 건수 (TEST_ 데이터만)
+            count_before = run_sql(
+                f"SELECT COUNT(*) FROM {table} WHERE slot = '{inactive}' AND {filter_col};",
+                fetch=True
+            )
+            run_sql(f"DELETE FROM {table} WHERE slot = '{inactive}' AND {filter_col};")
+            info(f"  {table}: TEST_ {count_before[0] if count_before else 0}건 삭제")
 
-        # 활성 슬롯은 건드리지 않았는지 확인
-        rows_check = run_sql(
-            f'SELECT COUNT(*) FROM "GdVehicle" WHERE slot = \'{active}\' AND code LIKE \'TEST_%\';',
+        # 실제 데이터는 건드리지 않았는지 확인
+        real_count = run_sql(
+            f"SELECT COUNT(*) FROM \"GdVehicle\" WHERE slot = '{inactive}' AND code NOT LIKE 'TEST_%';",
             fetch=True
         )
-        if int(rows_check[0] if rows_check else 0) > 0:
-            ok(f"비활성 슬롯 삭제 성공, 활성 슬롯({active}) 무사")
-            return True
-        else:
-            warn("활성 슬롯에도 테스트 데이터 없음 (이전 테스트에서 삭제되었을 수 있음)")
-            return True
+        info(f"  비활성 슬롯 실제 데이터 잔존: {real_count[0] if real_count else 0}건 (무사)")
+        ok(f"TEST_ 데이터만 안전 삭제 완료")
+        return True
     except Exception as e:
         fail(f"비활성 슬롯 삭제 실패: {e}")
         return False
@@ -454,9 +464,10 @@ def test_cleanup():
 
     try:
         for slot in ['A', 'B']:
+            # 안전장치: 모든 테이블에서 TEST_ 프리픽스 데이터만 삭제
             for table, col in [
-                ('"GdRepair"', '"vehicleCode"'),
-                ('"GdSaleDetail"', '"customerCode"'),
+                ('"GdRepair"', 'fno'),
+                ('"GdSaleDetail"', 'fno'),
                 ('"GdProduct"', 'code'),
                 ('"GdVehicle"', 'code'),
                 ('"GdCustomer"', 'code'),
