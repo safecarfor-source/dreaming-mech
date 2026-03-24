@@ -18,19 +18,12 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
+          command_timeout: 20m
           script: |
             cd /home/ubuntu/dreaming-mech
-
-            # 1. 최신 코드 가져오기
             git pull origin main
-
-            # 2. 변경된 서비스만 리빌드
             docker compose -f docker-compose.prod.yml build --no-cache backend frontend
-
-            # 3. 재시작
             docker compose -f docker-compose.prod.yml up -d backend frontend
-
-            # 4. 헬스체크 대기
             echo "Waiting for backend health..."
             for i in $(seq 1 30); do
               if docker inspect --format='{{.State.Health.Status}}' dreaming-mech-backend 2>/dev/null | grep -q healthy; then
@@ -39,14 +32,9 @@ jobs:
               fi
               sleep 2
             done
-
-            # 5. gd-sync 코드 동기화
             if [ -d gd-sync ]; then
               cp gd-sync/gd_sync_server.py /home/ubuntu/gd-sync/gd_sync_server.py
               echo "gd_sync_server.py synced"
             fi
-
-            # 6. 오래된 Docker 이미지 정리
             docker image prune -af
-
             echo "Deploy complete!"
