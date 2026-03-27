@@ -53,7 +53,13 @@ Thumbs.db
 !WEB_UPGRADE_PLAYBOOK.md
 !.claude/agents/*.md
 !.claude/commands/*.md
+!.claude/skills/*.md
 !tasks/*.md
+!rules/*.md
+!frontend/CLAUDE.md
+!backend/CLAUDE.md
+!BRAIN.md
+!DESIGN_SYSTEM.md
 
 
 # docs

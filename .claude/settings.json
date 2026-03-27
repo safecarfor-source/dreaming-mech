@@ -17,7 +17,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "echo '[Stop Hook] Claude 작업 완료 — tasks/todo.md 업데이트 확인'"
+            "command": "osascript -e 'display notification \"작업 완료!\" with title \"Claude Code\" sound name \"Glass\"' 2>/dev/null; echo '[Stop] tasks/todo.md 업데이트 확인'",
+            "timeout": 10000
           }
         ]
       }
