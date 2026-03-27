@@ -152,6 +152,26 @@ function HomeContent() {
         </div>
       </section>
 
+      {/* 지역별 정비소 찾기 */}
+      <section className="bg-white px-4 py-12">
+        <div className="max-w-5xl mx-auto">
+          <h2 className="text-[22px] md:text-[24px] font-bold text-[#111827] mb-6">
+            지역별 정비소 찾기
+          </h2>
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
+            {['서울', '경기', '인천', '부산', '대구', '대전', '광주', '울산', '세종', '강원', '충북', '충남', '전북', '전남', '경북', '경남', '제주'].map((sido) => (
+              <Link
+                key={sido}
+                href={`/region/${sido}`}
+                className="text-center py-3 px-2 rounded-xl bg-[#F3F4F6] hover:bg-[#7C4DFF] hover:text-white text-[#374151] text-[14px] font-medium transition-colors"
+              >
+                {sido}
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* 바로 문의 섹션 */}
       <section className="bg-white px-4 py-16 text-center">
         <div className="max-w-lg mx-auto">
