@@ -22,6 +22,28 @@
           }
         ]
       }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if echo \"$CLAUDE_FILE_PATH\" | grep -qE '\\.(ts|tsx|js|jsx)$'; then cd /Users/shinjeayoun/dreaming-mech && npx prettier --write \"$CLAUDE_FILE_PATH\" 2>/dev/null; fi",
+            "timeout": 15000
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if echo \"$CLAUDE_TOOL_INPUT\" | grep -q 'git commit'; then cd /Users/shinjeayoun/dreaming-mech/frontend && npx tsc --noEmit 2>&1 | tail -5; cd /Users/shinjeayoun/dreaming-mech/backend && npx tsc --noEmit 2>&1 | tail -5; fi",
+            "timeout": 60000
+          }
+        ]
+      }
     ]
   }
 }
