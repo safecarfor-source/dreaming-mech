@@ -276,6 +276,47 @@ export const ALL_REGIONS: Region[] = [
   { sido: '제주특별자치도', sigungu: '서귀포시', display: '제주 서귀포시' },
 ];
 
+// 시도 약칭 매핑
+export const SIDO_SHORT_NAMES: Record<string, string> = {
+  '서울특별시': '서울',
+  '부산광역시': '부산',
+  '대구광역시': '대구',
+  '인천광역시': '인천',
+  '광주광역시': '광주',
+  '대전광역시': '대전',
+  '울산광역시': '울산',
+  '세종특별자치시': '세종',
+  '경기도': '경기',
+  '강원특별자치도': '강원',
+  '충청북도': '충북',
+  '충청남도': '충남',
+  '전북특별자치도': '전북',
+  '전라남도': '전남',
+  '경상북도': '경북',
+  '경상남도': '경남',
+  '제주특별자치도': '제주',
+};
+
+// 약칭 → 정식명 역매핑
+export const SIDO_FULL_NAMES: Record<string, string> = Object.fromEntries(
+  Object.entries(SIDO_SHORT_NAMES).map(([full, short]) => [short, full])
+);
+
+// URL용 시도 슬러그 (약칭 반환)
+export function getSidoSlug(sido: string): string {
+  return SIDO_SHORT_NAMES[sido] || sido;
+}
+
+// 시도별 시군구 목록 가져오기
+export function getSigungusBySido(sido: string): Region[] {
+  return ALL_REGIONS.filter(r => r.sido === sido);
+}
+
+// 유니크 시도 목록
+export function getUniqueSidos(): string[] {
+  return [...new Set(ALL_REGIONS.map(r => r.sido))];
+}
+
 // 검색 함수
 export function searchRegions(query: string): Region[] {
   if (!query || query.trim() === '') {
