@@ -1,4 +1,5 @@
-import { Body, Controller, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
+import { PrismaService } from '../../prisma/prisma.service';
 import { CalcEngineService } from './calc-engine.service';
 import { IncentiveJwtGuard, RolesGuard } from '../guards/incentive-auth.guard';
 import { Roles } from '../guards/roles.decorator';
@@ -17,7 +18,10 @@ function toMonthStr(year: number, month: number): string {
 @UseGuards(IncentiveJwtGuard, RolesGuard)
 @Roles('admin')
 export class CalcController {
-  constructor(private calcEngine: CalcEngineService) {}
+  constructor(
+    private calcEngine: CalcEngineService,
+    private prisma: PrismaService,
+  ) {}
 
   @Post('team')
   async calcTeam(@Body() body: CalcBody) {
@@ -47,5 +51,15 @@ export class CalcController {
   async calcAll(@Body() body: CalcBody) {
     const month = toMonthStr(body.year, body.month);
     return this.calcEngine.calcAll(month);
+  }
+
+  @Get('history')
+  async getHistory(@Query('limit') limit?: string) {
+    const take = limit ? parseInt(limit, 10) : 20;
+    return this.prisma.incentiveEditLog.findMany({
+      orderBy: { editedAt: 'desc' },
+      take,
+      select: { id: true, editedAt: true, detail: true },
+    });
   }
 }

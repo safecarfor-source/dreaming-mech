@@ -442,7 +442,7 @@ export default function IncentiveTeamPage() {
       try {
         const [monthRes, histRes] = await Promise.all([
           incentiveApi.get<TeamMonthlyEntry[]>('/team/monthly'),
-          incentiveApi.get<CalcHistory[]>('/calc-history?limit=1').catch(() => ({ data: [] })),
+          incentiveApi.get<CalcHistory[]>('/calc/history?limit=1').catch(() => ({ data: [] })),
         ]);
         const months = monthRes.data;
         if (!months || months.length === 0) {
