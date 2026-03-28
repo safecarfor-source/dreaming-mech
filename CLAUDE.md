@@ -18,6 +18,7 @@
 | DB 스키마 변경 | `rules/db-safety.md` + `rules/change-safety.md` |
 | 새 기능 추가 | `rules/change-safety.md` (변경 전 체크리스트) |
 | 배포 | `rules/deploy.md` |
+| 배포 후 검증 | `rules/deploy-checklist.md` (매 배포마다 필수) |
 | 보안 관련 | `rules/security.md` |
 | 세션 시작 | `BRAIN.md` (시스템 구조도) + `tasks/todo.md` |
 | 컨텍스트 압축 후 | `rules/context-recovery.md` |
