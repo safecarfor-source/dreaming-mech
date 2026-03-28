@@ -658,7 +658,10 @@ function DetailPanel({
                           {formatDate(item.repairDate)}
                           {item.mileage ? ` · ${formatNumber(item.mileage)}km` : ''}
                         </p>
-                        <p className="text-sm text-gray-800 font-medium leading-snug line-clamp-2">
+                        <p
+                          className="text-sm text-gray-800 font-medium leading-snug overflow-hidden"
+                          style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}
+                        >
                           {item.productName}
                         </p>
                         {item.memo && (
