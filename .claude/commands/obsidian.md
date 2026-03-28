@@ -53,11 +53,11 @@ curl -s -X POST "http://127.0.0.1:27123/search/" \
 
 ## 모드
 
-### briefing (전체 브리핑)
+### briefing (기본 — $ARGUMENTS 비어있으면 이 모드)
 옵시디언 볼트 전체를 읽고 **실행 한 것 / 실행 안 한 것**으로 분류하여 종합 보고.
 
 실행 순서:
-1. 모든 폴더 목록 조회 (✅ 할일, 03-Actions, 04-AI-Research, 📋 정리됨, 📅 일정, 01-Memory)
+1. 모든 폴더 목록 조회 (볼트 루트(무제), ✅ 할일, 03-Actions, 04-AI-Research, 05-Content, 📋 정리됨, 📅 일정, 01-Memory)
 2. 각 폴더의 모든 파일 내용을 Bash REST API GET으로 읽기
 3. 2가지 대분류로 정리:
 
@@ -85,7 +85,7 @@ curl -s -X POST "http://127.0.0.1:27123/search/" \
 
 5. 테이블 형식으로 보고 (항목, 상태, 출처 폴더/파일명 포함)
 
-### memory (기본 — $ARGUMENTS 비어있으면 이 모드)
+### memory
 01-Memory/ 하위 5개 파일을 읽어서 핵심 내용 요약 보고:
 - who-i-am.md, business-structure.md, tools-and-stack.md, current-priorities.md, todo-master.md
 
@@ -228,9 +228,9 @@ status: 완료
 
 ## 사용 예시
 ```
-/obsidian                           # 메모리 로드
-/obsidian briefing                  # 전체 브리핑 (실행한것/안한것 분류)
+/obsidian                           # 전체 브리핑 (기본 — 실행한것/안한것 분류)
 /obsidian memory                    # 메모리 로드
+/obsidian briefing                  # 전체 브리핑 (위와 동일)
 /obsidian search 타이어              # 볼트에서 타이어 관련 검색
 /obsidian save research 트렌드리포트  # 04-AI-Research/에 저장
 /obsidian tidy                      # Inbox 정리
