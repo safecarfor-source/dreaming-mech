@@ -39,7 +39,7 @@ jobs:
           echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H 13.209.143.155 >> ~/.ssh/known_hosts
-          ssh -i ~/.ssh/id_rsa -f -N -L 5432:172.18.0.4:5432 ubuntu@13.209.143.155
+          ssh -i ~/.ssh/id_rsa -f -N -L 5432:172.18.0.3:5432 ubuntu@13.209.143.155
           sleep 2
 
       - name: crawl
