@@ -1,0 +1,64 @@
+name: íì´ì´ ê°ê²© í¬ë¡¤ë§
+
+on:
+  schedule:
+    - cron: '0 18 * * *'  # ë§¤ì¼ KST 03:00 (UTC 18:00)
+  workflow_dispatch:       # ìë ì¤í ë²í¼
+
+jobs:
+  crawl:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: ì½ë ì²´í¬ìì
+        uses: actions/checkout@v4
+
+      - name: Python 3.11 ì¤ì 
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: tire-price/requirements.txt
+
+      - name: í¨í¤ì§ ì¤ì¹
+        working-directory: tire-price
+        run: |
+          pip install -r requirements.txt
+          playwright install chromium
+          playwright install-deps chromium
+
+      - name: ìë¹ì¤ ê³ì  JSON íì¼ ìì±
+        working-directory: tire-price
+        run: |
+          echo '${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}' > service-account.json
+
+      - name: EC2 SSH í°ë ì¤ì  (DB ì ìì©)
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H 13.209.143.155 >> ~/.ssh/known_hosts
+          # ë°±ê·¸ë¼ì´ë í°ë: localhost:5432 â EC2 Docker postgres:5432
+          ssh -i ~/.ssh/id_rsa -f -N \
+            -L 5432:172.18.0.4:5432 \
+            ubuntu@13.209.143.155
+          sleep 2
+          echo "SSH í°ë ì°ê²° ìë£"
+
+      - name: íì´ì´ ê°ê²© í¬ë¡¤ë§ ì¤í
+        working-directory: tire-price
+        env:
+          TIRE_DB_NAME: ${{ secrets.TIRE_DB_NAME }}
+          TIRE_DB_USER: ${{ secrets.TIRE_DB_USER }}
+          TIRE_DB_PASSWORD: ${{ secrets.TIRE_DB_PASSWORD }}
+          TIRE_DB_HOST: localhost
+          TIRE_DB_PORT: 5432
+          GOOGLE_SHEETS_ID: ${{ secrets.GOOGLE_SHEETS_ID }}
+          GOOGLE_SERVICE_ACCOUNT_JSON: service-account.json
+        run: python main.py
+
+      - name: ìë¹ì¤ ê³ì  JSON ì­ì  (ë³´ì)
+        if: always()
+        working-directory: tire-price
+        run: rm -f service-account.json
