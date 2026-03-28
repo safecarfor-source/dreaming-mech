@@ -162,6 +162,7 @@ export class ErpService {
     >();
 
     for (const row of rows) {
+      if (!row.saleDate) continue;
       if (!byDate.has(row.saleDate)) {
         byDate.set(row.saleDate, { totalSales: 0, customerSet: new Set(), count: 0 });
       }
