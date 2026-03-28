@@ -322,7 +322,7 @@ def fetch_all_rows(cursor, table: str, columns: str, where: str = "") -> list:
         return []
 
 
-def parse_gdb(gdb_path: str) -> dict:
+def parse_gdb(gdb_path: str, config: dict = None) -> dict:
     """
     TOTAL.GDB 파싱 → {
         customers: [...],
@@ -332,6 +332,8 @@ def parse_gdb(gdb_path: str) -> dict:
         repairs: [...],
     }
     """
+    if config is None:
+        config = {}
     if not FDB_AVAILABLE:
         raise RuntimeError("fdb 라이브러리가 설치되지 않았습니다. pip install fdb 실행 필요.")
 
@@ -339,8 +341,8 @@ def parse_gdb(gdb_path: str) -> dict:
 
     conn = fdb.connect(
         database=gdb_path,
-        user="SYSDBA",
-        password="masterkey",
+        user=config.get("db_user", "SYSDBA"),
+        password=config.get("db_password", "masterkey"),
         charset="WIN949",  # 한글 인코딩
     )
     cur = conn.cursor()
@@ -494,7 +496,7 @@ def parse_gdb(gdb_path: str) -> dict:
 # PostgreSQL 데이터 쓰기
 # ──────────────────────────────────────────────
 def clear_slot(pg_conn, slot: str):
-    """비활성 슬롯 데이터 전체 삭제 (FK 순서 역순으로)"""
+    """비활성 슬롯 데이터 전체 삭제 (FK 순서 역순으로) — commit 없음, 트랜잭션 외부에서 제어"""
     tables = [
         "GdRepair",
         "GdSaleDetail",
@@ -507,18 +509,16 @@ def clear_slot(pg_conn, slot: str):
             cur.execute(f'DELETE FROM "{t}" WHERE slot = %s', (slot,))
             deleted = cur.rowcount
             logger.info(f"  {t} 슬롯={slot} 삭제: {deleted}건")
-    pg_conn.commit()
 
 
 def insert_batch(pg_conn, sql: str, rows: list, table_name: str):
-    """배치 INSERT (BATCH_SIZE 단위)"""
+    """배치 INSERT (BATCH_SIZE 단위) — commit 없음, 트랜잭션 외부에서 제어"""
     total = 0
     with pg_conn.cursor() as cur:
         for i in range(0, len(rows), BATCH_SIZE):
             batch = rows[i:i + BATCH_SIZE]
             psycopg2.extras.execute_batch(cur, sql, batch)
             total += len(batch)
-    pg_conn.commit()
     logger.info(f"  {table_name}: {total}건 INSERT 완료")
     return total
 
@@ -671,7 +671,7 @@ def get_active_slot(pg_conn) -> str:
 
 
 def switch_active_slot(pg_conn, new_slot: str):
-    """GdSlotConfig 업데이트: activeSlot 전환, switchCount 증가"""
+    """GdSlotConfig 업데이트: activeSlot 전환, switchCount 증가 — commit 없음, 트랜잭션 외부에서 제어"""
     with pg_conn.cursor() as cur:
         cur.execute(
             """
@@ -687,7 +687,6 @@ def switch_active_slot(pg_conn, new_slot: str):
             """,
             (new_slot, new_slot)
         )
-    pg_conn.commit()
 
 
 def get_last_synced_hash(pg_conn) -> Optional[str]:
@@ -755,7 +754,7 @@ def run_sync(cfg: dict, force: bool = False) -> bool:
 
         # GDB 파싱
         start_ts = time.time()
-        data = parse_gdb(gdb_path)
+        data = parse_gdb(gdb_path, cfg)
         parse_elapsed = time.time() - start_ts
         logger.info(f"파싱 완료 ({parse_elapsed:.1f}s): "
                     f"거래처={len(data['customers'])}, "
@@ -764,33 +763,46 @@ def run_sync(cfg: dict, force: bool = False) -> bool:
                     f"전표={len(data['sale_details'])}, "
                     f"정비={len(data['repairs'])}")
 
-        # 비활성 슬롯 데이터 삭제
-        logger.info(f"슬롯 {inactive_slot} 기존 데이터 삭제 중...")
-        clear_slot(pg_conn, inactive_slot)
+        # 비활성 슬롯 데이터 삭제 + 새 데이터 INSERT + 슬롯 전환을 하나의 트랜잭션으로 처리
+        # autocommit 비활성화 (psycopg2 기본값이 autocommit=False이지만 명시적으로 보장)
+        pg_conn.autocommit = False
+        logger.info(f"슬롯 {inactive_slot} 기존 데이터 삭제 중... (트랜잭션 시작)")
+        try:
+            clear_slot(pg_conn, inactive_slot)
 
-        # 새 데이터 INSERT
-        logger.info(f"슬롯 {inactive_slot} 데이터 INSERT 중...")
-        write_ts = time.time()
-        total_rows = write_slot_data(pg_conn, data, inactive_slot)
-        write_elapsed = time.time() - write_ts
-        logger.info(f"INSERT 완료 ({write_elapsed:.1f}s): 총 {total_rows}건")
+            # 새 데이터 INSERT
+            logger.info(f"슬롯 {inactive_slot} 데이터 INSERT 중...")
+            write_ts = time.time()
+            total_rows = write_slot_data(pg_conn, data, inactive_slot)
+            write_elapsed = time.time() - write_ts
+            logger.info(f"INSERT 완료 ({write_elapsed:.1f}s): 총 {total_rows}건")
 
-        # 검증
-        valid, reason = validate_slot(pg_conn, inactive_slot, cfg)
-        if not valid:
-            msg = f"검증 실패 ({reason}): 슬롯 전환 안 함, 현재 슬롯({active_slot}) 유지"
-            logger.error(msg)
-            complete_sync_log(pg_conn, log_id, "failed", total_rows, reason)
-            send_telegram(cfg,
-                f"[꿈꾸는정비사] GD 동기화 검증 실패\n"
-                f"슬롯: {inactive_slot}\n"
-                f"원인: {reason}\n"
-                f"현재 서비스 슬롯: {active_slot} (유지)"
-            )
-            return False
+            # 검증
+            valid, reason = validate_slot(pg_conn, inactive_slot, cfg)
+            if not valid:
+                pg_conn.rollback()
+                msg = f"검증 실패 ({reason}): 트랜잭션 롤백, 현재 슬롯({active_slot}) 유지"
+                logger.error(msg)
+                complete_sync_log(pg_conn, log_id, "failed", total_rows, reason)
+                send_telegram(cfg,
+                    f"[꿈꾸는정비사] GD 동기화 검증 실패\n"
+                    f"슬롯: {inactive_slot}\n"
+                    f"원인: {reason}\n"
+                    f"현재 서비스 슬롯: {active_slot} (유지)"
+                )
+                return False
 
-        # 슬롯 전환
-        switch_active_slot(pg_conn, inactive_slot)
+            # 슬롯 전환 (트랜잭션 내 포함)
+            switch_active_slot(pg_conn, inactive_slot)
+
+            # 전체 성공 시 커밋
+            pg_conn.commit()
+            logger.info(f"트랜잭션 커밋 완료 — 슬롯 {active_slot} → {inactive_slot} 전환 확정")
+
+        except Exception:
+            pg_conn.rollback()
+            logger.error("슬롯 전환 트랜잭션 롤백 (예외 발생)")
+            raise
         total_elapsed = time.time() - start_ts
         logger.info(
             f"동기화 성공! 슬롯 {active_slot} → {inactive_slot} 전환 완료 "
@@ -925,5 +937,50 @@ def main():
     daemon.run()
 
 
+PID_FILE = "/home/ubuntu/gd-sync/gd_sync.pid"
+
+
+def acquire_lock(pid_file: str) -> bool:
+    """PID 파일 잠금 획득. 이미 실행 중이면 False 반환."""
+    if os.path.exists(pid_file):
+        try:
+            with open(pid_file, "r") as f:
+                old_pid = int(f.read().strip())
+            # 프로세스가 살아있는지 확인 (kill -0: 신호 전송 없이 존재 여부만 확인)
+            os.kill(old_pid, 0)
+            # 예외 없이 통과하면 프로세스가 살아있음 → 중복 실행
+            logger.warning(f"이미 실행 중인 프로세스 감지 (PID={old_pid}). 중복 실행 방지 — 종료.")
+            return False
+        except (ValueError, ProcessLookupError):
+            # PID 파일이 존재하지만 프로세스는 없음 (이전 비정상 종료) → 무시하고 계속
+            logger.info("스테일 PID 파일 감지. 이전 비정상 종료 흔적 제거 후 시작.")
+        except PermissionError:
+            # 프로세스는 살아있지만 다른 사용자 소유 → 중복으로 간주
+            logger.warning("PID 파일 프로세스 접근 권한 없음 — 중복 실행 방지.")
+            return False
+
+    try:
+        with open(pid_file, "w") as f:
+            f.write(str(os.getpid()))
+    except Exception as e:
+        logger.error(f"PID 파일 쓰기 실패 ({pid_file}): {e}")
+        return False
+    return True
+
+
+def release_lock(pid_file: str):
+    """PID 파일 삭제."""
+    try:
+        if os.path.exists(pid_file):
+            os.remove(pid_file)
+    except Exception as e:
+        logger.warning(f"PID 파일 삭제 실패 ({pid_file}): {e}")
+
+
 if __name__ == "__main__":
-    main()
+    if not acquire_lock(PID_FILE):
+        sys.exit(1)
+    try:
+        main()
+    finally:
+        release_lock(PID_FILE)

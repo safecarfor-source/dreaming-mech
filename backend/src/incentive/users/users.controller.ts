@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { IncentiveJwtGuard, RolesGuard } from '../guards/incentive-auth.guard';
 import { Roles } from '../guards/roles.decorator';
@@ -21,6 +21,10 @@ export class UsersController {
 
   @Post()
   async create(@Body() body: { loginId: string; password: string; name: string; role: string }) {
+    const allowedRoles = ['admin', 'viewer', 'user'];
+    if (!body.loginId || body.loginId.length < 3) throw new BadRequestException('loginId는 3자 이상');
+    if (!body.password || body.password.length < 8) throw new BadRequestException('password는 8자 이상');
+    if (!allowedRoles.includes(body.role)) throw new BadRequestException('role은 admin/viewer/user 중 하나');
     const hashed = await bcrypt.hash(body.password, 10);
     return this.prisma.incentiveUser.create({
       data: { loginId: body.loginId, password: hashed, name: body.name, role: body.role },
@@ -30,6 +34,10 @@ export class UsersController {
 
   @Put(':id')
   async update(@Param('id') id: string, @Body() body: any) {
+    const allowedRoles = ['admin', 'viewer', 'user'];
+    if (body.loginId !== undefined && body.loginId.length < 3) throw new BadRequestException('loginId는 3자 이상');
+    if (body.password !== undefined && body.password.length < 8) throw new BadRequestException('password는 8자 이상');
+    if (body.role !== undefined && !allowedRoles.includes(body.role)) throw new BadRequestException('role은 admin/viewer/user 중 하나');
     const data: any = {};
     if (body.name) data.name = body.name;
     if (body.role) data.role = body.role;

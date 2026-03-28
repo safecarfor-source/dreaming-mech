@@ -537,7 +537,6 @@ model IncentiveUser {
   id            String   @id @default(uuid())
   loginId       String   @unique
   password      String   // bcrypt
-  plainPassword String?  // 관리자 조회용 평문 비밀번호
   name          String
   role          String   @default("viewer") // "admin", "manager", "director", "viewer"
   createdAt     DateTime @default(now())
