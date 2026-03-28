@@ -100,7 +100,7 @@ function RepairDetail({ code }: RepairDetailProps) {
             fontSize: 12, borderBottom: '1px solid #F5F5F5',
           }}>
             <span style={{ color: '#666' }}>{d}</span>
-            <span style={{ fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            <span style={{ fontWeight: 500, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
               {r.productName || '-'}
             </span>
             <span style={{ textAlign: 'right', color: '#1A1A1A' }}>
