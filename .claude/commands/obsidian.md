@@ -59,8 +59,10 @@ curl -s -X POST "http://127.0.0.1:27123/search/" \
 #### 데이터 수집 (가능한 한 병렬 실행)
 
 **소스 1: 옵시디언 볼트**
-1. 모든 폴더 목록 조회 (볼트 루트(무제), ✅ 할일, 03-Actions, 04-AI-Research, 05-Content, 📋 정리됨, 📅 일정, 01-Memory)
-2. 각 폴더의 모든 파일 내용을 Bash REST API GET으로 읽기
+1. **볼트 루트 먼저 스캔**: REST API GET /vault/ 호출하여 루트의 .md 파일 목록 확인 → 각 파일 내용 읽기 (⚠️ 루트에 정리 안 된 메모가 가장 많이 쌓임!)
+2. 하위 폴더 스캔: ✅ 할일, 03-Actions, 04-AI-Research, 05-Content, 📋 정리됨, 📅 일정, 01-Memory, 📥 Inbox
+3. 각 폴더의 모든 .md 파일 내용을 Bash REST API GET으로 읽기
+4. .canvas 파일은 무시
 
 **소스 2: 구글 캘린더**
 1. `gcal_list_events` 호출 (timeMin: 오늘 00:00, timeMax: 내일 23:59, timeZone: Asia/Seoul)
