@@ -54,6 +54,7 @@ jobs:
           TIRE_DB_PORT: '5432'
           GOOGLE_SHEETS_ID: ${{ secrets.GOOGLE_SHEETS_ID }}
           GOOGLE_SERVICE_ACCOUNT_JSON: service-account.json
+          TIREZZANG_PLAYWRIGHT: '1'
         run: python main.py
       - name: cleanup
         if: always()
