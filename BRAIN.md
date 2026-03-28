@@ -3,7 +3,7 @@
 > 모든 중요한 결정, 전략, 패턴을 여기에 기록.
 > 세션 시작 시 반드시 이 파일 먼저 읽을 것.
 
-*마지막 업데이트: 2026-03-24*
+*마지막 업데이트: 2026-03-28*
 
 ---
 
@@ -131,11 +131,15 @@
 ## 🏗️ 기술 아키텍처
 
 ### 인프라
-- **EC2**: ubuntu@13.209.143.155 (ap-northeast-2)
+- **EC2**: ubuntu@13.209.143.155 (ap-northeast-2), **t3.medium** (RAM 4GB, 2026-03-28 업그레이드)
 - **PEM**: /Users/shinjeayoun/Documents/문서/dreaming-mech-key.pem
 - **서버 경로**: /home/ubuntu/dreaming-mech
 - **배포**: Docker Compose (frontend:3000, backend:3001, postgres)
 - **Nginx**: SSL (Let's Encrypt), dreammechaniclab.com
+- **Postgres 튜닝**: shared_buffers=1GB, work_mem=16MB, effective_cache_size=3GB, max_connections=50
+- **memory-guard**: cron 5분 주기, Swap 20%→경고/40%→자동조치+텔레그램 알림 (`scripts/memory-guard.sh`)
+- **안전 배포**: `scripts/safe-deploy.sh` (백업→pull→빌드→배포→헬스체크)
+- **권한 분리**: app_user(앱) / migration_user(마이그레이션) / readonly_user(모니터링)
 
 ### 기술 스택
 - **Frontend**: Next.js 16 + React 19 + Tailwind CSS 4 + Framer Motion + Zustand
@@ -337,6 +341,14 @@ STEP 4: 접수 완료
 | 2026-03-24 | 3단계 백업 체계 (hourly×24 + daily×7 + monthly 30일) | ✅ 완료 |
 | 2026-03-24 | 시스템 구조도 + 변경 안전 규칙 작성 | ✅ 완료 |
 | 2026-03-24 | 시소 테스트 4회 ALL PASS + FK compound 교체 + 데이터 복원 | ✅ 완료 |
+| 2026-03-28 | EC2 t3.small→t3.medium 업그레이드 (RAM 1.9→4GB, Swap 597→23MB) | ✅ 완료 |
+| 2026-03-28 | Postgres 메모리 튜닝 (shared_buffers 128MB→1GB, work_mem 4→16MB) | ✅ 완료 |
+| 2026-03-28 | memory-guard.sh 설치 (5분 cron, 텔레그램 알림 연동) | ✅ 완료 |
+| 2026-03-28 | 보안 수정 1~9번 (plainPassword 제거, PID잠금, 트랜잭션, 인덱스, nullable) | ✅ 완료 |
+| 2026-03-28 | 배포 체크리스트 신규 작성 (rules/deploy-checklist.md) | ✅ 완료 |
+| 2026-03-28 | 차량조회 품목명 2줄 표시 수정 (gd-vehicle/page.tsx whiteSpace:nowrap 제거) | ✅ 완료 |
+| 2026-03-28 | 지역별 SEO 랜딩 페이지 + 정비소 JSON-LD 구조화 데이터 | ✅ 완료 |
+| 2026-03-28 | GET /incentive/calc/history 엔드포인트 추가 | ✅ 완료 |
 
 ---
 

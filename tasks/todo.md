@@ -70,6 +70,22 @@
 - [x] 유튜브 채널 → 사이트 링크 연결
 - [x] 네비게이션 정리 (서비스/문의하기 삭제, 플랫폼 소개 추가)
 
+### 인프라/보안 안정화 작전 (2026-03-28 완료)
+- [x] EC2 t3.small → t3.medium 업그레이드 (RAM 4GB, Swap 597→23MB)
+- [x] Postgres 메모리 튜닝 (shared_buffers 1GB, work_mem 16MB)
+- [x] memory-guard.sh 설치 (5분 cron, Swap 모니터링, 텔레그램 알림)
+- [x] 보안 #1: IncentiveUser.plainPassword 필드 제거 (DB + 코드)
+- [x] 보안 #2: Firebird 연결 정보 환경변수화 (gd_sync_server.py)
+- [x] 보안 #3: PID 파일 잠금 (동시 실행 방지)
+- [x] 보안 #4: users.controller.ts 입력값 검증 추가
+- [x] 보안 #5: clear_slot + insert_batch 단일 트랜잭션 묶기
+- [x] 보안 #8: GdSyncLog 인덱스 추가 (status/completedAt, sourceHash)
+- [x] 보안 #9: GdSaleDetail.saleDate nullable 처리
+- [x] 배포 체크리스트 신규 작성 (rules/deploy-checklist.md)
+- [x] 차량조회 품목명 2줄 표시 수정 (gd-vehicle/page.tsx)
+- [x] 지역별 SEO 랜딩 페이지 + 정비소 JSON-LD 구조화 데이터
+- [x] GET /incentive/calc/history 엔드포인트 추가
+
 ---
 
 ## ⏳ 남은 작업 (우선순위)
@@ -80,8 +96,8 @@
 - [ ] 플랫폼 소개 영상 촬영/편집
 
 ### P1: 코드 (소위 작전)
+- [ ] 텔레그램 알림 연결 (Bot Token + Chat ID 대장님 제공 대기 중)
 - [ ] 정비사 문의 알림 시스템 (새 문의 시 정비사에게 알림)
-- [ ] 지역별 SEO 랜딩 페이지 (/region/서울, /region/부산 등)
 - [ ] 정비소 상세 페이지 SEO (/shop/{region}-{name})
 
 ### 커뮤니티 활성화
@@ -114,3 +130,5 @@
 | 2026-02-27 | 디자인 통일 + 커뮤니티 Q&A + 고객 관리 | ✅ |
 | 2026-02-27 | 유튜브 연동 + GA 연동 + 네비게이션 정리 | ✅ |
 | 2026-02-27 | SEO P0 작전 (구조화 데이터 + 검색 등록) | ✅ |
+| 2026-03-28 | 인프라/보안 안정화 (EC2업그, Postgres튜닝, memory-guard, 보안#1~9) | ✅ |
+| 2026-03-28 | 지역별 SEO 랜딩 + 정비소 JSON-LD + calc/history 엔드포인트 | ✅ |
