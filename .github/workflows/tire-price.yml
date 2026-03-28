@@ -9,30 +9,33 @@ jobs:
   crawl:
     runs-on: ubuntu-latest
     timeout-minutes: 30
-
     steps:
       - name: checkout
         uses: actions/checkout@v4
-
       - name: setup-python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
           cache: pip
           cache-dependency-path: tire-price/requirements.txt
-
       - name: install
         working-directory: tire-price
         run: |
           pip install -r requirements.txt
           playwright install chromium
           playwright install-deps chromium
-
       - name: make-sa-json
         working-directory: tire-price
+        env:
+          SA_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
         run: |
-          echo '${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}' > service-account.json
-
+          python3 -c "
+          import os, json
+          raw = os.environ['SA_JSON'].strip().lstrip('\ufeff')
+          data = json.loads(raw)
+          with open('service-account.json', 'w') as f:
+              json.dump(data, f)
+          "
       - name: ssh-tunnel
         run: |
           mkdir -p ~/.ssh
@@ -41,7 +44,6 @@ jobs:
           ssh-keyscan -H 13.209.143.155 >> ~/.ssh/known_hosts
           ssh -i ~/.ssh/id_rsa -f -N -L 5432:172.18.0.3:5432 ubuntu@13.209.143.155
           sleep 2
-
       - name: crawl
         working-directory: tire-price
         env:
@@ -53,7 +55,6 @@ jobs:
           GOOGLE_SHEETS_ID: ${{ secrets.GOOGLE_SHEETS_ID }}
           GOOGLE_SERVICE_ACCOUNT_JSON: service-account.json
         run: python main.py
-
       - name: cleanup
         if: always()
         working-directory: tire-price
