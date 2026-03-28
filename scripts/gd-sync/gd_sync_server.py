@@ -448,7 +448,7 @@ def parse_gdb(gdb_path: str) -> dict:
             continue
         result["sale_details"].append({
             "fno": fno,
-            "saleDate": parse_date(r[1]) or "1970-01-01",
+            "saleDate": parse_date(r[1]),
             "saleType": safe_str(r[2]) or None,
             "customerCode": cust_code,
             "productCode": prod_code,

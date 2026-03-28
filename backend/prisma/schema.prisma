@@ -806,7 +806,7 @@ model GdSaleDetail {
   id            Int       @id @default(autoincrement())
   fno           String                     // 전표번호
   slot          String    @default("A")    // A/B 시소 슬롯
-  saleDate      String                     // 거래일자 (YYYY-MM-DD)
+  saleDate      String?                    // 거래일자 (YYYY-MM-DD) — 파싱 실패 시 null
   saleType      String?                    // 입출고 구분 (1=입고, 2=판매, 3=반품)
   customerCode  String                     // 거래처 코드
   customer      GdCustomer @relation(fields: [customerCode, slot], references: [code, slot])
@@ -881,4 +881,7 @@ model GdSyncLog {
   errorMessage  String?   @db.Text
   startedAt     DateTime  @default(now())
   completedAt   DateTime?
+
+  @@index([status, completedAt])
+  @@index([sourceHash])
 }
