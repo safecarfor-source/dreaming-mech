@@ -469,7 +469,7 @@ export default function IncentiveTeamPage() {
         // 항상 현재 월 선택
         setSelectedMonth(curMonth);
       } catch {
-        setMonthList([{ month: curMonth }]);
+        setMonthList([{ month: curMonth, incentive: 0, penalized: false }]);
         setSelectedMonth(curMonth);
         setLoading(false);
       }
