@@ -462,6 +462,11 @@ function getRecentMonths(count: number): string[] {
 
 const TARGET_ITEMS = Object.entries(ITEM_LABELS);
 
+interface QtyHistoryData {
+  history: Array<{ month: string; items: Record<string, number> }>;
+  targets: Record<string, Record<string, number>>;
+}
+
 function TargetSection() {
   const monthOptions = getRecentMonths(6);
   const [month, setMonth] = useState(monthOptions[0]);
@@ -471,6 +476,8 @@ function TargetSection() {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState('');
+  const [histData, setHistData] = useState<QtyHistoryData | null>(null);
+  const [histLoading, setHistLoading] = useState(true);
 
   const load = useCallback(async (m: string) => {
     setLoading(true);
@@ -486,7 +493,20 @@ function TargetSection() {
     }
   }, []);
 
+  const loadHistory = useCallback(async () => {
+    setHistLoading(true);
+    try {
+      const res = await incentiveApi.get<QtyHistoryData>('/team/item-qty-history');
+      setHistData(res.data);
+    } catch {
+      setHistData(null);
+    } finally {
+      setHistLoading(false);
+    }
+  }, []);
+
   useEffect(() => { load(month); }, [load, month]);
+  useEffect(() => { loadHistory(); }, [loadHistory]);
 
   async function handleSave() {
     setSaving(true);
@@ -494,6 +514,7 @@ function TargetSection() {
     try {
       await incentiveApi.post('/team/targets', { month, targets });
       setMsg('저장 완료!');
+      loadHistory();
     } catch {
       setMsg('저장 실패');
     } finally {
@@ -540,7 +561,7 @@ function TargetSection() {
       )}
 
       {/* 저장 버튼 + 메시지 */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
         <button
           style={{ ...btnStyle, background: GREEN }}
           onClick={handleSave}
@@ -552,6 +573,59 @@ function TargetSection() {
           <span style={{ fontSize: 13, color: msg.includes('완료') ? GREEN : '#FF4E45' }}>
             {msg}
           </span>
+        )}
+      </div>
+
+      {/* 5개월 이력 테이블 */}
+      <div style={{ borderTop: '1px solid #F0F0F0', paddingTop: 20 }}>
+        <div style={{ fontSize: 14, fontWeight: 700, color: '#1A1A1A', marginBottom: 12 }}>최근 5개월 수량 이력</div>
+        {histLoading && <div style={{ color: '#999', fontSize: 13 }}>로딩 중...</div>}
+        {!histLoading && histData && histData.history.length > 0 && (
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+              <thead>
+                <tr style={{ background: '#F5F5F5' }}>
+                  <th style={{ padding: '8px 10px', textAlign: 'left', fontWeight: 600, color: '#666', borderBottom: '1px solid #E0E0E0', whiteSpace: 'nowrap' }}>품목</th>
+                  {histData.history.map((h) => (
+                    <th key={h.month} style={{ padding: '8px 10px', textAlign: 'center', fontWeight: 600, color: '#666', borderBottom: '1px solid #E0E0E0', whiteSpace: 'nowrap' }}>
+                      {h.month}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {TARGET_ITEMS.map(([key, label]) => (
+                  <tr key={key} style={{ borderBottom: '1px solid #F0F0F0' }}>
+                    <td style={{ padding: '8px 10px', fontWeight: 600, color: '#333', whiteSpace: 'nowrap' }}>{label}</td>
+                    {histData.history.map((h) => {
+                      const qty = h.items[key] ?? 0;
+                      const tgt = histData.targets[h.month]?.[key] ?? 0;
+                      const met = tgt > 0 ? qty >= tgt : null;
+                      return (
+                        <td key={h.month} style={{ padding: '8px 10px', textAlign: 'center' }}>
+                          <span style={{
+                            fontWeight: met !== null ? 700 : 400,
+                            color: met === true ? GREEN : met === false ? RED : '#666',
+                          }}>
+                            {qty}
+                          </span>
+                          {tgt > 0 && (
+                            <span style={{ fontSize: 10, color: '#AAA', marginLeft: 2 }}>/{tgt}</span>
+                          )}
+                        </td>
+                      );
+                    })}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <p style={{ fontSize: 11, color: '#999', marginTop: 6 }}>
+              숫자/목표수량 — <span style={{ color: GREEN, fontWeight: 700 }}>초록</span> 달성 / <span style={{ color: RED, fontWeight: 700 }}>빨강</span> 미달
+            </p>
+          </div>
+        )}
+        {!histLoading && (!histData || histData.history.length === 0) && (
+          <p style={{ fontSize: 13, color: '#999' }}>이력 없음</p>
         )}
       </div>
     </div>

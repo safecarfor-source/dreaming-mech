@@ -41,23 +41,23 @@ const ACCENT = '#3EA6FF';
 const GREEN = '#10B981';
 const RED = '#EF4444';
 
-// 5단계 배율 티어 (이정석 부장)
+// 5단계 배율 티어 (이정석 부장) — 전년 대비 성장률 기준
 const DIR_TIERS = [
-  { label: '5% 이상 하락', min: -999, max: -5, rate: 0.3 },
-  { label: '0~5% 하락',    min: -5,   max: 0,  rate: 0.5 },
-  { label: '0~5% 성장',    min: 0,    max: 5,  rate: 0.6 },
-  { label: '5~8% 성장',    min: 5,    max: 8,  rate: 0.7 },
-  { label: '8% 이상 성장', min: 8,    max: 999, rate: 0.9 },
+  { label: '하락2 (-10% 이하)',  min: -999, max: -10, rate: 0.4 },
+  { label: '하락1 (-10%~-3%)',  min: -10,  max: -3,  rate: 0.5 },
+  { label: '기준 (-3%~5%)',      min: -3,   max: 5,   rate: 0.6 },
+  { label: '상승 (5%~10%)',      min: 5,    max: 10,  rate: 0.7 },
+  { label: '상승2 (10% 이상)',   min: 10,   max: 999, rate: 0.8 },
 ];
 
-const TIER_THRESHOLDS = [-Infinity, -5, 0, 5, 8];
-const TIER_LV_NAMES = ['Lv.-10', 'Lv.-5', 'Lv.1', 'Lv.5', 'Lv.10'];
+const TIER_THRESHOLDS = [-Infinity, -10, -3, 5, 10];
+const TIER_LV_NAMES = ['하락2', '하락1', '기준', '상승', '상승2'];
 
 function getTierIdx(growth: number): number {
-  if (growth <= -5) return 0;
-  if (growth <= 0) return 1;
+  if (growth <= -10) return 0;
+  if (growth <= -3) return 1;
   if (growth <= 5) return 2;
-  if (growth <= 8) return 3;
+  if (growth <= 10) return 3;
   return 4;
 }
 

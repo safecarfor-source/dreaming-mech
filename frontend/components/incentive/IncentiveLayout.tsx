@@ -195,13 +195,18 @@ export default function IncentiveLayout({ children }: IncentiveLayoutProps) {
   const [syncTime, setSyncTime] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
-  // 비인증 상태 리다이렉트
+  const [hydrated, setHydrated] = useState(false);
+
+  useEffect(() => { setHydrated(true); }, []);
+
+  // 비인증 상태 리다이렉트 (hydration 완료 후에만)
   useEffect(() => {
+    if (!hydrated) return;
     if (!isAuthenticated || isExpired()) {
       logout();
       router.replace('/incentive/login');
     }
-  }, [isAuthenticated, isExpired, logout, router]);
+  }, [hydrated, isAuthenticated, isExpired, logout, router]);
 
   // 동기화 시간 조회
   useEffect(() => {
@@ -237,7 +242,7 @@ export default function IncentiveLayout({ children }: IncentiveLayoutProps) {
     return () => document.removeEventListener('mousedown', handleClick);
   }, []);
 
-  if (!isAuthenticated || !user) return null;
+  if (!hydrated || !isAuthenticated || !user) return null;
 
   const tabs = getTabsForUser(user);
   const roleLabel = ROLE_LABEL[user.role] ?? user.role;

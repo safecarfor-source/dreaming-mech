@@ -425,6 +425,14 @@ const cardTitleStyle: React.CSSProperties = {
   letterSpacing: '-0.3px',
 };
 
+// KST 기준 현재 월 ("26년 4월" 형식)
+function currentKrMonth(): string {
+  const d = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Seoul' }));
+  const yy = String(d.getFullYear()).slice(2);
+  const mm = d.getMonth() + 1;
+  return `${yy}년 ${mm}월`;
+}
+
 // ===== 메인 페이지 =====
 
 export default function IncentiveTeamPage() {
@@ -439,18 +447,18 @@ export default function IncentiveTeamPage() {
   // 초기: 월 목록 + 최신 calc-history 로드
   useEffect(() => {
     async function init() {
+      const curMonth = currentKrMonth();
       try {
         const [monthRes, histRes] = await Promise.all([
           incentiveApi.get<TeamMonthlyEntry[]>('/team/monthly'),
           incentiveApi.get<CalcHistory[]>('/calc/history?limit=1').catch(() => ({ data: [] })),
         ]);
-        const months = monthRes.data;
-        if (!months || months.length === 0) {
-          setError(true);
-          setLoading(false);
-          return;
-        }
-        setMonthList(months);
+        const months = monthRes.data || [];
+
+        // 현재 월이 목록에 없으면 맨 뒤에 추가
+        const hasCurrentMonth = months.some((m) => m.month === curMonth);
+        const fullList = hasCurrentMonth ? months : [...months, { month: curMonth }];
+        setMonthList(fullList);
 
         // 마지막 자동계산 시간
         const histories = histRes.data;
@@ -458,11 +466,11 @@ export default function IncentiveTeamPage() {
           setLastCalcAt(histories[0].editedAt);
         }
 
-        // 가장 최신 달 선택
-        const latest = months[months.length - 1].month;
-        setSelectedMonth(latest);
+        // 항상 현재 월 선택
+        setSelectedMonth(curMonth);
       } catch {
-        setError(true);
+        setMonthList([{ month: curMonth }]);
+        setSelectedMonth(curMonth);
         setLoading(false);
       }
     }
@@ -560,6 +568,15 @@ export default function IncentiveTeamPage() {
           <div style={{ fontSize: 40, marginBottom: 12 }}>📊</div>
           <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 6, color: '#1A1A1A' }}>데이터가 없습니다</div>
           <div style={{ fontSize: 13 }}>극동 데이터 동기화를 확인해주세요</div>
+        </div>
+      )}
+
+      {/* 데이터 준비 중 (해당 월 데이터 미입력) */}
+      {!loading && !error && !teamData && (
+        <div style={{ textAlign: 'center', padding: '60px 20px', color: '#999' }}>
+          <div style={{ fontSize: 40, marginBottom: 12 }}>📅</div>
+          <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 6, color: '#1A1A1A' }}>데이터 준비 중</div>
+          <div style={{ fontSize: 13 }}>극동 데이터 동기화 후 자동으로 표시됩니다</div>
         </div>
       )}
 
