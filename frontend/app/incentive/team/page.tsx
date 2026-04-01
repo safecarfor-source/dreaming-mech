@@ -457,7 +457,7 @@ export default function IncentiveTeamPage() {
 
         // 현재 월이 목록에 없으면 맨 뒤에 추가
         const hasCurrentMonth = months.some((m) => m.month === curMonth);
-        const fullList = hasCurrentMonth ? months : [...months, { month: curMonth }];
+        const fullList: TeamMonthlyEntry[] = hasCurrentMonth ? months : [...months, { month: curMonth, incentive: 0, penalized: false }];
         setMonthList(fullList);
 
         // 마지막 자동계산 시간

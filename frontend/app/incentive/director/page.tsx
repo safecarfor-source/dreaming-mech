@@ -43,7 +43,7 @@ const RED = '#EF4444';
 
 // 5단계 배율 티어 (이정석 부장) — 전년 대비 성장률 기준
 const DIR_TIERS = [
-  { label: '하락2 (-10% 이하)',  min: -999, max: -10, rate: 0.4 },
+  { label: '하락2 (-10% 이하)',  min: -999, max: -10, rate: 0.3 },
   { label: '하락1 (-10%~-3%)',  min: -10,  max: -3,  rate: 0.5 },
   { label: '기준 (-3%~5%)',      min: -3,   max: 5,   rate: 0.6 },
   { label: '상승 (5%~10%)',      min: 5,    max: 10,  rate: 0.7 },
