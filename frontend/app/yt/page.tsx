@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, FolderOpen, Settings2 } from 'lucide-react';
+import { Plus, FolderOpen, Settings2, Search } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { getProjects, YtProject } from './lib/api';
 import ProjectCard from './components/ProjectCard';
@@ -50,6 +50,13 @@ export default function YtPage() {
             </p>
           </div>
           <div className="flex items-center gap-2">
+            <button
+              onClick={() => router.push('/yt/discover')}
+              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-4 py-2.5 rounded-xl text-sm font-medium transition-colors"
+            >
+              <Search className="w-4 h-4" />
+              주제 찾기
+            </button>
             <button
               onClick={() => setChannelModalOpen(true)}
               className="flex items-center gap-2 bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white border border-gray-700 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors"

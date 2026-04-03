@@ -358,8 +358,10 @@ export class YoutubeApiService {
       // @핸들 또는 /channel/UCxxxx 패턴 추출
       let resolvedChannelId: string | null = null;
 
-      const channelIdMatch = channelUrl.match(/\/channel\/(UC[\w-]+)/);
-      const handleMatch = channelUrl.match(/\/@([\w.-]+)/);
+      // URL 디코딩 (한글 핸들 지원)
+      const decodedUrl = decodeURIComponent(channelUrl);
+      const channelIdMatch = decodedUrl.match(/\/channel\/(UC[\w-]+)/);
+      const handleMatch = decodedUrl.match(/\/@([^/?\s]+)/);
 
       if (channelIdMatch) {
         resolvedChannelId = channelIdMatch[1];
