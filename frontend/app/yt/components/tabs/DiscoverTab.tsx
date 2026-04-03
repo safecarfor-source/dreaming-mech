@@ -25,7 +25,7 @@ interface DiscoverVideo {
   title: string;
   channelName: string;
   channelId?: string;
-  thumbnail: string;
+  thumbnailUrl: string;
   viewCount: number;
   subscriberCount: number;
   viewSubRatio?: number;
@@ -77,9 +77,9 @@ function VideoCard({
     <div className="bg-gray-800 border border-gray-700 rounded-2xl overflow-hidden hover:border-gray-600 transition-colors">
       {/* 썸네일 */}
       <div className="relative w-full aspect-video bg-gray-900">
-        {video.thumbnail ? (
+        {video.thumbnailUrl ? (
           <img
-            src={video.thumbnail}
+            src={video.thumbnailUrl}
             alt={video.title}
             className="w-full h-full object-cover"
           />
@@ -99,28 +99,32 @@ function VideoCard({
         <p className="text-white text-sm font-medium leading-snug line-clamp-2 mb-2">
           {video.title}
         </p>
-        <div className="flex items-center justify-between gap-2 flex-wrap">
-          <div className="flex items-center gap-2 text-xs text-gray-500 min-w-0">
-            <span className="truncate max-w-[120px]">{video.channelName}</span>
-            {video.subscriberCount > 0 && (
-              <span className="shrink-0">구독 {formatNumber(video.subscriberCount)}</span>
-            )}
-          </div>
-          <div className="flex items-center gap-1.5 shrink-0">
-            {badge && (
-              <span className={`text-xs px-2 py-0.5 rounded-md font-medium ${badge.className}`}>
-                {badge.label}
-              </span>
-            )}
-            {onAddToProject && (
-              <button
-                onClick={() => onAddToProject(video)}
-                className="text-xs px-2 py-1 bg-gray-700 hover:bg-blue-600/80 text-gray-300 hover:text-white border border-gray-600 hover:border-blue-500/50 rounded-lg transition-colors whitespace-nowrap"
-              >
-                + 추가
-              </button>
-            )}
-          </div>
+        {/* 핵심 지표 — 눈에 띄게 */}
+        <div className="flex items-center gap-2 mb-2">
+          <span className="text-xs px-2 py-0.5 bg-gray-900 text-blue-400 rounded-md font-medium">
+            조회 {formatNumber(video.viewCount)}
+          </span>
+          {video.subscriberCount > 0 && (
+            <span className="text-xs px-2 py-0.5 bg-gray-900 text-gray-400 rounded-md font-medium">
+              구독 {formatNumber(video.subscriberCount)}
+            </span>
+          )}
+          {badge && (
+            <span className={`text-xs px-2 py-0.5 rounded-md font-bold ${badge.className}`}>
+              {badge.label}
+            </span>
+          )}
+        </div>
+        <div className="flex items-center justify-between gap-2">
+          <span className="text-xs text-gray-500 truncate max-w-[160px]">{video.channelName}</span>
+          {onAddToProject && (
+            <button
+              onClick={() => onAddToProject(video)}
+              className="text-xs px-2 py-1 bg-gray-700 hover:bg-blue-600/80 text-gray-300 hover:text-white border border-gray-600 hover:border-blue-500/50 rounded-lg transition-colors whitespace-nowrap"
+            >
+              + 추가
+            </button>
+          )}
         </div>
 
         {/* AI 추천 이유 */}
@@ -306,8 +310,8 @@ function KeywordSearchPane() {
               >
                 {/* 썸네일 */}
                 <div className="w-20 aspect-video shrink-0 bg-gray-900 rounded-lg overflow-hidden">
-                  {v.thumbnail ? (
-                    <img src={v.thumbnail} alt={v.title} className="w-full h-full object-cover" />
+                  {v.thumbnailUrl ? (
+                    <img src={v.thumbnailUrl} alt={v.title} className="w-full h-full object-cover" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">
                       <Play className="w-4 h-4 text-gray-700" />
@@ -383,9 +387,9 @@ function TrendingPane() {
           >
             {/* 큰 썸네일 */}
             <div className="relative w-full aspect-video bg-gray-900">
-              {v.thumbnail ? (
+              {v.thumbnailUrl ? (
                 <img
-                  src={v.thumbnail}
+                  src={v.thumbnailUrl}
                   alt={v.title}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                 />
@@ -400,7 +404,10 @@ function TrendingPane() {
             </div>
             <div className="p-2.5">
               <p className="text-white text-xs leading-snug line-clamp-2 mb-1">{v.title}</p>
-              <p className="text-gray-500 text-xs truncate">{v.channelName}</p>
+              <div className="flex items-center gap-1.5 text-xs text-gray-500">
+                <span className="truncate max-w-[80px]">{v.channelName}</span>
+                <span className="text-blue-400 font-medium">{formatNumber(v.viewCount)}</span>
+              </div>
             </div>
           </div>
         ))}

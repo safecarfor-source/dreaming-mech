@@ -538,12 +538,18 @@ export class YouTubeSupporterService {
       }),
     );
 
-    // viewSubRatio 내림차순 정렬 후 상위 limit개 반환
-    const sorted = allResults
-      .sort((a, b) => b.viewSubRatio - a.viewSubRatio)
-      .slice(0, limit);
+    // viewSubRatio 내림차순 정렬 + 채널당 최대 3개 제한
+    const sorted = allResults.sort((a, b) => b.viewSubRatio - a.viewSubRatio);
+    const channelCount = new Map<string, number>();
+    const MAX_PER_CHANNEL = 3;
+    const diversified = sorted.filter((v) => {
+      const count = channelCount.get(v.channelId) ?? 0;
+      if (count >= MAX_PER_CHANNEL) return false;
+      channelCount.set(v.channelId, count + 1);
+      return true;
+    }).slice(0, limit);
 
-    return { success: true, data: sorted };
+    return { success: true, data: diversified };
   }
 
   async discoverByKeyword(dto: DiscoverKeywordDto) {

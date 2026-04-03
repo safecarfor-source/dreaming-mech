@@ -50,9 +50,8 @@ export interface ProductionResult {
 /**
  * Anthropic AI 오케스트레이션 서비스
  * 모델별 역할 분리:
- *   - Sonnet: 분석/생성 메인 작업
- *   - Haiku: 단순 생성 (제목/썸네일/해시태그)
- *   - Opus: 최종 검수
+ *   - Sonnet: 분석/생성/메타데이터
+ *   - Opus: 대본 작성 + 최종 검수
  */
 @Injectable()
 export class AiOrchestrationService {
@@ -107,20 +106,28 @@ export class AiOrchestrationService {
   }
 
   /**
-   * Haiku 모델 — 단순 생성 작업 (빠르고 경제적)
+   * Sonnet 모델 — 보조 생성 작업 (메타데이터 등)
+   * (기존 Haiku 역할을 Sonnet으로 통합)
    */
-  async generateWithHaiku(prompt: string): Promise<string> {
+  async generateWithSonnet(prompt: string): Promise<string> {
+    return this.analyzeWithSonnet(prompt);
+  }
+
+  /**
+   * Opus 모델 — 대본 작성 (핵심 아웃풋, 최고 품질)
+   */
+  async generateWithOpus(prompt: string): Promise<string> {
     if (this.isMockMode) {
-      this.logger.warn('ANTHROPIC_API_KEY 미설정 — mock 응답 반환 (Haiku)');
-      return `[MOCK Haiku 응답]\n${prompt.slice(0, 100)}...`;
+      this.logger.warn('ANTHROPIC_API_KEY 미설정 — mock 응답 반환 (Opus 대본)');
+      return `[MOCK Opus 대본]\n${prompt.slice(0, 100)}...`;
     }
 
     const client = this.getClient();
     if (!client) return '[AI 클라이언트 초기화 실패]';
 
     const message = await client.messages.create({
-      model: 'claude-haiku-4-5',
-      max_tokens: 2048,
+      model: 'claude-opus-4-5',
+      max_tokens: 8192,
       messages: [{ role: 'user', content: prompt }],
     });
 
@@ -128,7 +135,7 @@ export class AiOrchestrationService {
   }
 
   /**
-   * Opus 모델 — 최종 검수 (최고 품질)
+   * Opus 모델 — 최종 검수
    */
   async reviewWithOpus(content: string): Promise<string> {
     if (this.isMockMode) {
@@ -178,14 +185,77 @@ ${content}
     // STEP 2-2: 댓글 분석 (Sonnet)
     const commentAnalysis = await this.analyzeComments(projectTitle, comments);
 
-    // STEP 3: 코어벨류 + 대본 초안 (Sonnet)
-    const { coreValue, scriptDraft, introDrafts } = await this.generateScript(
+    // STEP 3: 코어벨류 + 대본 초안 (Opus)
+    let { coreValue, scriptDraft, introDrafts } = await this.generateScript(
       projectTitle,
       transcriptAnalysis,
       commentAnalysis,
     );
 
-    // STEP 4: 썸네일/제목/해시태그/설명란 (Haiku)
+    // STEP 3-V: 대본 자동 검증 + 최대 2회 자동 재작성
+    const MAX_RETRY = 2;
+    for (let attempt = 1; attempt <= MAX_RETRY; attempt++) {
+      const validation = this.validateScript(scriptDraft);
+
+      if (validation.passed) {
+        this.logger.log(`대본 검증 통과 (시도 ${attempt === 1 ? '1회차' : `재작성 ${attempt - 1}회`})`);
+        break;
+      }
+
+      this.logger.warn(
+        `대본 검증 실패 (시도 ${attempt}/${MAX_RETRY}) — 오류: ${validation.errors.join(' | ')}`,
+      );
+
+      if (attempt === MAX_RETRY) {
+        // 마지막 시도에도 실패하면 경고만 남기고 진행 (파이프라인 중단 방지)
+        this.logger.error(
+          `대본 검증 ${MAX_RETRY}회 모두 실패. 검증 미통과 상태로 파이프라인 계속 진행.`,
+        );
+        break;
+      }
+
+      // 검증 피드백을 원본 프롬프트에 합쳐서 Opus에게 재작성 요청
+      this.logger.log(`대본 재작성 요청 (${attempt}/${MAX_RETRY - 1}회차 재시도)`);
+      const feedbackPrompt = `당신은 20년 경력의 자동차 정비사이자 유튜버 "꿈꾸는정비사" (구독자 52K)입니다.
+주제: "${projectTitle}"
+
+레퍼런스 영상 분석 결과:
+${transcriptAnalysis.slice(0, 3000)}
+
+시청자 댓글 인사이트:
+- 공통 관심사: ${commentAnalysis.themes.join(', ')}
+- 댓글 기반 인트로 힌트: ${commentAnalysis.introDraft}
+
+아래 내용을 작성해주세요:
+
+## 1. 코어벨류 (Core Value)
+이 영상의 핵심 가치 제안: 시청자가 이 영상을 보면 얻는 것 (1~2문장)
+
+## 2. 인트로 초안 3개 (각 30초 분량, 약 150자)
+버전A: 문제 제기형
+버전B: 공감형
+버전C: 충격 통계형
+
+## 3. 대본 초안
+전체 약 8~10분 분량의 대본 (기-승-전-결 구조)
+- 인트로 (30초)
+- 본론 (6~8분)
+- 아웃트로 (1분)
+
+자연스러운 한국어 구어체로 작성해주세요.
+
+---
+[이전 대본 검증 피드백 — 반드시 수정하세요]
+${validation.errors.map((e, i) => `${i + 1}. ${e}`).join('\n')}
+---`;
+
+      const retryResult = await this.generateScriptFromPrompt(feedbackPrompt);
+      coreValue = retryResult.coreValue;
+      scriptDraft = retryResult.scriptDraft;
+      introDrafts = retryResult.introDrafts;
+    }
+
+    // STEP 4: 썸네일/제목/해시태그/설명란 (Sonnet)
     const { thumbnailStrategies, titles, hashtags, description } = await this.generateMetadata(
       projectTitle,
       coreValue,
@@ -311,6 +381,113 @@ INTRO_DRAFT: (인트로 문구)`;
   }
 
   /**
+   * 대본 자동 검증 하네스 (순수 코드 로직 — AI 미사용)
+   *
+   * 검증 규칙:
+   * 1. 글자수: 2400~3000자 (8~10분 분량)
+   * 2. 섹션 구조: 인트로/본론/아웃트로 존재 여부
+   * 3. 금지어 필터: 비속어, 경쟁사 비하 표현
+   * 4. 구어체 비율: 전체 문장 대비 10% 이상
+   */
+  validateScript(scriptDraft: string): { passed: boolean; errors: string[] } {
+    const errors: string[] = [];
+
+    // --- 규칙 1: 글자수 체크 (공백 포함) ---
+    const charCount = scriptDraft.length;
+    const MIN_CHARS = 2400;
+    const MAX_CHARS = 3000;
+
+    if (charCount < MIN_CHARS) {
+      errors.push(
+        `글자수 ${charCount.toLocaleString()}자 — 최소 ${MIN_CHARS.toLocaleString()}자 필요 (현재 ${MIN_CHARS - charCount}자 부족)`,
+      );
+    } else if (charCount > MAX_CHARS) {
+      errors.push(
+        `글자수 ${charCount.toLocaleString()}자 — 최대 ${MAX_CHARS.toLocaleString()}자 초과 (${charCount - MAX_CHARS}자 초과)`,
+      );
+    }
+
+    // --- 규칙 2: 섹션 구조 체크 ---
+    // 인트로 키워드
+    const hasIntro = /인트로|시작|안녕하세요|오늘은|반갑습니다/i.test(scriptDraft);
+    // 본론 키워드
+    const hasMain =
+      /본론|첫\s*번째|두\s*번째|1\.|2\.|먼저|그\s*다음|중요한\s*건|핵심은/i.test(
+        scriptDraft,
+      );
+    // 아웃트로 키워드
+    const hasOutro =
+      /아웃트로|마무리|정리하면|오늘\s*영상|구독|좋아요|댓글|다음\s*영상|감사합니다/i.test(
+        scriptDraft,
+      );
+
+    if (!hasIntro) {
+      errors.push('섹션 구조 오류 — 인트로 섹션을 찾을 수 없습니다 (키워드: 인트로/시작/안녕하세요 등)');
+    }
+    if (!hasMain) {
+      errors.push(
+        '섹션 구조 오류 — 본론 섹션을 찾을 수 없습니다 (키워드: 첫 번째/두 번째/먼저/핵심은 등)',
+      );
+    }
+    if (!hasOutro) {
+      errors.push(
+        '섹션 구조 오류 — 아웃트로 섹션을 찾을 수 없습니다 (키워드: 마무리/정리하면/구독/감사합니다 등)',
+      );
+    }
+
+    // --- 규칙 3: 금지어 필터 ---
+    // 비속어
+    const profanityPatterns = [
+      /씨[발팔]/,
+      /개새끼/,
+      /지랄/,
+      /병[신신]/,
+      /미친[놈년새]/,
+      /존나/,
+      /抄/,
+    ];
+    // 경쟁사 비하 표현
+    const competitorBashPatterns = [
+      /[현기아起아]차는\s*(최악|쓰레기|형편없)/i,
+      /[수입외제]차\s*(호구|바보|호갱)/i,
+      /(쓰레기|형편없는|최악의)\s*(차|브랜드|메이커)/i,
+    ];
+
+    const allForbiddenPatterns = [...profanityPatterns, ...competitorBashPatterns];
+    const foundForbidden = allForbiddenPatterns.filter((pattern) => pattern.test(scriptDraft));
+
+    if (foundForbidden.length > 0) {
+      errors.push(`금지어 감지 — 비속어 또는 경쟁사 비하 표현이 포함되어 있습니다 (${foundForbidden.length}건)`);
+    }
+
+    // --- 규칙 4: 구어체 비율 체크 ---
+    // 문장 단위로 분리 (마침표/물음표/느낌표 기준)
+    const sentences = scriptDraft
+      .split(/[.?!。]\s*/)
+      .map((s) => s.trim())
+      .filter((s) => s.length > 5);
+
+    // 구어체 어미 패턴
+    const colloquialPattern = /[요죠]$|니다$|거든요$|잖아요$|네요$|군요$|는데요$|해요$|이에요$|예요$/;
+    const colloquialCount = sentences.filter((s) => colloquialPattern.test(s)).length;
+    const totalSentences = sentences.length;
+    const colloquialRatio = totalSentences > 0 ? colloquialCount / totalSentences : 0;
+    const MIN_COLLOQUIAL_RATIO = 0.1; // 10%
+
+    if (totalSentences > 0 && colloquialRatio < MIN_COLLOQUIAL_RATIO) {
+      const pct = Math.round(colloquialRatio * 100);
+      errors.push(
+        `구어체 비율 ${pct}% — 최소 ${MIN_COLLOQUIAL_RATIO * 100}% 이상 필요 (현재 ${colloquialCount}/${totalSentences}문장만 구어체)`,
+      );
+    }
+
+    return {
+      passed: errors.length === 0,
+      errors,
+    };
+  }
+
+  /**
    * STEP 3: 코어벨류 + 대본 초안 + 인트로 초안 생성
    */
   private async generateScript(
@@ -346,7 +523,17 @@ ${transcriptAnalysis.slice(0, 3000)}
 
 자연스러운 한국어 구어체로 작성해주세요.`;
 
-    const response = await this.analyzeWithSonnet(prompt);
+    return this.generateScriptFromPrompt(prompt);
+  }
+
+  /**
+   * Opus 응답 → 코어벨류/인트로초안/대본 파싱 (재사용 가능한 파싱 로직)
+   * generateScript 최초 생성 + 검증 실패 시 재작성 모두 사용
+   */
+  private async generateScriptFromPrompt(
+    prompt: string,
+  ): Promise<{ coreValue: string; scriptDraft: string; introDrafts: string[] }> {
+    const response = await this.generateWithOpus(prompt);
 
     // 코어벨류 추출
     const coreValueMatch = response.match(/## 1\. 코어벨류.*?\n([\s\S]+?)(?=## 2)/);
@@ -369,7 +556,7 @@ ${transcriptAnalysis.slice(0, 3000)}
   }
 
   /**
-   * STEP 4: 메타데이터 생성 (Haiku)
+   * STEP 4: 메타데이터 생성 (Sonnet)
    */
   private async generateMetadata(
     projectTitle: string,
@@ -396,7 +583,7 @@ TITLE_3: (제목 후보 3)
 HASHTAGS: #태그1 #태그2 #태그3 #태그4 #태그5 #태그6 #태그7 #태그8 #태그9 #태그10
 DESCRIPTION: (설명란 — 500자 내외, SEO 최적화)`;
 
-    const response = await this.generateWithHaiku(prompt);
+    const response = await this.generateWithSonnet(prompt);
 
     const extract = (pattern: RegExp) => {
       const match = response.match(pattern);
@@ -542,7 +729,7 @@ ${channelList || '(등록된 채널 없음)'}
 1. 채널명: [채널명]
    이유: (왜 이 채널을 참고해야 하는가)`;
 
-    return this.generateWithHaiku(prompt);
+    return this.generateWithSonnet(prompt);
   }
 
   private extractText(content: Array<{ type: string; text?: string }>): string {
