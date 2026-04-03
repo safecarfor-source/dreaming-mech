@@ -30,8 +30,8 @@ export default function YtPage() {
     load();
   }, []);
 
-  const inProgress = projects.filter((p) => p.status === 'in_progress');
-  const completed = projects.filter((p) => p.status === 'completed');
+  const inProgress = projects.filter((p) => p.status === 'IN_PROGRESS');
+  const completed = projects.filter((p) => p.status === 'COMPLETED');
 
   const handleCreated = (project: YtProject) => {
     setProjects((prev) => [project, ...prev]);

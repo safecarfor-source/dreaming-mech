@@ -19,7 +19,7 @@ function formatDate(dateStr?: string): string {
 }
 
 export default function ProjectCard({ project, onClick }: ProjectCardProps) {
-  const isCompleted = project.status === 'completed';
+  const isCompleted = project.status === 'COMPLETED';
 
   return (
     <motion.div

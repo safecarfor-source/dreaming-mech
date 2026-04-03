@@ -33,7 +33,7 @@ export interface YtProject {
   id: string;
   title: string;
   shootingDate?: string;
-  status: 'in_progress' | 'completed';
+  status: 'IN_PROGRESS' | 'COMPLETED';
   createdAt: string;
   updatedAt: string;
 }

@@ -59,7 +59,7 @@ export default function ProjectDetailPage({ params }: PageProps) {
   };
 
   const handleComplete = async () => {
-    if (!project || project.status === 'completed') return;
+    if (!project || project.status === 'COMPLETED') return;
     setCompleting(true);
     try {
       const updated = await completeProject(id);
@@ -81,7 +81,7 @@ export default function ProjectDetailPage({ params }: PageProps) {
 
   if (!project) return null;
 
-  const isCompleted = project.status === 'completed';
+  const isCompleted = project.status === 'COMPLETED';
 
   return (
     <div className="min-h-screen bg-gray-950">
