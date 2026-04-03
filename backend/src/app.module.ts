@@ -26,6 +26,7 @@ import { CommunityModule } from './community/community.module';
 import { IncentiveModule } from './incentive/incentive.module';
 import { ErpModule } from './erp/erp.module';
 import { TasksModule } from './tasks/tasks.module';
+import { YouTubeSupporterModule } from './youtube-supporter/youtube-supporter.module';
 
 @Module({
   imports: [
@@ -60,6 +61,7 @@ import { TasksModule } from './tasks/tasks.module';
     IncentiveModule,
     ErpModule,
     TasksModule,
+    YouTubeSupporterModule,
   ],
   controllers: [AppController],
   providers: [

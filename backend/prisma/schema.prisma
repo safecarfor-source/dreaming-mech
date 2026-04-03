@@ -884,3 +884,96 @@ model GdSyncLog {
   @@index([status, completedAt])
   @@index([sourceHash])
 }
+
+// ========================================
+// 🎬 유튜브 서포터 (YouTube Supporter)
+// ========================================
+
+// 프로젝트 상태
+enum YtProjectStatus {
+  IN_PROGRESS   // 진행 중
+  COMPLETED     // 완료
+}
+
+// 영상 프로젝트 (서랍 1)
+model YtProject {
+  id              String           @id @default(uuid())
+  title           String           // 주제명 (예: "브레이크 패드")
+  shootingDate    DateTime?        // 촬영 예정일
+  status          YtProjectStatus  @default(IN_PROGRESS)
+  sortOrder       Int              @default(0) // 정렬 순서
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  // 관계
+  referenceVideos YtReferenceVideo[]
+  productionData  YtProductionData[]
+
+  @@index([status])
+  @@index([createdAt])
+}
+
+// 레퍼런스 영상 (서랍 2)
+model YtReferenceVideo {
+  id                  String    @id @default(uuid())
+  projectId           String
+  project             YtProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  youtubeUrl          String    // 영상 URL
+  videoId             String    // YouTube 영상 ID
+  channelName         String    // 채널명
+  channelId           String?   // 채널 ID
+  title               String    // 영상 제목
+  subscriberCount     Int       @default(0) // 구독자 수
+  viewCount           Int       @default(0) // 조회수
+  viewSubRatio        Float     @default(0) // 조회수/구독자 비율 (핵심 KPI)
+  language            String    @default("ko") // "ko" | "en"
+  thumbnailUrl        String?   // 썸네일 URL
+  transcript          String?   @db.Text // 전체 자막
+  introAnalysis       String?   @db.Text // 첫 30초 분석
+  contentAnalysis     String?   @db.Text // 본문 분석
+  whatToSay           String?   @db.Text // 메시지 본질
+  structureAnalysis   String?   @db.Text // 3막 9단계 구조 분석
+  lessonsLearned      String?   @db.Text // 배울 점
+  createdAt           DateTime  @default(now())
+
+  @@index([projectId])
+  @@index([viewSubRatio])
+}
+
+// 제작 내용 (서랍 3)
+model YtProductionData {
+  id                    String    @id @default(uuid())
+  projectId             String
+  project               YtProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  version               Int       @default(1) // 버전 1 또는 2
+  coreValue             String?   @db.Text // 코어벨류
+  introSources          Json?     // 인트로 소재 (30초 대본 + 댓글 분석)
+  introDrafts           Json?     // 인트로 문구 후보들 (배열)
+  scriptDraft           String?   @db.Text // 대본 초안
+  thumbnailStrategies   Json?     // 썸네일 문구 전략 3개
+  titles                Json?     // 제목 후보 3개 (배열)
+  hashtags              Json?     // 해시태그 (배열)
+  description           String?   @db.Text // 설명란
+  timeline              String?   @db.Text // 타임라인 (영상 완성 후)
+  opusReview            String?   @db.Text // Opus 검수 결과
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@unique([projectId, version])
+  @@index([projectId])
+}
+
+// 스킬 노트 (서랍 4)
+model YtSkillNote {
+  id          String   @id @default(uuid())
+  category    String   // "script" | "thumbnail" | "intro" | "shortform" | "other"
+  title       String   // 스킬 제목
+  content     String   @db.Text // 스킬 내용
+  source      String?  // 출처 (어떤 영상/뉴스레터에서 배웠는지)
+  tags        String[] // 검색용 태그
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([category])
+  @@index([createdAt])
+}
