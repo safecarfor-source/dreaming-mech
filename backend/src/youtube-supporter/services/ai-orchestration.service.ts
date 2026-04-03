@@ -255,24 +255,16 @@ ${validation.errors.map((e, i) => `${i + 1}. ${e}`).join('\n')}
       introDrafts = retryResult.introDrafts;
     }
 
-    // STEP 4: 썸네일/제목/해시태그/설명란 (Sonnet)
-    const { thumbnailStrategies, titles, hashtags, description } = await this.generateMetadata(
+    // STEP 4: 제목/해시태그/설명란 (Sonnet) — 썸네일은 독립 시스템으로 분리됨
+    const { titles, hashtags, description } = await this.generateMetadata(
       projectTitle,
       coreValue,
       scriptDraft,
     );
 
-    // STEP 5: Opus 최종 검수
-    const summaryForReview = `
-[주제] ${projectTitle}
-[코어벨류] ${coreValue}
-[인트로 초안] ${introDrafts[0] ?? ''}
-[대본 초안 일부] ${scriptDraft.slice(0, 2000)}
-[썸네일 전략] ${thumbnailStrategies.join(' / ')}
-[제목 후보] ${titles.join(' / ')}
-    `.trim();
-
-    const opusReview = await this.reviewWithOpus(summaryForReview);
+    // STEP 5: Opus 최종 검수 (수동 요청 시만)
+    // 자동 파이프라인에서는 생략 — 대장님이 "최종 검토" 요청 시 별도 실행
+    const opusReview = '';
 
     return {
       coreValue,
@@ -282,7 +274,7 @@ ${validation.errors.map((e, i) => `${i + 1}. ${e}`).join('\n')}
       },
       introDrafts,
       scriptDraft,
-      thumbnailStrategies,
+      thumbnailStrategies: [], // 썸네일은 독립 시스템에서 별도 처리
       titles,
       hashtags,
       description,
@@ -556,14 +548,13 @@ ${transcriptAnalysis.slice(0, 3000)}
   }
 
   /**
-   * STEP 4: 메타데이터 생성 (Sonnet)
+   * STEP 4: 메타데이터 생성 (Sonnet) — 제목/해시태그/설명만 (썸네일 독립)
    */
   private async generateMetadata(
     projectTitle: string,
     coreValue: string,
     scriptDraft: string,
   ): Promise<{
-    thumbnailStrategies: string[];
     titles: string[];
     hashtags: string[];
     description: string;
@@ -574,14 +565,11 @@ ${transcriptAnalysis.slice(0, 3000)}
 
 다음을 생성해주세요:
 
-THUMBNAIL_1: (썸네일 전략 1 — 감정 자극형, 문구 포함)
-THUMBNAIL_2: (썸네일 전략 2 — 숫자/통계형, 문구 포함)
-THUMBNAIL_3: (썸네일 전략 3 — 비교/대조형, 문구 포함)
-TITLE_1: (제목 후보 1)
-TITLE_2: (제목 후보 2)
-TITLE_3: (제목 후보 3)
+TITLE_1: (제목 후보 1 — SEO + 감정 자극)
+TITLE_2: (제목 후보 2 — 숫자/통계 활용)
+TITLE_3: (제목 후보 3 — 문제 제기형)
 HASHTAGS: #태그1 #태그2 #태그3 #태그4 #태그5 #태그6 #태그7 #태그8 #태그9 #태그10
-DESCRIPTION: (설명란 — 500자 내외, SEO 최적화)`;
+DESCRIPTION: (설명란 — 500자 내외, SEO 최적화, 타임라인 포함)`;
 
     const response = await this.generateWithSonnet(prompt);
 
@@ -589,12 +577,6 @@ DESCRIPTION: (설명란 — 500자 내외, SEO 최적화)`;
       const match = response.match(pattern);
       return match?.[1]?.trim() ?? '';
     };
-
-    const thumbnailStrategies = [
-      extract(/THUMBNAIL_1:\s*(.+)/),
-      extract(/THUMBNAIL_2:\s*(.+)/),
-      extract(/THUMBNAIL_3:\s*(.+)/),
-    ].filter((s) => s.length > 0);
 
     const titles = [
       extract(/TITLE_1:\s*(.+)/),
@@ -610,7 +592,48 @@ DESCRIPTION: (설명란 — 500자 내외, SEO 최적화)`;
 
     const description = extract(/DESCRIPTION:\s*([\s\S]+?)(?:\n\n|$)/);
 
-    return { thumbnailStrategies, titles, hashtags, description };
+    return { titles, hashtags, description };
+  }
+
+  /**
+   * 썸네일 독립 시스템 — 학습된 규칙 기반 텍스트 전략 생성
+   * 대장님이 "썸네일 제작" 버튼 클릭 시 호출
+   */
+  async generateThumbnailStrategy(
+    projectTitle: string,
+    coreValue: string,
+    thumbnailKnowledge: string,
+  ): Promise<{ strategies: string[] }> {
+    const knowledgeSection = thumbnailKnowledge
+      ? `\n\n참고할 썸네일 학습 자료:\n${thumbnailKnowledge.slice(0, 2000)}`
+      : '';
+
+    const prompt = `당신은 유튜브 썸네일 전문가입니다.
+주제: "${projectTitle}"
+코어벨류: ${coreValue}
+${knowledgeSection}
+
+아래 3가지 방식으로 썸네일 텍스트 전략을 제안해주세요.
+각 전략마다 다음을 포함하세요:
+- 메인 문구 (7자 이내, 강렬하게)
+- 서브 문구 (필요시)
+- 레이아웃 설명 (텍스트 위치, 인물/배경 구성)
+- 색상 조합 (배경색 + 텍스트색)
+- 왜 이 전략이 클릭을 유도하는지 설명
+
+STRATEGY_1: (감정 자극형)
+STRATEGY_2: (숫자/통계형)
+STRATEGY_3: (비교/대조형)`;
+
+    const response = await this.analyzeWithSonnet(prompt);
+
+    const strategies = [
+      response.match(/STRATEGY_1:\s*([\s\S]+?)(?=STRATEGY_2:|$)/)?.[1]?.trim() ?? '',
+      response.match(/STRATEGY_2:\s*([\s\S]+?)(?=STRATEGY_3:|$)/)?.[1]?.trim() ?? '',
+      response.match(/STRATEGY_3:\s*([\s\S]+?)$/)?.[1]?.trim() ?? '',
+    ].filter((s) => s.length > 0);
+
+    return { strategies };
   }
 
   /**

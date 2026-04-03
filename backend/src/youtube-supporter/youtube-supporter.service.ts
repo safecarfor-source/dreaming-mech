@@ -612,6 +612,63 @@ export class YouTubeSupporterService {
   }
 
   // ─────────────────────────────────────────────
+  // 레퍼런스 자동 추천
+  // ─────────────────────────────────────────────
+
+  /**
+   * 프로젝트 주제 기반 YouTube 전체 검색 → viewSubRatio 상위 5개 추천
+   */
+  async suggestReferences(projectId: string) {
+    const project = await this.ensureProjectExists(projectId);
+
+    // YouTube 전체에서 주제 키워드로 검색 (한국어 + 영어)
+    const [koVideos, enVideos] = await Promise.all([
+      this.youtubeApi.searchVideos(project.title, 'ko', 25),
+      this.youtubeApi.searchVideos(project.title, 'en', 25),
+    ]);
+
+    const allVideos = [...koVideos, ...enVideos];
+
+    if (!allVideos.length) {
+      return { success: true, data: [] };
+    }
+
+    // 고유 채널 ID → 구독자수 조회
+    const uniqueChannelIds = [...new Set(allVideos.map((v) => v.channelId))];
+    const subscriberMap = new Map<string, number>();
+
+    await Promise.all(
+      uniqueChannelIds.map(async (channelId) => {
+        try {
+          const stats = await this.youtubeApi.getChannelStats(channelId);
+          subscriberMap.set(channelId, stats.subscriberCount);
+        } catch {
+          subscriberMap.set(channelId, 0);
+        }
+      }),
+    );
+
+    // viewSubRatio 계산 + 채널당 1개 제한 + 상위 5개
+    const ranked = allVideos
+      .map((v) => {
+        const subscriberCount = subscriberMap.get(v.channelId) ?? 0;
+        const viewSubRatio = this.youtubeApi.calculateViewSubRatio(v.viewCount, subscriberCount);
+        return { ...v, subscriberCount, viewSubRatio };
+      })
+      .sort((a, b) => b.viewSubRatio - a.viewSubRatio);
+
+    // 채널당 1개만 (다양한 소스)
+    const channelSeen = new Set<string>();
+    const top5 = ranked.filter((v) => {
+      if (channelSeen.has(v.channelId)) return false;
+      channelSeen.add(v.channelId);
+      return true;
+    }).slice(0, 5);
+
+    return { success: true, data: top5 };
+  }
+
+  // ─────────────────────────────────────────────
   // 헬퍼
   // ─────────────────────────────────────────────
 

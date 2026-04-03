@@ -221,4 +221,10 @@ export async function discoverFindChannels(keyword: string) {
   return res.data;
 }
 
+// 레퍼런스 자동 추천
+export async function suggestReferences(projectId: string) {
+  const res = await ytApi.post(`/yt/projects/${projectId}/suggest-references`);
+  return res.data;
+}
+
 export default ytApi;

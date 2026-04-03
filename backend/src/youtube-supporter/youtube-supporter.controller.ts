@@ -442,4 +442,19 @@ export class YouTubeSupporterController {
   ) {
     return this.service.discoverFindChannels(dto);
   }
+
+  // ─────────────────────────────────────────────
+  // 레퍼런스 자동 추천
+  // ─────────────────────────────────────────────
+
+  /**
+   * POST /api/yt/projects/:id/suggest-references
+   * 프로젝트 주제 기반으로 YouTube 전체에서 viewSubRatio 상위 5개 영상 자동 추천
+   */
+  @Post('projects/:id/suggest-references')
+  @UseGuards(YtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  suggestReferences(@Param('id') id: string) {
+    return this.service.suggestReferences(id);
+  }
 }
