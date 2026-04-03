@@ -663,7 +663,7 @@ export class YouTubeSupporterService {
       if (channelSeen.has(v.channelId)) return false;
       channelSeen.add(v.channelId);
       return true;
-    }).slice(0, 5);
+    }).slice(0, 10);
 
     return { success: true, data: top5 };
   }
