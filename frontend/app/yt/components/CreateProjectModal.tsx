@@ -31,7 +31,7 @@ export default function CreateProjectModal({
     try {
       const project = await createProject({
         title: title.trim(),
-        shootingDate: shootingDate || undefined,
+        shootingDate: shootingDate ? `${shootingDate}T00:00:00.000Z` : undefined,
       });
       onCreated(project);
       handleClose();
