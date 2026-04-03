@@ -18,6 +18,11 @@ import type {
   CreateSkillNoteDto,
   LearnDto,
   ExternalSaveDto,
+  CreateChannelDto,
+  UpdateChannelDto,
+  DiscoverChannelVideosDto,
+  DiscoverKeywordDto,
+  DiscoverFindChannelsDto,
 } from './schemas/youtube-supporter.schema';
 import { YtProjectStatus } from '@prisma/client';
 
@@ -354,6 +359,250 @@ export class YouTubeSupporterService {
     });
 
     return { success: true, data: note };
+  }
+
+  // ─────────────────────────────────────────────
+  // 채널 CRUD (주제 찾기)
+  // ─────────────────────────────────────────────
+
+  async createChannel(dto: CreateChannelDto) {
+    // YouTube API로 채널 정보 조회
+    const channelInfo = await this.youtubeApi.getChannelInfo(dto.channelUrl);
+
+    // 채널 영상 조회 → 평균 조회수 계산
+    const videos = await this.youtubeApi.getChannelVideos(channelInfo.channelId, 50);
+    const avgViewCount =
+      videos.length > 0
+        ? Math.round(videos.reduce((sum, v) => sum + v.viewCount, 0) / videos.length)
+        : 0;
+
+    const channel = await this.prisma.ytChannel.upsert({
+      where: { channelId: channelInfo.channelId },
+      create: {
+        channelId: channelInfo.channelId,
+        channelName: channelInfo.channelName,
+        channelUrl: dto.channelUrl,
+        thumbnailUrl: channelInfo.thumbnailUrl,
+        subscriberCount: channelInfo.subscriberCount,
+        videoCount: channelInfo.videoCount,
+        category: dto.category ?? '정비',
+        memo: dto.memo ?? null,
+        avgViewCount,
+        lastSyncedAt: new Date(),
+      },
+      update: {
+        channelName: channelInfo.channelName,
+        thumbnailUrl: channelInfo.thumbnailUrl,
+        subscriberCount: channelInfo.subscriberCount,
+        videoCount: channelInfo.videoCount,
+        avgViewCount,
+        lastSyncedAt: new Date(),
+        ...(dto.category !== undefined && { category: dto.category }),
+        ...(dto.memo !== undefined && { memo: dto.memo }),
+      },
+    });
+
+    return { success: true, data: channel };
+  }
+
+  async getChannels(category?: string) {
+    const where = category ? { category } : {};
+
+    const channels = await this.prisma.ytChannel.findMany({
+      where,
+      orderBy: [{ category: 'asc' }, { channelName: 'asc' }],
+    });
+
+    return { success: true, data: channels };
+  }
+
+  async updateChannel(id: string, dto: UpdateChannelDto) {
+    const channel = await this.prisma.ytChannel.findUnique({ where: { id } });
+    if (!channel) {
+      throw new NotFoundException(`채널을 찾을 수 없습니다: ${id}`);
+    }
+
+    const updated = await this.prisma.ytChannel.update({
+      where: { id },
+      data: {
+        ...(dto.category !== undefined && { category: dto.category }),
+        ...(dto.memo !== undefined && { memo: dto.memo }),
+      },
+    });
+
+    return { success: true, data: updated };
+  }
+
+  async deleteChannel(id: string) {
+    const channel = await this.prisma.ytChannel.findUnique({ where: { id } });
+    if (!channel) {
+      throw new NotFoundException(`채널을 찾을 수 없습니다: ${id}`);
+    }
+
+    await this.prisma.ytChannel.delete({ where: { id } });
+
+    return { success: true, message: '채널이 삭제되었습니다' };
+  }
+
+  // ─────────────────────────────────────────────
+  // 카테고리 CRUD
+  // ─────────────────────────────────────────────
+
+  async getCategories() {
+    const categories = await this.prisma.ytCategory.findMany({
+      orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
+    });
+
+    return { success: true, data: categories };
+  }
+
+  async createCategory(name: string) {
+    const existing = await this.prisma.ytCategory.findUnique({ where: { name } });
+    if (existing) {
+      throw new BadRequestException(`이미 존재하는 카테고리입니다: ${name}`);
+    }
+
+    const category = await this.prisma.ytCategory.create({
+      data: { name },
+    });
+
+    return { success: true, data: category };
+  }
+
+  async deleteCategory(id: string) {
+    const category = await this.prisma.ytCategory.findUnique({ where: { id } });
+    if (!category) {
+      throw new NotFoundException(`카테고리를 찾을 수 없습니다: ${id}`);
+    }
+
+    await this.prisma.ytCategory.delete({ where: { id } });
+
+    return { success: true, message: '카테고리가 삭제되었습니다' };
+  }
+
+  // ─────────────────────────────────────────────
+  // 주제 찾기 (Discover)
+  // ─────────────────────────────────────────────
+
+  async discoverChannelVideos(dto: DiscoverChannelVideosDto) {
+    const limit = dto.limit ?? 50;
+
+    // 등록된 채널 조회 (카테고리 필터 선택)
+    const channels = await this.prisma.ytChannel.findMany({
+      where: dto.category ? { category: dto.category } : {},
+    });
+
+    if (!channels.length) {
+      return { success: true, data: [] };
+    }
+
+    // 각 채널의 상위 영상 조회 + 평균 이상 필터
+    const allResults: Array<{
+      videoId: string;
+      title: string;
+      thumbnailUrl: string;
+      viewCount: number;
+      likeCount: number;
+      publishedAt: string;
+      channelId: string;
+      channelName: string;
+      subscriberCount: number;
+      viewSubRatio: number;
+    }> = [];
+
+    await Promise.all(
+      channels.map(async (ch) => {
+        try {
+          const videos = await this.youtubeApi.getChannelVideos(ch.channelId, 20);
+          const avgViewCount = ch.avgViewCount || 0;
+
+          for (const v of videos) {
+            // 평균 조회수 초과 영상만 필터
+            if (v.viewCount > avgViewCount) {
+              const viewSubRatio = this.youtubeApi.calculateViewSubRatio(
+                v.viewCount,
+                ch.subscriberCount,
+              );
+              allResults.push({
+                ...v,
+                channelId: ch.channelId,
+                channelName: ch.channelName,
+                subscriberCount: ch.subscriberCount,
+                viewSubRatio,
+              });
+            }
+          }
+        } catch (err) {
+          this.logger.warn(`채널 영상 조회 실패: ${ch.channelId}`, err);
+        }
+      }),
+    );
+
+    // viewSubRatio 내림차순 정렬 후 상위 limit개 반환
+    const sorted = allResults
+      .sort((a, b) => b.viewSubRatio - a.viewSubRatio)
+      .slice(0, limit);
+
+    return { success: true, data: sorted };
+  }
+
+  async discoverByKeyword(dto: DiscoverKeywordDto) {
+    const maxResults = dto.maxResults ?? 50;
+    const language = (dto.language ?? 'ko') as 'ko' | 'en';
+
+    const videos = await this.youtubeApi.searchVideos(dto.keyword, language, maxResults);
+
+    if (!videos.length) {
+      return { success: true, data: [] };
+    }
+
+    // 고유 채널 ID 수집 후 구독자 수 조회
+    const uniqueChannelIds = [...new Set(videos.map((v) => v.channelId))];
+    const subscriberMap = new Map<string, number>();
+
+    await Promise.all(
+      uniqueChannelIds.map(async (channelId) => {
+        try {
+          const stats = await this.youtubeApi.getChannelStats(channelId);
+          subscriberMap.set(channelId, stats.subscriberCount);
+        } catch {
+          subscriberMap.set(channelId, 0);
+        }
+      }),
+    );
+
+    const results = videos
+      .map((v) => {
+        const subscriberCount = subscriberMap.get(v.channelId) ?? 0;
+        const viewSubRatio = this.youtubeApi.calculateViewSubRatio(v.viewCount, subscriberCount);
+        return { ...v, subscriberCount, viewSubRatio };
+      })
+      .sort((a, b) => b.viewSubRatio - a.viewSubRatio);
+
+    return { success: true, data: results };
+  }
+
+  async discoverTrending(maxResults?: number) {
+    const results = await this.youtubeApi.getTrendingVideos('KR', maxResults ?? 50);
+    return { success: true, data: results };
+  }
+
+  async discoverRecommend() {
+    const channels = await this.prisma.ytChannel.findMany({
+      orderBy: { channelName: 'asc' },
+    });
+
+    // 최근 트렌딩 영상 조회
+    const trendingVideos = await this.youtubeApi.getTrendingVideos('KR', 20);
+
+    const recommendation = await this.aiOrchestration.recommendTopics(channels, trendingVideos);
+
+    return { success: true, data: { recommendation } };
+  }
+
+  async discoverFindChannels(dto: DiscoverFindChannelsDto) {
+    const channels = await this.youtubeApi.searchChannels(dto.keyword, 10);
+    return { success: true, data: channels };
   }
 
   // ─────────────────────────────────────────────

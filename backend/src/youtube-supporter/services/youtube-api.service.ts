@@ -34,6 +34,45 @@ export interface CommentItem {
   publishedAt: string;
 }
 
+export interface ChannelInfo {
+  channelId: string;
+  channelName: string;
+  thumbnailUrl: string;
+  subscriberCount: number;
+  videoCount: number;
+  description: string;
+}
+
+export interface ChannelVideoItem {
+  videoId: string;
+  title: string;
+  thumbnailUrl: string;
+  viewCount: number;
+  likeCount: number;
+  publishedAt: string;
+}
+
+export interface TrendingVideoItem {
+  videoId: string;
+  title: string;
+  channelName: string;
+  channelId: string;
+  thumbnailUrl: string;
+  viewCount: number;
+  subscriberCount: number;
+  viewSubRatio: number;
+  publishedAt: string;
+}
+
+export interface ChannelSearchResult {
+  channelId: string;
+  channelName: string;
+  thumbnailUrl: string;
+  subscriberCount: number;
+  videoCount: number;
+  description: string;
+}
+
 const MOCK_VIDEOS: YouTubeVideoItem[] = [
   {
     videoId: 'mock_video_1',
@@ -296,6 +335,332 @@ export class YoutubeApiService {
     } catch (error) {
       this.logger.error(`getVideoComments 실패: ${videoId}`, error);
       return [];
+    }
+  }
+
+  /**
+   * URL에서 채널 ID 추출 + 상세정보 조회
+   */
+  async getChannelInfo(channelUrl: string): Promise<ChannelInfo> {
+    if (this.isMockMode) {
+      this.logger.warn('YOUTUBE_API_KEY 미설정 — mock 데이터 반환');
+      return {
+        channelId: 'mock_channel_id',
+        channelName: '[MOCK] 꿈꾸는정비사',
+        thumbnailUrl: 'https://via.placeholder.com/88x88',
+        subscriberCount: 52000,
+        videoCount: 120,
+        description: 'MOCK 채널 설명',
+      };
+    }
+
+    try {
+      // @핸들 또는 /channel/UCxxxx 패턴 추출
+      let resolvedChannelId: string | null = null;
+
+      const channelIdMatch = channelUrl.match(/\/channel\/(UC[\w-]+)/);
+      const handleMatch = channelUrl.match(/\/@([\w.-]+)/);
+
+      if (channelIdMatch) {
+        resolvedChannelId = channelIdMatch[1];
+      } else if (handleMatch) {
+        // 핸들로 채널 검색
+        const searchRes = await axios.get(`${this.baseUrl}/search`, {
+          params: {
+            key: this.apiKey,
+            q: `@${handleMatch[1]}`,
+            type: 'channel',
+            maxResults: 1,
+            part: 'id',
+          },
+        });
+        resolvedChannelId = (searchRes.data.items?.[0] as { id?: { channelId?: string } } | undefined)?.id?.channelId ?? null;
+      }
+
+      if (!resolvedChannelId) {
+        throw new Error(`채널 ID를 추출할 수 없습니다: ${channelUrl}`);
+      }
+
+      const res = await axios.get(`${this.baseUrl}/channels`, {
+        params: {
+          key: this.apiKey,
+          id: resolvedChannelId,
+          part: 'snippet,statistics',
+        },
+      });
+
+      const data = res.data.items?.[0] as
+        | {
+            id: string;
+            snippet: {
+              title: string;
+              description: string;
+              thumbnails: { default: { url: string } };
+            };
+            statistics: { subscriberCount?: string; videoCount?: string };
+          }
+        | undefined;
+
+      if (!data) {
+        throw new Error(`채널을 찾을 수 없습니다: ${resolvedChannelId}`);
+      }
+
+      return {
+        channelId: data.id,
+        channelName: data.snippet.title,
+        thumbnailUrl: data.snippet.thumbnails.default.url,
+        subscriberCount: parseInt(data.statistics.subscriberCount ?? '0', 10),
+        videoCount: parseInt(data.statistics.videoCount ?? '0', 10),
+        description: data.snippet.description,
+      };
+    } catch (error) {
+      this.logger.error(`getChannelInfo 실패: ${channelUrl}`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * 채널의 영상 목록 + 통계 (조회수 내림차순)
+   */
+  async getChannelVideos(channelId: string, maxResults = 50): Promise<ChannelVideoItem[]> {
+    if (this.isMockMode) {
+      this.logger.warn('YOUTUBE_API_KEY 미설정 — mock 데이터 반환');
+      return [
+        {
+          videoId: 'mock_v1',
+          title: '[MOCK] 채널 영상 1',
+          thumbnailUrl: 'https://via.placeholder.com/320x180',
+          viewCount: 150000,
+          likeCount: 6000,
+          publishedAt: '2024-01-01T00:00:00Z',
+        },
+      ];
+    }
+
+    try {
+      // 1단계: 채널 영상 검색 (조회수 순)
+      const searchRes = await axios.get(`${this.baseUrl}/search`, {
+        params: {
+          key: this.apiKey,
+          channelId,
+          part: 'id,snippet',
+          order: 'viewCount',
+          maxResults,
+          type: 'video',
+        },
+      });
+
+      const items = searchRes.data.items as Array<{
+        id: { videoId: string };
+        snippet: {
+          title: string;
+          thumbnails: { medium: { url: string } };
+          publishedAt: string;
+        };
+      }>;
+
+      if (!items?.length) return [];
+
+      const videoIds = items.map((item) => item.id.videoId).join(',');
+
+      // 2단계: 통계 조회
+      const statsRes = await axios.get(`${this.baseUrl}/videos`, {
+        params: {
+          key: this.apiKey,
+          id: videoIds,
+          part: 'statistics',
+        },
+      });
+
+      const statsMap = new Map<string, { viewCount: number; likeCount: number }>();
+      for (const v of statsRes.data.items as Array<{
+        id: string;
+        statistics: { viewCount?: string; likeCount?: string };
+      }>) {
+        statsMap.set(v.id, {
+          viewCount: parseInt(v.statistics.viewCount ?? '0', 10),
+          likeCount: parseInt(v.statistics.likeCount ?? '0', 10),
+        });
+      }
+
+      return items.map((item) => {
+        const stats = statsMap.get(item.id.videoId);
+        return {
+          videoId: item.id.videoId,
+          title: item.snippet.title,
+          thumbnailUrl: item.snippet.thumbnails.medium.url,
+          viewCount: stats?.viewCount ?? 0,
+          likeCount: stats?.likeCount ?? 0,
+          publishedAt: item.snippet.publishedAt,
+        };
+      });
+    } catch (error) {
+      this.logger.error(`getChannelVideos 실패: ${channelId}`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * 인기 급상승 영상 조회
+   */
+  async getTrendingVideos(regionCode = 'KR', maxResults = 50): Promise<TrendingVideoItem[]> {
+    if (this.isMockMode) {
+      this.logger.warn('YOUTUBE_API_KEY 미설정 — mock 데이터 반환');
+      return [
+        {
+          videoId: 'mock_trend_1',
+          title: '[MOCK] 급상승 영상',
+          channelName: 'MOCK 채널',
+          channelId: 'mock_ch_1',
+          thumbnailUrl: 'https://via.placeholder.com/320x180',
+          viewCount: 500000,
+          subscriberCount: 100000,
+          viewSubRatio: this.calculateViewSubRatio(500000, 100000),
+          publishedAt: '2024-01-01T00:00:00Z',
+        },
+      ];
+    }
+
+    try {
+      // 1단계: 인기 급상승 영상 조회
+      const videosRes = await axios.get(`${this.baseUrl}/videos`, {
+        params: {
+          key: this.apiKey,
+          chart: 'mostPopular',
+          regionCode,
+          maxResults,
+          part: 'snippet,statistics',
+        },
+      });
+
+      const items = videosRes.data.items as Array<{
+        id: string;
+        snippet: {
+          title: string;
+          channelTitle: string;
+          channelId: string;
+          thumbnails: { medium: { url: string } };
+          publishedAt: string;
+        };
+        statistics: { viewCount?: string };
+      }>;
+
+      if (!items?.length) return [];
+
+      // 2단계: 고유 채널 ID 수집 후 구독자 수 배치 조회
+      const channelIds = [...new Set(items.map((v) => v.snippet.channelId))];
+      const channelSubMap = new Map<string, number>();
+
+      // channels.list는 한 번에 최대 50개 조회 가능
+      for (let i = 0; i < channelIds.length; i += 50) {
+        const batch = channelIds.slice(i, i + 50).join(',');
+        const chRes = await axios.get(`${this.baseUrl}/channels`, {
+          params: {
+            key: this.apiKey,
+            id: batch,
+            part: 'statistics',
+          },
+        });
+        for (const ch of chRes.data.items as Array<{
+          id: string;
+          statistics: { subscriberCount?: string };
+        }>) {
+          channelSubMap.set(ch.id, parseInt(ch.statistics.subscriberCount ?? '0', 10));
+        }
+      }
+
+      return items.map((item) => {
+        const viewCount = parseInt(item.statistics.viewCount ?? '0', 10);
+        const subscriberCount = channelSubMap.get(item.snippet.channelId) ?? 0;
+        return {
+          videoId: item.id,
+          title: item.snippet.title,
+          channelName: item.snippet.channelTitle,
+          channelId: item.snippet.channelId,
+          thumbnailUrl: item.snippet.thumbnails.medium.url,
+          viewCount,
+          subscriberCount,
+          viewSubRatio: this.calculateViewSubRatio(viewCount, subscriberCount),
+          publishedAt: item.snippet.publishedAt,
+        };
+      });
+    } catch (error) {
+      this.logger.error(`getTrendingVideos 실패: regionCode=${regionCode}`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * 채널 검색 (발굴용)
+   */
+  async searchChannels(keyword: string, maxResults = 10): Promise<ChannelSearchResult[]> {
+    if (this.isMockMode) {
+      this.logger.warn('YOUTUBE_API_KEY 미설정 — mock 데이터 반환');
+      return [
+        {
+          channelId: 'mock_search_ch_1',
+          channelName: `[MOCK] ${keyword} 관련 채널`,
+          thumbnailUrl: 'https://via.placeholder.com/88x88',
+          subscriberCount: 30000,
+          videoCount: 80,
+          description: 'MOCK 채널 설명',
+        },
+      ];
+    }
+
+    try {
+      // 1단계: 채널 검색
+      const searchRes = await axios.get(`${this.baseUrl}/search`, {
+        params: {
+          key: this.apiKey,
+          q: keyword,
+          type: 'channel',
+          maxResults,
+          part: 'id,snippet',
+        },
+      });
+
+      const items = searchRes.data.items as Array<{
+        id: { channelId: string };
+        snippet: { channelTitle: string };
+      }>;
+
+      if (!items?.length) return [];
+
+      const channelIds = items.map((item) => item.id.channelId).join(',');
+
+      // 2단계: 채널 상세 조회
+      const detailRes = await axios.get(`${this.baseUrl}/channels`, {
+        params: {
+          key: this.apiKey,
+          id: channelIds,
+          part: 'snippet,statistics',
+        },
+      });
+
+      return (
+        detailRes.data.items?.map(
+          (ch: {
+            id: string;
+            snippet: {
+              title: string;
+              description: string;
+              thumbnails: { default: { url: string } };
+            };
+            statistics: { subscriberCount?: string; videoCount?: string };
+          }) => ({
+            channelId: ch.id,
+            channelName: ch.snippet.title,
+            thumbnailUrl: ch.snippet.thumbnails.default.url,
+            subscriberCount: parseInt(ch.statistics.subscriberCount ?? '0', 10),
+            videoCount: parseInt(ch.statistics.videoCount ?? '0', 10),
+            description: ch.snippet.description,
+          }),
+        ) ?? []
+      );
+    } catch (error) {
+      this.logger.error(`searchChannels 실패: ${keyword}`, error);
+      throw error;
     }
   }
 

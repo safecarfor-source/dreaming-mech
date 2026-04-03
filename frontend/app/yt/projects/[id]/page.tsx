@@ -5,13 +5,14 @@ import { motion } from 'framer-motion';
 import { ArrowLeft, Calendar, CheckCircle2, PlayCircle, Check } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { getProject, completeProject, YtProject } from '../../lib/api';
+import DiscoverTab from '../../components/tabs/DiscoverTab';
 import ProductionTab from '../../components/tabs/ProductionTab';
 import ShortformTab from '../../components/tabs/ShortformTab';
 import LearningTab from '../../components/tabs/LearningTab';
 import CleanupTab from '../../components/tabs/CleanupTab';
 
-type Tab = '제작' | '숏폼' | '학습' | '정리';
-const TABS: Tab[] = ['제작', '숏폼', '학습', '정리'];
+type Tab = '주제찾기' | '제작' | '숏폼' | '학습' | '정리';
+const TABS: Tab[] = ['주제찾기', '제작', '숏폼', '학습', '정리'];
 
 function formatDate(dateStr?: string): string {
   if (!dateStr) return '날짜 미정';
@@ -32,11 +33,11 @@ export default function ProjectDetailPage({ params }: PageProps) {
 
   const [project, setProject] = useState<YtProject | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<Tab>('제작');
+  const [activeTab, setActiveTab] = useState<Tab>('주제찾기');
   const [completing, setCompleting] = useState(false);
 
   // 한 번 로드한 탭은 언마운트하지 않음 (insightLoaded 패턴)
-  const [loadedTabs, setLoadedTabs] = useState<Set<Tab>>(new Set(['제작']));
+  const [loadedTabs, setLoadedTabs] = useState<Set<Tab>>(new Set(['주제찾기']));
 
   useEffect(() => {
     const load = async () => {
@@ -161,6 +162,9 @@ export default function ProjectDetailPage({ params }: PageProps) {
           transition={{ duration: 0.2 }}
         >
           {/* 한 번 로드된 탭은 hidden으로 유지 */}
+          <div className={activeTab === '주제찾기' ? '' : 'hidden'}>
+            {loadedTabs.has('주제찾기') && <DiscoverTab />}
+          </div>
           <div className={activeTab === '제작' ? '' : 'hidden'}>
             {loadedTabs.has('제작') && <ProductionTab projectId={id} />}
           </div>

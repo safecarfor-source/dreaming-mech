@@ -977,3 +977,30 @@ model YtSkillNote {
   @@index([category])
   @@index([createdAt])
 }
+
+// 등록 채널 (주제 찾기용)
+model YtChannel {
+  id              String    @id @default(uuid())
+  channelId       String    @unique
+  channelName     String
+  channelUrl      String
+  thumbnailUrl    String?
+  subscriberCount Int       @default(0)
+  videoCount      Int       @default(0)
+  category        String    @default("정비")
+  memo            String?
+  avgViewCount    Int       @default(0)
+  lastSyncedAt    DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([category])
+}
+
+// 카테고리 관리
+model YtCategory {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+}

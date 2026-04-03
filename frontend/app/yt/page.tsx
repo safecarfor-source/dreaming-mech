@@ -2,17 +2,19 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, FolderOpen } from 'lucide-react';
+import { Plus, FolderOpen, Settings2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { getProjects, YtProject } from './lib/api';
 import ProjectCard from './components/ProjectCard';
 import CreateProjectModal from './components/CreateProjectModal';
+import ChannelManageModal from './components/ChannelManageModal';
 
 export default function YtPage() {
   const router = useRouter();
   const [projects, setProjects] = useState<YtProject[]>([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
+  const [channelModalOpen, setChannelModalOpen] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -47,13 +49,22 @@ export default function YtPage() {
               총 {projects.length}개
             </p>
           </div>
-          <button
-            onClick={() => setModalOpen(true)}
-            className="flex items-center gap-2 bg-violet-600 hover:bg-violet-500 text-white px-4 py-2.5 rounded-xl text-sm font-medium transition-colors"
-          >
-            <Plus className="w-4 h-4" />
-            새 프로젝트
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setChannelModalOpen(true)}
+              className="flex items-center gap-2 bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white border border-gray-700 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors"
+            >
+              <Settings2 className="w-4 h-4" />
+              채널 관리
+            </button>
+            <button
+              onClick={() => setModalOpen(true)}
+              className="flex items-center gap-2 bg-violet-600 hover:bg-violet-500 text-white px-4 py-2.5 rounded-xl text-sm font-medium transition-colors"
+            >
+              <Plus className="w-4 h-4" />
+              새 프로젝트
+            </button>
+          </div>
         </div>
 
         {loading ? (
@@ -140,6 +151,12 @@ export default function YtPage() {
         open={modalOpen}
         onClose={() => setModalOpen(false)}
         onCreated={handleCreated}
+      />
+
+      {/* 채널 관리 모달 */}
+      <ChannelManageModal
+        open={channelModalOpen}
+        onClose={() => setChannelModalOpen(false)}
       />
     </div>
   );

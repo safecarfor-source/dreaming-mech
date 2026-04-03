@@ -110,3 +110,54 @@ export const ExternalSaveSchema = z.object({
 });
 
 export type ExternalSaveDto = z.infer<typeof ExternalSaveSchema>;
+
+// ─────────────────────────────────────────────
+// 채널 관리 (주제 찾기)
+// ─────────────────────────────────────────────
+
+export const CreateChannelSchema = z.object({
+  channelUrl: z.string().url('유효한 YouTube 채널 URL을 입력하세요'),
+  category: z.string().max(50).optional(),
+  memo: z.string().max(500).optional(),
+});
+
+export const UpdateChannelSchema = z.object({
+  category: z.string().max(50).optional(),
+  memo: z.string().max(500).optional(),
+});
+
+export type CreateChannelDto = z.infer<typeof CreateChannelSchema>;
+export type UpdateChannelDto = z.infer<typeof UpdateChannelSchema>;
+
+// ─────────────────────────────────────────────
+// 카테고리 관리
+// ─────────────────────────────────────────────
+
+export const CreateCategorySchema = z.object({
+  name: z.string().min(1, '카테고리명을 입력하세요').max(20, '카테고리명은 20자 이하로 입력하세요'),
+});
+
+export type CreateCategoryDto = z.infer<typeof CreateCategorySchema>;
+
+// ─────────────────────────────────────────────
+// 주제 찾기 (Discover)
+// ─────────────────────────────────────────────
+
+export const DiscoverChannelVideosSchema = z.object({
+  category: z.string().optional(),
+  limit: z.number().min(1).max(100).optional().default(50),
+});
+
+export const DiscoverKeywordSchema = z.object({
+  keyword: z.string().min(1, '검색어를 입력하세요'),
+  language: z.string().optional(),
+  maxResults: z.number().min(1).max(50).optional().default(50),
+});
+
+export const DiscoverFindChannelsSchema = z.object({
+  keyword: z.string().min(1, '검색어를 입력하세요'),
+});
+
+export type DiscoverChannelVideosDto = z.infer<typeof DiscoverChannelVideosSchema>;
+export type DiscoverKeywordDto = z.infer<typeof DiscoverKeywordSchema>;
+export type DiscoverFindChannelsDto = z.infer<typeof DiscoverFindChannelsSchema>;

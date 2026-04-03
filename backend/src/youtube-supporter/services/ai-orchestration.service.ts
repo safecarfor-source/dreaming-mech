@@ -480,6 +480,71 @@ TAGS: tag1, tag2, tag3, tag4, tag5`;
     return { title, processedContent, tags };
   }
 
+  /**
+   * 주제 추천 (등록된 채널 + 최근 트렌드 분석 → 영상 주제 10개 추천)
+   */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async recommendTopics(channels: any[], recentVideos: any[]): Promise<string> {
+    const channelList = channels
+      .map((ch: { channelName: string; category: string; subscriberCount: number }) =>
+        `- ${ch.channelName} (카테고리: ${ch.category}, 구독자: ${ch.subscriberCount?.toLocaleString()}명)`,
+      )
+      .join('\n');
+
+    const videoList = recentVideos
+      .slice(0, 20)
+      .map((v: { title: string; channelName: string; viewSubRatio: number }) =>
+        `- "${v.title}" (채널: ${v.channelName}, 조회/구독 비율: ${v.viewSubRatio})`,
+      )
+      .join('\n');
+
+    const prompt = `당신은 자동차 유튜브 콘텐츠 전략 전문가입니다.
+
+등록된 벤치마크 채널들:
+${channelList || '(등록된 채널 없음)'}
+
+최근 트렌딩 영상들:
+${videoList || '(트렌딩 데이터 없음)'}
+
+위 데이터를 바탕으로, 구독자 52K의 자동차 정비사 유튜버 "꿈꾸는정비사"를 위한 영상 주제 10개를 추천해주세요.
+각 주제마다 추천 이유도 함께 제시해주세요.
+
+형식:
+1. [주제명]
+   이유: (왜 이 주제가 지금 효과적인가)
+
+2. [주제명]
+   이유: ...`;
+
+    return this.analyzeWithSonnet(prompt);
+  }
+
+  /**
+   * 유사 채널 추천 (기존 등록 채널 기반)
+   */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async suggestChannels(existingChannels: any[]): Promise<string> {
+    const channelList = existingChannels
+      .map((ch: { channelName: string; category: string; description?: string }) =>
+        `- ${ch.channelName} (카테고리: ${ch.category})${ch.description ? `: ${ch.description.slice(0, 100)}` : ''}`,
+      )
+      .join('\n');
+
+    const prompt = `당신은 자동차 YouTube 채널 분석 전문가입니다.
+
+현재 등록된 채널들:
+${channelList || '(등록된 채널 없음)'}
+
+위 채널들과 유사하거나 보완적인 자동차 관련 YouTube 채널 5개를 추천해주세요.
+각 채널에 대해 채널명과 팔로우해야 하는 이유를 설명해주세요.
+
+형식:
+1. 채널명: [채널명]
+   이유: (왜 이 채널을 참고해야 하는가)`;
+
+    return this.generateWithHaiku(prompt);
+  }
+
   private extractText(content: Array<{ type: string; text?: string }>): string {
     return content
       .filter((block) => block.type === 'text')

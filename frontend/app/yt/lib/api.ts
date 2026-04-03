@@ -165,4 +165,60 @@ export const saveSkill = async (
   return res.data;
 };
 
+// 채널 관리
+export async function getChannels(category?: string) {
+  const params = category ? `?category=${category}` : '';
+  const res = await ytApi.get(`/yt/channels${params}`);
+  return res.data;
+}
+export async function createChannel(data: { channelUrl: string; category?: string; memo?: string }) {
+  const res = await ytApi.post('/yt/channels', data);
+  return res.data;
+}
+export async function updateChannel(id: string, data: { category?: string; memo?: string }) {
+  const res = await ytApi.patch(`/yt/channels/${id}`, data);
+  return res.data;
+}
+export async function deleteChannel(id: string) {
+  const res = await ytApi.delete(`/yt/channels/${id}`);
+  return res.data;
+}
+
+// 카테고리
+export async function getCategories() {
+  const res = await ytApi.get('/yt/categories');
+  return res.data;
+}
+export async function createCategory(name: string) {
+  const res = await ytApi.post('/yt/categories', { name });
+  return res.data;
+}
+export async function deleteCategory(id: string) {
+  const res = await ytApi.delete(`/yt/categories/${id}`);
+  return res.data;
+}
+
+// 탐색
+export async function discoverChannelVideos(data: { category?: string; limit?: number }) {
+  const res = await ytApi.post('/yt/discover/channel-videos', data);
+  return res.data;
+}
+export async function discoverByKeyword(data: { keyword: string; language?: string; maxResults?: number }) {
+  const res = await ytApi.post('/yt/discover/keyword', data);
+  return res.data;
+}
+export async function discoverTrending(maxResults?: number) {
+  const params = maxResults ? `?maxResults=${maxResults}` : '';
+  const res = await ytApi.get(`/yt/discover/trending${params}`);
+  return res.data;
+}
+export async function discoverRecommend() {
+  const res = await ytApi.post('/yt/discover/recommend');
+  return res.data;
+}
+export async function discoverFindChannels(keyword: string) {
+  const res = await ytApi.post('/yt/discover/find-channels', { keyword });
+  return res.data;
+}
+
 export default ytApi;
