@@ -63,6 +63,11 @@ services:
       SOLAPI_KAKAO_CHANNEL_ID: ${SOLAPI_KAKAO_CHANNEL_ID:-}
       SOLAPI_QUOTE_TEMPLATE_ID: ${SOLAPI_QUOTE_TEMPLATE_ID:-}
       SOLAPI_INQUIRY_TEMPLATE_ID: ${SOLAPI_INQUIRY_TEMPLATE_ID:-}
+      # YouTube Supporter
+      YT_PASSWORD: ${YT_PASSWORD:-}
+      YOUTUBE_API_KEY: ${YOUTUBE_API_KEY:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      YT_EXTERNAL_API_KEY: ${YT_EXTERNAL_API_KEY:-}
     depends_on:
       postgres:
         condition: service_healthy
