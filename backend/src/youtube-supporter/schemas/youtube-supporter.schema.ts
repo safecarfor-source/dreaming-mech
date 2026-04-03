@@ -16,7 +16,12 @@ export type AuthDto = z.infer<typeof AuthSchema>;
 
 export const CreateProjectSchema = z.object({
   title: z.string().min(1, '주제명을 입력하세요').max(200),
-  shootingDate: z.string().datetime().optional().nullable(),
+  shootingDate: z.string().optional().nullable().transform((val) => {
+    if (!val) return null;
+    // "2026-04-10" 같은 date-only → ISO datetime으로 변환
+    if (/^\d{4}-\d{2}-\d{2}$/.test(val)) return `${val}T00:00:00.000Z`;
+    return val;
+  }),
   sortOrder: z.number().int().optional().default(0),
 });
 
