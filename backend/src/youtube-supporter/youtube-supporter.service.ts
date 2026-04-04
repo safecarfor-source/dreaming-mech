@@ -26,7 +26,6 @@ import type {
 } from './schemas/youtube-supporter.schema';
 import { YtProjectStatus } from '@prisma/client';
 
-@Injectable()
 // 제작 작업 상태 추적 (인메모리)
 interface ProductionJob {
   status: 'PROCESSING' | 'COMPLETED' | 'FAILED';
@@ -34,6 +33,7 @@ interface ProductionJob {
   error?: string;
 }
 
+@Injectable()
 export class YouTubeSupporterService {
   private readonly logger = new Logger(YouTubeSupporterService.name);
   // 프로젝트별 제작 작업 상태 (인메모리)
