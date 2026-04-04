@@ -158,11 +158,16 @@ export interface ProductionStatusResponse {
 export const getProductionResult = async (
   projectId: string
 ): Promise<ProductionStatusResponse> => {
-  // 이 엔드포인트는 interceptor가 .data를 추출하므로, 원본 응답을 받기 위해 직접 호출
-  const res = await ytApi.get(`/yt/projects/${projectId}/production`, {
-    transformResponse: [(data) => JSON.parse(data)], // interceptor 우회
+  // 인터셉터가 .data를 추출하므로, 직접 fetch로 원본 응답을 받음
+  const token = typeof window !== 'undefined' ? localStorage.getItem('yt_auth_token') : null;
+  const baseUrl = typeof window !== 'undefined' ? (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001') : 'http://localhost:3001';
+  const res = await fetch(`${baseUrl}/yt/projects/${projectId}/production`, {
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { 'x-yt-token': token } : {}),
+    },
   });
-  return res.data;
+  return res.json();
 };
 
 export const saveTimeline = async (
