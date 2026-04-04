@@ -27,8 +27,17 @@ import type {
 import { YtProjectStatus } from '@prisma/client';
 
 @Injectable()
+// 제작 작업 상태 추적 (인메모리)
+interface ProductionJob {
+  status: 'PROCESSING' | 'COMPLETED' | 'FAILED';
+  startedAt: Date;
+  error?: string;
+}
+
 export class YouTubeSupporterService {
   private readonly logger = new Logger(YouTubeSupporterService.name);
+  // 프로젝트별 제작 작업 상태 (인메모리)
+  private readonly productionJobs = new Map<string, ProductionJob>();
 
   constructor(
     private readonly prisma: PrismaService,
@@ -211,10 +220,37 @@ export class YouTubeSupporterService {
       throw new BadRequestException('지정한 레퍼런스 영상을 찾을 수 없습니다');
     }
 
+    // 이미 처리 중이면 중복 실행 방지
+    const existingJob = this.productionJobs.get(projectId);
+    if (existingJob?.status === 'PROCESSING') {
+      return { success: true, data: { status: 'PROCESSING', message: '이미 분석이 진행 중입니다' } };
+    }
+
     this.logger.log(`제작 시작: projectId=${projectId}, videos=${project.referenceVideos.length}개`);
 
+    // 작업 상태를 PROCESSING으로 설정
+    this.productionJobs.set(projectId, { status: 'PROCESSING', startedAt: new Date() });
+
+    // 백그라운드에서 비동기 실행 (즉시 응답 반환)
+    this.runProductionAsync(projectId, project).catch((err) => {
+      this.logger.error(`제작 실패: projectId=${projectId}`, err);
+      this.productionJobs.set(projectId, {
+        status: 'FAILED',
+        startedAt: this.productionJobs.get(projectId)?.startedAt ?? new Date(),
+        error: err.message || '알 수 없는 오류',
+      });
+    });
+
+    return {
+      success: true,
+      data: { status: 'PROCESSING', message: '분석을 시작했습니다. 잠시 후 결과를 확인해주세요.' },
+    };
+  }
+
+  // 백그라운드 제작 파이프라인
+  private async runProductionAsync(projectId: string, project: any) {
     // 레퍼런스 영상 컨텍스트 구성
-    const referenceContext = project.referenceVideos.map((v) => ({
+    const referenceContext = project.referenceVideos.map((v: any) => ({
       videoId: v.videoId,
       title: v.title,
       channelName: v.channelName,
@@ -229,7 +265,7 @@ export class YouTubeSupporterService {
     if (firstVideoId) {
       const rawComments = await this.youtubeApi.getVideoComments(firstVideoId, 100);
       comments = {
-        comments: rawComments.map((c) => ({ text: c.text, likeCount: c.likeCount })),
+        comments: rawComments.map((c: any) => ({ text: c.text, likeCount: c.likeCount })),
       };
     }
 
@@ -240,7 +276,7 @@ export class YouTubeSupporterService {
     ]);
 
     // DB 저장 (upsert — 재실행 시 덮어씀)
-    const [v1Data, v2Data] = await Promise.all([
+    await Promise.all([
       this.prisma.ytProductionData.upsert({
         where: { projectId_version: { projectId, version: 1 } },
         create: {
@@ -261,24 +297,53 @@ export class YouTubeSupporterService {
       }),
     ]);
 
-    return {
-      success: true,
-      data: {
-        version1: v1Data,
-        version2: v2Data,
-      },
-    };
+    // 작업 완료
+    this.productionJobs.set(projectId, {
+      status: 'COMPLETED',
+      startedAt: this.productionJobs.get(projectId)?.startedAt ?? new Date(),
+    });
+
+    this.logger.log(`제작 완료: projectId=${projectId}`);
   }
 
   async getProduction(projectId: string) {
     await this.ensureProjectExists(projectId);
+
+    // 인메모리 작업 상태 확인
+    const job = this.productionJobs.get(projectId);
 
     const productionData = await this.prisma.ytProductionData.findMany({
       where: { projectId },
       orderBy: { version: 'asc' },
     });
 
-    return { success: true, data: productionData };
+    // 작업 상태에 따른 응답
+    if (job?.status === 'PROCESSING') {
+      const elapsed = Math.floor((Date.now() - job.startedAt.getTime()) / 1000);
+      return {
+        success: true,
+        data: productionData,
+        status: 'PROCESSING',
+        elapsed,
+        message: `AI가 분석 중입니다... (${elapsed}초 경과)`,
+      };
+    }
+
+    if (job?.status === 'FAILED') {
+      return {
+        success: false,
+        data: productionData,
+        status: 'FAILED',
+        error: job.error,
+        message: `분석 실패: ${job.error}`,
+      };
+    }
+
+    return {
+      success: true,
+      data: productionData,
+      status: productionData.length > 0 ? 'COMPLETED' : 'IDLE',
+    };
   }
 
   // ─────────────────────────────────────────────
@@ -537,7 +602,7 @@ export class YouTubeSupporterService {
     await Promise.all(
       channels.map(async (ch) => {
         try {
-          const videos = await this.youtubeApi.getChannelVideos(ch.channelId, 20);
+          const videos = await this.youtubeApi.getChannelVideos(ch.channelId, 20, dto.videoDuration);
           const avgViewCount = ch.avgViewCount || 0;
 
           for (const v of videos) {

@@ -495,7 +495,7 @@ export class YoutubeApiService {
   /**
    * 채널의 영상 목록 + 통계 (조회수 내림차순)
    */
-  async getChannelVideos(channelId: string, maxResults = 50): Promise<ChannelVideoItem[]> {
+  async getChannelVideos(channelId: string, maxResults = 50, videoDuration?: 'short' | 'medium' | 'long'): Promise<ChannelVideoItem[]> {
     if (this.isMockMode) {
       this.logger.warn('YOUTUBE_API_KEY 미설정 — mock 데이터 반환');
       return [
@@ -512,13 +512,17 @@ export class YoutubeApiService {
 
     try {
       // 1단계: 채널 영상 검색 (조회수 순)
-      const channelSearchData = await this.youtubeGet('search', {
+      const searchParams: Record<string, any> = {
         channelId,
         part: 'id,snippet',
         order: 'viewCount',
         maxResults,
         type: 'video',
-      });
+      };
+      if (videoDuration) {
+        searchParams.videoDuration = videoDuration;
+      }
+      const channelSearchData = await this.youtubeGet('search', searchParams);
 
       const items = channelSearchData.items as Array<{
         id: { videoId: string };

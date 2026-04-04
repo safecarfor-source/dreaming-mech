@@ -178,9 +178,16 @@ function VideoCard({
 function ChannelDiscoverPane() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [selectedCat, setSelectedCat] = useState<string>('전체');
+  const [duration, setDuration] = useState<string>('all');
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState<DiscoverVideo[]>([]);
   const [started, setStarted] = useState(false);
+
+  const DURATION_OPTIONS = [
+    { value: 'all', label: '전체' },
+    { value: 'medium', label: '롱폼' },
+    { value: 'short', label: '숏츠' },
+  ];
 
   useEffect(() => {
     getCategories()
@@ -195,6 +202,7 @@ function ChannelDiscoverPane() {
       const data = await discoverChannelVideos({
         category: selectedCat === '전체' ? undefined : selectedCat,
         limit: 20,
+        ...(duration !== 'all' && { videoDuration: duration as 'short' | 'medium' | 'long' }),
       });
       setResults(Array.isArray(data) ? data : []);
     } catch {
@@ -221,6 +229,23 @@ function ChannelDiscoverPane() {
             }`}
           >
             {cat}
+          </button>
+        ))}
+      </div>
+
+      {/* 영상 길이 필터 (숏폼/롱폼) */}
+      <div className="flex gap-2">
+        {DURATION_OPTIONS.map((d) => (
+          <button
+            key={d.value}
+            onClick={() => setDuration(d.value)}
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+              duration === d.value
+                ? 'bg-violet-600 text-white'
+                : 'bg-gray-800 text-gray-400 hover:text-gray-200 border border-gray-700'
+            }`}
+          >
+            {d.label}
           </button>
         ))}
       </div>

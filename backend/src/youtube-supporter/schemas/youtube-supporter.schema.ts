@@ -151,6 +151,7 @@ export type CreateCategoryDto = z.infer<typeof CreateCategorySchema>;
 export const DiscoverChannelVideosSchema = z.object({
   category: z.string().optional(),
   limit: z.number().min(1).max(100).optional().default(50),
+  videoDuration: z.enum(['short', 'medium', 'long']).optional(),
 });
 
 export const DiscoverKeywordSchema = z.object({

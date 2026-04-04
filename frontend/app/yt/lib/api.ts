@@ -147,10 +147,21 @@ export const startProduction = async (
   return res.data;
 };
 
+export interface ProductionStatusResponse {
+  data: any[];
+  status: 'IDLE' | 'PROCESSING' | 'COMPLETED' | 'FAILED';
+  elapsed?: number;
+  message?: string;
+  error?: string;
+}
+
 export const getProductionResult = async (
   projectId: string
-): Promise<{ v1: YtProductionResult; v2: YtProductionResult }> => {
-  const res = await ytApi.get(`/yt/projects/${projectId}/production`);
+): Promise<ProductionStatusResponse> => {
+  // 이 엔드포인트는 interceptor가 .data를 추출하므로, 원본 응답을 받기 위해 직접 호출
+  const res = await ytApi.get(`/yt/projects/${projectId}/production`, {
+    transformResponse: [(data) => JSON.parse(data)], // interceptor 우회
+  });
   return res.data;
 };
 
@@ -220,7 +231,7 @@ export async function deleteCategory(id: string) {
 }
 
 // 탐색
-export async function discoverChannelVideos(data: { category?: string; limit?: number }) {
+export async function discoverChannelVideos(data: { category?: string; limit?: number; videoDuration?: 'short' | 'medium' | 'long' }) {
   const res = await ytApi.post('/yt/discover/channel-videos', data);
   return res.data;
 }

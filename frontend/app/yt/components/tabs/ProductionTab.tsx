@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Loader2,
@@ -11,14 +11,27 @@ import {
   ExternalLink,
   Play,
   Info,
+  AlertCircle,
+  Link2,
+  Search,
+  Plus,
+  RefreshCw,
 } from 'lucide-react';
-import { getProject, startProduction, getProductionResult, YtProductionResult, YtReferenceVideo } from '../../lib/api';
+import {
+  getProject,
+  startProduction,
+  getProductionResult,
+  addReferencesToProject,
+  discoverByKeyword,
+  YtProductionResult,
+  YtReferenceVideo,
+  ProductionStatusResponse,
+} from '../../lib/api';
 
 interface ProductionTabProps {
   projectId: string;
+  onSwitchToDiscover?: () => void;
 }
-
-// YtReferenceVideo 타입은 api.ts에서 import
 
 type AnalysisSection =
   | 'research'
@@ -41,71 +54,365 @@ const SECTION_LABELS: Record<AnalysisSection, string> = {
   description: '설명란',
 };
 
+// DB 필드명 → 프론트 필드명 매핑
+const DB_FIELD_MAP: Record<string, AnalysisSection> = {
+  coreValue: 'coreValue',
+  introSources: 'introMaterial',
+  scriptDraft: 'script',
+  thumbnailStrategies: 'thumbnailText',
+  titles: 'titleSuggestions',
+  hashtags: 'hashtags',
+  description: 'description',
+  opusReview: 'research',
+};
+
 function formatNumber(n: number) {
   if (n >= 10000) return `${(n / 10000).toFixed(1)}만`;
   if (n >= 1000) return `${(n / 1000).toFixed(1)}천`;
   return String(n);
 }
 
-export default function ProductionTab({ projectId }: ProductionTabProps) {
-  // 레퍼런스 영상 (주제찾기에서 추가된 것)
+// DB 레코드를 프론트 형식으로 변환
+function mapDbToResult(dbRecord: any): YtProductionResult {
+  return {
+    version: dbRecord.version,
+    research: dbRecord.opusReview || '',
+    introMaterial: typeof dbRecord.introSources === 'string'
+      ? dbRecord.introSources
+      : JSON.stringify(dbRecord.introSources || '', null, 2),
+    coreValue: dbRecord.coreValue || '',
+    script: dbRecord.scriptDraft || '',
+    thumbnailText: typeof dbRecord.thumbnailStrategies === 'string'
+      ? dbRecord.thumbnailStrategies
+      : JSON.stringify(dbRecord.thumbnailStrategies || '', null, 2),
+    titleSuggestions: Array.isArray(dbRecord.titles) ? dbRecord.titles : [],
+    hashtags: Array.isArray(dbRecord.hashtags) ? dbRecord.hashtags : [],
+    description: dbRecord.description || '',
+  };
+}
+
+// 경과 시간 포맷
+function formatElapsed(seconds: number): string {
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return m > 0 ? `${m}분 ${s}초` : `${s}초`;
+}
+
+// ─── 직접 링크 입력 컴포넌트 ──────────────────────────
+function DirectLinkInput({ projectId, onAdded }: { projectId: string; onAdded: () => void }) {
+  const [url, setUrl] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const extractVideoId = (input: string): string | null => {
+    // youtube.com/watch?v=VIDEO_ID
+    const match1 = input.match(/[?&]v=([a-zA-Z0-9_-]{11})/);
+    if (match1) return match1[1];
+    // youtu.be/VIDEO_ID
+    const match2 = input.match(/youtu\.be\/([a-zA-Z0-9_-]{11})/);
+    if (match2) return match2[1];
+    // youtube.com/shorts/VIDEO_ID
+    const match3 = input.match(/shorts\/([a-zA-Z0-9_-]{11})/);
+    if (match3) return match3[1];
+    // 11자 ID 직접 입력
+    if (/^[a-zA-Z0-9_-]{11}$/.test(input.trim())) return input.trim();
+    return null;
+  };
+
+  const handleAdd = async () => {
+    const videoId = extractVideoId(url);
+    if (!videoId) {
+      setError('올바른 YouTube URL을 입력해주세요');
+      return;
+    }
+    setLoading(true);
+    setError('');
+    try {
+      await addReferencesToProject(projectId, [{
+        videoId,
+        title: `영상 ${videoId}`,
+        channelName: '',
+      }]);
+      setUrl('');
+      onAdded();
+    } catch {
+      setError('영상 추가에 실패했습니다');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="space-y-2">
+      <div className="flex gap-2">
+        <div className="flex-1 relative">
+          <Link2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+          <input
+            type="text"
+            value={url}
+            onChange={(e) => { setUrl(e.target.value); setError(''); }}
+            placeholder="YouTube URL 붙여넣기 (예: https://youtube.com/watch?v=...)"
+            className="w-full bg-gray-900 border border-gray-700 rounded-xl pl-9 pr-4 py-2.5 text-white placeholder-gray-500 text-sm focus:outline-none focus:border-violet-500 transition-colors"
+            onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
+          />
+        </div>
+        <button
+          onClick={handleAdd}
+          disabled={loading || !url.trim()}
+          className="flex items-center gap-1.5 bg-violet-600 hover:bg-violet-500 disabled:bg-gray-700 disabled:text-gray-500 text-white px-4 py-2.5 rounded-xl text-sm font-medium transition-colors whitespace-nowrap"
+        >
+          {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+          추가
+        </button>
+      </div>
+      {error && <p className="text-red-400 text-xs">{error}</p>}
+    </div>
+  );
+}
+
+// ─── 인라인 주제찾기 (간이 키워드 검색) ──────────────────
+function InlineTopicSearch({ projectId, onAdded }: { projectId: string; onAdded: () => void }) {
+  const [keyword, setKeyword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [results, setResults] = useState<any[]>([]);
+  const [addedIds, setAddedIds] = useState<Set<string>>(new Set());
+
+  const handleSearch = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!keyword.trim()) return;
+    setLoading(true);
+    try {
+      const data = await discoverByKeyword({ keyword, maxResults: 10 });
+      const arr = Array.isArray(data) ? data : [];
+      arr.sort((a: any, b: any) => (b.viewSubRatio ?? 0) - (a.viewSubRatio ?? 0));
+      setResults(arr);
+    } catch {
+      setResults([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAdd = async (v: any) => {
+    if (addedIds.has(v.videoId)) return;
+    try {
+      await addReferencesToProject(projectId, [{
+        videoId: v.videoId,
+        title: v.title,
+        channelName: v.channelName,
+        channelId: v.channelId,
+        viewCount: v.viewCount,
+        subscriberCount: v.subscriberCount,
+        thumbnailUrl: v.thumbnailUrl,
+      }]);
+      setAddedIds((prev) => new Set([...prev, v.videoId]));
+      onAdded();
+    } catch { /* 무시 */ }
+  };
+
+  return (
+    <div className="space-y-3">
+      <form onSubmit={handleSearch} className="flex gap-2">
+        <div className="flex-1 relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+          <input
+            type="text"
+            value={keyword}
+            onChange={(e) => setKeyword(e.target.value)}
+            placeholder="키워드로 참고 영상 검색 (예: 타이어 교체)"
+            className="w-full bg-gray-900 border border-gray-700 rounded-xl pl-9 pr-4 py-2.5 text-white placeholder-gray-500 text-sm focus:outline-none focus:border-violet-500 transition-colors"
+          />
+        </div>
+        <button
+          type="submit"
+          disabled={loading || !keyword.trim()}
+          className="bg-violet-600 hover:bg-violet-500 disabled:bg-gray-700 disabled:text-gray-500 text-white px-4 py-2.5 rounded-xl text-sm font-medium transition-colors"
+        >
+          {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : '검색'}
+        </button>
+      </form>
+
+      {results.length > 0 && (
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-[300px] overflow-y-auto">
+          {results.map((v: any) => (
+            <div key={v.videoId} className="bg-gray-800 border border-gray-700 rounded-xl overflow-hidden group">
+              <div className="relative w-full aspect-video bg-gray-900">
+                {v.thumbnailUrl ? (
+                  <img src={v.thumbnailUrl} alt={v.title} className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <Play className="w-5 h-5 text-gray-700" />
+                  </div>
+                )}
+                <div className="absolute bottom-1 right-1 bg-black/75 text-white text-[10px] px-1 py-0.5 rounded">
+                  {formatNumber(v.viewCount || 0)}
+                </div>
+              </div>
+              <div className="p-2">
+                <p className="text-white text-xs leading-snug line-clamp-2 mb-1.5">{v.title}</p>
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-500 text-[10px] truncate max-w-[80px]">{v.channelName}</span>
+                  {addedIds.has(v.videoId) ? (
+                    <span className="text-[10px] px-2 py-1 bg-emerald-500/15 text-emerald-400 border border-emerald-500/25 rounded-lg">
+                      ✓ 추가됨
+                    </span>
+                  ) : (
+                    <button
+                      onClick={() => handleAdd(v)}
+                      className="text-[10px] px-2 py-1 bg-gray-700 hover:bg-violet-600/80 text-gray-300 hover:text-white rounded-lg transition-colors"
+                    >
+                      + 추가
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── 메인 ProductionTab ──────────────────────────────
+export default function ProductionTab({ projectId, onSwitchToDiscover }: ProductionTabProps) {
+  // 레퍼런스 영상
   const [references, setReferences] = useState<YtReferenceVideo[]>([]);
   const [refsLoading, setRefsLoading] = useState(true);
 
-  // 분석
-  const [analysisLoading, setAnalysisLoading] = useState(false);
-  const [result, setResult] = useState<{
-    v1: YtProductionResult;
-    v2: YtProductionResult;
-  } | null>(null);
+  // 분석 상태
+  const [analysisStatus, setAnalysisStatus] = useState<'IDLE' | 'PROCESSING' | 'COMPLETED' | 'FAILED'>('IDLE');
+  const [analysisElapsed, setAnalysisElapsed] = useState(0);
+  const [analysisError, setAnalysisError] = useState('');
+  const [result, setResult] = useState<{ v1: YtProductionResult; v2: YtProductionResult } | null>(null);
   const [activeVersion, setActiveVersion] = useState<1 | 2>(1);
   const [activeSection, setActiveSection] = useState<AnalysisSection>('research');
+  const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const elapsedTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // 타임라인
   const [timeline, setTimeline] = useState('');
 
-  // 프로젝트의 레퍼런스 영상 로드
-  useEffect(() => {
-    const load = async () => {
-      try {
-        const project = await getProject(projectId);
-        // 프로젝트에 referenceVideos가 있으면 설정
-        if (project && project.referenceVideos) {
-          setReferences(project.referenceVideos);
-        }
-      } catch {
-        // 실패 시 빈 배열
-      } finally {
-        setRefsLoading(false);
+  // 참고영상 추가 모드
+  const [addMode, setAddMode] = useState<'none' | 'link' | 'search'>('none');
+
+  // 레퍼런스 로드
+  const loadRefs = useCallback(async () => {
+    try {
+      const project = await getProject(projectId);
+      if (project?.referenceVideos) {
+        setReferences(project.referenceVideos);
       }
-    };
-    load();
+    } catch { /* 실패 시 빈 배열 */ }
+    finally { setRefsLoading(false); }
   }, [projectId]);
 
+  useEffect(() => { loadRefs(); }, [loadRefs]);
+
+  // 기존 분석 결과 체크 (페이지 로드 시)
+  useEffect(() => {
+    const checkExisting = async () => {
+      try {
+        const res = await getProductionResult(projectId);
+        if (res.status === 'COMPLETED' && res.data?.length >= 2) {
+          const v1 = res.data.find((d: any) => d.version === 1);
+          const v2 = res.data.find((d: any) => d.version === 2);
+          if (v1 && v2) {
+            setResult({ v1: mapDbToResult(v1), v2: mapDbToResult(v2) });
+            setAnalysisStatus('COMPLETED');
+          }
+        } else if (res.status === 'PROCESSING') {
+          // 진행 중이면 폴링 시작
+          setAnalysisStatus('PROCESSING');
+          setAnalysisElapsed(res.elapsed || 0);
+          startPolling();
+        }
+      } catch { /* 무시 */ }
+    };
+    checkExisting();
+    return () => stopPolling();
+  }, [projectId]);
+
+  // 폴링 시작
+  const startPolling = () => {
+    stopPolling();
+    // 경과 시간 타이머
+    elapsedTimerRef.current = setInterval(() => {
+      setAnalysisElapsed((prev) => prev + 1);
+    }, 1000);
+    // 결과 폴링 (5초마다)
+    pollingRef.current = setInterval(async () => {
+      try {
+        const res = await getProductionResult(projectId);
+        if (res.status === 'COMPLETED' && res.data?.length >= 2) {
+          const v1 = res.data.find((d: any) => d.version === 1);
+          const v2 = res.data.find((d: any) => d.version === 2);
+          if (v1 && v2) {
+            setResult({ v1: mapDbToResult(v1), v2: mapDbToResult(v2) });
+            setAnalysisStatus('COMPLETED');
+            stopPolling();
+          }
+        } else if (res.status === 'FAILED') {
+          setAnalysisStatus('FAILED');
+          setAnalysisError(res.error || '분석 중 오류가 발생했습니다');
+          stopPolling();
+        }
+      } catch { /* 네트워크 오류 시 폴링 계속 */ }
+    }, 5000);
+  };
+
+  const stopPolling = () => {
+    if (pollingRef.current) { clearInterval(pollingRef.current); pollingRef.current = null; }
+    if (elapsedTimerRef.current) { clearInterval(elapsedTimerRef.current); elapsedTimerRef.current = null; }
+  };
+
+  // 분석 시작
   const handleAnalysis = async () => {
     const videoIds = references.map((r) => r.id);
     if (videoIds.length === 0) return;
-    setAnalysisLoading(true);
+    setAnalysisStatus('PROCESSING');
+    setAnalysisElapsed(0);
+    setAnalysisError('');
     try {
       await startProduction(projectId, videoIds);
-      const data = await getProductionResult(projectId);
-      setResult(data);
-    } catch {
-      // 분석 실패
-    } finally {
-      setAnalysisLoading(false);
+      startPolling();
+    } catch (err: any) {
+      setAnalysisStatus('FAILED');
+      setAnalysisError(err.message || '분석 시작에 실패했습니다');
     }
   };
 
+  // 참고영상 추가 후 리로드
+  const handleRefAdded = () => {
+    loadRefs();
+  };
+
   const currentResult = result
-    ? activeVersion === 1
-      ? result.v1
-      : result.v2
+    ? activeVersion === 1 ? result.v1 : result.v2
     : null;
+
+  // 분석 중 진행 메시지
+  const PROGRESS_MESSAGES = [
+    { at: 0, msg: 'AI가 레퍼런스 영상을 분석하고 있습니다...' },
+    { at: 30, msg: '자막과 댓글을 분석하고 있습니다...' },
+    { at: 60, msg: '코어 밸류와 인트로 소재를 추출 중...' },
+    { at: 120, msg: '대본 초안을 작성하고 있습니다...' },
+    { at: 180, msg: '대본 검수 및 최적화 중...' },
+    { at: 240, msg: '메타데이터(제목, 해시태그) 생성 중...' },
+    { at: 300, msg: '거의 완료! 최종 정리 중...' },
+  ];
+
+  const getProgressMessage = (elapsed: number) => {
+    let msg = PROGRESS_MESSAGES[0].msg;
+    for (const p of PROGRESS_MESSAGES) {
+      if (elapsed >= p.at) msg = p.msg;
+    }
+    return msg;
+  };
 
   return (
     <div className="space-y-8">
-      {/* 참고 영상 (주제찾기에서 추가된 레퍼런스) */}
+      {/* 참고 영상 섹션 */}
       <section>
         <div className="flex items-center gap-2 mb-4">
           <span className="text-xs font-bold text-violet-400 bg-violet-500/15 border border-violet-500/25 px-2 py-0.5 rounded-md">
@@ -119,47 +426,95 @@ export default function ProductionTab({ projectId }: ProductionTabProps) {
             <Loader2 className="w-5 h-5 text-violet-400 animate-spin" />
           </div>
         ) : references.length > 0 ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-            {references.map((ref) => (
-              <a
-                key={ref.id}
-                href={`https://youtube.com/watch?v=${ref.videoId}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="bg-gray-800 border border-gray-700 rounded-xl overflow-hidden hover:border-violet-500/50 transition-colors group"
-              >
-                {/* 썸네일 */}
-                <div className="relative w-full aspect-video bg-gray-900">
-                  {ref.thumbnailUrl ? (
-                    <img
-                      src={ref.thumbnailUrl}
-                      alt={ref.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <Play className="w-6 h-6 text-gray-700" />
+          <div className="space-y-3">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              {references.map((ref) => (
+                <a
+                  key={ref.id}
+                  href={`https://youtube.com/watch?v=${ref.videoId}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="bg-gray-800 border border-gray-700 rounded-xl overflow-hidden hover:border-violet-500/50 transition-colors group"
+                >
+                  <div className="relative w-full aspect-video bg-gray-900">
+                    {ref.thumbnailUrl ? (
+                      <img src={ref.thumbnailUrl} alt={ref.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center"><Play className="w-6 h-6 text-gray-700" /></div>
+                    )}
+                    <div className="absolute bottom-1 right-1 bg-black/75 text-white text-[10px] px-1 py-0.5 rounded">
+                      {formatNumber(ref.viewCount)}
                     </div>
-                  )}
-                  <div className="absolute bottom-1 right-1 bg-black/75 text-white text-[10px] px-1 py-0.5 rounded">
-                    {formatNumber(ref.viewCount)}
                   </div>
-                </div>
-                <div className="p-2">
-                  <p className="text-white text-xs leading-snug line-clamp-2 mb-1">{ref.title}</p>
-                  <div className="flex items-center gap-1 text-gray-500 text-[10px]">
-                    <span className="truncate">{ref.channelName}</span>
-                    <ExternalLink className="w-2.5 h-2.5 shrink-0 text-gray-600" />
+                  <div className="p-2">
+                    <p className="text-white text-xs leading-snug line-clamp-2 mb-1">{ref.title}</p>
+                    <div className="flex items-center gap-1 text-gray-500 text-[10px]">
+                      <span className="truncate">{ref.channelName}</span>
+                      <ExternalLink className="w-2.5 h-2.5 shrink-0 text-gray-600" />
+                    </div>
                   </div>
-                </div>
-              </a>
-            ))}
+                </a>
+              ))}
+            </div>
+            {/* 추가 버튼 */}
+            <div className="flex gap-2">
+              <button
+                onClick={() => setAddMode(addMode === 'link' ? 'none' : 'link')}
+                className={`text-xs px-3 py-1.5 rounded-lg transition-colors ${addMode === 'link' ? 'bg-violet-600 text-white' : 'bg-gray-800 text-gray-400 hover:text-white border border-gray-700'}`}
+              >
+                <Link2 className="w-3 h-3 inline mr-1" />링크 추가
+              </button>
+              <button
+                onClick={() => setAddMode(addMode === 'search' ? 'none' : 'search')}
+                className={`text-xs px-3 py-1.5 rounded-lg transition-colors ${addMode === 'search' ? 'bg-violet-600 text-white' : 'bg-gray-800 text-gray-400 hover:text-white border border-gray-700'}`}
+              >
+                <Search className="w-3 h-3 inline mr-1" />주제찾기
+              </button>
+            </div>
+            <AnimatePresence>
+              {addMode === 'link' && (
+                <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}>
+                  <DirectLinkInput projectId={projectId} onAdded={handleRefAdded} />
+                </motion.div>
+              )}
+              {addMode === 'search' && (
+                <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}>
+                  <InlineTopicSearch projectId={projectId} onAdded={handleRefAdded} />
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         ) : (
-          <div className="bg-gray-900 border border-gray-700 rounded-xl p-6 text-center">
-            <Info className="w-6 h-6 text-gray-600 mx-auto mb-2" />
-            <p className="text-gray-400 text-sm mb-1">참고 영상이 없습니다</p>
-            <p className="text-gray-600 text-xs">주제찾기 탭에서 영상을 검색하고 "추가" 버튼을 눌러주세요</p>
+          <div className="bg-gray-900 border border-gray-700 rounded-xl p-6 space-y-4">
+            <div className="text-center">
+              <Info className="w-6 h-6 text-gray-600 mx-auto mb-2" />
+              <p className="text-gray-400 text-sm mb-1">참고 영상이 없습니다</p>
+              <p className="text-gray-600 text-xs mb-4">아래에서 직접 링크를 추가하거나 키워드로 검색해보세요</p>
+            </div>
+
+            {/* 직접 링크 입력 */}
+            <div>
+              <p className="text-gray-400 text-xs font-medium mb-2 flex items-center gap-1">
+                <Link2 className="w-3 h-3" /> YouTube 링크로 추가
+              </p>
+              <DirectLinkInput projectId={projectId} onAdded={handleRefAdded} />
+            </div>
+
+            <div className="border-t border-gray-800 pt-4">
+              <p className="text-gray-400 text-xs font-medium mb-2 flex items-center gap-1">
+                <Search className="w-3 h-3" /> 키워드로 참고영상 찾기
+              </p>
+              <InlineTopicSearch projectId={projectId} onAdded={handleRefAdded} />
+            </div>
+
+            {onSwitchToDiscover && (
+              <button
+                onClick={onSwitchToDiscover}
+                className="w-full text-xs text-violet-400 hover:text-violet-300 py-2 transition-colors"
+              >
+                ← 주제찾기 탭에서 더 다양한 검색 →
+              </button>
+            )}
           </div>
         )}
       </section>
@@ -173,36 +528,72 @@ export default function ProductionTab({ projectId }: ProductionTabProps) {
           <h3 className="text-white font-semibold text-sm">분석 & 대본</h3>
         </div>
 
-        {!result ? (
+        {analysisStatus === 'PROCESSING' ? (
+          /* 분석 진행 중 UI */
+          <div className="bg-gray-900 border border-violet-500/30 rounded-2xl p-8 text-center">
+            <div className="relative w-16 h-16 mx-auto mb-4">
+              <div className="absolute inset-0 rounded-full border-2 border-violet-500/20" />
+              <div className="absolute inset-0 rounded-full border-2 border-violet-400 border-t-transparent animate-spin" />
+              <Sparkles className="absolute inset-0 m-auto w-6 h-6 text-violet-400" />
+            </div>
+            <p className="text-white font-medium text-sm mb-2">
+              {references.length}개 레퍼런스 기반으로 분석합니다
+            </p>
+            <p className="text-violet-300 text-xs mb-1">
+              {getProgressMessage(analysisElapsed)}
+            </p>
+            <p className="text-gray-500 text-xs mb-4">
+              경과 시간: {formatElapsed(analysisElapsed)} (보통 3~8분 소요)
+            </p>
+            {/* 프로그레스 바 */}
+            <div className="w-full max-w-xs mx-auto bg-gray-800 rounded-full h-1.5 mb-3">
+              <div
+                className="bg-violet-500 h-1.5 rounded-full transition-all duration-1000"
+                style={{ width: `${Math.min(95, (analysisElapsed / 360) * 100)}%` }}
+              />
+            </div>
+            <p className="text-gray-600 text-[10px]">
+              페이지를 닫아도 분석은 계속 진행됩니다
+            </p>
+          </div>
+        ) : analysisStatus === 'FAILED' ? (
+          /* 분석 실패 UI */
+          <div className="bg-gray-900 border border-red-500/30 rounded-2xl p-6 text-center">
+            <AlertCircle className="w-8 h-8 text-red-400 mx-auto mb-3" />
+            <p className="text-red-300 text-sm mb-2">분석에 실패했습니다</p>
+            <p className="text-gray-500 text-xs mb-4">{analysisError}</p>
+            <button
+              onClick={handleAnalysis}
+              disabled={references.length === 0}
+              className="inline-flex items-center gap-2 bg-violet-600 hover:bg-violet-500 text-white px-5 py-2 rounded-xl text-sm font-medium transition-colors"
+            >
+              <RefreshCw className="w-4 h-4" />
+              다시 시도
+            </button>
+          </div>
+        ) : !result ? (
+          /* 분석 전 UI */
           <div className="bg-gray-900 border border-gray-700 rounded-2xl p-6 text-center">
             <Sparkles className="w-8 h-8 text-violet-400 mx-auto mb-3" />
             <p className="text-gray-300 text-sm mb-1">
               {references.length > 0
                 ? `${references.length}개 레퍼런스 기반으로 분석합니다`
-                : '먼저 주제찾기에서 참고 영상을 추가해주세요'}
+                : '먼저 위에서 참고 영상을 추가해주세요'}
             </p>
             <p className="text-gray-500 text-xs mb-5">
               리서치, 인트로 소재, 코어 밸류, 대본, 썸네일, 제목, 해시태그 자동 생성
             </p>
             <button
               onClick={handleAnalysis}
-              disabled={analysisLoading || references.length === 0}
+              disabled={references.length === 0}
               className="inline-flex items-center gap-2 bg-violet-600 hover:bg-violet-500 disabled:bg-gray-700 disabled:text-gray-500 text-white px-6 py-2.5 rounded-xl text-sm font-medium transition-colors"
             >
-              {analysisLoading ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  분석 중...
-                </>
-              ) : (
-                <>
-                  <Sparkles className="w-4 h-4" />
-                  분석 시작
-                </>
-              )}
+              <Sparkles className="w-4 h-4" />
+              분석 시작
             </button>
           </div>
         ) : (
+          /* 분석 결과 UI */
           <div className="space-y-4">
             {/* 버전 탭 */}
             <div className="flex gap-2">
@@ -219,25 +610,31 @@ export default function ProductionTab({ projectId }: ProductionTabProps) {
                   버전 {v}
                 </button>
               ))}
+              {/* 재분석 버튼 */}
+              <button
+                onClick={handleAnalysis}
+                className="ml-auto px-3 py-2 bg-gray-800 text-gray-400 hover:text-white border border-gray-700 rounded-xl text-xs transition-colors"
+              >
+                <RefreshCw className="w-3 h-3 inline mr-1" />
+                재분석
+              </button>
             </div>
 
             {/* 섹션 네비게이션 */}
             <div className="flex flex-wrap gap-2">
-              {(Object.keys(SECTION_LABELS) as AnalysisSection[]).map(
-                (section) => (
-                  <button
-                    key={section}
-                    onClick={() => setActiveSection(section)}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                      activeSection === section
-                        ? 'bg-violet-500/20 text-violet-300 border border-violet-500/30'
-                        : 'bg-gray-800 text-gray-500 hover:text-gray-300 border border-gray-700'
-                    }`}
-                  >
-                    {SECTION_LABELS[section]}
-                  </button>
-                )
-              )}
+              {(Object.keys(SECTION_LABELS) as AnalysisSection[]).map((section) => (
+                <button
+                  key={section}
+                  onClick={() => setActiveSection(section)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                    activeSection === section
+                      ? 'bg-violet-500/20 text-violet-300 border border-violet-500/30'
+                      : 'bg-gray-800 text-gray-500 hover:text-gray-300 border border-gray-700'
+                  }`}
+                >
+                  {SECTION_LABELS[section]}
+                </button>
+              ))}
             </div>
 
             {/* 섹션 콘텐츠 */}
@@ -253,13 +650,12 @@ export default function ProductionTab({ projectId }: ProductionTabProps) {
                 <div className="flex items-center gap-2 mb-3">
                   <FileText className="w-4 h-4 text-violet-400" />
                   <h4 className="text-white font-semibold text-sm">
-                    {SECTION_LABELS[activeSection as AnalysisSection]}
+                    {SECTION_LABELS[activeSection]}
                   </h4>
                 </div>
                 {currentResult && (
                   <div className="text-gray-300 text-sm leading-relaxed whitespace-pre-wrap">
-                    {activeSection === 'titleSuggestions' ||
-                    activeSection === 'hashtags'
+                    {activeSection === 'titleSuggestions' || activeSection === 'hashtags'
                       ? Array.isArray(currentResult[activeSection])
                         ? (currentResult[activeSection] as string[]).join('\n')
                         : String(currentResult[activeSection])
