@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Play, Calendar, FolderOpen } from 'lucide-react';
+import { Play, Calendar, FolderOpen } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { getProjects, YtProject } from '../../lib/api';
-import ProductionTab from './ProductionTab';
 
 function formatDate(dateStr?: string): string {
   if (!dateStr) return '날짜 미정';
@@ -17,9 +17,9 @@ interface ProjectCardTabProps {
 }
 
 export default function ProjectCardTab({ currentProjectId }: ProjectCardTabProps) {
+  const router = useRouter();
   const [projects, setProjects] = useState<YtProject[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
 
   useEffect(() => {
     const load = async () => {
@@ -34,22 +34,6 @@ export default function ProjectCardTab({ currentProjectId }: ProjectCardTabProps
     };
     load();
   }, []);
-
-  // 상세 보기 모드
-  if (selectedProjectId) {
-    return (
-      <div>
-        <button
-          onClick={() => setSelectedProjectId(null)}
-          className="flex items-center gap-1.5 text-gray-400 hover:text-white transition-colors text-sm mb-4"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          프로젝트 목록으로
-        </button>
-        <ProductionTab projectId={selectedProjectId} />
-      </div>
-    );
-  }
 
   // 로딩
   if (loading) {
@@ -79,7 +63,7 @@ export default function ProjectCardTab({ currentProjectId }: ProjectCardTabProps
               <motion.button
                 key={project.id}
                 whileHover={{ y: -4 }}
-                onClick={() => setSelectedProjectId(project.id)}
+                onClick={() => router.push(`/yt/projects/${project.id}`)}
                 className={`text-left bg-gray-800 border rounded-xl overflow-hidden hover:border-violet-500/50 transition-colors ${
                   project.id === currentProjectId
                     ? 'border-violet-500/50 ring-1 ring-violet-500/30'
@@ -124,7 +108,7 @@ export default function ProjectCardTab({ currentProjectId }: ProjectCardTabProps
               <motion.button
                 key={project.id}
                 whileHover={{ y: -4 }}
-                onClick={() => setSelectedProjectId(project.id)}
+                onClick={() => router.push(`/yt/projects/${project.id}`)}
                 className="text-left bg-gray-800/50 border border-gray-700 rounded-xl overflow-hidden hover:border-emerald-500/30 transition-colors opacity-75 hover:opacity-100"
               >
                 <div className="relative w-full aspect-video bg-gradient-to-br from-emerald-900/30 to-gray-900 flex items-center justify-center">
