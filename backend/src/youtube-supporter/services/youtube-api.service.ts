@@ -93,12 +93,100 @@ export class YoutubeApiService {
   private readonly logger = new Logger(YoutubeApiService.name);
   private readonly baseUrl = 'https://www.googleapis.com/youtube/v3';
 
+  // API 키 로테이션: YOUTUBE_API_KEY, YOUTUBE_API_KEY_2, YOUTUBE_API_KEY_3, ...
+  private apiKeys: string[] = [];
+  private currentKeyIndex = 0;
+  private exhaustedKeys = new Set<number>(); // quota 초과된 키 인덱스
+  private lastResetCheck = 0;
+
+  constructor() {
+    this.loadApiKeys();
+  }
+
+  private loadApiKeys() {
+    const keys: string[] = [];
+    const primary = process.env.YOUTUBE_API_KEY;
+    if (primary) keys.push(primary);
+
+    // YOUTUBE_API_KEY_2, _3, _4, ... 순서대로 탐색
+    for (let i = 2; i <= 10; i++) {
+      const key = process.env[`YOUTUBE_API_KEY_${i}`];
+      if (key) keys.push(key);
+    }
+
+    this.apiKeys = keys;
+    if (keys.length > 1) {
+      this.logger.log(`YouTube API 키 ${keys.length}개 로드 (로테이션 활성)`);
+    } else if (keys.length === 1) {
+      this.logger.log('YouTube API 키 1개 로드');
+    }
+  }
+
   private get apiKey(): string | undefined {
-    return process.env.YOUTUBE_API_KEY;
+    if (this.apiKeys.length === 0) return undefined;
+
+    // 태평양 시간 자정 (한국 오후 4시)에 exhaustedKeys 리셋
+    const now = Date.now();
+    if (now - this.lastResetCheck > 60 * 60 * 1000) { // 1시간마다 체크
+      const pst = new Date(now).toLocaleString('en-US', { timeZone: 'America/Los_Angeles' });
+      const pstHour = new Date(pst).getHours();
+      if (pstHour === 0 && this.exhaustedKeys.size > 0) {
+        this.logger.log('YouTube API quota 리셋 — 모든 키 활성화');
+        this.exhaustedKeys.clear();
+        this.currentKeyIndex = 0;
+      }
+      this.lastResetCheck = now;
+    }
+
+    return this.apiKeys[this.currentKeyIndex];
+  }
+
+  /** quota 초과 시 다음 키로 전환. 모든 키 소진 시 false 반환 */
+  private rotateKey(): boolean {
+    this.exhaustedKeys.add(this.currentKeyIndex);
+    this.logger.warn(`API 키 #${this.currentKeyIndex + 1} quota 초과 (${this.exhaustedKeys.size}/${this.apiKeys.length} 소진)`);
+
+    // 다음 살아있는 키 찾기
+    for (let i = 0; i < this.apiKeys.length; i++) {
+      const nextIndex = (this.currentKeyIndex + 1 + i) % this.apiKeys.length;
+      if (!this.exhaustedKeys.has(nextIndex)) {
+        this.currentKeyIndex = nextIndex;
+        this.logger.log(`API 키 #${nextIndex + 1}로 전환`);
+        return true;
+      }
+    }
+
+    this.logger.error('모든 YouTube API 키 quota 초과!');
+    return false;
+  }
+
+  /** quota 에러인지 확인 */
+  private isQuotaError(error: any): boolean {
+    return error?.response?.status === 403 &&
+      error?.response?.data?.error?.errors?.[0]?.reason === 'quotaExceeded';
   }
 
   private get isMockMode(): boolean {
-    return !this.apiKey;
+    return this.apiKeys.length === 0;
+  }
+
+  /** YouTube API 호출 래퍼 — quota 초과 시 자동 키 로테이션 + 재시도 */
+  private async youtubeGet<T = any>(endpoint: string, params: Record<string, any>): Promise<T> {
+    const maxRetries = this.apiKeys.length;
+    for (let attempt = 0; attempt < maxRetries; attempt++) {
+      try {
+        const res = await axios.get(`${this.baseUrl}/${endpoint}`, {
+          params: { ...params, key: this.apiKey },
+        });
+        return res.data as T;
+      } catch (error) {
+        if (this.isQuotaError(error) && this.rotateKey()) {
+          continue; // 다음 키로 재시도
+        }
+        throw error;
+      }
+    }
+    throw new Error('모든 YouTube API 키 quota 초과');
   }
 
   /**
@@ -117,20 +205,17 @@ export class YoutubeApiService {
 
     try {
       // 1단계: 영상 검색
-      const searchRes = await axios.get(`${this.baseUrl}/search`, {
-        params: {
-          key: this.apiKey,
-          q: keyword,
-          part: 'snippet',
-          type: 'video',
-          maxResults,
-          relevanceLanguage: language,
-          videoCaption: 'closedCaption', // 자막 있는 영상만
-          ...(videoDuration && { videoDuration }), // short (<4분), medium (4-20분), long (>20분)
-        },
+      const searchData = await this.youtubeGet('search', {
+        q: keyword,
+        part: 'snippet',
+        type: 'video',
+        maxResults,
+        relevanceLanguage: language,
+        videoCaption: 'closedCaption',
+        ...(videoDuration && { videoDuration }),
       });
 
-      const items = searchRes.data.items as Array<{
+      const items = searchData.items as Array<{
         id: { videoId: string };
         snippet: {
           title: string;
@@ -147,16 +232,13 @@ export class YoutubeApiService {
       const videoIds = items.map((item) => item.id.videoId).join(',');
 
       // 2단계: 통계 가져오기
-      const statsRes = await axios.get(`${this.baseUrl}/videos`, {
-        params: {
-          key: this.apiKey,
-          id: videoIds,
-          part: 'statistics',
-        },
+      const statsData = await this.youtubeGet('videos', {
+        id: videoIds,
+        part: 'statistics',
       });
 
       const statsMap = new Map<string, { viewCount: number; likeCount: number; commentCount: number }>();
-      for (const v of statsRes.data.items as Array<{
+      for (const v of statsData.items as Array<{
         id: string;
         statistics: { viewCount?: string; likeCount?: string; commentCount?: string };
       }>) {
@@ -210,15 +292,12 @@ export class YoutubeApiService {
 
     try {
       // 영상 정보 + 통계
-      const videoRes = await axios.get(`${this.baseUrl}/videos`, {
-        params: {
-          key: this.apiKey,
-          id: videoId,
-          part: 'snippet,statistics',
-        },
+      const videoResData = await this.youtubeGet('videos', {
+        id: videoId,
+        part: 'snippet,statistics',
       });
 
-      const videoData = videoRes.data.items?.[0] as
+      const videoData = videoResData.items?.[0] as
         | {
             snippet: {
               title: string;
@@ -266,15 +345,12 @@ export class YoutubeApiService {
     }
 
     try {
-      const res = await axios.get(`${this.baseUrl}/channels`, {
-        params: {
-          key: this.apiKey,
-          id: channelId,
-          part: 'statistics',
-        },
+      const channelResData = await this.youtubeGet('channels', {
+        id: channelId,
+        part: 'statistics',
       });
 
-      const channelData = res.data.items?.[0] as
+      const channelData = channelResData.items?.[0] as
         | { statistics: { subscriberCount?: string; viewCount?: string; videoCount?: string } }
         | undefined;
 
@@ -305,18 +381,15 @@ export class YoutubeApiService {
     }
 
     try {
-      const res = await axios.get(`${this.baseUrl}/commentThreads`, {
-        params: {
-          key: this.apiKey,
-          videoId,
-          part: 'snippet',
-          maxResults,
-          order: 'relevance', // 인기 댓글 우선
-        },
+      const commentResData = await this.youtubeGet('commentThreads', {
+        videoId,
+        part: 'snippet',
+        maxResults,
+        order: 'relevance', // 인기 댓글 우선
       });
 
       return (
-        res.data.items?.map(
+        commentResData.items?.map(
           (item: {
             snippet: {
               topLevelComment: {
@@ -371,31 +444,25 @@ export class YoutubeApiService {
         resolvedChannelId = channelIdMatch[1];
       } else if (handleMatch) {
         // 핸들로 채널 검색
-        const searchRes = await axios.get(`${this.baseUrl}/search`, {
-          params: {
-            key: this.apiKey,
-            q: `@${handleMatch[1]}`,
-            type: 'channel',
-            maxResults: 1,
-            part: 'id',
-          },
+        const handleSearchData = await this.youtubeGet('search', {
+          q: `@${handleMatch[1]}`,
+          type: 'channel',
+          maxResults: 1,
+          part: 'id',
         });
-        resolvedChannelId = (searchRes.data.items?.[0] as { id?: { channelId?: string } } | undefined)?.id?.channelId ?? null;
+        resolvedChannelId = (handleSearchData.items?.[0] as { id?: { channelId?: string } } | undefined)?.id?.channelId ?? null;
       }
 
       if (!resolvedChannelId) {
         throw new Error(`채널 ID를 추출할 수 없습니다: ${channelUrl}`);
       }
 
-      const res = await axios.get(`${this.baseUrl}/channels`, {
-        params: {
-          key: this.apiKey,
-          id: resolvedChannelId,
-          part: 'snippet,statistics',
-        },
+      const channelDetailData = await this.youtubeGet('channels', {
+        id: resolvedChannelId,
+        part: 'snippet,statistics',
       });
 
-      const data = res.data.items?.[0] as
+      const data = channelDetailData.items?.[0] as
         | {
             id: string;
             snippet: {
@@ -445,18 +512,15 @@ export class YoutubeApiService {
 
     try {
       // 1단계: 채널 영상 검색 (조회수 순)
-      const searchRes = await axios.get(`${this.baseUrl}/search`, {
-        params: {
-          key: this.apiKey,
-          channelId,
-          part: 'id,snippet',
-          order: 'viewCount',
-          maxResults,
-          type: 'video',
-        },
+      const channelSearchData = await this.youtubeGet('search', {
+        channelId,
+        part: 'id,snippet',
+        order: 'viewCount',
+        maxResults,
+        type: 'video',
       });
 
-      const items = searchRes.data.items as Array<{
+      const items = channelSearchData.items as Array<{
         id: { videoId: string };
         snippet: {
           title: string;
@@ -470,16 +534,13 @@ export class YoutubeApiService {
       const videoIds = items.map((item) => item.id.videoId).join(',');
 
       // 2단계: 통계 조회
-      const statsRes = await axios.get(`${this.baseUrl}/videos`, {
-        params: {
-          key: this.apiKey,
-          id: videoIds,
-          part: 'statistics',
-        },
+      const channelVideoStatsData = await this.youtubeGet('videos', {
+        id: videoIds,
+        part: 'statistics',
       });
 
       const statsMap = new Map<string, { viewCount: number; likeCount: number }>();
-      for (const v of statsRes.data.items as Array<{
+      for (const v of channelVideoStatsData.items as Array<{
         id: string;
         statistics: { viewCount?: string; likeCount?: string };
       }>) {
@@ -529,17 +590,14 @@ export class YoutubeApiService {
 
     try {
       // 1단계: 인기 급상승 영상 조회
-      const videosRes = await axios.get(`${this.baseUrl}/videos`, {
-        params: {
-          key: this.apiKey,
-          chart: 'mostPopular',
-          regionCode,
-          maxResults,
-          part: 'snippet,statistics',
-        },
+      const trendingData = await this.youtubeGet('videos', {
+        chart: 'mostPopular',
+        regionCode,
+        maxResults,
+        part: 'snippet,statistics',
       });
 
-      const items = videosRes.data.items as Array<{
+      const items = trendingData.items as Array<{
         id: string;
         snippet: {
           title: string;
@@ -560,14 +618,11 @@ export class YoutubeApiService {
       // channels.list는 한 번에 최대 50개 조회 가능
       for (let i = 0; i < channelIds.length; i += 50) {
         const batch = channelIds.slice(i, i + 50).join(',');
-        const chRes = await axios.get(`${this.baseUrl}/channels`, {
-          params: {
-            key: this.apiKey,
-            id: batch,
-            part: 'statistics',
-          },
+        const trendingChannelData = await this.youtubeGet('channels', {
+          id: batch,
+          part: 'statistics',
         });
-        for (const ch of chRes.data.items as Array<{
+        for (const ch of trendingChannelData.items as Array<{
           id: string;
           statistics: { subscriberCount?: string };
         }>) {
@@ -616,17 +671,14 @@ export class YoutubeApiService {
 
     try {
       // 1단계: 채널 검색
-      const searchRes = await axios.get(`${this.baseUrl}/search`, {
-        params: {
-          key: this.apiKey,
-          q: keyword,
-          type: 'channel',
-          maxResults,
-          part: 'id,snippet',
-        },
+      const channelSearchResult = await this.youtubeGet('search', {
+        q: keyword,
+        type: 'channel',
+        maxResults,
+        part: 'id,snippet',
       });
 
-      const items = searchRes.data.items as Array<{
+      const items = channelSearchResult.items as Array<{
         id: { channelId: string };
         snippet: { channelTitle: string };
       }>;
@@ -636,16 +688,13 @@ export class YoutubeApiService {
       const channelIds = items.map((item) => item.id.channelId).join(',');
 
       // 2단계: 채널 상세 조회
-      const detailRes = await axios.get(`${this.baseUrl}/channels`, {
-        params: {
-          key: this.apiKey,
-          id: channelIds,
-          part: 'snippet,statistics',
-        },
+      const channelDetailResult = await this.youtubeGet('channels', {
+        id: channelIds,
+        part: 'snippet,statistics',
       });
 
       return (
-        detailRes.data.items?.map(
+        channelDetailResult.items?.map(
           (ch: {
             id: string;
             snippet: {
