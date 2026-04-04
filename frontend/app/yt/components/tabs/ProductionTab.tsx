@@ -83,7 +83,7 @@ export default function ProductionTab({ projectId }: ProductionTabProps) {
   }, [projectId]);
 
   const handleAnalysis = async () => {
-    const videoIds = references.map((r) => r.videoId);
+    const videoIds = references.map((r) => r.id);
     if (videoIds.length === 0) return;
     setAnalysisLoading(true);
     try {
