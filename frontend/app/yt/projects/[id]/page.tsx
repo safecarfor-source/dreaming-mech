@@ -17,7 +17,7 @@ import {
 import { useRouter } from 'next/navigation';
 import { getProject, completeProject, YtProject } from '../../lib/api';
 import DiscoverTab from '../../components/tabs/DiscoverTab';
-import ProductionTab from '../../components/tabs/ProductionTab';
+import ProjectCardTab from '../../components/tabs/ProjectCardTab';
 import ShortformTab from '../../components/tabs/ShortformTab';
 import LearningTab from '../../components/tabs/LearningTab';
 import CleanupTab from '../../components/tabs/CleanupTab';
@@ -189,7 +189,7 @@ export default function ProjectDetailPage({ params }: PageProps) {
           {/* 버그 수정: motion.div key={activeTab} 제거 — hidden 패턴과 충돌 */}
           <div>
             <div className={activeTab === '프로젝트카드' ? '' : 'hidden'}>
-              {loadedTabs.has('프로젝트카드') && <ProductionTab projectId={id} />}
+              {loadedTabs.has('프로젝트카드') && <ProjectCardTab currentProjectId={id} />}
             </div>
             <div className={activeTab === '주제찾기' ? '' : 'hidden'}>
               {loadedTabs.has('주제찾기') && <DiscoverTab projectId={id} />}
