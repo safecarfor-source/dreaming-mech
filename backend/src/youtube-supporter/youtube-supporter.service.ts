@@ -139,6 +139,17 @@ export class YouTubeSupporterService {
     return { success: true, data: project };
   }
 
+  async reopenProject(id: string) {
+    await this.ensureProjectExists(id);
+
+    const project = await this.prisma.ytProject.update({
+      where: { id },
+      data: { status: YtProjectStatus.IN_PROGRESS },
+    });
+
+    return { success: true, data: project };
+  }
+
   // ─────────────────────────────────────────────
   // YouTube 검색
   // ─────────────────────────────────────────────
@@ -555,8 +566,23 @@ export class YouTubeSupporterService {
   async discoverByKeyword(dto: DiscoverKeywordDto) {
     const maxResults = dto.maxResults ?? 50;
     const language = (dto.language ?? 'ko') as 'ko' | 'en';
+    const duration = (dto.videoDuration as 'short' | 'medium' | 'long' | undefined) ?? undefined;
 
-    const videos = await this.youtubeApi.searchVideos(dto.keyword, language, maxResults, dto.videoDuration as 'short' | 'medium' | 'long' | undefined);
+    // 캐시 키 생성
+    const cacheKey = `${dto.keyword}:${language}:${duration ?? 'all'}`;
+
+    // 캐시 조회 (6시간 TTL)
+    const cached = await this.prisma.ytSearchCache.findUnique({
+      where: { cacheKey },
+    });
+
+    if (cached && cached.expiresAt > new Date()) {
+      this.logger.log(`캐시 히트: "${dto.keyword}" (${language}, ${duration ?? 'all'})`);
+      return { success: true, data: cached.results };
+    }
+
+    // 캐시 미스 → YouTube API 호출
+    const videos = await this.youtubeApi.searchVideos(dto.keyword, language, maxResults, duration);
 
     if (!videos.length) {
       return { success: true, data: [] };
@@ -592,6 +618,23 @@ export class YouTubeSupporterService {
         };
       })
       .sort((a, b) => b.viewSubRatio - a.viewSubRatio);
+
+    // 결과를 캐시에 저장 (6시간 TTL)
+    const expiresAt = new Date(Date.now() + 6 * 60 * 60 * 1000);
+    await this.prisma.ytSearchCache.upsert({
+      where: { cacheKey },
+      update: { results: results as any, expiresAt },
+      create: {
+        cacheKey,
+        keyword: dto.keyword,
+        language,
+        videoDuration: duration ?? null,
+        results: results as any,
+        expiresAt,
+      },
+    });
+
+    this.logger.log(`캐시 저장: "${dto.keyword}" (${language}, ${duration ?? 'all'}) → ${results.length}개`);
 
     return { success: true, data: results };
   }

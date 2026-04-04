@@ -1004,3 +1004,17 @@ model YtCategory {
   sortOrder Int      @default(0)
   createdAt DateTime @default(now())
 }
+
+// 검색 캐시 (YouTube API 호출 절약)
+model YtSearchCache {
+  id            String   @id @default(uuid())
+  cacheKey      String   @unique       // keyword+language+duration 해시
+  keyword       String
+  language      String   @default("ko")
+  videoDuration String?                // short | medium | long
+  results       Json                   // 검색 결과 JSON
+  expiresAt     DateTime               // 캐시 만료 시각
+  createdAt     DateTime @default(now())
+
+  @@index([expiresAt])
+}

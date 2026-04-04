@@ -152,6 +152,15 @@ export class YouTubeSupporterController {
     return this.service.completeProject(id);
   }
 
+  /**
+   * PATCH /api/yt/projects/:id/reopen — 완료 취소 (진행 중으로 되돌리기)
+   */
+  @Patch('projects/:id/reopen')
+  @UseGuards(YtAuthGuard)
+  reopenProject(@Param('id') id: string) {
+    return this.service.reopenProject(id);
+  }
+
   // ─────────────────────────────────────────────
   // YouTube 검색
   // ─────────────────────────────────────────────

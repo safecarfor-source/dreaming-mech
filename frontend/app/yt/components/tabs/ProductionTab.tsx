@@ -12,22 +12,13 @@ import {
   Play,
   Info,
 } from 'lucide-react';
-import { getProject, startProduction, getProductionResult, YtProductionResult } from '../../lib/api';
+import { getProject, startProduction, getProductionResult, YtProductionResult, YtReferenceVideo } from '../../lib/api';
 
 interface ProductionTabProps {
   projectId: string;
 }
 
-interface ReferenceVideo {
-  id: string;
-  videoId: string;
-  title: string;
-  channelName: string;
-  viewCount: number;
-  subscriberCount: number;
-  thumbnailUrl?: string;
-  viewSubRatio: number;
-}
+// YtReferenceVideo 타입은 api.ts에서 import
 
 type AnalysisSection =
   | 'research'
@@ -58,7 +49,7 @@ function formatNumber(n: number) {
 
 export default function ProductionTab({ projectId }: ProductionTabProps) {
   // 레퍼런스 영상 (주제찾기에서 추가된 것)
-  const [references, setReferences] = useState<ReferenceVideo[]>([]);
+  const [references, setReferences] = useState<YtReferenceVideo[]>([]);
   const [refsLoading, setRefsLoading] = useState(true);
 
   // 분석
@@ -79,8 +70,8 @@ export default function ProductionTab({ projectId }: ProductionTabProps) {
       try {
         const project = await getProject(projectId);
         // 프로젝트에 referenceVideos가 있으면 설정
-        if (project && (project as any).referenceVideos) {
-          setReferences((project as any).referenceVideos);
+        if (project && project.referenceVideos) {
+          setReferences(project.referenceVideos);
         }
       } catch {
         // 실패 시 빈 배열

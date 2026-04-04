@@ -29,6 +29,17 @@ ytApi.interceptors.response.use((response) => {
 });
 
 // 타입 정의
+export interface YtReferenceVideo {
+  id: string;
+  videoId: string;
+  title: string;
+  channelName: string;
+  viewCount: number;
+  subscriberCount: number;
+  thumbnailUrl?: string;
+  viewSubRatio: number;
+}
+
 export interface YtProject {
   id: string;
   title: string;
@@ -36,6 +47,7 @@ export interface YtProject {
   status: 'IN_PROGRESS' | 'COMPLETED';
   createdAt: string;
   updatedAt: string;
+  referenceVideos?: YtReferenceVideo[];
 }
 
 export interface YtSearchResult {
@@ -104,6 +116,11 @@ export const updateProject = async (
 
 export const completeProject = async (id: string): Promise<YtProject> => {
   const res = await ytApi.patch(`/yt/projects/${id}/complete`);
+  return res.data;
+};
+
+export const reopenProject = async (id: string): Promise<YtProject> => {
+  const res = await ytApi.patch(`/yt/projects/${id}/reopen`);
   return res.data;
 };
 

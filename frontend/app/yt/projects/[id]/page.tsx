@@ -7,6 +7,9 @@ import {
   CheckCircle2,
   PlayCircle,
   Check,
+  Undo2,
+  Plus,
+  Settings2,
   FileText,
   Search,
   Image,
@@ -15,7 +18,9 @@ import {
   Smartphone,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { getProject, completeProject, YtProject } from '../../lib/api';
+import { getProject, completeProject, reopenProject, YtProject } from '../../lib/api';
+import CreateProjectModal from '../../components/CreateProjectModal';
+import ChannelManageModal from '../../components/ChannelManageModal';
 import DiscoverTab from '../../components/tabs/DiscoverTab';
 import ProjectCardTab from '../../components/tabs/ProjectCardTab';
 import ShortformTab from '../../components/tabs/ShortformTab';
@@ -57,6 +62,8 @@ export default function ProjectDetailPage({ params }: PageProps) {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<Tab>('프로젝트카드');
   const [completing, setCompleting] = useState(false);
+  const [createModalOpen, setCreateModalOpen] = useState(false);
+  const [channelModalOpen, setChannelModalOpen] = useState(false);
 
   // 한 번 로드한 탭은 언마운트하지 않음 (insightLoaded 패턴)
   const [loadedTabs, setLoadedTabs] = useState<Set<Tab>>(new Set(['프로젝트카드']));
@@ -85,6 +92,19 @@ export default function ProjectDetailPage({ params }: PageProps) {
     setCompleting(true);
     try {
       const updated = await completeProject(id);
+      setProject(updated);
+    } catch {
+      // 실패 시 무시
+    } finally {
+      setCompleting(false);
+    }
+  };
+
+  const handleReopen = async () => {
+    if (!project || project.status === 'IN_PROGRESS') return;
+    setCompleting(true);
+    try {
+      const updated = await reopenProject(id);
       setProject(updated);
     } catch {
       // 실패 시 무시
@@ -147,8 +167,8 @@ export default function ProjectDetailPage({ params }: PageProps) {
             <span>{formatDate(project.shootingDate)}</span>
           </div>
 
-          {/* 완료 버튼 */}
-          {!isCompleted && (
+          {/* 완료/취소 버튼 */}
+          {!isCompleted ? (
             <button
               onClick={handleComplete}
               disabled={completing}
@@ -156,6 +176,15 @@ export default function ProjectDetailPage({ params }: PageProps) {
             >
               <Check className="w-3.5 h-3.5" />
               {completing ? '처리 중...' : '완료 처리'}
+            </button>
+          ) : (
+            <button
+              onClick={handleReopen}
+              disabled={completing}
+              className="mt-3 w-full flex items-center justify-center gap-1.5 px-3 py-1.5 bg-gray-800 hover:bg-violet-500/15 hover:text-violet-400 hover:border-violet-500/25 text-gray-400 border border-gray-700 rounded-lg text-xs font-medium transition-colors"
+            >
+              <Undo2 className="w-3.5 h-3.5" />
+              {completing ? '처리 중...' : '완료 취소'}
             </button>
           )}
         </div>
@@ -181,6 +210,24 @@ export default function ProjectDetailPage({ params }: PageProps) {
             );
           })}
         </nav>
+
+        {/* 하단 액션 버튼 */}
+        <div className="px-3 py-3 border-t border-gray-800 space-y-1.5">
+          <button
+            onClick={() => setCreateModalOpen(true)}
+            className="w-full flex items-center gap-2 px-3 py-2 text-xs font-medium text-gray-400 hover:text-violet-400 hover:bg-violet-500/10 rounded-lg transition-colors"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            새 프로젝트
+          </button>
+          <button
+            onClick={() => setChannelModalOpen(true)}
+            className="w-full flex items-center gap-2 px-3 py-2 text-xs font-medium text-gray-400 hover:text-gray-200 hover:bg-gray-800 rounded-lg transition-colors"
+          >
+            <Settings2 className="w-3.5 h-3.5" />
+            채널 관리
+          </button>
+        </div>
       </aside>
 
       {/* ─── 오른쪽 콘텐츠 영역 ─── */}
@@ -209,6 +256,20 @@ export default function ProjectDetailPage({ params }: PageProps) {
           </div>
         </div>
       </main>
+
+      {/* 모달 */}
+      <CreateProjectModal
+        open={createModalOpen}
+        onClose={() => setCreateModalOpen(false)}
+        onCreated={(newProject) => {
+          setCreateModalOpen(false);
+          router.push(`/yt/projects/${newProject.id}`);
+        }}
+      />
+      <ChannelManageModal
+        open={channelModalOpen}
+        onClose={() => setChannelModalOpen(false)}
+      />
     </div>
   );
 }
