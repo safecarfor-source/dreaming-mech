@@ -144,6 +144,15 @@ export class YouTubeSupporterController {
   }
 
   /**
+   * DELETE /api/yt/projects/:id
+   */
+  @Delete('projects/:id')
+  @UseGuards(YtAuthGuard)
+  deleteProject(@Param('id') id: string) {
+    return this.service.deleteProject(id);
+  }
+
+  /**
    * PATCH /api/yt/projects/:id/complete
    */
   @Patch('projects/:id/complete')

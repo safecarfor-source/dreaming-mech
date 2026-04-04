@@ -124,6 +124,10 @@ export const reopenProject = async (id: string): Promise<YtProject> => {
   return res.data;
 };
 
+export const deleteProject = async (id: string): Promise<void> => {
+  await ytApi.delete(`/yt/projects/${id}`);
+};
+
 // 검색
 export const searchVideos = async (
   keyword: string

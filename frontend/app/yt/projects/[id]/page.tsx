@@ -10,6 +10,7 @@ import {
   Undo2,
   Plus,
   Settings2,
+  Trash2,
   FileText,
   Search,
   Image,
@@ -18,7 +19,7 @@ import {
   Smartphone,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { getProject, completeProject, reopenProject, YtProject } from '../../lib/api';
+import { getProject, completeProject, reopenProject, deleteProject, YtProject } from '../../lib/api';
 import CreateProjectModal from '../../components/CreateProjectModal';
 import ChannelManageModal from '../../components/ChannelManageModal';
 import DiscoverTab from '../../components/tabs/DiscoverTab';
@@ -64,6 +65,8 @@ export default function ProjectDetailPage({ params }: PageProps) {
   const [completing, setCompleting] = useState(false);
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [channelModalOpen, setChannelModalOpen] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   // 한 번 로드한 탭은 언마운트하지 않음 (insightLoaded 패턴)
   const [loadedTabs, setLoadedTabs] = useState<Set<Tab>>(new Set(['프로젝트카드']));
@@ -110,6 +113,19 @@ export default function ProjectDetailPage({ params }: PageProps) {
       // 실패 시 무시
     } finally {
       setCompleting(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    setDeleting(true);
+    try {
+      await deleteProject(id);
+      router.push('/yt');
+    } catch {
+      // 실패 시 무시
+    } finally {
+      setDeleting(false);
+      setDeleteConfirmOpen(false);
     }
   };
 
@@ -227,6 +243,13 @@ export default function ProjectDetailPage({ params }: PageProps) {
             <Settings2 className="w-3.5 h-3.5" />
             채널 관리
           </button>
+          <button
+            onClick={() => setDeleteConfirmOpen(true)}
+            className="w-full flex items-center gap-2 px-3 py-2 text-xs font-medium text-gray-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+            프로젝트 삭제
+          </button>
         </div>
       </aside>
 
@@ -270,6 +293,36 @@ export default function ProjectDetailPage({ params }: PageProps) {
         open={channelModalOpen}
         onClose={() => setChannelModalOpen(false)}
       />
+
+      {/* 삭제 확인 모달 */}
+      {deleteConfirmOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+          <div className="bg-gray-900 border border-gray-700 rounded-2xl p-6 w-full max-w-sm mx-4 shadow-2xl">
+            <h3 className="text-white font-bold text-lg mb-2">프로젝트 삭제</h3>
+            <p className="text-gray-400 text-sm mb-1">
+              <span className="text-white font-medium">{project.title}</span>을(를) 삭제하시겠습니까?
+            </p>
+            <p className="text-red-400/80 text-xs mb-5">
+              레퍼런스 영상, 제작 데이터 등 모든 데이터가 삭제됩니다.
+            </p>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setDeleteConfirmOpen(false)}
+                className="flex-1 px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg text-sm font-medium transition-colors"
+              >
+                취소
+              </button>
+              <button
+                onClick={handleDelete}
+                disabled={deleting}
+                className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
+              >
+                {deleting ? '삭제 중...' : '삭제'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

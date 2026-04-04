@@ -150,6 +150,19 @@ export class YouTubeSupporterService {
     return { success: true, data: project };
   }
 
+  /**
+   * 프로젝트 삭제 (Cascade로 레퍼런스/프로덕션도 삭제)
+   */
+  async deleteProject(id: string) {
+    await this.ensureProjectExists(id);
+
+    await this.prisma.ytProject.delete({
+      where: { id },
+    });
+
+    return { success: true, message: '프로젝트가 삭제되었습니다' };
+  }
+
   // ─────────────────────────────────────────────
   // YouTube 검색
   // ─────────────────────────────────────────────
