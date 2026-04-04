@@ -108,6 +108,7 @@ export class YoutubeApiService {
     keyword: string,
     language: 'ko' | 'en' = 'ko',
     maxResults = 10,
+    videoDuration?: 'short' | 'medium' | 'long',
   ): Promise<YouTubeVideoItem[]> {
     if (this.isMockMode) {
       this.logger.warn('YOUTUBE_API_KEY 미설정 — mock 데이터 반환');
@@ -125,6 +126,7 @@ export class YoutubeApiService {
           maxResults,
           relevanceLanguage: language,
           videoCaption: 'closedCaption', // 자막 있는 영상만
+          ...(videoDuration && { videoDuration }), // short (<4분), medium (4-20분), long (>20분)
         },
       });
 

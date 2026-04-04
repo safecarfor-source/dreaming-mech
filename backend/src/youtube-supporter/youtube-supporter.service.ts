@@ -556,7 +556,7 @@ export class YouTubeSupporterService {
     const maxResults = dto.maxResults ?? 50;
     const language = (dto.language ?? 'ko') as 'ko' | 'en';
 
-    const videos = await this.youtubeApi.searchVideos(dto.keyword, language, maxResults);
+    const videos = await this.youtubeApi.searchVideos(dto.keyword, language, maxResults, dto.videoDuration as 'short' | 'medium' | 'long' | undefined);
 
     if (!videos.length) {
       return { success: true, data: [] };
@@ -674,6 +674,58 @@ export class YouTubeSupporterService {
     }).slice(0, 10);
 
     return { success: true, data: top5 };
+  }
+
+  // ─────────────────────────────────────────────
+  // 레퍼런스 직접 저장
+  // ─────────────────────────────────────────────
+
+  async addReferences(
+    projectId: string,
+    dto: {
+      videos: Array<{
+        videoId: string;
+        title: string;
+        channelName: string;
+        channelId?: string;
+        viewCount?: number;
+        subscriberCount?: number;
+        thumbnailUrl?: string;
+      }>;
+    },
+  ) {
+    // 프로젝트 존재 확인
+    const project = await this.prisma.ytProject.findUnique({ where: { id: projectId } });
+    if (!project) {
+      throw new NotFoundException(`프로젝트를 찾을 수 없습니다: ${projectId}`);
+    }
+
+    const created = await Promise.all(
+      dto.videos.map(async (v) => {
+        // 이미 존재하는지 확인 (중복 방지)
+        const existing = await this.prisma.ytReferenceVideo.findFirst({
+          where: { projectId, videoId: v.videoId },
+        });
+        if (existing) return existing;
+
+        return this.prisma.ytReferenceVideo.create({
+          data: {
+            projectId,
+            videoId: v.videoId,
+            youtubeUrl: `https://youtube.com/watch?v=${v.videoId}`,
+            title: v.title,
+            channelName: v.channelName,
+            channelId: v.channelId ?? '',
+            viewCount: v.viewCount ?? 0,
+            subscriberCount: v.subscriberCount ?? 0,
+            thumbnailUrl: v.thumbnailUrl ?? null,
+            viewSubRatio: this.youtubeApi.calculateViewSubRatio(v.viewCount ?? 0, v.subscriberCount ?? 0),
+          },
+        });
+      }),
+    );
+
+    return { success: true, data: created };
   }
 
   // ─────────────────────────────────────────────

@@ -457,4 +457,18 @@ export class YouTubeSupporterController {
   suggestReferences(@Param('id') id: string) {
     return this.service.suggestReferences(id);
   }
+
+  /**
+   * POST /api/yt/projects/:id/references
+   * 발굴된 영상을 레퍼런스로 프로젝트에 저장
+   * body: { videos: [{ videoId, title, channelName, channelId?, viewCount?, subscriberCount?, thumbnailUrl? }] }
+   */
+  @Post('projects/:id/references')
+  @UseGuards(YtAuthGuard)
+  addReferences(
+    @Param('id') id: string,
+    @Body() dto: any,
+  ) {
+    return this.service.addReferences(id, dto);
+  }
 }

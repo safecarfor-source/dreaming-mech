@@ -203,8 +203,30 @@ export async function discoverChannelVideos(data: { category?: string; limit?: n
   const res = await ytApi.post('/yt/discover/channel-videos', data);
   return res.data;
 }
-export async function discoverByKeyword(data: { keyword: string; language?: string; maxResults?: number }) {
+export async function discoverByKeyword(data: {
+  keyword: string;
+  language?: string;
+  maxResults?: number;
+  videoDuration?: 'short' | 'medium' | 'long';
+}) {
   const res = await ytApi.post('/yt/discover/keyword', data);
+  return res.data;
+}
+
+// 프로젝트에 레퍼런스 영상 추가
+export async function addReferencesToProject(
+  projectId: string,
+  videos: Array<{
+    videoId: string;
+    title: string;
+    channelName: string;
+    channelId?: string;
+    viewCount?: number;
+    subscriberCount?: number;
+    thumbnailUrl?: string;
+  }>,
+) {
+  const res = await ytApi.post(`/yt/projects/${projectId}/references`, { videos });
   return res.data;
 }
 export async function discoverTrending(maxResults?: number) {

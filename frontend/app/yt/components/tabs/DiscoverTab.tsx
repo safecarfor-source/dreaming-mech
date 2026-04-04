@@ -22,6 +22,7 @@ import {
   discoverTrending,
   discoverRecommend,
   getCategories,
+  addReferencesToProject,
 } from '../../lib/api';
 
 // ─── 타입 ─────────────────────────────────────────
@@ -261,17 +262,44 @@ function ChannelDiscoverPane() {
 }
 
 // ─── 키워드 검색 서브탭 ───────────────────────────────────
-function KeywordSearchPane() {
+function KeywordSearchPane({ projectId }: { projectId?: string }) {
   const [keyword, setKeyword] = useState('');
   const [language, setLanguage] = useState('전체');
+  const [duration, setDuration] = useState<string>('all');
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState<DiscoverVideo[]>([]);
+  const [addedIds, setAddedIds] = useState<Set<string>>(new Set());
+
+  const handleAddToProject = async (v: DiscoverVideo) => {
+    if (!projectId || addedIds.has(v.videoId)) return;
+    try {
+      await addReferencesToProject(projectId, [{
+        videoId: v.videoId,
+        title: v.title,
+        channelName: v.channelName,
+        channelId: v.channelId,
+        viewCount: v.viewCount,
+        subscriberCount: v.subscriberCount,
+        thumbnailUrl: v.thumbnailUrl,
+      }]);
+      setAddedIds((prev) => new Set([...prev, v.videoId]));
+    } catch {
+      // 실패 시 무시
+    }
+  };
 
   const LANG_MAP: Record<string, string | undefined> = {
     전체: undefined,
     한국어: 'ko',
     영어: 'en',
   };
+
+  const DURATION_OPTIONS = [
+    { value: 'all', label: '전체' },
+    { value: 'long', label: '롱폼 (>20분)' },
+    { value: 'medium', label: '미들 (4-20분)' },
+    { value: 'short', label: '숏폼 (<4분)' },
+  ];
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -282,6 +310,7 @@ function KeywordSearchPane() {
         keyword,
         language: LANG_MAP[language],
         maxResults: 50,
+        ...(duration !== 'all' && { videoDuration: duration as 'short' | 'medium' | 'long' }),
       });
       const arr: DiscoverVideo[] = Array.isArray(data) ? data : [];
       // viewSubRatio 내림차순 정렬
@@ -331,6 +360,23 @@ function KeywordSearchPane() {
           {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : '검색'}
         </button>
       </form>
+
+      {/* 영상 길이 필터 */}
+      <div className="flex gap-2">
+        {DURATION_OPTIONS.map((d) => (
+          <button
+            key={d.value}
+            onClick={() => setDuration(d.value)}
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+              duration === d.value
+                ? 'bg-violet-600 text-white'
+                : 'bg-gray-800 text-gray-400 hover:text-gray-200 border border-gray-700'
+            }`}
+          >
+            {d.label}
+          </button>
+        ))}
+      </div>
 
       {/* 결과 리스트 (테이블형) */}
       {results.length > 0 && (
@@ -393,9 +439,19 @@ function KeywordSearchPane() {
                 </div>
                 {/* 버튼 */}
                 <div className="shrink-0">
-                  <button className="text-xs px-2.5 py-1.5 bg-gray-700 hover:bg-blue-600/80 text-gray-300 hover:text-white border border-gray-600 hover:border-blue-500/50 rounded-lg transition-colors">
-                    + 추가
-                  </button>
+                  {addedIds.has(v.videoId) ? (
+                    <span className="text-xs px-2.5 py-1.5 bg-emerald-500/15 text-emerald-400 border border-emerald-500/25 rounded-lg">
+                      ✓ 추가됨
+                    </span>
+                  ) : (
+                    <button
+                      onClick={() => handleAddToProject(v)}
+                      disabled={!projectId}
+                      className="text-xs px-2.5 py-1.5 bg-gray-700 hover:bg-blue-600/80 text-gray-300 hover:text-white border border-gray-600 hover:border-blue-500/50 rounded-lg transition-colors disabled:opacity-50"
+                    >
+                      + 추가
+                    </button>
+                  )}
                 </div>
               </div>
             );
@@ -542,7 +598,7 @@ function AiRecommendPane() {
 }
 
 // ─── 메인 DiscoverTab ─────────────────────────────────────
-export default function DiscoverTab() {
+export default function DiscoverTab({ projectId }: { projectId?: string }) {
   const [activeSubTab, setActiveSubTab] = useState<SubTab>('채널탐색');
   const [loadedSubTabs, setLoadedSubTabs] = useState<Set<SubTab>>(new Set(['채널탐색']));
 
@@ -585,7 +641,7 @@ export default function DiscoverTab() {
             {loadedSubTabs.has('채널탐색') && <ChannelDiscoverPane />}
           </div>
           <div className={activeSubTab === '키워드검색' ? '' : 'hidden'}>
-            {loadedSubTabs.has('키워드검색') && <KeywordSearchPane />}
+            {loadedSubTabs.has('키워드검색') && <KeywordSearchPane projectId={projectId} />}
           </div>
           <div className={activeSubTab === '트렌드' ? '' : 'hidden'}>
             {loadedSubTabs.has('트렌드') && <TrendingPane />}

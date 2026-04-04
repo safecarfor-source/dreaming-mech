@@ -157,6 +157,7 @@ export const DiscoverKeywordSchema = z.object({
   keyword: z.string().min(1, '검색어를 입력하세요'),
   language: z.string().optional(),
   maxResults: z.number().min(1).max(50).optional().default(50),
+  videoDuration: z.enum(['short', 'medium', 'long']).optional(),
 });
 
 export const DiscoverFindChannelsSchema = z.object({
