@@ -77,7 +77,9 @@ export default function ProjectDetailPage({ params }: PageProps) {
         const data = await getProject(id);
         setProject(data);
       } catch {
-        router.push('/yt');
+        // 프로젝트가 삭제/없을 때 강제 리다이렉트
+        window.location.href = '/yt';
+        return;
       } finally {
         setLoading(false);
       }
