@@ -2,9 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Play, Calendar, FolderOpen } from 'lucide-react';
+import { ArrowLeft, Play, Calendar, FolderOpen } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { getProjects, YtProject } from '../../lib/api';
+import ProductionTab from './ProductionTab';
 
 function formatDate(dateStr?: string): string {
   if (!dateStr) return '날짜 미정';
@@ -20,6 +21,7 @@ export default function ProjectCardTab({ currentProjectId }: ProjectCardTabProps
   const router = useRouter();
   const [projects, setProjects] = useState<YtProject[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
 
   useEffect(() => {
     const load = async () => {
@@ -35,6 +37,31 @@ export default function ProjectCardTab({ currentProjectId }: ProjectCardTabProps
     load();
   }, []);
 
+  const handleCardClick = (projectId: string) => {
+    // 다른 프로젝트면 URL 이동 (사이드바 업데이트)
+    if (projectId !== currentProjectId) {
+      router.push(`/yt/projects/${projectId}`);
+    }
+    // 현재 프로젝트든 다른 프로젝트든 ProductionTab 표시
+    setSelectedProjectId(projectId);
+  };
+
+  // 상세 보기 모드
+  if (selectedProjectId) {
+    return (
+      <div>
+        <button
+          onClick={() => setSelectedProjectId(null)}
+          className="flex items-center gap-1.5 text-gray-400 hover:text-white transition-colors text-sm mb-4"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          프로젝트 목록으로
+        </button>
+        <ProductionTab projectId={selectedProjectId} />
+      </div>
+    );
+  }
+
   // 로딩
   if (loading) {
     return (
@@ -44,7 +71,6 @@ export default function ProjectCardTab({ currentProjectId }: ProjectCardTabProps
     );
   }
 
-  // 프로젝트 목록 그리드 (유튜브 썸네일 스타일)
   const inProgress = projects.filter((p) => p.status === 'IN_PROGRESS');
   const completed = projects.filter((p) => p.status === 'COMPLETED');
 
@@ -63,14 +89,13 @@ export default function ProjectCardTab({ currentProjectId }: ProjectCardTabProps
               <motion.button
                 key={project.id}
                 whileHover={{ y: -4 }}
-                onClick={() => router.push(`/yt/projects/${project.id}`)}
+                onClick={() => handleCardClick(project.id)}
                 className={`text-left bg-gray-800 border rounded-xl overflow-hidden hover:border-violet-500/50 transition-colors ${
                   project.id === currentProjectId
                     ? 'border-violet-500/50 ring-1 ring-violet-500/30'
                     : 'border-gray-700'
                 }`}
               >
-                {/* 썸네일 영역 (그라데이션 배경) */}
                 <div className="relative w-full aspect-video bg-gradient-to-br from-violet-900/40 to-gray-900 flex items-center justify-center">
                   <span className="text-2xl">🎬</span>
                   {project.id === currentProjectId && (
@@ -79,7 +104,6 @@ export default function ProjectCardTab({ currentProjectId }: ProjectCardTabProps
                     </div>
                   )}
                 </div>
-                {/* 정보 */}
                 <div className="p-2.5">
                   <p className="text-white text-xs font-medium leading-snug line-clamp-2 mb-1">
                     {project.title}
@@ -108,7 +132,7 @@ export default function ProjectCardTab({ currentProjectId }: ProjectCardTabProps
               <motion.button
                 key={project.id}
                 whileHover={{ y: -4 }}
-                onClick={() => router.push(`/yt/projects/${project.id}`)}
+                onClick={() => handleCardClick(project.id)}
                 className="text-left bg-gray-800/50 border border-gray-700 rounded-xl overflow-hidden hover:border-emerald-500/30 transition-colors opacity-75 hover:opacity-100"
               >
                 <div className="relative w-full aspect-video bg-gradient-to-br from-emerald-900/30 to-gray-900 flex items-center justify-center">
@@ -129,7 +153,6 @@ export default function ProjectCardTab({ currentProjectId }: ProjectCardTabProps
         </div>
       )}
 
-      {/* 빈 상태 */}
       {projects.length === 0 && (
         <div className="py-20 text-center text-gray-500 text-sm">
           아직 프로젝트가 없습니다. 주제찾기에서 주제를 선정하세요.
