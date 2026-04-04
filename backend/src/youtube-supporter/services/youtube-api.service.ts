@@ -256,11 +256,11 @@ export class YoutubeApiService {
   }
 
   /**
-   * 채널 구독자 수 조회
+   * 채널 통계 조회 (구독자 수 + 총 조회수 + 영상 수)
    */
-  async getChannelStats(channelId: string): Promise<{ subscriberCount: number }> {
+  async getChannelStats(channelId: string): Promise<{ subscriberCount: number; totalViews: number; videoCount: number }> {
     if (this.isMockMode) {
-      return { subscriberCount: 52000 };
+      return { subscriberCount: 52000, totalViews: 5000000, videoCount: 120 };
     }
 
     try {
@@ -273,15 +273,17 @@ export class YoutubeApiService {
       });
 
       const channelData = res.data.items?.[0] as
-        | { statistics: { subscriberCount?: string } }
+        | { statistics: { subscriberCount?: string; viewCount?: string; videoCount?: string } }
         | undefined;
 
       return {
         subscriberCount: parseInt(channelData?.statistics.subscriberCount ?? '0', 10),
+        totalViews: parseInt(channelData?.statistics.viewCount ?? '0', 10),
+        videoCount: parseInt(channelData?.statistics.videoCount ?? '0', 10),
       };
     } catch (error) {
       this.logger.error(`getChannelStats 실패: ${channelId}`, error);
-      return { subscriberCount: 0 };
+      return { subscriberCount: 0, totalViews: 0, videoCount: 0 };
     }
   }
 
@@ -673,5 +675,88 @@ export class YoutubeApiService {
   calculateViewSubRatio(viewCount: number, subscriberCount: number): number {
     if (subscriberCount === 0) return 0;
     return Math.round((viewCount / subscriberCount) * 100) / 100;
+  }
+
+  /**
+   * 기여도: 이 영상의 조회수가 채널 평균 대비 얼마나 높은가
+   * 5.0+ = Great, 2.0+ = Good, 0.5+ = Normal, 0.2+ = Bad, 미만 = Worst
+   */
+  calculateContributionScore(
+    videoViewCount: number,
+    channelTotalViews: number,
+    channelVideoCount: number,
+  ): { score: number; tier: string } {
+    if (channelVideoCount === 0 || channelTotalViews === 0) return { score: 0, tier: 'Normal' };
+    const channelAvg = channelTotalViews / channelVideoCount;
+    const score = videoViewCount / channelAvg;
+    const tier =
+      score >= 5 ? 'Great' :
+      score >= 2 ? 'Good' :
+      score >= 0.5 ? 'Normal' :
+      score >= 0.2 ? 'Bad' : 'Worst';
+    return { score: Math.round(score * 100) / 100, tier };
+  }
+
+  /**
+   * 성과도: 구독자 규모별 보정된 조회수/구독자 비율
+   * 소형(<1만): 10+ Great / 중형(<10만): 5+ Great / 대형(10만+): 3+ Great
+   */
+  calculatePerformanceScore(
+    viewCount: number,
+    subscriberCount: number,
+  ): { ratio: number; tier: string } {
+    if (subscriberCount === 0) return { ratio: 0, tier: 'Normal' };
+    const ratio = viewCount / subscriberCount;
+    let tier: string;
+    if (subscriberCount < 10000) {
+      tier =
+        ratio >= 10 ? 'Great' :
+        ratio >= 3 ? 'Good' :
+        ratio >= 1 ? 'Normal' :
+        ratio >= 0.3 ? 'Bad' : 'Worst';
+    } else if (subscriberCount < 100000) {
+      tier =
+        ratio >= 5 ? 'Great' :
+        ratio >= 2 ? 'Good' :
+        ratio >= 0.5 ? 'Normal' :
+        ratio >= 0.1 ? 'Bad' : 'Worst';
+    } else {
+      tier =
+        ratio >= 3 ? 'Great' :
+        ratio >= 1 ? 'Good' :
+        ratio >= 0.3 ? 'Normal' :
+        ratio >= 0.05 ? 'Bad' : 'Worst';
+    }
+    return { ratio: Math.round(ratio * 100) / 100, tier };
+  }
+
+  /**
+   * 조회 속도: 일평균 조회수 (최소 1일 기준)
+   */
+  calculateViewVelocity(
+    viewCount: number,
+    publishedAt: string,
+  ): { velocity: number; daysSince: number } {
+    const days = Math.max(1, Math.floor((Date.now() - new Date(publishedAt).getTime()) / 86400000));
+    return { velocity: Math.round(viewCount / days), daysSince: days };
+  }
+
+  /**
+   * 참여율: (좋아요 + 댓글) / 조회수 × 100
+   * 10%+ = Great, 5%+ = Good, 2%+ = Normal, 0.5%+ = Bad, 미만 = Worst
+   */
+  calculateEngagementRate(
+    likeCount: number,
+    commentCount: number,
+    viewCount: number,
+  ): { rate: number; tier: string } {
+    if (viewCount === 0) return { rate: 0, tier: 'Normal' };
+    const rate = ((likeCount + commentCount) / viewCount) * 100;
+    const tier =
+      rate >= 10 ? 'Great' :
+      rate >= 5 ? 'Good' :
+      rate >= 2 ? 'Normal' :
+      rate >= 0.5 ? 'Bad' : 'Worst';
+    return { rate: Math.round(rate * 100) / 100, tier };
   }
 }

@@ -562,26 +562,34 @@ export class YouTubeSupporterService {
       return { success: true, data: [] };
     }
 
-    // 고유 채널 ID 수집 후 구독자 수 조회
+    // 고유 채널 ID 수집 후 채널 통계 조회 (구독자 + 총조회수 + 영상수)
     const uniqueChannelIds = [...new Set(videos.map((v) => v.channelId))];
-    const subscriberMap = new Map<string, number>();
+    const channelStatsMap = new Map<string, { subscriberCount: number; totalViews: number; videoCount: number }>();
 
     await Promise.all(
       uniqueChannelIds.map(async (channelId) => {
         try {
           const stats = await this.youtubeApi.getChannelStats(channelId);
-          subscriberMap.set(channelId, stats.subscriberCount);
+          channelStatsMap.set(channelId, stats);
         } catch {
-          subscriberMap.set(channelId, 0);
+          channelStatsMap.set(channelId, { subscriberCount: 0, totalViews: 0, videoCount: 0 });
         }
       }),
     );
 
     const results = videos
       .map((v) => {
-        const subscriberCount = subscriberMap.get(v.channelId) ?? 0;
-        const viewSubRatio = this.youtubeApi.calculateViewSubRatio(v.viewCount, subscriberCount);
-        return { ...v, subscriberCount, viewSubRatio };
+        const stats = channelStatsMap.get(v.channelId) ?? { subscriberCount: 0, totalViews: 0, videoCount: 0 };
+        const subscriberCount = stats.subscriberCount;
+        return {
+          ...v,
+          subscriberCount,
+          viewSubRatio: this.youtubeApi.calculateViewSubRatio(v.viewCount, subscriberCount),
+          contribution: this.youtubeApi.calculateContributionScore(v.viewCount, stats.totalViews, stats.videoCount),
+          performance: this.youtubeApi.calculatePerformanceScore(v.viewCount, subscriberCount),
+          velocity: this.youtubeApi.calculateViewVelocity(v.viewCount, v.publishedAt),
+          engagement: this.youtubeApi.calculateEngagementRate(v.likeCount, v.commentCount, v.viewCount),
+        };
       })
       .sort((a, b) => b.viewSubRatio - a.viewSubRatio);
 

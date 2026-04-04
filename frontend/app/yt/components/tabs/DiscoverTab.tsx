@@ -10,6 +10,11 @@ import {
   Play,
   Plus,
   ChevronDown,
+  ExternalLink,
+  Zap,
+  BarChart3,
+  ThumbsUp,
+  TrendingUp as Velocity,
 } from 'lucide-react';
 import {
   discoverChannelVideos,
@@ -20,6 +25,11 @@ import {
 } from '../../lib/api';
 
 // ─── 타입 ─────────────────────────────────────────
+interface ScoreTier {
+  score: number;
+  tier: 'Worst' | 'Bad' | 'Normal' | 'Good' | 'Great';
+}
+
 interface DiscoverVideo {
   videoId: string;
   title: string;
@@ -30,6 +40,31 @@ interface DiscoverVideo {
   subscriberCount: number;
   viewSubRatio?: number;
   recommendReason?: string;
+  publishedAt?: string;
+  likeCount?: number;
+  commentCount?: number;
+  // 새 점수들
+  contribution?: ScoreTier;
+  performance?: { ratio: number; tier: string };
+  velocity?: { velocity: number; daysSince: number };
+  engagement?: { rate: number; tier: string };
+}
+
+// ─── 점수 뱃지 컴포넌트 ──────────────────────────────
+const TIER_COLORS: Record<string, string> = {
+  Great: 'bg-rose-500/20 text-rose-400 border-rose-500/30',
+  Good: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
+  Normal: 'bg-gray-700/50 text-gray-400 border-gray-600',
+  Bad: 'bg-gray-800 text-gray-600 border-gray-700',
+  Worst: 'bg-gray-900 text-gray-700 border-gray-800',
+};
+
+function ScoreBadge({ label, value, tier }: { label: string; value: string; tier: string }) {
+  return (
+    <span className={`inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded border font-medium ${TIER_COLORS[tier] || TIER_COLORS.Normal}`}>
+      {label} {value}
+    </span>
+  );
 }
 
 interface Category {
@@ -320,20 +355,44 @@ function KeywordSearchPane() {
                 </div>
                 {/* 정보 */}
                 <div className="flex-1 min-w-0">
-                  <p className="text-white text-sm leading-snug line-clamp-2 mb-1">{v.title}</p>
-                  <div className="flex items-center gap-2 text-xs text-gray-500 flex-wrap">
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <p className="text-white text-sm leading-snug line-clamp-1 flex-1">{v.title}</p>
+                    <a
+                      href={`https://youtube.com/watch?v=${v.videoId}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="shrink-0 text-gray-600 hover:text-red-400 transition-colors"
+                      title="YouTube에서 보기"
+                    >
+                      <ExternalLink className="w-3.5 h-3.5" />
+                    </a>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs text-gray-500 flex-wrap mb-1.5">
                     <span className="truncate max-w-[100px]">{v.channelName}</span>
                     <span>조회 {formatNumber(v.viewCount)}</span>
                     {v.subscriberCount > 0 && <span>구독 {formatNumber(v.subscriberCount)}</span>}
+                    {v.velocity && <span className="text-blue-400">일 {formatNumber(v.velocity.velocity)}회</span>}
+                  </div>
+                  {/* 점수 뱃지 */}
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    {b && (
+                      <span className={`text-[10px] px-1.5 py-0.5 rounded border font-medium ${b.className}`}>
+                        비율 {b.label}
+                      </span>
+                    )}
+                    {v.contribution && v.contribution.tier !== 'Normal' && (
+                      <ScoreBadge label="기여" value={`${v.contribution.score}x`} tier={v.contribution.tier} />
+                    )}
+                    {v.performance && v.performance.tier !== 'Normal' && (
+                      <ScoreBadge label="성과" value={v.performance.tier} tier={v.performance.tier} />
+                    )}
+                    {v.engagement && v.engagement.tier !== 'Normal' && (
+                      <ScoreBadge label="참여" value={`${v.engagement.rate}%`} tier={v.engagement.tier} />
+                    )}
                   </div>
                 </div>
-                {/* 배지 + 버튼 */}
-                <div className="shrink-0 flex items-center gap-2">
-                  {b && (
-                    <span className={`text-xs px-2 py-0.5 rounded-md font-medium ${b.className}`}>
-                      {b.label}
-                    </span>
-                  )}
+                {/* 버튼 */}
+                <div className="shrink-0">
                   <button className="text-xs px-2.5 py-1.5 bg-gray-700 hover:bg-blue-600/80 text-gray-300 hover:text-white border border-gray-600 hover:border-blue-500/50 rounded-lg transition-colors">
                     + 추가
                   </button>
