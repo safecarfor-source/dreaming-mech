@@ -142,7 +142,7 @@ export const startProduction = async (
   videoIds: string[]
 ): Promise<{ jobId: string }> => {
   const res = await ytApi.post(`/yt/projects/${projectId}/produce`, {
-    videoIds,
+    referenceVideoIds: videoIds,
   });
   return res.data;
 };
