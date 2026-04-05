@@ -379,6 +379,66 @@ export class YouTubeSupporterService {
   }
 
   // ─────────────────────────────────────────────
+  // 대본 대화형 수정 + 직접 편집
+  // ─────────────────────────────────────────────
+
+  async updateProductionData(
+    projectId: string,
+    version: number,
+    data: Record<string, any>,
+  ) {
+    await this.ensureProjectExists(projectId);
+
+    // 허용 필드만 업데이트 (안전)
+    const allowedFields = [
+      'coreValue', 'introSources', 'introDrafts', 'scriptDraft',
+      'thumbnailStrategies', 'titles', 'hashtags', 'description', 'timeline', 'opusReview',
+    ];
+    const filtered: Record<string, any> = {};
+    for (const key of Object.keys(data)) {
+      if (allowedFields.includes(key)) {
+        filtered[key] = data[key];
+      }
+    }
+
+    const updated = await this.prisma.ytProductionData.update({
+      where: { projectId_version: { projectId, version } },
+      data: filtered,
+    });
+
+    return { success: true, data: updated };
+  }
+
+  async refineScript(
+    projectId: string,
+    dto: { message: string; version?: number; chatHistory?: Array<{ role: 'user' | 'assistant'; content: string }> },
+  ) {
+    const project = await this.prisma.ytProject.findUnique({
+      where: { id: projectId },
+    });
+
+    if (!project) {
+      throw new NotFoundException(`프로젝트를 찾을 수 없습니다: ${projectId}`);
+    }
+
+    // 현재 대본 가져오기
+    const productionData = await this.prisma.ytProductionData.findUnique({
+      where: { projectId_version: { projectId, version: dto.version ?? 1 } },
+    });
+
+    const currentScript = productionData?.scriptDraft ?? '';
+
+    const response = await this.aiOrchestration.refineScript(
+      project.title,
+      currentScript,
+      dto.message,
+      dto.chatHistory ?? [],
+    );
+
+    return { success: true, data: { response } };
+  }
+
+  // ─────────────────────────────────────────────
   // 스킬 노트
   // ─────────────────────────────────────────────
 

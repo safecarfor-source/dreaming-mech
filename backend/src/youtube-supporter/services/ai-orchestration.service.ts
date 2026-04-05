@@ -563,13 +563,15 @@ ${transcriptAnalysis.slice(0, 3000)}
 코어벨류: ${coreValue}
 대본 요약: ${scriptDraft.slice(0, 500)}
 
-다음을 생성해주세요:
+아래 형식으로 생성해주세요. 각 항목에 실제 내용을 작성하세요. 괄호 안의 설명은 참고용이며 출력하지 마세요.
 
-TITLE_1: (제목 후보 1 — SEO + 감정 자극)
-TITLE_2: (제목 후보 2 — 숫자/통계 활용)
-TITLE_3: (제목 후보 3 — 문제 제기형)
-HASHTAGS: #태그1 #태그2 #태그3 #태그4 #태그5 #태그6 #태그7 #태그8 #태그9 #태그10
-DESCRIPTION: (설명란 — 500자 내외, SEO 최적화, 타임라인 포함)`;
+TITLE_1: 여기에 실제 제목을 적으세요 (SEO + 감정 자극 스타일, 50자 이내)
+TITLE_2: 여기에 실제 제목을 적으세요 (숫자/통계 활용 스타일, 50자 이내)
+TITLE_3: 여기에 실제 제목을 적으세요 (문제 제기형 스타일, 50자 이내)
+HASHTAGS: #태그1 #태그2 #태그3 ... (최소 20개 이상, 관련 키워드 최대한 많이)
+DESCRIPTION: 여기에 유튜브 설명란을 적으세요 (500자 내외, SEO 최적화, 타임라인 포함)
+
+중요: TITLE_1, TITLE_2, TITLE_3에는 반드시 시청자가 클릭하고 싶은 실제 제목을 한국어로 작성하세요. "(SEO + 감정 자극)" 같은 카테고리 라벨이 아니라 실제 유튜브 제목이어야 합니다.`;
 
     const response = await this.generateWithSonnet(prompt);
 
@@ -634,6 +636,36 @@ STRATEGY_3: (비교/대조형)`;
     ].filter((s) => s.length > 0);
 
     return { strategies };
+  }
+
+  /**
+   * 대본 대화형 수정 — 사용자 피드백 기반으로 대본 개선
+   */
+  async refineScript(
+    projectTitle: string,
+    currentScript: string,
+    userMessage: string,
+    chatHistory: Array<{ role: 'user' | 'assistant'; content: string }>,
+  ): Promise<string> {
+    const historyText = chatHistory
+      .slice(-6) // 최근 6개 대화만
+      .map((h) => `${h.role === 'user' ? '대장님' : 'AI'}: ${h.content}`)
+      .join('\n\n');
+
+    const prompt = `당신은 유튜브 영상 대본 전문 작가입니다. 20년 경력 자동차 정비사 "꿈꾸는 정비사" 채널의 대본을 함께 만들고 있습니다.
+
+주제: "${projectTitle}"
+
+현재 대본:
+---
+${currentScript.slice(0, 4000)}
+---
+
+${historyText ? `이전 대화:\n${historyText}\n\n` : ''}대장님 요청: ${userMessage}
+
+위 요청을 반영하여 답변해주세요. 대본 전체를 다시 쓸 필요는 없고, 요청에 맞는 부분만 수정하거나 새로운 아이디어를 제안해주세요. 자연스럽고 대화하듯 답변하세요.`;
+
+    return this.analyzeWithSonnet(prompt);
   }
 
   /**

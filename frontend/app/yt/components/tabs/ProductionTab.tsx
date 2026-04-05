@@ -16,11 +16,18 @@ import {
   Search,
   Plus,
   RefreshCw,
+  MessageSquare,
+  Send,
+  Pencil,
+  Save,
+  X,
 } from 'lucide-react';
 import {
   getProject,
   startProduction,
   getProductionResult,
+  refineScript,
+  updateProductionField,
   addReferencesToProject,
   discoverByKeyword,
   YtProductionResult,
@@ -74,17 +81,44 @@ function formatNumber(n: number) {
 
 // DB 레코드를 프론트 형식으로 변환
 function mapDbToResult(dbRecord: any): YtProductionResult {
+  // 인트로 소재: introDrafts(배열) 우선, introSources(객체)는 댓글 분석 결과
+  let introMaterial = '';
+  if (Array.isArray(dbRecord.introDrafts) && dbRecord.introDrafts.length > 0) {
+    // introDrafts는 인트로 버전 3개 (문제제기/공감/충격통계)
+    introMaterial = dbRecord.introDrafts.join('\n\n---\n\n');
+  }
+  // introSources에 댓글 분석 결과가 있으면 추가
+  if (dbRecord.introSources && typeof dbRecord.introSources === 'object') {
+    const src = dbRecord.introSources as any;
+    const parts: string[] = [];
+    if (src.introDraft) {
+      parts.push(`💬 댓글 기반 인트로:\n${src.introDraft}`);
+    }
+    if (Array.isArray(src.commentThemes) && src.commentThemes.length > 0) {
+      parts.push(`📊 시청자 관심사:\n${src.commentThemes.map((t: string, i: number) => `${i + 1}. ${t}`).join('\n')}`);
+    }
+    if (parts.length > 0) {
+      introMaterial = introMaterial
+        ? `${introMaterial}\n\n---\n\n${parts.join('\n\n')}`
+        : parts.join('\n\n');
+    }
+  }
+
+  // 썸네일: 별도 탭에서 관리
+  let thumbnailText = '';
+  if (Array.isArray(dbRecord.thumbnailStrategies) && dbRecord.thumbnailStrategies.length > 0) {
+    thumbnailText = dbRecord.thumbnailStrategies.join('\n\n---\n\n');
+  } else {
+    thumbnailText = '썸네일 문구는 [썸네일] 탭에서 별도로 생성됩니다.';
+  }
+
   return {
     version: dbRecord.version,
     research: dbRecord.opusReview || '',
-    introMaterial: typeof dbRecord.introSources === 'string'
-      ? dbRecord.introSources
-      : JSON.stringify(dbRecord.introSources || '', null, 2),
+    introMaterial: introMaterial || '인트로 소재가 아직 생성되지 않았습니다.',
     coreValue: dbRecord.coreValue || '',
     script: dbRecord.scriptDraft || '',
-    thumbnailText: typeof dbRecord.thumbnailStrategies === 'string'
-      ? dbRecord.thumbnailStrategies
-      : JSON.stringify(dbRecord.thumbnailStrategies || '', null, 2),
+    thumbnailText,
     titleSuggestions: Array.isArray(dbRecord.titles) ? dbRecord.titles : [],
     hashtags: Array.isArray(dbRecord.hashtags) ? dbRecord.hashtags : [],
     description: dbRecord.description || '',
@@ -296,6 +330,17 @@ export default function ProductionTab({ projectId, onSwitchToDiscover }: Product
   // 참고영상 추가 모드
   const [addMode, setAddMode] = useState<'none' | 'link' | 'search'>('none');
 
+  // 대본 대화형 채팅
+  const [chatOpen, setChatOpen] = useState(false);
+  const [chatMessages, setChatMessages] = useState<Array<{ role: 'user' | 'assistant'; content: string }>>([]);
+  const [chatInput, setChatInput] = useState('');
+  const [chatLoading, setChatLoading] = useState(false);
+
+  // 대본 직접 편집
+  const [editingSection, setEditingSection] = useState<AnalysisSection | null>(null);
+  const [editContent, setEditContent] = useState('');
+  const [saving, setSaving] = useState(false);
+
   // 레퍼런스 로드
   const loadRefs = useCallback(async () => {
     try {
@@ -385,6 +430,75 @@ export default function ProductionTab({ projectId, onSwitchToDiscover }: Product
   // 참고영상 추가 후 리로드
   const handleRefAdded = () => {
     loadRefs();
+  };
+
+  // 채팅 전송
+  const handleChatSend = async () => {
+    if (!chatInput.trim() || chatLoading) return;
+    const userMsg = chatInput.trim();
+    setChatInput('');
+    setChatMessages((prev) => [...prev, { role: 'user', content: userMsg }]);
+    setChatLoading(true);
+    try {
+      const res = await refineScript(projectId, userMsg, activeVersion, chatMessages);
+      setChatMessages((prev) => [...prev, { role: 'assistant', content: res.response }]);
+    } catch {
+      setChatMessages((prev) => [...prev, { role: 'assistant', content: '오류가 발생했습니다. 다시 시도해주세요.' }]);
+    } finally {
+      setChatLoading(false);
+    }
+  };
+
+  // DB 필드명 매핑
+  const SECTION_TO_DB_FIELD: Record<AnalysisSection, string> = {
+    research: 'opusReview',
+    introMaterial: 'introDrafts',
+    coreValue: 'coreValue',
+    script: 'scriptDraft',
+    thumbnailText: 'thumbnailStrategies',
+    titleSuggestions: 'titles',
+    hashtags: 'hashtags',
+    description: 'description',
+  };
+
+  // 편집 시작
+  const handleEditStart = () => {
+    if (!currentResult) return;
+    setEditingSection(activeSection);
+    const value = currentResult[activeSection];
+    if (Array.isArray(value)) {
+      setEditContent((value as string[]).join('\n'));
+    } else {
+      setEditContent(String(value));
+    }
+  };
+
+  // 편집 저장
+  const handleEditSave = async () => {
+    if (!editingSection) return;
+    setSaving(true);
+    try {
+      const dbField = SECTION_TO_DB_FIELD[editingSection];
+      let value: any = editContent;
+      // 배열 필드
+      if (editingSection === 'titleSuggestions' || editingSection === 'hashtags') {
+        value = editContent.split('\n').map((s) => s.trim()).filter((s) => s.length > 0);
+      }
+      await updateProductionField(projectId, activeVersion, dbField, value);
+      // 로컬 상태 업데이트
+      if (result) {
+        const updated = { ...result };
+        const target = activeVersion === 1 ? updated.v1 : updated.v2;
+        (target as any)[editingSection] = editingSection === 'titleSuggestions' || editingSection === 'hashtags'
+          ? value : editContent;
+        setResult(updated);
+      }
+      setEditingSection(null);
+    } catch {
+      // 저장 실패
+    } finally {
+      setSaving(false);
+    }
   };
 
   const currentResult = result
@@ -647,13 +761,53 @@ export default function ProductionTab({ projectId, onSwitchToDiscover }: Product
                 transition={{ duration: 0.15 }}
                 className="bg-gray-900 border border-gray-700 rounded-2xl p-5"
               >
-                <div className="flex items-center gap-2 mb-3">
-                  <FileText className="w-4 h-4 text-violet-400" />
-                  <h4 className="text-white font-semibold text-sm">
-                    {SECTION_LABELS[activeSection]}
-                  </h4>
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <FileText className="w-4 h-4 text-violet-400" />
+                    <h4 className="text-white font-semibold text-sm">
+                      {SECTION_LABELS[activeSection]}
+                    </h4>
+                  </div>
+                  {/* 편집/채팅 버튼 */}
+                  <div className="flex items-center gap-1.5">
+                    {editingSection === activeSection ? (
+                      <>
+                        <button
+                          onClick={handleEditSave}
+                          disabled={saving}
+                          className="text-xs px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg transition-colors flex items-center gap-1"
+                        >
+                          {saving ? <Loader2 className="w-3 h-3 animate-spin" /> : <Save className="w-3 h-3" />}
+                          저장
+                        </button>
+                        <button
+                          onClick={() => setEditingSection(null)}
+                          className="text-xs px-2.5 py-1.5 bg-gray-700 text-gray-300 rounded-lg transition-colors"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </>
+                    ) : (
+                      <button
+                        onClick={handleEditStart}
+                        className="text-xs px-2.5 py-1.5 bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-white rounded-lg transition-colors flex items-center gap-1 border border-gray-700"
+                      >
+                        <Pencil className="w-3 h-3" />
+                        수정
+                      </button>
+                    )}
+                  </div>
                 </div>
-                {currentResult && (
+
+                {/* 편집 모드 */}
+                {editingSection === activeSection ? (
+                  <textarea
+                    value={editContent}
+                    onChange={(e) => setEditContent(e.target.value)}
+                    rows={15}
+                    className="w-full bg-gray-950 border border-gray-600 rounded-xl px-4 py-3 text-gray-200 text-sm focus:outline-none focus:border-violet-500 transition-colors resize-y font-mono leading-relaxed"
+                  />
+                ) : currentResult ? (
                   <div className="text-gray-300 text-sm leading-relaxed whitespace-pre-wrap">
                     {activeSection === 'titleSuggestions' || activeSection === 'hashtags'
                       ? Array.isArray(currentResult[activeSection])
@@ -661,9 +815,83 @@ export default function ProductionTab({ projectId, onSwitchToDiscover }: Product
                         : String(currentResult[activeSection])
                       : String(currentResult[activeSection])}
                   </div>
-                )}
+                ) : null}
               </motion.div>
             </AnimatePresence>
+
+            {/* AI 대화형 수정 */}
+            <div className="mt-4">
+              <button
+                onClick={() => setChatOpen(!chatOpen)}
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
+                  chatOpen
+                    ? 'bg-violet-600 text-white'
+                    : 'bg-gray-800 text-gray-400 hover:text-white border border-gray-700'
+                }`}
+              >
+                <MessageSquare className="w-4 h-4" />
+                AI와 대화하며 수정
+              </button>
+
+              {chatOpen && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  className="mt-3 bg-gray-900 border border-gray-700 rounded-2xl overflow-hidden"
+                >
+                  {/* 채팅 메시지 */}
+                  <div className="max-h-[300px] overflow-y-auto p-4 space-y-3">
+                    {chatMessages.length === 0 && (
+                      <p className="text-gray-500 text-xs text-center py-4">
+                        대본에 대해 궁금한 점이나 수정하고 싶은 부분을 말씀해주세요
+                      </p>
+                    )}
+                    {chatMessages.map((msg, i) => (
+                      <div
+                        key={i}
+                        className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                      >
+                        <div
+                          className={`max-w-[80%] px-3 py-2 rounded-xl text-sm whitespace-pre-wrap ${
+                            msg.role === 'user'
+                              ? 'bg-violet-600 text-white'
+                              : 'bg-gray-800 text-gray-300 border border-gray-700'
+                          }`}
+                        >
+                          {msg.content}
+                        </div>
+                      </div>
+                    ))}
+                    {chatLoading && (
+                      <div className="flex justify-start">
+                        <div className="bg-gray-800 border border-gray-700 px-3 py-2 rounded-xl">
+                          <Loader2 className="w-4 h-4 text-violet-400 animate-spin" />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* 입력 */}
+                  <div className="border-t border-gray-800 p-3 flex gap-2">
+                    <input
+                      type="text"
+                      value={chatInput}
+                      onChange={(e) => setChatInput(e.target.value)}
+                      placeholder="예: 인트로를 더 임팩트 있게 바꿔줘"
+                      className="flex-1 bg-gray-950 border border-gray-700 rounded-xl px-3 py-2 text-white text-sm placeholder-gray-500 focus:outline-none focus:border-violet-500"
+                      onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleChatSend()}
+                    />
+                    <button
+                      onClick={handleChatSend}
+                      disabled={chatLoading || !chatInput.trim()}
+                      className="bg-violet-600 hover:bg-violet-500 disabled:bg-gray-700 text-white px-3 py-2 rounded-xl transition-colors"
+                    >
+                      <Send className="w-4 h-4" />
+                    </button>
+                  </div>
+                </motion.div>
+              )}
+            </div>
           </div>
         )}
       </section>

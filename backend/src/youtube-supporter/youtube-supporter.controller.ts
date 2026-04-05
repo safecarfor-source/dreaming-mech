@@ -256,6 +256,38 @@ export class YouTubeSupporterController {
   }
 
   // ─────────────────────────────────────────────
+  // 대본 대화형 수정 + 직접 편집
+  // ─────────────────────────────────────────────
+
+  /**
+   * POST /api/yt/projects/:id/refine
+   * body: { message, version?, chatHistory? }
+   */
+  @Post('projects/:id/refine')
+  @UseGuards(YtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  refineScript(
+    @Param('id') id: string,
+    @Body() dto: { message: string; version?: number; chatHistory?: Array<{ role: 'user' | 'assistant'; content: string }> },
+  ) {
+    return this.service.refineScript(id, dto);
+  }
+
+  /**
+   * PATCH /api/yt/projects/:id/production/:version
+   * 대본/제목 등 직접 수정
+   */
+  @Patch('projects/:id/production/:version')
+  @UseGuards(YtAuthGuard)
+  updateProductionData(
+    @Param('id') id: string,
+    @Param('version') version: string,
+    @Body() dto: Record<string, any>,
+  ) {
+    return this.service.updateProductionData(id, parseInt(version, 10), dto);
+  }
+
+  // ─────────────────────────────────────────────
   // 스킬 노트
   // ─────────────────────────────────────────────
 

@@ -170,6 +170,33 @@ export const getProductionResult = async (
   return res.json();
 };
 
+// 대본 대화형 수정
+export const refineScript = async (
+  projectId: string,
+  message: string,
+  version?: number,
+  chatHistory?: Array<{ role: 'user' | 'assistant'; content: string }>,
+): Promise<{ response: string }> => {
+  const res = await ytApi.post(`/yt/projects/${projectId}/refine`, {
+    message,
+    version,
+    chatHistory,
+  });
+  return res.data;
+};
+
+// 대본 직접 수정 (DB 저장)
+export const updateProductionField = async (
+  projectId: string,
+  version: number,
+  field: string,
+  value: any,
+): Promise<void> => {
+  await ytApi.patch(`/yt/projects/${projectId}/production/${version}`, {
+    [field]: value,
+  });
+};
+
 export const saveTimeline = async (
   projectId: string,
   timeline: string
