@@ -407,7 +407,7 @@ export class YouTubeSupporterService {
       }
 
       // 자막 추출
-      const transcriptResult = await this.transcript.extractTranscript(videoId);
+      const transcriptResult = await this.transcript.getTranscript(videoId);
       if (!transcriptResult.transcript) {
         throw new BadRequestException('이 영상에서 자막을 추출할 수 없습니다');
       }
