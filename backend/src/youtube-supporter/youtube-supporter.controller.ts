@@ -256,6 +256,23 @@ export class YouTubeSupporterController {
   }
 
   // ─────────────────────────────────────────────
+  // 숏폼 분석
+  // ─────────────────────────────────────────────
+
+  /**
+   * POST /api/yt/shortform/analyze
+   * body: { videoUrl?, projectId?, transcript? }
+   */
+  @Post('shortform/analyze')
+  @UseGuards(YtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  analyzeShortform(
+    @Body() dto: { videoUrl?: string; projectId?: string; transcript?: string },
+  ) {
+    return this.service.analyzeShortform(dto);
+  }
+
+  // ─────────────────────────────────────────────
   // 대본 대화형 수정 + 직접 편집
   // ─────────────────────────────────────────────
 

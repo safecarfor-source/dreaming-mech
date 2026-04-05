@@ -197,6 +197,27 @@ export const updateProductionField = async (
   });
 };
 
+// 숏폼 분석
+export interface ShortformSegment {
+  id: number;
+  startTime: string;
+  endTime: string;
+  hookTitle: string;
+  subTitle: string;
+  reason: string;
+  hookScore: number;
+  storyScore: number;
+  viralScore: number;
+  segments?: Array<{ start: string; end: string; label: string }>;
+}
+
+export const analyzeShortform = async (
+  data: { videoUrl?: string; projectId?: string; transcript?: string },
+): Promise<{ videoTitle: string; transcriptLength: number; segments: ShortformSegment[] }> => {
+  const res = await ytApi.post('/yt/shortform/analyze', data);
+  return res.data;
+};
+
 export const saveTimeline = async (
   projectId: string,
   timeline: string

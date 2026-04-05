@@ -379,6 +379,76 @@ export class YouTubeSupporterService {
   }
 
   // ─────────────────────────────────────────────
+  // 숏폼 분석
+  // ─────────────────────────────────────────────
+
+  async analyzeShortform(dto: { videoUrl?: string; projectId?: string; transcript?: string }) {
+    let transcriptText = dto.transcript || '';
+    let videoTitle = '';
+
+    // 1) 직접 자막 텍스트가 있으면 사용
+    if (transcriptText) {
+      videoTitle = '직접 입력';
+    }
+    // 2) videoUrl에서 자막 추출
+    else if (dto.videoUrl) {
+      const videoIdMatch = dto.videoUrl.match(/(?:v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+      if (!videoIdMatch) {
+        throw new BadRequestException('올바른 YouTube URL을 입력해주세요');
+      }
+      const videoId = videoIdMatch[1];
+
+      // 영상 정보 가져오기
+      try {
+        const stats = await this.youtubeApi.getVideoStats(videoId);
+        videoTitle = stats.title || videoId;
+      } catch {
+        videoTitle = videoId;
+      }
+
+      // 자막 추출
+      const transcriptResult = await this.transcript.extractTranscript(videoId);
+      if (!transcriptResult.transcript) {
+        throw new BadRequestException('이 영상에서 자막을 추출할 수 없습니다');
+      }
+      transcriptText = transcriptResult.transcript;
+    }
+    // 3) 프로젝트 대본 사용
+    else if (dto.projectId) {
+      const productionData = await this.prisma.ytProductionData.findFirst({
+        where: { projectId: dto.projectId, version: 1 },
+      });
+      if (productionData?.scriptDraft) {
+        transcriptText = productionData.scriptDraft;
+      }
+      const project = await this.prisma.ytProject.findUnique({
+        where: { id: dto.projectId },
+      });
+      videoTitle = project?.title || '';
+    }
+
+    if (!transcriptText) {
+      throw new BadRequestException('분석할 자막/대본이 없습니다');
+    }
+
+    this.logger.log(`숏폼 분석 시작: title="${videoTitle}", transcript=${transcriptText.length}자`);
+
+    const result = await this.aiOrchestration.analyzeShortformSegments(
+      transcriptText,
+      videoTitle,
+    );
+
+    return {
+      success: true,
+      data: {
+        videoTitle,
+        transcriptLength: transcriptText.length,
+        ...result,
+      },
+    };
+  }
+
+  // ─────────────────────────────────────────────
   // 대본 대화형 수정 + 직접 편집
   // ─────────────────────────────────────────────
 

@@ -276,7 +276,7 @@ export default function ProjectDetailPage({ params }: PageProps) {
               {loadedTabs.has('정리') && <CleanupTab />}
             </div>
             <div className={activeTab === '숏폼제작' ? '' : 'hidden'}>
-              {loadedTabs.has('숏폼제작') && <ShortformTab />}
+              {loadedTabs.has('숏폼제작') && <ShortformTab projectId={id} />}
             </div>
           </div>
         </div>

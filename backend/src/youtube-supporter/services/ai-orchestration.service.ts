@@ -669,6 +669,80 @@ ${historyText ? `이전 대화:\n${historyText}\n\n` : ''}대장님 요청: ${us
   }
 
   /**
+   * 숏폼 구간 추천 — 자막 기반 AI 분석
+   * 롱폼 영상의 자막을 분석해서 숏폼으로 만들기 좋은 구간 5개를 추천
+   */
+  async analyzeShortformSegments(
+    transcript: string,
+    videoTitle: string,
+  ): Promise<{
+    segments: Array<{
+      id: number;
+      startTime: string;
+      endTime: string;
+      hookTitle: string;
+      subTitle: string;
+      reason: string;
+      hookScore: number;
+      storyScore: number;
+      viralScore: number;
+      segments?: Array<{ start: string; end: string; label: string }>;
+    }>;
+  }> {
+    const prompt = `당신은 유튜브 숏폼 전문 창작자입니다. 아래 롱폼 영상의 자막을 분석해서 숏폼(60초 이내)으로 만들기 좋은 구간 5개를 추천해주세요.
+
+영상 제목: "${videoTitle}"
+
+자막:
+---
+${transcript.slice(0, 12000)}
+---
+
+각 숏폼 구간에 대해 다음 JSON 배열로 응답해주세요. 반드시 유효한 JSON만 출력하세요.
+
+[
+  {
+    "id": 1,
+    "startTime": "00:00",
+    "endTime": "00:45",
+    "hookTitle": "첫 3초에 보여줄 큰 글씨 훅 타이틀 (15자 이내, 강렬하게)",
+    "subTitle": "영상 하단에 표시할 서브타이틀 (20자 이내)",
+    "reason": "왜 이 구간이 숏폼으로 좋은지 설명",
+    "hookScore": 85,
+    "storyScore": 70,
+    "viralScore": 80,
+    "segments": [
+      {"start": "00:00", "end": "00:15", "label": "훅 도입"},
+      {"start": "02:30", "end": "02:45", "label": "핵심 포인트"},
+      {"start": "05:10", "end": "05:25", "label": "결론"}
+    ]
+  }
+]
+
+중요 규칙:
+1. 첫 3초 훅이 가장 중요 — 말이 잘리면 절대 안 됨. 문장이 완전히 시작되는 지점에서 시작
+2. 하나의 구간만 자르지 말고, 여러 구간을 합성해서 60초 숏폼을 만들 수 있도록 segments 배열 제공
+3. hookTitle은 시청자가 이 영상을 왜 봐야 하는지 타당한 이유 + 호기심을 주는 방향
+4. hookScore (첫인상 파워 0-100), storyScore (서사 구조 0-100), viralScore (바이럴 가능성 0-100)
+5. 총 5개를 추천하되, 점수가 높은 순서로 정렬`;
+
+    const response = await this.analyzeWithSonnet(prompt);
+
+    // JSON 파싱
+    try {
+      const jsonMatch = response.match(/\[[\s\S]*\]/);
+      if (jsonMatch) {
+        const parsed = JSON.parse(jsonMatch[0]);
+        return { segments: parsed };
+      }
+    } catch (err) {
+      this.logger.warn('숏폼 구간 JSON 파싱 실패, 원문 반환', err);
+    }
+
+    return { segments: [] };
+  }
+
+  /**
    * 타임라인 생성 (영상 완성 후)
    */
   async generateTimeline(projectTitle: string, scriptContent: string): Promise<string> {
