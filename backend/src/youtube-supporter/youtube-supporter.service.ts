@@ -408,10 +408,10 @@ export class YouTubeSupporterService {
 
       // 자막 추출
       const transcriptResult = await this.transcript.getTranscript(videoId);
-      if (!transcriptResult.transcript) {
+      if (!transcriptResult.fullText) {
         throw new BadRequestException('이 영상에서 자막을 추출할 수 없습니다');
       }
-      transcriptText = transcriptResult.transcript;
+      transcriptText = transcriptResult.fullText;
     }
     // 3) 프로젝트 대본 사용
     else if (dto.projectId) {
