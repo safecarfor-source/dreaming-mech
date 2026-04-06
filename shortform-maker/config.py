@@ -57,7 +57,7 @@ MAX_CLIPS = 8  # 최대 후보 구간
 FADE_DURATION = 0.3  # 구간 합성 시 페이드 (초)
 
 # Claude 설정
-CLAUDE_MODEL = "claude-sonnet-4-5-20251022"
+CLAUDE_MODEL = "claude-sonnet-4-6"
 CLAUDE_MAX_TOKENS_ANALYSIS = 4000
 CLAUDE_MAX_TOKENS_COPY = 3000
 
