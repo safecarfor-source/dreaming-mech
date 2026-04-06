@@ -11,6 +11,7 @@ import {
   HttpStatus,
   UseGuards,
   UnauthorizedException,
+  BadRequestException,
   Res,
   UploadedFile,
   UseInterceptors,
@@ -56,6 +57,18 @@ import {
   type DiscoverChannelVideosDto,
   type DiscoverKeywordDto,
   type DiscoverFindChannelsDto,
+  ThumbnailStrategySchema,
+  ThumbnailGenerateSchema,
+  ThumbnailAnalyzeSchema,
+  ThumbnailSaveSchema,
+  ThumbnailFeedbackSchema,
+  ThumbnailMemorySchema,
+  type ThumbnailStrategyDto,
+  type ThumbnailGenerateDto,
+  type ThumbnailAnalyzeDto,
+  type ThumbnailSaveDto,
+  type ThumbnailFeedbackDto,
+  type ThumbnailMemoryDto,
 } from './schemas/youtube-supporter.schema';
 
 /**
@@ -636,5 +649,121 @@ export class YouTubeSupporterController {
     @Param('jobId') jobId: string,
   ) {
     return this.service.shortformStorageDelete(jobId);
+  }
+
+  // ─────────────────────────────────────────────
+  // 썸네일 AI
+  // ─────────────────────────────────────────────
+
+  /**
+   * POST /api/yt/thumbnail/strategy
+   * AI 썸네일 전략 생성 (3안)
+   */
+  @Post('thumbnail/strategy')
+  @UseGuards(YtAuthGuard)
+  async thumbnailStrategy(
+    @Body(new ZodValidationPipe(ThumbnailStrategySchema)) dto: ThumbnailStrategyDto,
+  ) {
+    return this.service.generateThumbnailStrategy(dto);
+  }
+
+  /**
+   * POST /api/yt/thumbnail/generate
+   * FLUX로 썸네일 배경 이미지 생성
+   */
+  @Post('thumbnail/generate')
+  @UseGuards(YtAuthGuard)
+  async thumbnailGenerate(
+    @Body(new ZodValidationPipe(ThumbnailGenerateSchema)) dto: ThumbnailGenerateDto,
+  ) {
+    return this.service.generateThumbnailImage(dto);
+  }
+
+  /**
+   * POST /api/yt/thumbnail/analyze
+   * 레퍼런스 썸네일 분석 (Claude Vision)
+   */
+  @Post('thumbnail/analyze')
+  @UseGuards(YtAuthGuard)
+  @UseInterceptors(FileInterceptor('image'))
+  async thumbnailAnalyze(
+    @UploadedFile() file: Express.Multer.File,
+    @Body(new ZodValidationPipe(ThumbnailAnalyzeSchema)) dto: ThumbnailAnalyzeDto,
+  ) {
+    if (!file) {
+      throw new BadRequestException('이미지 파일을 업로드해주세요');
+    }
+    const imageBase64 = file.buffer.toString('base64');
+    return this.service.analyzeThumbnail(imageBase64, file.mimetype, dto);
+  }
+
+  /**
+   * POST /api/yt/thumbnail/save
+   * 완성 썸네일 저장
+   */
+  @Post('thumbnail/save')
+  @UseGuards(YtAuthGuard)
+  async thumbnailSave(
+    @Body(new ZodValidationPipe(ThumbnailSaveSchema)) dto: ThumbnailSaveDto,
+  ) {
+    return this.service.saveThumbnail(dto);
+  }
+
+  /**
+   * GET /api/yt/thumbnail/list
+   * 썸네일 목록 조회
+   */
+  @Get('thumbnail/list')
+  @UseGuards(YtAuthGuard)
+  async thumbnailList(
+    @Query('projectId') projectId?: string,
+  ) {
+    return this.service.getThumbnails(projectId);
+  }
+
+  /**
+   * DELETE /api/yt/thumbnail/:id
+   * 썸네일 삭제
+   */
+  @Delete('thumbnail/:id')
+  @UseGuards(YtAuthGuard)
+  async thumbnailDelete(
+    @Param('id') id: string,
+  ) {
+    return this.service.deleteThumbnail(id);
+  }
+
+  /**
+   * POST /api/yt/thumbnail/feedback
+   * 썸네일 피드백 (좋아요/별로)
+   */
+  @Post('thumbnail/feedback')
+  @UseGuards(YtAuthGuard)
+  async thumbnailFeedback(
+    @Body(new ZodValidationPipe(ThumbnailFeedbackSchema)) dto: ThumbnailFeedbackDto,
+  ) {
+    return this.service.saveThumbnailFeedback(dto);
+  }
+
+  /**
+   * POST /api/yt/thumbnail/memory
+   * 전문가 노하우 직접 입력
+   */
+  @Post('thumbnail/memory')
+  @UseGuards(YtAuthGuard)
+  async thumbnailMemory(
+    @Body(new ZodValidationPipe(ThumbnailMemorySchema)) dto: ThumbnailMemoryDto,
+  ) {
+    return this.service.saveThumbnailMemory(dto);
+  }
+
+  /**
+   * GET /api/yt/thumbnail/memory
+   * 학습된 썸네일 메모리 조회
+   */
+  @Get('thumbnail/memory')
+  @UseGuards(YtAuthGuard)
+  async thumbnailMemoryList() {
+    return this.service.getThumbnailMemory();
   }
 }

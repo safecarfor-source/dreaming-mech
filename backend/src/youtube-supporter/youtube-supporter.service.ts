@@ -8,6 +8,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { YoutubeApiService } from './services/youtube-api.service';
 import { TranscriptService } from './services/transcript.service';
 import { AiOrchestrationService } from './services/ai-orchestration.service';
+import { ReplicateService } from './services/replicate.service';
 import type {
   CreateProjectDto,
   UpdateProjectDto,
@@ -23,8 +24,14 @@ import type {
   DiscoverChannelVideosDto,
   DiscoverKeywordDto,
   DiscoverFindChannelsDto,
+  ThumbnailStrategyDto,
+  ThumbnailGenerateDto,
+  ThumbnailSaveDto,
+  ThumbnailAnalyzeDto,
+  ThumbnailFeedbackDto,
+  ThumbnailMemoryDto,
 } from './schemas/youtube-supporter.schema';
-import { YtProjectStatus } from '@prisma/client';
+import { YtProjectStatus, Prisma } from '@prisma/client';
 
 // 제작 작업 상태 추적 (인메모리)
 interface ProductionJob {
@@ -44,6 +51,7 @@ export class YouTubeSupporterService {
     private readonly youtubeApi: YoutubeApiService,
     private readonly transcript: TranscriptService,
     private readonly aiOrchestration: AiOrchestrationService,
+    private readonly replicate: ReplicateService,
   ) {}
 
   // ─────────────────────────────────────────────
@@ -1162,5 +1170,202 @@ export class YouTubeSupporterService {
       description: result.description,
       opusReview: result.opusReview,
     };
+  }
+
+  // ─────────────────────────────────────────────
+  // 썸네일 AI
+  // ─────────────────────────────────────────────
+
+  /**
+   * AI 썸네일 전략 생성
+   */
+  async generateThumbnailStrategy(dto: ThumbnailStrategyDto) {
+    // 프로젝트 컨텍스트 가져오기
+    let coreValue: string | undefined;
+    let scriptSummary: string | undefined;
+    let projectTitle = '유튜브 썸네일';
+
+    if (dto.projectId) {
+      const project = await this.prisma.ytProject.findUnique({
+        where: { id: dto.projectId },
+        include: { productionData: { orderBy: { createdAt: 'desc' }, take: 1 } },
+      });
+      if (project) {
+        projectTitle = project.title;
+        const prod = project.productionData[0];
+        if (prod) {
+          coreValue = prod.coreValue ?? undefined;
+          scriptSummary = prod.scriptDraft
+            ? (prod.scriptDraft as string).slice(0, 500)
+            : undefined;
+        }
+      }
+    }
+
+    // 학습된 썸네일 노하우 가져오기 (최근 20개)
+    const skillNotes = await this.prisma.ytSkillNote.findMany({
+      where: { category: 'thumbnail' },
+      orderBy: { createdAt: 'desc' },
+      take: 20,
+      select: { content: true },
+    });
+    const learnedKnowledge = skillNotes.map((n) => n.content);
+
+    // 커스텀 지시가 있으면 프로젝트 제목에 추가
+    if (dto.customInstruction) {
+      projectTitle = `${projectTitle}\n추가 지시: ${dto.customInstruction}`;
+    }
+
+    const rawResponse = await this.aiOrchestration.generateThumbnailStrategy(
+      projectTitle,
+      coreValue,
+      scriptSummary,
+      learnedKnowledge,
+    );
+
+    // JSON 파싱 시도
+    try {
+      const jsonMatch = rawResponse.match(/```json\s*([\s\S]*?)\s*```/);
+      const jsonStr = jsonMatch ? jsonMatch[1] : rawResponse;
+      return JSON.parse(jsonStr);
+    } catch {
+      return { raw: rawResponse };
+    }
+  }
+
+  /**
+   * FLUX로 썸네일 배경 이미지 생성
+   */
+  async generateThumbnailImage(dto: ThumbnailGenerateDto) {
+    const imageUrls = await this.replicate.generateImage(dto.prompt, {
+      width: dto.width,
+      height: dto.height,
+    });
+
+    // 썸네일 레코드 생성
+    const thumbnail = await this.prisma.ytThumbnail.create({
+      data: {
+        projectId: dto.projectId ?? null,
+        baseImageUrl: imageUrls[0] ?? null,
+        prompt: dto.prompt,
+        status: 'GENERATING',
+      },
+    });
+
+    return {
+      id: thumbnail.id,
+      imageUrls,
+      status: 'COMPLETED',
+    };
+  }
+
+  /**
+   * 썸네일 저장 (캔버스 편집 결과)
+   */
+  async saveThumbnail(dto: ThumbnailSaveDto) {
+    return this.prisma.ytThumbnail.create({
+      data: {
+        projectId: dto.projectId ?? null,
+        imageUrl: dto.imageUrl,
+        baseImageUrl: dto.baseImageUrl ?? null,
+        canvasData: dto.canvasData ? (dto.canvasData as Prisma.InputJsonValue) : undefined,
+        strategy: dto.strategy ? (dto.strategy as Prisma.InputJsonValue) : undefined,
+        prompt: dto.prompt ?? null,
+        status: 'COMPLETED',
+      },
+    });
+  }
+
+  /**
+   * 프로젝트별 썸네일 목록
+   */
+  async getThumbnails(projectId?: string) {
+    return this.prisma.ytThumbnail.findMany({
+      where: projectId ? { projectId } : {},
+      orderBy: { createdAt: 'desc' },
+      take: 50,
+    });
+  }
+
+  /**
+   * 썸네일 삭제
+   */
+  async deleteThumbnail(id: string) {
+    return this.prisma.ytThumbnail.delete({ where: { id } });
+  }
+
+  /**
+   * 레퍼런스 썸네일 분석 (Claude Vision)
+   */
+  async analyzeThumbnail(imageBase64: string, mediaType: string, dto: ThumbnailAnalyzeDto) {
+    const analysis = await this.aiOrchestration.analyzeThumbnailImage(
+      imageBase64,
+      mediaType,
+      dto.userNote,
+    );
+
+    // 메모리에 저장
+    if (dto.saveToMemory) {
+      try {
+        const parsed = JSON.parse(analysis.match(/```json\s*([\s\S]*?)\s*```/)?.[1] ?? analysis);
+        await this.prisma.ytSkillNote.create({
+          data: {
+            category: 'thumbnail',
+            title: `[AI 분석] ${parsed.emotionalTone ?? '썸네일'} - ${parsed.layout ?? '분석'}`,
+            content: `구도: ${parsed.layout}\n색상: ${JSON.stringify(parsed.colorScheme)}\n텍스트: ${JSON.stringify(parsed.textStrategy)}\n감정: ${parsed.emotionalTone}\n효과: ${parsed.effectivenessReason}`,
+            source: 'thumbnail-analyzer',
+            tags: ['ai-analysis', parsed.emotionalTone, parsed.layout].filter(Boolean),
+          },
+        });
+      } catch {
+        this.logger.warn('분석 결과 메모리 저장 실패 (JSON 파싱 오류)');
+      }
+    }
+
+    return analysis;
+  }
+
+  /**
+   * 전문가 직접 노하우 저장
+   */
+  async saveThumbnailMemory(dto: ThumbnailMemoryDto) {
+    return this.prisma.ytSkillNote.create({
+      data: {
+        category: 'thumbnail',
+        title: `[전문가] ${dto.content.slice(0, 50)}`,
+        content: dto.content,
+        source: 'expert-input',
+        tags: ['expert-rule', ...dto.tags],
+      },
+    });
+  }
+
+  /**
+   * 썸네일 피드백 저장
+   */
+  async saveThumbnailFeedback(dto: ThumbnailFeedbackDto) {
+    const thumbnail = await this.prisma.ytThumbnail.findUnique({ where: { id: dto.thumbnailId } });
+    if (!thumbnail) throw new NotFoundException('썸네일을 찾을 수 없습니다');
+
+    return this.prisma.ytSkillNote.create({
+      data: {
+        category: 'thumbnail',
+        title: `[피드백] ${dto.rating === 'good' ? '좋음' : '별로'} - ${dto.comment?.slice(0, 30) ?? '무제'}`,
+        content: `평가: ${dto.rating}\n프롬프트: ${thumbnail.prompt ?? '없음'}\n코멘트: ${dto.comment ?? '없음'}`,
+        source: 'feedback',
+        tags: ['feedback', dto.rating],
+      },
+    });
+  }
+
+  /**
+   * 학습된 썸네일 메모리 조회
+   */
+  async getThumbnailMemory() {
+    return this.prisma.ytSkillNote.findMany({
+      where: { category: 'thumbnail' },
+      orderBy: { createdAt: 'desc' },
+      take: 50,
+    });
   }
 }

@@ -168,3 +168,51 @@ export const DiscoverFindChannelsSchema = z.object({
 export type DiscoverChannelVideosDto = z.infer<typeof DiscoverChannelVideosSchema>;
 export type DiscoverKeywordDto = z.infer<typeof DiscoverKeywordSchema>;
 export type DiscoverFindChannelsDto = z.infer<typeof DiscoverFindChannelsSchema>;
+
+// ─────────────────────────────────────────────
+// 썸네일 AI
+// ─────────────────────────────────────────────
+
+export const ThumbnailStrategySchema = z.object({
+  projectId: z.string().uuid().optional(),
+  customInstruction: z.string().max(500).optional(),
+});
+
+export const ThumbnailGenerateSchema = z.object({
+  projectId: z.string().uuid().optional(),
+  prompt: z.string().min(1, '프롬프트를 입력하세요').max(2000),
+  width: z.number().int().min(256).max(2048).optional().default(1280),
+  height: z.number().int().min(256).max(2048).optional().default(720),
+});
+
+export const ThumbnailAnalyzeSchema = z.object({
+  userNote: z.string().max(1000).optional(),
+  saveToMemory: z.boolean().optional().default(true),
+});
+
+export const ThumbnailSaveSchema = z.object({
+  projectId: z.string().uuid().optional(),
+  imageUrl: z.string().url(),
+  baseImageUrl: z.string().url().optional(),
+  canvasData: z.record(z.string(), z.any()).optional(),
+  strategy: z.record(z.string(), z.any()).optional(),
+  prompt: z.string().max(2000).optional(),
+});
+
+export const ThumbnailFeedbackSchema = z.object({
+  thumbnailId: z.string().uuid(),
+  rating: z.enum(['good', 'bad']),
+  comment: z.string().max(500).optional(),
+});
+
+export const ThumbnailMemorySchema = z.object({
+  content: z.string().min(1, '노하우 내용을 입력하세요').max(2000),
+  tags: z.array(z.string().max(50)).max(10).optional().default([]),
+});
+
+export type ThumbnailStrategyDto = z.infer<typeof ThumbnailStrategySchema>;
+export type ThumbnailGenerateDto = z.infer<typeof ThumbnailGenerateSchema>;
+export type ThumbnailAnalyzeDto = z.infer<typeof ThumbnailAnalyzeSchema>;
+export type ThumbnailSaveDto = z.infer<typeof ThumbnailSaveSchema>;
+export type ThumbnailFeedbackDto = z.infer<typeof ThumbnailFeedbackSchema>;
+export type ThumbnailMemoryDto = z.infer<typeof ThumbnailMemorySchema>;

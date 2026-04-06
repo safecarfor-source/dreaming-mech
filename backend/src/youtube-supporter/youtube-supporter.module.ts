@@ -4,6 +4,7 @@ import { YouTubeSupporterService } from './youtube-supporter.service';
 import { YoutubeApiService } from './services/youtube-api.service';
 import { TranscriptService } from './services/transcript.service';
 import { AiOrchestrationService } from './services/ai-orchestration.service';
+import { ReplicateService } from './services/replicate.service';
 
 /**
  * YouTube Supporter 모듈
@@ -16,6 +17,7 @@ import { AiOrchestrationService } from './services/ai-orchestration.service';
     YoutubeApiService,
     TranscriptService,
     AiOrchestrationService,
+    ReplicateService,
   ],
 })
 export class YouTubeSupporterModule {}

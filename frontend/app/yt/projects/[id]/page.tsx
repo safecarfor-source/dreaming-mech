@@ -267,7 +267,7 @@ export default function ProjectDetailPage({ params }: PageProps) {
               {loadedTabs.has('주제찾기') && <DiscoverTab projectId={id} />}
             </div>
             <div className={activeTab === '썸네일' ? '' : 'hidden'}>
-              {loadedTabs.has('썸네일') && <ThumbnailTab />}
+              {loadedTabs.has('썸네일') && <ThumbnailTab projectId={id} />}
             </div>
             <div className={activeTab === '학습' ? '' : 'hidden'}>
               {loadedTabs.has('학습') && <LearningTab projectId={id} />}

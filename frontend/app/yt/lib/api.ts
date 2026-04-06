@@ -492,4 +492,107 @@ export const deleteShortformStorage = async (jobId: string): Promise<void> => {
   if (!res.ok) throw new Error('삭제 실패');
 };
 
+// ─── 썸네일 AI ────────────────────────────────────────
+
+export interface ThumbnailStrategy {
+  concept: string;
+  description: string;
+  background: string;
+  textMain: string;
+  textSub?: string;
+  colorScheme: {
+    background: string;
+    textColor: string;
+    accentColor: string;
+  };
+  emotionalTone: string;
+  fluxPrompt: string;
+}
+
+export interface ThumbnailRecord {
+  id: string;
+  projectId?: string;
+  imageUrl?: string;
+  baseImageUrl?: string;
+  canvasData?: Record<string, unknown>;
+  strategy?: Record<string, unknown>;
+  prompt?: string;
+  status: string;
+  createdAt: string;
+}
+
+export async function generateThumbnailStrategy(data: {
+  projectId?: string;
+  customInstruction?: string;
+}): Promise<{ strategies: ThumbnailStrategy[] }> {
+  const res = await ytApi.post('/yt/thumbnail/strategy', data);
+  return res.data;
+}
+
+export async function generateThumbnailImage(data: {
+  projectId?: string;
+  prompt: string;
+  width?: number;
+  height?: number;
+}): Promise<{ id: string; imageUrls: string[]; status: string }> {
+  const res = await ytApi.post('/yt/thumbnail/generate', data);
+  return res.data;
+}
+
+export async function analyzeThumbnail(file: File, userNote?: string): Promise<string> {
+  const formData = new FormData();
+  formData.append('image', file);
+  if (userNote) formData.append('userNote', userNote);
+  formData.append('saveToMemory', 'true');
+
+  const res = await ytApi.post('/yt/thumbnail/analyze', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
+  return res.data;
+}
+
+export async function saveThumbnail(data: {
+  projectId?: string;
+  imageUrl: string;
+  baseImageUrl?: string;
+  canvasData?: Record<string, unknown>;
+  strategy?: Record<string, unknown>;
+  prompt?: string;
+}): Promise<ThumbnailRecord> {
+  const res = await ytApi.post('/yt/thumbnail/save', data);
+  return res.data;
+}
+
+export async function getThumbnails(projectId?: string): Promise<ThumbnailRecord[]> {
+  const res = await ytApi.get('/yt/thumbnail/list', { params: projectId ? { projectId } : {} });
+  return res.data;
+}
+
+export async function deleteThumbnail(id: string) {
+  const res = await ytApi.delete(`/yt/thumbnail/${id}`);
+  return res.data;
+}
+
+export async function saveThumbnailFeedback(data: {
+  thumbnailId: string;
+  rating: 'good' | 'bad';
+  comment?: string;
+}) {
+  const res = await ytApi.post('/yt/thumbnail/feedback', data);
+  return res.data;
+}
+
+export async function saveThumbnailMemory(data: {
+  content: string;
+  tags?: string[];
+}) {
+  const res = await ytApi.post('/yt/thumbnail/memory', data);
+  return res.data;
+}
+
+export async function getThumbnailMemory() {
+  const res = await ytApi.get('/yt/thumbnail/memory');
+  return res.data;
+}
+
 export default ytApi;

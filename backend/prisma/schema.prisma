@@ -909,6 +909,7 @@ model YtProject {
   referenceVideos YtReferenceVideo[]
   productionData  YtProductionData[]
   shortformJobs   YtShortformJob[]
+  thumbnails      YtThumbnail[]
 
   @@index([status])
   @@index([createdAt])
@@ -1021,6 +1022,24 @@ model YtCategory {
   name      String   @unique
   sortOrder Int      @default(0)
   createdAt DateTime @default(now())
+}
+
+// 썸네일 (AI 생성 + 캔버스 편집)
+model YtThumbnail {
+  id           String     @id @default(uuid())
+  projectId    String?
+  project      YtProject? @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  imageUrl     String?    // 완성 PNG S3 URL
+  baseImageUrl String?    // 배경 이미지 URL (AI 생성 or 실사진)
+  canvasData   Json?      // Konva JSON (편집 상태 복원용)
+  strategy     Json?      // AI 전략 데이터
+  prompt       String?    @db.Text // FLUX 생성 프롬프트
+  status       String     @default("DRAFT") // DRAFT | GENERATING | COMPLETED
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@index([projectId])
+  @@index([createdAt])
 }
 
 // 검색 캐시 (YouTube API 호출 절약)
