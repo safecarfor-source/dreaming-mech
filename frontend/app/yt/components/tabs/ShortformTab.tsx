@@ -5,8 +5,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Smartphone,
   Loader2,
-  Link2,
-  FileText,
   Sparkles,
   Scissors,
   Star,
@@ -24,7 +22,6 @@ import {
   History,
 } from 'lucide-react';
 import {
-  analyzeShortform,
   ShortformSegment,
   uploadShortformVideo,
   getShortformJobStatus,
@@ -305,8 +302,7 @@ function ShortformDownloadCard({ result, jobId, index }: { result: ShortformJobR
 // ─── 메인 ShortformTab ──────────────────────────────
 export default function ShortformTab({ projectId }: ShortformTabProps) {
   // Phase 1 상태
-  const [mode, setMode] = useState<'url' | 'project' | 'upload'>('url');
-  const [videoUrl, setVideoUrl] = useState('');
+  const mode = 'upload' as const;
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [result, setResult] = useState<{
@@ -338,23 +334,7 @@ export default function ShortformTab({ projectId }: ShortformTabProps) {
       .finally(() => setLoadingSaved(false));
   }, [projectId]);
 
-  // ─── Phase 1 핸들러 ──────────────────────────────
-  const handleAnalyze = async () => {
-    setLoading(true);
-    setError('');
-    try {
-      const data = mode === 'url'
-        ? await analyzeShortform({ videoUrl })
-        : await analyzeShortform({ projectId });
-      setResult(data);
-    } catch (err: any) {
-      setError(err.response?.data?.message || err.message || '분석에 실패했습니다');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // ─── Phase 2 핸들러 ──────────────────────────────
+  // ─── 핸들러 ──────────────────────────────
   const handleFileSelect = useCallback((file: File) => {
     if (!file.type.startsWith('video/') && !file.name.endsWith('.mp4')) {
       setError('mp4 영상 파일만 업로드 가능합니다');
@@ -446,89 +426,7 @@ export default function ShortformTab({ projectId }: ShortformTabProps) {
       {/* 결과 없을 때: 입력 UI */}
       {!result && !jobStatus ? (
         <div className="space-y-4">
-          {/* 모드 탭 */}
-          <div className="flex gap-2 flex-wrap">
-            <button
-              onClick={() => setMode('url')}
-              className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
-                mode === 'url' ? 'bg-violet-600 text-white' : 'bg-gray-800 text-gray-400 hover:text-white border border-gray-700'
-              }`}
-            >
-              <Link2 className="w-3.5 h-3.5" />
-              YouTube URL
-            </button>
-            {projectId && (
-              <button
-                onClick={() => setMode('project')}
-                className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
-                  mode === 'project' ? 'bg-violet-600 text-white' : 'bg-gray-800 text-gray-400 hover:text-white border border-gray-700'
-                }`}
-              >
-                <FileText className="w-3.5 h-3.5" />
-                현재 프로젝트 대본
-              </button>
-            )}
-            <button
-              onClick={() => setMode('upload')}
-              className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
-                mode === 'upload' ? 'bg-emerald-600 text-white' : 'bg-gray-800 text-gray-400 hover:text-white border border-gray-700'
-              }`}
-            >
-              <Upload className="w-3.5 h-3.5" />
-              영상 업로드 (자동 제작)
-            </button>
-          </div>
-
-          {/* URL 모드 */}
-          {mode === 'url' && (
-            <>
-              <div className="relative">
-                <Link2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-                <input
-                  type="text"
-                  value={videoUrl}
-                  onChange={(e) => setVideoUrl(e.target.value)}
-                  placeholder="YouTube URL 붙여넣기 (예: https://youtube.com/watch?v=...)"
-                  className="w-full bg-gray-900 border border-gray-700 rounded-xl pl-9 pr-4 py-3 text-white placeholder-gray-500 text-sm focus:outline-none focus:border-violet-500 transition-colors"
-                  onKeyDown={(e) => e.key === 'Enter' && handleAnalyze()}
-                />
-              </div>
-              <button
-                onClick={handleAnalyze}
-                disabled={loading || !videoUrl.trim()}
-                className="w-full flex items-center justify-center gap-2 bg-violet-600 hover:bg-violet-500 disabled:bg-gray-700 disabled:text-gray-500 text-white py-3 rounded-xl text-sm font-medium transition-colors"
-              >
-                {loading ? (
-                  <><Loader2 className="w-4 h-4 animate-spin" />자막 분석 중... (30초~1분 소요)</>
-                ) : (
-                  <><Sparkles className="w-4 h-4" />숏폼 구간 분석 시작</>
-                )}
-              </button>
-            </>
-          )}
-
-          {/* 프로젝트 모드 */}
-          {mode === 'project' && (
-            <>
-              <div className="bg-gray-900 border border-gray-700 rounded-xl p-4">
-                <p className="text-gray-300 text-sm">현재 프로젝트의 대본을 기반으로 숏폼 구간을 분석합니다</p>
-                <p className="text-gray-500 text-xs mt-1">먼저 [AI 제작] 탭에서 대본을 생성해주세요</p>
-              </div>
-              <button
-                onClick={handleAnalyze}
-                disabled={loading}
-                className="w-full flex items-center justify-center gap-2 bg-violet-600 hover:bg-violet-500 disabled:bg-gray-700 disabled:text-gray-500 text-white py-3 rounded-xl text-sm font-medium transition-colors"
-              >
-                {loading ? (
-                  <><Loader2 className="w-4 h-4 animate-spin" />분석 중...</>
-                ) : (
-                  <><Sparkles className="w-4 h-4" />숏폼 구간 분석 시작</>
-                )}
-              </button>
-            </>
-          )}
-
-          {/* 업로드 모드 (Phase 2) */}
+          {/* 영상 업로드 */}
           {mode === 'upload' && (
             <div className="space-y-4">
               {/* 드래그앤드롭 영역 */}
@@ -604,18 +502,6 @@ export default function ShortformTab({ projectId }: ShortformTabProps) {
 
           {error && <p className="text-red-400 text-xs text-center">{error}</p>}
 
-          {/* Phase 1 안내 (URL/project 모드) */}
-          {(mode === 'url' || mode === 'project') && (
-            <div className="bg-gray-900 border border-gray-700 rounded-xl p-4 space-y-2">
-              <p className="text-gray-400 text-xs font-medium">이 기능은...</p>
-              <ul className="text-gray-500 text-xs space-y-1.5 ml-4 list-disc">
-                <li>롱폼 영상의 자막을 AI가 분석합니다</li>
-                <li>숏폼으로 만들기 좋은 구간 5개를 추천합니다</li>
-                <li>각 구간의 훅 타이틀, 합성 구간, 편집 가이드를 제공합니다</li>
-                <li>여러 구간을 합성해서 60초 숏폼을 만들 수 있습니다</li>
-              </ul>
-            </div>
-          )}
 
           {/* 저장된 숏폼 작업 이력 */}
           {savedJobs.length > 0 && (
