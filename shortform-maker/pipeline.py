@@ -1,13 +1,15 @@
-"""숏폼 자동변환 파이프라인 v1.0 — 모듈 오케스트레이터"""
+"""숏폼 자동변환 파이프라인 v2.0 — 블랙바 + 번인 자막 + LUFS"""
 
 import json
 import os
 
 from modules.analyzer import analyze_two_stage
+from modules.caption_builder import build_ass_subtitles
 from modules.composer import ComposedClip, build_clips
 from modules.ingest import download_youtube, extract_audio, get_video_info, transcribe_audio
 from modules.renderer import render_clip
 from modules.subtitle_parser import parse_subtitle_file, parse_subtitle_text
+from modules.thumbnail import generate_thumbnail
 
 
 def run_pipeline(
@@ -48,6 +50,7 @@ def run_pipeline(
 
     # 2. 자막 확보 (SRT 있으면 Whisper 스킵)
     segments = None
+    all_words = []  # v2.0: 워드 레벨 타임스탬프
 
     if subtitle_text:
         _progress(2, "SRT 자막 파싱 중... (Whisper 스킵)")
@@ -57,12 +60,13 @@ def run_pipeline(
         segments = parse_subtitle_file(subtitle_source)
 
     if not segments:
-        # Whisper로 자막 생성
+        # Whisper로 자막 생성 (워드 레벨 포함)
         _progress(2, "오디오 추출 중...")
         audio_path = extract_audio(video_path, output_dir)
-        _progress(3, "AI 자막 생성 중... (Whisper)")
+        _progress(3, "AI 자막 생성 중... (Whisper 워드 레벨)")
         transcript = transcribe_audio(audio_path)
         segments = transcript.get("segments", [])
+        all_words = transcript.get("words", [])
 
         # 자막 저장
         transcript_path = os.path.join(output_dir, "transcript.json")
@@ -81,24 +85,51 @@ def run_pipeline(
     with open(analysis_path, "w", encoding="utf-8") as f:
         json.dump(analysis_clips, f, ensure_ascii=False, indent=2)
 
-    # 5. 클립 조립 (검증 + 정렬)
-    composed_clips = build_clips(analysis_clips)
+    # 5. 클립 조립 (검증 + 정렬 + 워드 필터링)
+    composed_clips = build_clips(analysis_clips, all_words=all_words)
 
-    # 6. FFmpeg 렌더링
+    # 6. FFmpeg 렌더링 (블랙바 + 번인 자막)
     results = []
     for i, clip in enumerate(composed_clips):
         _progress(6, f"클립 {i + 1}/{len(composed_clips)} 렌더링 중: {clip.hook_title}")
         clip_path = os.path.join(output_dir, f"clip_{i + 1:02d}.mp4")
 
+        # ASS 자막 생성 (워드 데이터 있을 때)
+        ass_path = None
+        if clip.words:
+            ass_path = build_ass_subtitles(
+                words=clip.words,
+                clip_start_sec=clip.segments[0].start_sec,
+                clip_end_sec=clip.segments[-1].end_sec,
+            )
+
         try:
-            render_clip(video_path, clip, clip_path)
-            results.append(_clip_to_dict(clip, clip_path, i + 1))
+            render_clip(video_path, clip, clip_path, ass_path=ass_path)
+
+            # 썸네일 생성
+            thumb_path = os.path.join(output_dir, f"thumb_{i + 1:02d}.jpg")
+            thumb_result = generate_thumbnail(
+                video_path=video_path,
+                hook_title=clip.hook_title,
+                output_path=thumb_path,
+                start_sec=clip.segments[0].start_sec,
+                end_sec=clip.segments[-1].end_sec,
+            )
+
+            result_dict = _clip_to_dict(clip, clip_path, i + 1)
+            if thumb_result:
+                result_dict["thumbnail"] = thumb_path
+                result_dict["thumbnail_filename"] = f"thumb_{i + 1:02d}.jpg"
+            results.append(result_dict)
         except Exception as e:
-            # 렌더링 실패해도 나머지 계속
             results.append({
                 **_clip_to_dict(clip, "", i + 1),
                 "error": str(e),
             })
+        finally:
+            # ASS 임시 파일 정리
+            if ass_path and os.path.exists(ass_path):
+                os.remove(ass_path)
 
     # 7. 결과 저장
     results_path = os.path.join(output_dir, "results.json")

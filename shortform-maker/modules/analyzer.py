@@ -99,10 +99,11 @@ def _stage2_copy(
         )
 
     # 합성 구간 텍스트도 추가
+    segments_by_id = {s["id"]: s for s in stage1_result.get("segments", [])}
     for comp in stage1_result.get("compositions", []):
         comp_text_parts = []
         for seg_id in comp["segment_ids"]:
-            seg = stage1_result["segments"][seg_id]
+            seg = segments_by_id.get(seg_id, {})
             start_sec = _time_to_seconds(seg["start"])
             end_sec = _time_to_seconds(seg["end"])
             relevant = [
@@ -152,6 +153,9 @@ def _merge_results(stage1: dict, stage2: dict) -> list[dict]:
             clip["end"] = seg.get("end", "00:00:00")
             clip["keywords"] = seg.get("keywords", [])
             clip["summary"] = seg.get("summary", "")
+            # v2.0: 3초 훅 리오더 + 루프 친화성
+            clip["hook_reorder"] = seg.get("hook_reorder")
+            clip["loop_friendly"] = seg.get("loop_friendly", False)
 
         clips.append(clip)
 

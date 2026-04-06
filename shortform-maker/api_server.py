@@ -1,6 +1,6 @@
-"""숏폼 메이커 v1.1 — FastAPI 서버
+"""숏폼 메이커 v2.0 — FastAPI 서버
 영상 업로드 → 비동기 파이프라인 실행 → 결과 다운로드
-v1.1: job 상태 디스크 영속화 (서버 재시작 후에도 다운로드 가능)
+v2.0: 블랙바 레이아웃 + 번인 자막 + LUFS + 썸네일
 """
 
 import json
@@ -18,7 +18,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-app = FastAPI(title="숏폼 메이커 API", version="1.1.0")
+app = FastAPI(title="숏폼 메이커 API", version="2.0.0")
 
 OUTPUT_BASE = "/app/output"
 
@@ -118,6 +118,9 @@ def _run_pipeline_task(job_id: str, video_path: str, output_dir: str):
                 entry["error"] = r["error"]
             else:
                 entry["downloadUrl"] = f"/shortform/download/{job_id}/{r.get('index', 0)}"
+            # 썸네일 URL 추가
+            if r.get("thumbnail_filename"):
+                entry["thumbnailUrl"] = f"/shortform/thumbnail/{job_id}/{r.get('index', 0)}"
             formatted.append(entry)
         success_count = sum(1 for r in results if not r.get("error"))
         with _jobs_lock:
@@ -258,6 +261,30 @@ async def download_clip(
         clip_path,
         media_type="video/mp4",
         filename=f"shortform_clip_{index:02d}.mp4",
+    )
+
+
+@app.get("/shortform/thumbnail/{job_id}/{index}")
+async def download_thumbnail(
+    job_id: str,
+    index: int,
+    x_yt_token: Optional[str] = Header(None),
+    token: Optional[str] = None,
+):
+    """썸네일 이미지 다운로드"""
+    auth_token = x_yt_token or token
+    _check_auth(auth_token)
+
+    output_dir = os.path.join(OUTPUT_BASE, job_id)
+    thumb_path = os.path.join(output_dir, f"thumb_{index:02d}.jpg")
+
+    if not os.path.exists(thumb_path):
+        raise HTTPException(status_code=404, detail="썸네일 파일을 찾을 수 없습니다")
+
+    return FileResponse(
+        thumb_path,
+        media_type="image/jpeg",
+        filename=f"shortform_thumb_{index:02d}.jpg",
     )
 
 
