@@ -48,7 +48,7 @@ def transcribe_audio(audio_path: str, language: str = "ko") -> dict:
             file=f,
             language=language,
             response_format="verbose_json",
-            timestamp_granularities=["segment"],
+            timestamp_granularities=["segment", "word"],
         )
 
     return result.model_dump()

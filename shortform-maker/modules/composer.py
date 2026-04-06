@@ -34,6 +34,8 @@ class ComposedClip:
     reason: str = ""
     score_breakdown: dict = field(default_factory=dict)
     is_composition: bool = False
+    words: list[dict] = field(default_factory=list)  # Whisper word-level 타임스탬프
+    hook_reorder: dict | None = None  # 3초 훅 리오더 {"hook_start": "HH:MM:SS", "hook_end": "HH:MM:SS"}
 
     @property
     def total_duration(self) -> float:
@@ -47,11 +49,15 @@ class ComposedClip:
         return " + ".join(parts)
 
 
-def build_clips(analysis_clips: list[dict]) -> list[ComposedClip]:
+def build_clips(
+    analysis_clips: list[dict],
+    all_words: list[dict] | None = None,
+) -> list[ComposedClip]:
     """분석 결과에서 ComposedClip 리스트 생성
 
     Args:
         analysis_clips: analyzer.analyze_two_stage() 결과
+        all_words: Whisper word-level 타임스탬프 (전체 영상)
 
     Returns:
         검증 통과한 ComposedClip 리스트 (Virality Score순)
@@ -60,7 +66,6 @@ def build_clips(analysis_clips: list[dict]) -> list[ComposedClip]:
 
     for clip_data in analysis_clips:
         if clip_data.get("is_composition") and clip_data.get("segments"):
-            # 합성 구간
             segments = [
                 ClipSegment(start=s["start"], end=s["end"])
                 for s in clip_data["segments"]
@@ -75,9 +80,9 @@ def build_clips(analysis_clips: list[dict]) -> list[ComposedClip]:
                 primary_desire=clip_data.get("primary_desire", ""),
                 reason=clip_data.get("reason", ""),
                 score_breakdown=clip_data.get("score_breakdown", {}),
+                hook_reorder=clip_data.get("hook_reorder"),
             )
         else:
-            # 단일 구간
             seg = ClipSegment(
                 start=clip_data.get("start", "00:00:00"),
                 end=clip_data.get("end", "00:00:00"),
@@ -92,15 +97,33 @@ def build_clips(analysis_clips: list[dict]) -> list[ComposedClip]:
                 primary_desire=clip_data.get("primary_desire", ""),
                 reason=clip_data.get("reason", ""),
                 score_breakdown=clip_data.get("score_breakdown", {}),
+                hook_reorder=clip_data.get("hook_reorder"),
             )
 
-        # 검증
+        # 클립 범위 내 워드 필터링
+        if all_words:
+            composed.words = _filter_words_for_clip(all_words, composed)
+
         if _validate_clip(composed):
             clips.append(composed)
 
-    # Virality Score순 정렬
     clips.sort(key=lambda c: c.virality_score, reverse=True)
     return clips
+
+
+def _filter_words_for_clip(
+    all_words: list[dict],
+    clip: "ComposedClip",
+) -> list[dict]:
+    """클립 시간 범위 내 워드만 필터링"""
+    clip_words = []
+    for seg in clip.segments:
+        for w in all_words:
+            w_start = w.get("start", 0)
+            w_end = w.get("end", 0)
+            if w_start >= seg.start_sec - 0.1 and w_end <= seg.end_sec + 0.1:
+                clip_words.append(w)
+    return clip_words
 
 
 def _validate_clip(clip: ComposedClip) -> bool:
