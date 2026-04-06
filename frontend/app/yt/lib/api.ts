@@ -397,4 +397,58 @@ export const getShortformDownloadUrl = (jobId: string, index: number): string =>
   return `${baseUrl}/yt/shortform/download/${jobId}/${index}${token ? `?token=${token}` : ''}`;
 };
 
+// ─── 숏폼 DB 저장/조회 ────────────────────────────────────────
+
+export interface SavedShortformJob {
+  id: string;
+  projectId: string;
+  externalJobId: string;
+  status: string;
+  fileName?: string;
+  results?: ShortformJobResult[];
+  error?: string;
+  createdAt: string;
+}
+
+export const saveShortformJob = async (data: {
+  projectId: string;
+  externalJobId: string;
+  status: string;
+  fileName?: string;
+  results?: ShortformJobResult[];
+  error?: string;
+}): Promise<SavedShortformJob> => {
+  const token = typeof window !== 'undefined' ? localStorage.getItem('yt_auth_token') : null;
+  const baseUrl = typeof window !== 'undefined'
+    ? (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001')
+    : 'http://localhost:3001';
+  const res = await fetch(`${baseUrl}/yt/shortform/save`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { 'x-yt-token': token } : {}),
+    },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error('저장 실패');
+  const json = await res.json();
+  return json.data ?? json;
+};
+
+export const listShortformJobs = async (projectId: string): Promise<SavedShortformJob[]> => {
+  const token = typeof window !== 'undefined' ? localStorage.getItem('yt_auth_token') : null;
+  const baseUrl = typeof window !== 'undefined'
+    ? (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001')
+    : 'http://localhost:3001';
+  const res = await fetch(`${baseUrl}/yt/shortform/list/${projectId}`, {
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { 'x-yt-token': token } : {}),
+    },
+  });
+  if (!res.ok) throw new Error('조회 실패');
+  const json = await res.json();
+  return json.data ?? [];
+};
+
 export default ytApi;

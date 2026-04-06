@@ -591,4 +591,28 @@ export class YouTubeSupporterController {
   ) {
     return this.service.shortformDownload(jobId, index, token, res);
   }
+
+  /**
+   * POST /api/yt/shortform/save
+   * 숏폼 작업 결과 DB 저장
+   */
+  @Post('shortform/save')
+  @UseGuards(YtAuthGuard)
+  async shortformSave(
+    @Body() body: { projectId: string; externalJobId: string; status: string; fileName?: string; results?: any; error?: string },
+  ) {
+    return this.service.shortformSave(body);
+  }
+
+  /**
+   * GET /api/yt/shortform/list/:projectId
+   * 프로젝트의 숏폼 작업 이력 조회
+   */
+  @Get('shortform/list/:projectId')
+  @UseGuards(YtAuthGuard)
+  async shortformList(
+    @Param('projectId') projectId: string,
+  ) {
+    return this.service.shortformList(projectId);
+  }
 }

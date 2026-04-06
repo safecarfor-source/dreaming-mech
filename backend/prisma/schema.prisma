@@ -908,6 +908,7 @@ model YtProject {
   // 관계
   referenceVideos YtReferenceVideo[]
   productionData  YtProductionData[]
+  shortformJobs   YtShortformJob[]
 
   @@index([status])
   @@index([createdAt])
@@ -961,6 +962,23 @@ model YtProductionData {
 
   @@unique([projectId, version])
   @@index([projectId])
+}
+
+// 숏폼 작업 (프로젝트별 제작 이력)
+model YtShortformJob {
+  id              String    @id @default(uuid())
+  projectId       String
+  project         YtProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  externalJobId   String    // shortform-maker 서비스의 jobId
+  status          String    @default("PROCESSING") // PROCESSING | COMPLETED | FAILED
+  fileName        String?   // 원본 파일명
+  results         Json?     // 완료 시 결과 배열 [{index, hookTitle, subTitle, downloadUrl}]
+  error           String?   // 실패 시 에러 메시지
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([projectId])
+  @@index([externalJobId])
 }
 
 // 스킬 노트 (서랍 4)

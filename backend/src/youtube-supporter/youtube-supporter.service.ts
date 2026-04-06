@@ -1060,6 +1060,56 @@ export class YouTubeSupporterService {
   }
 
   // ─────────────────────────────────────────────
+  // 숏폼 작업 DB 저장/조회
+  // ─────────────────────────────────────────────
+
+  async shortformSave(data: {
+    projectId: string;
+    externalJobId: string;
+    status: string;
+    fileName?: string;
+    results?: any;
+    error?: string;
+  }) {
+    // upsert: 같은 externalJobId가 있으면 업데이트
+    const existing = await this.prisma.ytShortformJob.findFirst({
+      where: { externalJobId: data.externalJobId },
+    });
+
+    if (existing) {
+      const updated = await this.prisma.ytShortformJob.update({
+        where: { id: existing.id },
+        data: {
+          status: data.status,
+          results: data.results ?? undefined,
+          error: data.error ?? undefined,
+        },
+      });
+      return { data: updated };
+    }
+
+    const created = await this.prisma.ytShortformJob.create({
+      data: {
+        projectId: data.projectId,
+        externalJobId: data.externalJobId,
+        status: data.status,
+        fileName: data.fileName,
+        results: data.results ?? undefined,
+        error: data.error ?? undefined,
+      },
+    });
+    return { data: created };
+  }
+
+  async shortformList(projectId: string) {
+    const jobs = await this.prisma.ytShortformJob.findMany({
+      where: { projectId },
+      orderBy: { createdAt: 'desc' },
+    });
+    return { data: jobs };
+  }
+
+  // ─────────────────────────────────────────────
   // 헬퍼
   // ─────────────────────────────────────────────
 

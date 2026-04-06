@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Smartphone,
@@ -21,6 +21,7 @@ import {
   AlertCircle,
   Film,
   X,
+  History,
 } from 'lucide-react';
 import {
   analyzeShortform,
@@ -30,6 +31,9 @@ import {
   getShortformDownloadUrl,
   ShortformJobStatus,
   ShortformJobResult,
+  saveShortformJob,
+  listShortformJobs,
+  SavedShortformJob,
 } from '../../lib/api';
 
 interface ShortformTabProps {
@@ -314,6 +318,20 @@ export default function ShortformTab({ projectId }: ShortformTabProps) {
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // 저장된 작업 이력
+  const [savedJobs, setSavedJobs] = useState<SavedShortformJob[]>([]);
+  const [loadingSaved, setLoadingSaved] = useState(false);
+
+  // ─── 페이지 로드 시 저장된 작업 불러오기 ──────────
+  useEffect(() => {
+    if (!projectId) return;
+    setLoadingSaved(true);
+    listShortformJobs(projectId)
+      .then((jobs) => setSavedJobs(jobs))
+      .catch(() => {})
+      .finally(() => setLoadingSaved(false));
+  }, [projectId]);
+
   // ─── Phase 1 핸들러 ──────────────────────────────
   const handleAnalyze = async () => {
     setLoading(true);
@@ -347,7 +365,7 @@ export default function ShortformTab({ projectId }: ShortformTabProps) {
     if (file) handleFileSelect(file);
   }, [handleFileSelect]);
 
-  const startPolling = (id: string) => {
+  const startPolling = (id: string, fileName?: string) => {
     if (pollingRef.current) clearInterval(pollingRef.current);
     pollingRef.current = setInterval(async () => {
       try {
@@ -356,6 +374,21 @@ export default function ShortformTab({ projectId }: ShortformTabProps) {
         if (status.status === 'COMPLETED' || status.status === 'FAILED') {
           clearInterval(pollingRef.current!);
           setIsProcessing(false);
+          // DB에 자동 저장
+          if (projectId) {
+            saveShortformJob({
+              projectId,
+              externalJobId: id,
+              status: status.status,
+              fileName,
+              results: status.results,
+              error: status.error,
+            })
+              .then((saved) => {
+                setSavedJobs((prev) => [saved, ...prev.filter((j) => j.externalJobId !== id)]);
+              })
+              .catch(() => {});
+          }
         }
       } catch (err: any) {
         clearInterval(pollingRef.current!);
@@ -373,7 +406,7 @@ export default function ShortformTab({ projectId }: ShortformTabProps) {
     try {
       const { jobId: id } = await uploadShortformVideo(uploadFile);
       setJobId(id);
-      startPolling(id);
+      startPolling(id, uploadFile.name);
     } catch (err: any) {
       setError(err.message || '업로드 실패');
       setIsProcessing(false);
@@ -575,6 +608,58 @@ export default function ShortformTab({ projectId }: ShortformTabProps) {
                 <li>각 구간의 훅 타이틀, 합성 구간, 편집 가이드를 제공합니다</li>
                 <li>여러 구간을 합성해서 60초 숏폼을 만들 수 있습니다</li>
               </ul>
+            </div>
+          )}
+
+          {/* 저장된 숏폼 작업 이력 */}
+          {savedJobs.length > 0 && (
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <History className="w-4 h-4 text-gray-500" />
+                <p className="text-gray-400 text-xs font-medium">이전 제작 이력</p>
+              </div>
+              {savedJobs.map((job) => (
+                <button
+                  key={job.id}
+                  onClick={() => {
+                    setJobId(job.externalJobId);
+                    setJobStatus({
+                      status: job.status as ShortformJobStatus['status'],
+                      progress: job.status === 'COMPLETED'
+                        ? `완료! ${(job.results || []).length}개 숏폼 생성됨`
+                        : job.error || '',
+                      results: job.results,
+                      error: job.error,
+                    });
+                  }}
+                  className="w-full bg-gray-800 border border-gray-700 rounded-xl p-3 hover:border-violet-500/30 transition-colors text-left"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Film className="w-3.5 h-3.5 text-emerald-400" />
+                      <span className="text-white text-sm truncate max-w-[180px]">
+                        {job.fileName || '영상'}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {job.status === 'COMPLETED' ? (
+                        <span className="text-emerald-400 text-xs">{(job.results || []).length}개 숏폼</span>
+                      ) : (
+                        <span className="text-red-400 text-xs">실패</span>
+                      )}
+                      <span className="text-gray-600 text-[10px]">
+                        {new Date(job.createdAt).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' })}
+                      </span>
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+          {loadingSaved && (
+            <div className="flex items-center justify-center gap-2 py-4">
+              <Loader2 className="w-4 h-4 text-gray-500 animate-spin" />
+              <span className="text-gray-500 text-xs">이전 작업 불러오는 중...</span>
             </div>
           )}
         </div>
