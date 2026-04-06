@@ -51,7 +51,7 @@ else:
 # 숏폼 제한
 MIN_CLIP_DURATION = 15  # 초
 MAX_CLIP_DURATION = 60  # 초
-MAX_CLIPS = 8  # 최대 후보 구간
+MAX_CLIPS = 4  # 최대 후보 구간 (2~4개 알짜만)
 
 # 합성 설정
 FADE_DURATION = 0.3  # 구간 합성 시 페이드 (초)
