@@ -339,7 +339,8 @@ export interface ShortformJobResult {
   index: number;
   hookTitle: string;
   subTitle: string;
-  downloadUrl: string;
+  downloadUrl?: string;
+  error?: string;
 }
 
 export interface ShortformJobStatus {

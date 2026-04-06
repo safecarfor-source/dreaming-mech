@@ -108,15 +108,21 @@ def _run_pipeline_task(job_id: str, video_path: str, output_dir: str):
         # 결과 변환 (프론트엔드 인터페이스에 맞춤)
         formatted = []
         for r in results:
-            formatted.append({
+            entry = {
                 "index": r.get("index", 0),
                 "hookTitle": r.get("hook_title", ""),
                 "subTitle": r.get("subtitle", ""),
-                "downloadUrl": f"/shortform/download/{job_id}/{r.get('index', 0)}",
-            })
+            }
+            # 렌더 실패한 클립은 다운로드 URL 제외
+            if r.get("error"):
+                entry["error"] = r["error"]
+            else:
+                entry["downloadUrl"] = f"/shortform/download/{job_id}/{r.get('index', 0)}"
+            formatted.append(entry)
+        success_count = sum(1 for r in results if not r.get("error"))
         with _jobs_lock:
             _jobs[job_id]["status"] = "COMPLETED"
-            _jobs[job_id]["progress"] = f"완료! {len(results)}개 숏폼 생성됨"
+            _jobs[job_id]["progress"] = f"완료! {success_count}/{len(results)}개 숏폼 생성됨"
             _jobs[job_id]["results"] = formatted
             _save_job_to_disk(job_id, _jobs[job_id])
     except Exception as e:

@@ -114,7 +114,11 @@ def _apply_letterbox_overlay(
     # 폰트 존재 여부 확인
     font = FONT_PATH if os.path.exists(FONT_PATH) else ""
     font_opt = f":fontfile='{font}'" if font else ""
-    font_bold_opt = f":fontfile='{font}':fontindex={FONT_BOLD_INDEX}" if font else ""
+    # fontindex는 .ttc (TrueType Collection)에서만 사용 — .ttf에서는 지원 안 됨
+    if font and font.endswith(".ttc"):
+        font_bold_opt = f":fontfile='{font}':fontindex={FONT_BOLD_INDEX}" if font else ""
+    else:
+        font_bold_opt = f":fontfile='{font}'" if font else ""
 
     # 훅 타이틀 줄바꿈 처리
     hook_text = clip.hook_title

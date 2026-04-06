@@ -282,15 +282,21 @@ function ShortformDownloadCard({ result, jobId, index }: { result: ShortformJobR
         <Film className="w-4 h-4 text-emerald-400" />
       </div>
 
-      <button
-        onClick={handleDownload}
-        className="w-full flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white py-2.5 rounded-xl text-sm font-medium transition-colors"
-      >
-        <Download className="w-4 h-4" />
-        숏폼 다운로드
-      </button>
-      {downloadError && (
-        <p className="text-red-400 text-xs text-center mt-1">{downloadError}</p>
+      {result.error ? (
+        <p className="text-red-400 text-xs text-center py-2.5">렌더링 실패</p>
+      ) : (
+        <>
+          <button
+            onClick={handleDownload}
+            className="w-full flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white py-2.5 rounded-xl text-sm font-medium transition-colors"
+          >
+            <Download className="w-4 h-4" />
+            숏폼 다운로드
+          </button>
+          {downloadError && (
+            <p className="text-red-400 text-xs text-center mt-1">{downloadError}</p>
+          )}
+        </>
       )}
     </motion.div>
   );
