@@ -160,10 +160,9 @@ def _apply_letterbox_overlay(
         to_args = ["-to", seg.end]
 
     filter_complex = (
-        # 스케일 + 배경
-        f"[0:v]scale={CANVAS_WIDTH}:-2[scaled];"
-        f"color={BG_COLOR}:s={CANVAS_WIDTH}x{CANVAS_HEIGHT}[bg];"
-        f"[bg][scaled]overlay=(W-w)/2:(H-h)/2[base];"
+        # 세로 맞춤 확대 + 센터 크롭 (16:9 → 9:16 변환)
+        f"[0:v]scale={CANVAS_WIDTH}:{CANVAS_HEIGHT}:force_original_aspect_ratio=increase,"
+        f"crop={CANVAS_WIDTH}:{CANVAS_HEIGHT}[base];"
         # 훅 타이틀 (배경색 span, 전체 지속)
         f"[base]drawtext="
         f"textfile='{hook_file}'"
