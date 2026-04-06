@@ -249,6 +249,9 @@ async def download_clip(
 
     clip_path = os.path.join(output_dir, f"clip_{index:02d}.mp4")
     if not os.path.exists(clip_path):
+        # fallback: overlay 실패 시 concat 파일 제공 (구버전 호환)
+        clip_path = os.path.join(output_dir, f"clip_{index:02d}_concat.mp4")
+    if not os.path.exists(clip_path):
         raise HTTPException(status_code=404, detail="클립 파일을 찾을 수 없습니다")
 
     return FileResponse(
