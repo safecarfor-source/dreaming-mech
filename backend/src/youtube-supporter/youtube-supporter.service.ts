@@ -1109,6 +1109,34 @@ export class YouTubeSupporterService {
     return { data: jobs };
   }
 
+  async shortformStorage() {
+    const token = process.env.YT_PASSWORD || '';
+    const upstream = await fetch(
+      `${this.shortformServiceUrl}/shortform/storage`,
+      { headers: { 'X-YT-Token': token } },
+    );
+    if (!upstream.ok) {
+      return { data: [], totalSize: '0 MB' };
+    }
+    return upstream.json();
+  }
+
+  async shortformStorageDelete(jobId: string) {
+    const token = process.env.YT_PASSWORD || '';
+    const upstream = await fetch(
+      `${this.shortformServiceUrl}/shortform/storage/${jobId}`,
+      {
+        method: 'DELETE',
+        headers: { 'X-YT-Token': token },
+      },
+    );
+    if (!upstream.ok) {
+      const err = await upstream.text();
+      throw new NotFoundException(err);
+    }
+    return upstream.json();
+  }
+
   // ─────────────────────────────────────────────
   // 헬퍼
   // ─────────────────────────────────────────────

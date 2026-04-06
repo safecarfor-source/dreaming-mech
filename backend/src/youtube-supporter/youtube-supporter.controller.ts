@@ -615,4 +615,26 @@ export class YouTubeSupporterController {
   ) {
     return this.service.shortformList(projectId);
   }
+
+  /**
+   * GET /api/yt/shortform/storage
+   * 숏폼 output 파일 리스트 (용량 관리)
+   */
+  @Get('shortform/storage')
+  @UseGuards(YtAuthGuard)
+  async shortformStorage() {
+    return this.service.shortformStorage();
+  }
+
+  /**
+   * DELETE /api/yt/shortform/storage/:jobId
+   * 특정 job 폴더 삭제
+   */
+  @Delete('shortform/storage/:jobId')
+  @UseGuards(YtAuthGuard)
+  async shortformStorageDelete(
+    @Param('jobId') jobId: string,
+  ) {
+    return this.service.shortformStorageDelete(jobId);
+  }
 }

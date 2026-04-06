@@ -452,4 +452,44 @@ export const listShortformJobs = async (projectId: string): Promise<SavedShortfo
   return json.data ?? [];
 };
 
+// ─── 숏폼 Storage 관리 ────────────────────────────────────────
+
+export interface StorageJob {
+  jobId: string;
+  date: string;
+  size: string;
+  files: { name: string; size: string }[];
+  label: string;
+}
+
+export const getShortformStorage = async (): Promise<{ data: StorageJob[]; totalSize: string }> => {
+  const token = typeof window !== 'undefined' ? localStorage.getItem('yt_auth_token') : null;
+  const baseUrl = typeof window !== 'undefined'
+    ? (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001')
+    : 'http://localhost:3001';
+  const res = await fetch(`${baseUrl}/yt/shortform/storage`, {
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { 'x-yt-token': token } : {}),
+    },
+  });
+  if (!res.ok) throw new Error('조회 실패');
+  return res.json();
+};
+
+export const deleteShortformStorage = async (jobId: string): Promise<void> => {
+  const token = typeof window !== 'undefined' ? localStorage.getItem('yt_auth_token') : null;
+  const baseUrl = typeof window !== 'undefined'
+    ? (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001')
+    : 'http://localhost:3001';
+  const res = await fetch(`${baseUrl}/yt/shortform/storage/${jobId}`, {
+    method: 'DELETE',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { 'x-yt-token': token } : {}),
+    },
+  });
+  if (!res.ok) throw new Error('삭제 실패');
+};
+
 export default ytApi;

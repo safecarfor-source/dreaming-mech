@@ -31,6 +31,9 @@ import {
   saveShortformJob,
   listShortformJobs,
   SavedShortformJob,
+  getShortformStorage,
+  deleteShortformStorage,
+  StorageJob,
 } from '../../lib/api';
 
 interface ShortformTabProps {
@@ -634,6 +637,120 @@ export default function ShortformTab({ projectId }: ShortformTabProps) {
           {error && <p className="text-red-400 text-xs text-center">{error}</p>}
         </div>
       )}
+
+      {/* 저장소 관리 */}
+      <StorageManager />
+    </div>
+  );
+}
+
+// ─── 저장소 관리 컴포넌트 ────────────────────────────
+function StorageManager() {
+  const [open, setOpen] = useState(false);
+  const [storage, setStorage] = useState<{ data: StorageJob[]; totalSize: string } | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [deleting, setDeleting] = useState<string | null>(null);
+
+  const loadStorage = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await getShortformStorage();
+      setStorage(res);
+    } catch {
+      // 무시
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (open && !storage) loadStorage();
+  }, [open, storage, loadStorage]);
+
+  const handleDelete = async (jobId: string) => {
+    setDeleting(jobId);
+    try {
+      await deleteShortformStorage(jobId);
+      await loadStorage();
+    } catch {
+      // 무시
+    } finally {
+      setDeleting(null);
+    }
+  };
+
+  return (
+    <div className="mt-6 border-t border-gray-800 pt-4">
+      <button
+        onClick={() => setOpen(!open)}
+        className="flex items-center gap-2 text-gray-500 hover:text-gray-300 text-xs transition-colors"
+      >
+        <History className="w-3.5 h-3.5" />
+        저장소 관리
+        {storage && <span className="text-gray-600">({storage.totalSize})</span>}
+        {open ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+      </button>
+
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            className="overflow-hidden"
+          >
+            <div className="mt-3 space-y-2">
+              {loading && (
+                <div className="flex items-center gap-2 py-4 justify-center">
+                  <Loader2 className="w-4 h-4 text-gray-500 animate-spin" />
+                  <span className="text-gray-500 text-xs">불러오는 중...</span>
+                </div>
+              )}
+              {storage && storage.data.length === 0 && (
+                <p className="text-gray-600 text-xs text-center py-4">저장된 파일이 없습니다</p>
+              )}
+              {storage?.data.map((job) => (
+                <div key={job.jobId} className="bg-gray-900 border border-gray-800 rounded-xl p-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="text-gray-400 text-xs">{job.date}</span>
+                        <span className="text-gray-600 text-xs">{job.size}</span>
+                      </div>
+                      {job.label && (
+                        <p className="text-gray-500 text-[10px] truncate mt-0.5">{job.label}</p>
+                      )}
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {job.files.map((f) => (
+                          <span key={f.name} className="text-gray-600 text-[10px] bg-gray-800 px-1.5 py-0.5 rounded">
+                            {f.name} ({f.size})
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => handleDelete(job.jobId)}
+                      disabled={deleting === job.jobId}
+                      className="ml-2 p-1.5 text-red-400/50 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors shrink-0"
+                    >
+                      {deleting === job.jobId ? (
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      ) : (
+                        <X className="w-3.5 h-3.5" />
+                      )}
+                    </button>
+                  </div>
+                </div>
+              ))}
+              {storage && storage.data.length > 0 && (
+                <p className="text-gray-600 text-[10px] text-center">
+                  총 {storage.totalSize} · X 버튼으로 개별 삭제
+                </p>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

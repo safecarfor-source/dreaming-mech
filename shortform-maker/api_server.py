@@ -279,3 +279,75 @@ async def list_jobs(
                     "results": job["results"],
                 })
     return JSONResponse({"data": result})
+
+
+@app.get("/shortform/storage")
+async def list_storage(x_yt_token: Optional[str] = Header(None)):
+    """output 디렉토리 파일 리스트 (날짜, 용량 포함)"""
+    _check_auth(x_yt_token)
+
+    from datetime import datetime
+
+    jobs = []
+    output_base = Path(OUTPUT_BASE)
+    if not output_base.exists():
+        return JSONResponse({"data": [], "totalSize": "0 MB"})
+
+    total_bytes = 0
+    for job_dir in sorted(output_base.iterdir(), key=lambda p: p.stat().st_mtime, reverse=True):
+        if not job_dir.is_dir():
+            continue
+        files = []
+        dir_size = 0
+        for f in sorted(job_dir.iterdir()):
+            if f.is_file():
+                sz = f.stat().st_size
+                dir_size += sz
+                files.append({
+                    "name": f.name,
+                    "size": f"{sz / 1024 / 1024:.1f} MB",
+                })
+        total_bytes += dir_size
+        mtime = datetime.fromtimestamp(job_dir.stat().st_mtime)
+        # job.json에서 progress 읽기
+        job_json = job_dir / "job.json"
+        label = ""
+        if job_json.exists():
+            try:
+                with open(job_json) as jf:
+                    label = json.load(jf).get("progress", "")
+            except Exception:
+                pass
+        jobs.append({
+            "jobId": job_dir.name,
+            "date": mtime.strftime("%Y-%m-%d %H:%M"),
+            "size": f"{dir_size / 1024 / 1024:.1f} MB",
+            "files": files,
+            "label": label,
+        })
+
+    return JSONResponse({
+        "data": jobs,
+        "totalSize": f"{total_bytes / 1024 / 1024:.1f} MB",
+    })
+
+
+@app.delete("/shortform/storage/{job_id}")
+async def delete_storage(job_id: str, x_yt_token: Optional[str] = Header(None)):
+    """특정 job 폴더 삭제"""
+    _check_auth(x_yt_token)
+
+    target = Path(OUTPUT_BASE) / job_id
+    if not target.exists() or not target.is_dir():
+        raise HTTPException(status_code=404, detail="폴더를 찾을 수 없습니다")
+
+    # 안전: OUTPUT_BASE 하위인지 확인
+    if not str(target.resolve()).startswith(str(Path(OUTPUT_BASE).resolve())):
+        raise HTTPException(status_code=403, detail="접근 금지")
+
+    shutil.rmtree(target)
+    # 인메모리에서도 제거
+    with _jobs_lock:
+        _jobs.pop(job_id, None)
+
+    return JSONResponse({"message": f"{job_id} 삭제 완료"})
