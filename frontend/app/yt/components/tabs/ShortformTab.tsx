@@ -27,6 +27,7 @@ import {
   ShortformSegment,
   uploadShortformVideo,
   getShortformJobStatus,
+  getShortformDownloadUrl,
   ShortformJobStatus,
   ShortformJobResult,
 } from '../../lib/api';
@@ -234,22 +235,26 @@ function ProcessingProgress({ jobStatus }: { jobStatus: ShortformJobStatus }) {
 
 // ─── Phase 2 결과 다운로드 카드 ───────────────────────
 function ShortformDownloadCard({ result, jobId, index }: { result: ShortformJobResult; jobId: string; index: number }) {
-  const handleDownload = () => {
-    const baseUrl = typeof window !== 'undefined'
-      ? (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001')
-      : 'http://localhost:3001';
-    const token = typeof window !== 'undefined' ? localStorage.getItem('yt_auth_token') : null;
-    const url = `${baseUrl}/yt/shortform/download/${jobId}/${index}`;
+  const [downloadError, setDownloadError] = useState('');
 
-    // fetch로 다운로드 (헤더에 token 추가)
-    fetch(url, { headers: token ? { 'x-yt-token': token } : {} })
-      .then((r) => r.blob())
+  const handleDownload = () => {
+    setDownloadError('');
+    // api.ts의 getShortformDownloadUrl 사용 (토큰을 쿼리파라미터로 일관되게 전달)
+    const url = getShortformDownloadUrl(jobId, index);
+    fetch(url)
+      .then((r) => {
+        if (!r.ok) throw new Error(`다운로드 실패 (${r.status})`);
+        return r.blob();
+      })
       .then((blob) => {
         const a = document.createElement('a');
         a.href = URL.createObjectURL(blob);
         a.download = `shortform_${index + 1}_${result.hookTitle.slice(0, 8)}.mp4`;
         a.click();
         URL.revokeObjectURL(a.href);
+      })
+      .catch((err: any) => {
+        setDownloadError(err.message || '다운로드에 실패했습니다');
       });
   };
 
@@ -280,6 +285,9 @@ function ShortformDownloadCard({ result, jobId, index }: { result: ShortformJobR
         <Download className="w-4 h-4" />
         숏폼 다운로드
       </button>
+      {downloadError && (
+        <p className="text-red-400 text-xs text-center mt-1">{downloadError}</p>
+      )}
     </motion.div>
   );
 }
@@ -349,7 +357,11 @@ export default function ShortformTab({ projectId }: ShortformTabProps) {
           clearInterval(pollingRef.current!);
           setIsProcessing(false);
         }
-      } catch (_) {}
+      } catch (err: any) {
+        clearInterval(pollingRef.current!);
+        setIsProcessing(false);
+        setError(err.message || '상태 조회 중 오류가 발생했습니다');
+      }
     }, 3000);
   };
 
