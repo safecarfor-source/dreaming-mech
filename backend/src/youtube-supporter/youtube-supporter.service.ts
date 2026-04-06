@@ -980,6 +980,86 @@ export class YouTubeSupporterService {
   }
 
   // ─────────────────────────────────────────────
+  // 숏폼 Phase 2: Python 서비스 프록시
+  // ─────────────────────────────────────────────
+
+  private get shortformServiceUrl(): string {
+    return process.env.SHORTFORM_SERVICE_URL || 'http://shortform-maker:8000';
+  }
+
+  async shortformProcess(file: Express.Multer.File, token?: string): Promise<{ data: { jobId: string } }> {
+    if (!file) {
+      throw new BadRequestException('영상 파일이 없습니다');
+    }
+
+    const form = new FormData();
+    // Buffer → 순수 ArrayBuffer로 복사 (TypeScript strict 호환)
+    const arrayBuffer = file.buffer.buffer.slice(
+      file.buffer.byteOffset,
+      file.buffer.byteOffset + file.buffer.byteLength,
+    ) as ArrayBuffer;
+    const blob = new Blob([arrayBuffer], { type: file.mimetype || 'video/mp4' });
+    form.append('video', blob, file.originalname || 'video.mp4');
+
+    const headers: Record<string, string> = {};
+    if (token) headers['x-yt-token'] = token;
+
+    const res = await fetch(`${this.shortformServiceUrl}/shortform/process`, {
+      method: 'POST',
+      headers,
+      body: form,
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new BadRequestException((err as any).detail || '숏폼 처리 시작 실패');
+    }
+
+    return res.json();
+  }
+
+  async shortformJobStatus(jobId: string, token?: string): Promise<any> {
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (token) headers['x-yt-token'] = token;
+
+    const res = await fetch(`${this.shortformServiceUrl}/shortform/job/${jobId}`, { headers });
+
+    if (!res.ok) {
+      throw new NotFoundException('잡을 찾을 수 없습니다');
+    }
+
+    return res.json();
+  }
+
+  async shortformDownload(jobId: string, index: string, token: string | undefined, res: import('express').Response): Promise<void> {
+    const params = token ? `?token=${encodeURIComponent(token)}` : '';
+    const headers: Record<string, string> = {};
+    if (token) headers['x-yt-token'] = token;
+
+    const upstream = await fetch(
+      `${this.shortformServiceUrl}/shortform/download/${jobId}/${index}${params}`,
+      { headers },
+    );
+
+    if (!upstream.ok) {
+      res.status(upstream.status).json({ message: '다운로드 실패' });
+      return;
+    }
+
+    res.set('Content-Type', 'video/mp4');
+    res.set('Content-Disposition', `attachment; filename="shortform_clip_${index}.mp4"`);
+
+    const { Readable } = await import('stream');
+    const body = upstream.body;
+    if (!body) {
+      res.status(500).end();
+      return;
+    }
+    const nodeStream = Readable.fromWeb(body as any);
+    nodeStream.pipe(res);
+  }
+
+  // ─────────────────────────────────────────────
   // 헬퍼
   // ─────────────────────────────────────────────
 

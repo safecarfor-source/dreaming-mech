@@ -119,10 +119,41 @@ services:
         max-size: "10m"
         max-file: "3"
 
+  shortform-maker:
+    image: dreaming-mech-shortform:latest
+    build:
+      context: ./shortform-maker
+      dockerfile: Dockerfile
+    container_name: dreaming-mech-shortform
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      YT_PASSWORD: ${YT_PASSWORD:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+    volumes:
+      - shortform_output:/app/output
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/health')\""]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
 volumes:
   postgres_data:
     external: true
     name: dreaming-mech_postgres_data
+  shortform_output:
+    driver: local
 
 networks:
   app-network:

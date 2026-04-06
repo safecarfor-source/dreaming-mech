@@ -334,4 +334,67 @@ export async function suggestReferences(projectId: string) {
   return res.data;
 }
 
+// 숏폼 Phase 2: 영상 처리
+export interface ShortformJobResult {
+  index: number;
+  hookTitle: string;
+  subTitle: string;
+  downloadUrl: string;
+}
+
+export interface ShortformJobStatus {
+  status: 'UPLOADING' | 'TRANSCRIBING' | 'ANALYZING' | 'PROCESSING' | 'COMPLETED' | 'FAILED';
+  progress: string;
+  results?: ShortformJobResult[];
+  error?: string;
+}
+
+export const uploadShortformVideo = async (
+  file: File,
+  onUploadProgress?: (percent: number) => void,
+): Promise<{ jobId: string }> => {
+  const formData = new FormData();
+  formData.append('video', file);
+  const token = typeof window !== 'undefined' ? localStorage.getItem('yt_auth_token') : null;
+  const baseUrl = typeof window !== 'undefined'
+    ? (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001')
+    : 'http://localhost:3001';
+  const res = await fetch(`${baseUrl}/yt/shortform/process`, {
+    method: 'POST',
+    headers: token ? { 'x-yt-token': token } : {},
+    body: formData,
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error((err as any).message || '업로드 실패');
+  }
+  const data = await res.json();
+  return data.data ?? data;
+};
+
+export const getShortformJobStatus = async (jobId: string): Promise<ShortformJobStatus> => {
+  const token = typeof window !== 'undefined' ? localStorage.getItem('yt_auth_token') : null;
+  const baseUrl = typeof window !== 'undefined'
+    ? (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001')
+    : 'http://localhost:3001';
+  const res = await fetch(`${baseUrl}/yt/shortform/job/${jobId}`, {
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { 'x-yt-token': token } : {}),
+    },
+  });
+  if (!res.ok) throw new Error('상태 조회 실패');
+  const data = await res.json();
+  return data.data ?? data;
+};
+
+export const getShortformDownloadUrl = (jobId: string, index: number): string => {
+  const baseUrl = typeof window !== 'undefined'
+    ? (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001')
+    : 'http://localhost:3001';
+  const token = typeof window !== 'undefined' ? localStorage.getItem('yt_auth_token') : null;
+  // 토큰은 쿼리파라미터로 전달 (다운로드 링크용)
+  return `${baseUrl}/yt/shortform/download/${jobId}/${index}${token ? `?token=${token}` : ''}`;
+};
+
 export default ytApi;

@@ -12,8 +12,13 @@ import {
   UseGuards,
   UnauthorizedException,
   Res,
+  UploadedFile,
+  UseInterceptors,
+  Req,
+  StreamableFile,
 } from '@nestjs/common';
-import type { Response } from 'express';
+import type { Request, Response } from 'express';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { YouTubeSupporterService } from './youtube-supporter.service';
 import { YtAuthGuard } from './guards/yt-auth.guard';
 import { YtExternalApiGuard } from './guards/yt-external-api.guard';
@@ -537,5 +542,53 @@ export class YouTubeSupporterController {
     @Body() dto: any,
   ) {
     return this.service.addReferences(id, dto);
+  }
+
+  // ─────────────────────────────────────────────
+  // 숏폼 Phase 2: 영상 처리 (Python 서비스 프록시)
+  // ─────────────────────────────────────────────
+
+  /**
+   * POST /api/yt/shortform/process
+   * 영상 파일 업로드 → Python 숏폼 파이프라인 시작 → jobId 반환
+   */
+  @Post('shortform/process')
+  @UseGuards(YtAuthGuard)
+  @UseInterceptors(FileInterceptor('video', { limits: { fileSize: 2 * 1024 * 1024 * 1024 } }))
+  @HttpCode(HttpStatus.OK)
+  async shortformProcess(
+    @UploadedFile() file: Express.Multer.File,
+    @Req() req: Request,
+  ) {
+    const token = req.headers['x-yt-token'] as string | undefined;
+    return this.service.shortformProcess(file, token);
+  }
+
+  /**
+   * GET /api/yt/shortform/job/:jobId
+   * 숏폼 잡 처리 상태 조회
+   */
+  @Get('shortform/job/:jobId')
+  @UseGuards(YtAuthGuard)
+  async shortformJobStatus(
+    @Param('jobId') jobId: string,
+    @Req() req: Request,
+  ) {
+    const token = req.headers['x-yt-token'] as string | undefined;
+    return this.service.shortformJobStatus(jobId, token);
+  }
+
+  /**
+   * GET /api/yt/shortform/download/:jobId/:index
+   * 완성된 숏폼 클립 다운로드
+   */
+  @Get('shortform/download/:jobId/:index')
+  async shortformDownload(
+    @Param('jobId') jobId: string,
+    @Param('index') index: string,
+    @Query('token') token: string | undefined,
+    @Res() res: Response,
+  ) {
+    return this.service.shortformDownload(jobId, index, token, res);
   }
 }

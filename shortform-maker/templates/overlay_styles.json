@@ -1,0 +1,23 @@
+{
+  "default": {
+    "hook_title": {
+      "fontsize": 56,
+      "fontcolor": "white",
+      "bg_color": "#E4015C",
+      "bg_opacity": 0.85,
+      "max_chars_per_line": 15,
+      "bold": true
+    },
+    "subtitle": {
+      "fontsize": 40,
+      "fontcolor": "white",
+      "bg_color": "black",
+      "bg_opacity": 0.6
+    },
+    "aux_text": {
+      "fontsize": 28,
+      "fontcolor": "#AAAAAA",
+      "default_text": "꿈꾸는정비사"
+    }
+  }
+}
