@@ -56,5 +56,8 @@ EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=10s --start-period=20s --retries=3 \
   CMD node -e "require('http').get('http://localhost:3000', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
 
+# Next.js 16 standalone: 0.0.0.0 바인딩 (Docker 헬스체크 + 내부 통신용)
+ENV HOSTNAME=0.0.0.0
+
 # Start the application
 CMD ["node", "server.js"]
