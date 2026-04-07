@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Loader2,
@@ -16,12 +16,15 @@ import {
   RefreshCw,
   ChevronRight,
   Eye,
+  History,
+  X,
 } from 'lucide-react';
 import {
   generateThumbnailStrategy,
   generateThumbnailImage,
   getThumbnails,
   deleteThumbnail,
+  saveThumbnail,
   saveThumbnailFeedback,
   saveThumbnailMemory,
   analyzeThumbnail,
@@ -96,6 +99,38 @@ function CreateView({ projectId }: { projectId: string }) {
   const [generatedImages, setGeneratedImages] = useState<string[]>([]);
   const [editingPrompt, setEditingPrompt] = useState('');
   const [error, setError] = useState('');
+  const [savedThumbnails, setSavedThumbnails] = useState<ThumbnailRecord[]>([]);
+  const [loadingHistory, setLoadingHistory] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  // 이전 이력 로드
+  const loadHistory = useCallback(async () => {
+    setLoadingHistory(true);
+    try {
+      const data = await getThumbnails(projectId);
+      setSavedThumbnails(data || []);
+    } catch {
+      // 조용히 실패
+    } finally {
+      setLoadingHistory(false);
+    }
+  }, [projectId]);
+
+  // 마운트 시 이력 로드
+  useEffect(() => { loadHistory(); }, [loadHistory]);
+
+  const handleDeleteSaved = useCallback(async (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    setDeletingId(id);
+    try {
+      await deleteThumbnail(id);
+      setSavedThumbnails((prev) => prev.filter((t) => t.id !== id));
+    } catch {
+      // 조용히 실패
+    } finally {
+      setDeletingId(null);
+    }
+  }, []);
 
   const handleGenerateStrategy = useCallback(async () => {
     setLoading(true);
@@ -133,12 +168,26 @@ function CreateView({ projectId }: { projectId: string }) {
       });
       setGeneratedImages(result.imageUrls);
       setStep('preview');
+      // 자동 저장
+      if (result.imageUrls.length > 0) {
+        try {
+          await saveThumbnail({
+            projectId,
+            imageUrl: result.imageUrls[0],
+            prompt: editingPrompt,
+            strategy: selectedStrategy ? (selectedStrategy as unknown as Record<string, unknown>) : undefined,
+          });
+          await loadHistory();
+        } catch {
+          // 저장 실패해도 생성은 성공으로 처리
+        }
+      }
     } catch (e) {
       setError('이미지 생성 실패: ' + (e instanceof Error ? e.message : '알 수 없는 오류'));
     } finally {
       setLoading(false);
     }
-  }, [projectId, editingPrompt]);
+  }, [projectId, editingPrompt, selectedStrategy, loadHistory]);
 
   return (
     <div className="space-y-6">
@@ -329,6 +378,71 @@ function CreateView({ projectId }: { projectId: string }) {
 
       {/* 직접 실사진 업로드 옵션 */}
       <DirectUploadSection projectId={projectId} />
+
+      {/* 이전 제작 이력 */}
+      {savedThumbnails.length > 0 && (
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <History className="w-4 h-4 text-gray-500" />
+              <p className="text-gray-400 text-xs font-medium">이전 제작 이력</p>
+            </div>
+            <span className="text-gray-600 text-[10px]">{savedThumbnails.length}개</span>
+          </div>
+          {savedThumbnails.slice(0, 5).map((t) => (
+            <div
+              key={t.id}
+              className="relative group w-full bg-gray-800 border border-gray-700 rounded-xl p-3 hover:border-purple-500/30 transition-colors flex items-center gap-3"
+            >
+              {/* 썸네일 미리보기 */}
+              {(t.imageUrl || t.baseImageUrl) ? (
+                <img
+                  src={t.imageUrl || t.baseImageUrl}
+                  alt="썸네일"
+                  className="w-16 h-9 object-cover rounded-lg flex-shrink-0 border border-gray-700"
+                />
+              ) : (
+                <div className="w-16 h-9 bg-gray-700 rounded-lg flex-shrink-0 flex items-center justify-center">
+                  <ImageIcon className="w-4 h-4 text-gray-600" />
+                </div>
+              )}
+              <div className="flex-1 min-w-0 flex items-center justify-between pr-6">
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium flex-shrink-0 ${
+                    t.status === 'COMPLETED' ? 'bg-green-500/20 text-green-400' : 'bg-yellow-500/20 text-yellow-400'
+                  }`}>
+                    {t.status === 'COMPLETED' ? '완성' : '초안'}
+                  </span>
+                  <span className="text-gray-400 text-xs truncate max-w-[120px]">
+                    {(t.strategy as Record<string, unknown>)?.concept as string || '생성된 썸네일'}
+                  </span>
+                </div>
+                <span className="text-gray-500 text-[10px] flex-shrink-0 ml-2">
+                  {new Date(t.createdAt).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                </span>
+              </div>
+              {/* 삭제 버튼 */}
+              <button
+                onClick={(e) => handleDeleteSaved(e, t.id)}
+                disabled={deletingId === t.id}
+                className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-lg opacity-0 group-hover:opacity-100 hover:bg-gray-700 transition-all"
+              >
+                {deletingId === t.id ? (
+                  <Loader2 className="w-3 h-3 text-gray-400 animate-spin" />
+                ) : (
+                  <X className="w-3 h-3 text-gray-400 hover:text-red-400 transition-colors" />
+                )}
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+      {loadingHistory && (
+        <div className="flex items-center justify-center gap-2 py-3">
+          <Loader2 className="w-4 h-4 text-gray-500 animate-spin" />
+          <span className="text-gray-500 text-xs">이전 이력 불러오는 중...</span>
+        </div>
+      )}
     </div>
   );
 }
