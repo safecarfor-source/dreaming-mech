@@ -4,7 +4,7 @@ import json
 
 import anthropic
 
-from config import CLAUDE_MAX_TOKENS_ANALYSIS, CLAUDE_MAX_TOKENS_COPY, CLAUDE_MODEL, PROMPTS_DIR
+from config import CLAUDE_MAX_TOKENS_ANALYSIS, CLAUDE_MAX_TOKENS_COPY, CLAUDE_MODEL, CLAUDE_MODEL_OPUS, PROMPTS_DIR
 from modules.knowledge import load_rules_for_prompt
 from modules.subtitle_parser import segments_to_transcript_text
 
@@ -120,7 +120,7 @@ def _stage2_copy(
     prompt = prompt.replace("{segments_text}", "\n\n".join(segments_text_parts))
 
     response = client.messages.create(
-        model=CLAUDE_MODEL,
+        model=CLAUDE_MODEL_OPUS,
         max_tokens=CLAUDE_MAX_TOKENS_COPY,
         messages=[{"role": "user", "content": prompt}],
     )

@@ -89,6 +89,7 @@ DYNAMIC_HOLD_MAX_ZOOM = 1.1  # 최대 줌 배율
 
 # Claude 설정
 CLAUDE_MODEL = "claude-sonnet-4-6"
+CLAUDE_MODEL_OPUS = "claude-opus-4-5"
 CLAUDE_MAX_TOKENS_ANALYSIS = 4000
 CLAUDE_MAX_TOKENS_COPY = 3000
 

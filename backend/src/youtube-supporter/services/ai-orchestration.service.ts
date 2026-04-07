@@ -829,7 +829,7 @@ ${channelList || '(등록된 채널 없음)'}
   // ─────────────────────────────────────────────
 
   /**
-   * 썸네일 전략 생성 (Sonnet)
+   * 썸네일 전략 생성 (Opus)
    * 프로젝트 컨텍스트 + 학습된 노하우를 기반으로 전략 3안 제안
    */
   async generateThumbnailStrategy(
@@ -885,11 +885,11 @@ ${knowledgeSection}
 - 텍스트는 이미지에 포함하지 말 것 (캔버스에서 별도 추가)
 - 배경에 텍스트 공간을 확보한 구도`;
 
-    return this.analyzeWithSonnet(prompt);
+    return this.generateWithOpus(prompt);
   }
 
   /**
-   * Claude Vision으로 레퍼런스 썸네일 분석
+   * Claude Vision(Opus)으로 레퍼런스 썸네일 분석
    */
   async analyzeThumbnailImage(imageBase64: string, mediaType: string, userNote?: string): Promise<string> {
     if (this.isMockMode) {
@@ -909,7 +909,7 @@ ${knowledgeSection}
     const userNoteSection = userNote ? `\n\n전문가 메모: ${userNote}` : '';
 
     const message = await client.messages.create({
-      model: 'claude-sonnet-4-5',
+      model: 'claude-opus-4-5',
       max_tokens: 4096,
       messages: [{
         role: 'user',
