@@ -492,6 +492,21 @@ export const deleteShortformStorage = async (jobId: string): Promise<void> => {
   if (!res.ok) throw new Error('삭제 실패');
 };
 
+export const deleteShortformJob = async (id: string): Promise<void> => {
+  const token = typeof window !== 'undefined' ? localStorage.getItem('yt_auth_token') : null;
+  const baseUrl = typeof window !== 'undefined'
+    ? (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001')
+    : 'http://localhost:3001';
+  const res = await fetch(`${baseUrl}/yt/shortform/saved/${id}`, {
+    method: 'DELETE',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { 'x-yt-token': token } : {}),
+    },
+  });
+  if (!res.ok) throw new Error('삭제 실패');
+};
+
 // ─── 썸네일 AI ────────────────────────────────────────
 
 export interface ThumbnailStrategy {

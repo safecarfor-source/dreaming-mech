@@ -1117,6 +1117,11 @@ export class YouTubeSupporterService {
     return { data: jobs };
   }
 
+  async shortformJobDelete(id: string) {
+    await this.prisma.ytShortformJob.delete({ where: { id } });
+    return { data: { success: true } };
+  }
+
   async shortformStorage() {
     const token = process.env.YT_PASSWORD || '';
     const upstream = await fetch(

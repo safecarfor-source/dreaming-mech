@@ -31,6 +31,7 @@ import {
   saveShortformJob,
   listShortformJobs,
   SavedShortformJob,
+  deleteShortformJob,
   getShortformStorage,
   deleteShortformStorage,
   StorageJob,
@@ -326,9 +327,10 @@ export default function ShortformTab({ projectId }: ShortformTabProps) {
   // 저장된 작업 이력
   const [savedJobs, setSavedJobs] = useState<SavedShortformJob[]>([]);
   const [loadingSaved, setLoadingSaved] = useState(false);
+  const [deletingJobId, setDeletingJobId] = useState<string | null>(null);
 
-  // ─── 페이지 로드 시 저장된 작업 불러오기 ──────────
-  useEffect(() => {
+  // ─── 저장된 작업 새로고침 ──────────
+  const refreshSavedJobs = useCallback(() => {
     if (!projectId) return;
     setLoadingSaved(true);
     listShortformJobs(projectId)
@@ -336,6 +338,11 @@ export default function ShortformTab({ projectId }: ShortformTabProps) {
       .catch(() => {})
       .finally(() => setLoadingSaved(false));
   }, [projectId]);
+
+  // ─── 페이지 로드 시 저장된 작업 불러오기 ──────────
+  useEffect(() => {
+    refreshSavedJobs();
+  }, [refreshSavedJobs]);
 
   // ─── 핸들러 ──────────────────────────────
   const handleFileSelect = useCallback((file: File) => {
@@ -410,6 +417,20 @@ export default function ShortformTab({ projectId }: ShortformTabProps) {
     setJobStatus(null);
     setIsProcessing(false);
     setError('');
+    refreshSavedJobs();
+  };
+
+  const handleDeleteJob = async (e: React.MouseEvent, jobId: string) => {
+    e.stopPropagation();
+    setDeletingJobId(jobId);
+    try {
+      await deleteShortformJob(jobId);
+      setSavedJobs((prev) => prev.filter((j) => j.id !== jobId));
+    } catch {
+      // 무시
+    } finally {
+      setDeletingJobId(null);
+    }
   };
 
   // ─── 렌더링 ──────────────────────────────────────
@@ -508,48 +529,65 @@ export default function ShortformTab({ projectId }: ShortformTabProps) {
 
           {/* 저장된 숏폼 작업 이력 */}
           {savedJobs.length > 0 && (
-            <div className="space-y-3">
-              <div className="flex items-center gap-2">
-                <History className="w-4 h-4 text-gray-500" />
-                <p className="text-gray-400 text-xs font-medium">이전 제작 이력</p>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <History className="w-4 h-4 text-gray-500" />
+                  <p className="text-gray-400 text-xs font-medium">이전 제작 이력</p>
+                </div>
+                <span className="text-gray-600 text-[10px]">{savedJobs.length}개</span>
               </div>
               {savedJobs.slice(0, 5).map((job) => (
-                <button
+                <div
                   key={job.id}
-                  onClick={() => {
-                    setJobId(job.externalJobId);
-                    setJobStatus({
-                      status: job.status as ShortformJobStatus['status'],
-                      progress: job.status === 'COMPLETED'
-                        ? `완료! ${(job.results || []).length}개 숏폼 생성됨`
-                        : job.error || '',
-                      results: job.results,
-                      error: job.error,
-                    });
-                  }}
-                  className="w-full bg-gray-800 border border-gray-700 rounded-xl p-3 hover:border-violet-500/30 transition-colors text-left"
+                  className="relative group w-full bg-gray-800 border border-gray-700 rounded-xl p-3 hover:border-violet-500/30 transition-colors"
                 >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Film className="w-3.5 h-3.5 text-emerald-400" />
-                      <span className="text-white text-sm truncate max-w-[180px]">
-                        {job.fileName || '영상'}
-                      </span>
+                  <button
+                    onClick={() => {
+                      setJobId(job.externalJobId);
+                      setJobStatus({
+                        status: job.status as ShortformJobStatus['status'],
+                        progress: job.status === 'COMPLETED'
+                          ? `완료! ${(job.results || []).length}개 숏폼 생성됨`
+                          : job.error || '',
+                        results: job.results,
+                        error: job.error,
+                      });
+                    }}
+                    className="w-full text-left"
+                  >
+                    <div className="flex items-center justify-between pr-6">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <Film className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
+                        <span className="text-white text-xs truncate max-w-[160px]">
+                          {job.fileName || '영상'}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 flex-shrink-0 ml-2">
+                        {job.status === 'COMPLETED' ? (
+                          <span className="text-emerald-400 text-xs">{(job.results || []).length}개 숏폼</span>
+                        ) : (
+                          <span className="text-red-400 text-xs">실패</span>
+                        )}
+                        <span className="text-gray-500 text-[10px]">
+                          {new Date(job.createdAt).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      {job.status === 'COMPLETED' ? (
-                        <span className="text-emerald-400 text-xs">{(job.results || []).length}개 숏폼</span>
-                      ) : (
-                        <span className="text-red-400 text-xs">실패</span>
-                      )}
-                      <span className="text-gray-600 text-[10px]">
-                        {new Date(job.createdAt).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' })}
-                        {' '}
-                        {new Date(job.createdAt).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false })}
-                      </span>
-                    </div>
-                  </div>
-                </button>
+                  </button>
+                  {/* 삭제 버튼 */}
+                  <button
+                    onClick={(e) => handleDeleteJob(e, job.id)}
+                    disabled={deletingJobId === job.id}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-lg opacity-0 group-hover:opacity-100 hover:bg-gray-700 transition-all"
+                  >
+                    {deletingJobId === job.id ? (
+                      <Loader2 className="w-3 h-3 text-gray-400 animate-spin" />
+                    ) : (
+                      <X className="w-3 h-3 text-gray-400 hover:text-red-400 transition-colors" />
+                    )}
+                  </button>
+                </div>
               ))}
             </div>
           )}

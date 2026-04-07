@@ -651,6 +651,18 @@ export class YouTubeSupporterController {
     return this.service.shortformStorageDelete(jobId);
   }
 
+  /**
+   * DELETE /api/yt/shortform/saved/:id
+   * DB 저장된 숏폼 이력 삭제
+   */
+  @Delete('shortform/saved/:id')
+  @UseGuards(YtAuthGuard)
+  async shortformJobDelete(
+    @Param('id') id: string,
+  ) {
+    return this.service.shortformJobDelete(id);
+  }
+
   // ─────────────────────────────────────────────
   // 썸네일 AI
   // ─────────────────────────────────────────────
