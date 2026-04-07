@@ -259,7 +259,7 @@ function TotalIncentiveCard({
                 <td style={{ padding: '5px 0', textAlign: 'right', fontWeight: 600 }}>{fmtWon(originalIncentive)}</td>
               </tr>
               <tr>
-                <td style={{ padding: '5px 0', color: RED }}>감액 (-50%)</td>
+                <td style={{ padding: '5px 0', color: RED }}>인센티브 미달 (-50%)</td>
                 <td style={{ padding: '5px 0', textAlign: 'right', color: RED, fontWeight: 600 }}>-{fmtWon(penaltyAmount)}</td>
               </tr>
             </>
