@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import Link from 'next/link';
 import { MapPin, Share2, ChevronLeft, ChevronRight, BadgeCheck, Phone, Heart, X } from 'lucide-react';
 import { mechanicsApi } from '@/lib/api';
 import { sanitizeText, sanitizeBasicHTML, sanitizePhone } from '@/lib/sanitize';
@@ -464,6 +465,23 @@ export default function ShopDetailClient({ slug }: Props) {
         <div className="px-5 py-6">
           <h3 className="text-[20px] font-bold text-gray-900 mb-4 text-center">리뷰</h3>
           <ReviewSection reviews={mechanic.reviews} mechanicId={mechanic.id} />
+        </div>
+
+        {/* 문의하기 CTA */}
+        <div className="bg-[#F9FAFB] px-5 py-10 pb-28 md:pb-10 text-center">
+          <h3 className="text-[20px] font-bold text-[#111827] mb-2">
+            이 정비소에 문의하기
+          </h3>
+          <p className="text-[15px] text-[#6B7280] mb-6 leading-[1.6]">
+            타이어 교체, 정비 견적 등 궁금한 점을 문의해 보세요
+          </p>
+          <Link
+            href={`/inquiry?mechanicId=${mechanic.id}`}
+            className="inline-flex items-center justify-center gap-2 bg-[#E4015C] hover:bg-[#C70150] text-white rounded-xl px-8 py-4 text-[17px] font-semibold transition-colors"
+          >
+            <Phone size={20} />
+            바로 문의하기
+          </Link>
         </div>
       </div>
 
