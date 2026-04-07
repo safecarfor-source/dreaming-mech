@@ -187,10 +187,25 @@ def recut_oversized_segment(
     """
     client = anthropic.Anthropic()
 
-    # 해당 구간의 자막 추출
-    start_sec = _time_to_seconds(clip_data.get("start", "00:00:00"))
-    end_sec = _time_to_seconds(clip_data.get("end", "00:00:00"))
+    # 해당 구간의 시간 범위 확보
+    # 합성 구간은 pipeline에서 start/end를 미리 계산해서 넣어줌
+    start_str = clip_data.get("start", "00:00:00")
+    end_str = clip_data.get("end", "00:00:00")
+
+    # 방어: start/end가 비어있거나 00:00:00이면 segments에서 추출
+    if (not start_str or start_str == "00:00:00") and clip_data.get("segments"):
+        seg_list = clip_data["segments"]
+        start_str = seg_list[0].get("start", "00:00:00")
+        end_str = seg_list[-1].get("end", "00:00:00")
+        logger.info(f"[RECUT] 합성 구간 → segments에서 범위 추출: {start_str}~{end_str}")
+
+    start_sec = _time_to_seconds(start_str)
+    end_sec = _time_to_seconds(end_str)
     duration_sec = round(end_sec - start_sec)
+
+    if duration_sec <= 0:
+        logger.error(f"[RECUT] 구간 길이 0초 → 재설계 불가")
+        return []
 
     relevant_text = []
     for s in segments:
@@ -205,8 +220,8 @@ def recut_oversized_segment(
         return []
 
     template = prompt_path.read_text(encoding="utf-8")
-    prompt = template.replace("{start}", clip_data.get("start", ""))
-    prompt = prompt.replace("{end}", clip_data.get("end", ""))
+    prompt = template.replace("{start}", start_str)
+    prompt = prompt.replace("{end}", end_str)
     prompt = prompt.replace("{duration_sec}", str(duration_sec))
     prompt = prompt.replace("{summary}", clip_data.get("summary", ""))
     prompt = prompt.replace("{keywords}", ", ".join(clip_data.get("keywords", [])))

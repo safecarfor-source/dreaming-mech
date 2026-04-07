@@ -96,6 +96,14 @@ def run_pipeline(
     if oversized_raw:
         _progress(5, f"초과 구간 {len(oversized_raw)}개 → AI 재설계 중...")
         for raw_clip in oversized_raw:
+            # 합성 구간은 start/end가 없고 segments 배열에 시간이 있음
+            # → 전체 범위를 start/end로 계산해서 recut에 넘김
+            if raw_clip.get("is_composition") and raw_clip.get("segments"):
+                all_starts = [s.get("start", "99:99:99") for s in raw_clip["segments"]]
+                all_ends = [s.get("end", "00:00:00") for s in raw_clip["segments"]]
+                raw_clip["start"] = min(all_starts)
+                raw_clip["end"] = max(all_ends)
+
             recut_results = recut_oversized_segment(raw_clip, segments)
             if recut_results:
                 # 재설계된 구간으로 새 클립 생성
