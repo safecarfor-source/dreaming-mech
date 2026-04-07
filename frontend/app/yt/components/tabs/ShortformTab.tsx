@@ -513,7 +513,7 @@ export default function ShortformTab({ projectId }: ShortformTabProps) {
                 <History className="w-4 h-4 text-gray-500" />
                 <p className="text-gray-400 text-xs font-medium">이전 제작 이력</p>
               </div>
-              {savedJobs.map((job) => (
+              {savedJobs.slice(0, 5).map((job) => (
                 <button
                   key={job.id}
                   onClick={() => {
@@ -544,6 +544,8 @@ export default function ShortformTab({ projectId }: ShortformTabProps) {
                       )}
                       <span className="text-gray-600 text-[10px]">
                         {new Date(job.createdAt).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' })}
+                        {' '}
+                        {new Date(job.createdAt).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false })}
                       </span>
                     </div>
                   </div>
