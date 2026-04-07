@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 import incentiveApi from '@/lib/incentive-api';
-import type { DirectorMonthlyEntry, MonthlySalesTarget } from '@/types/incentive';
+import type { DirectorMonthlyEntry, MonthlySalesTarget, TeamIncentiveData } from '@/types/incentive';
 
 // recharts 동적 임포트 (SSR 비활성)
 const ResponsiveContainer = dynamic(
@@ -40,6 +40,19 @@ const CartesianGrid = dynamic(
 const ACCENT = '#3EA6FF';
 const GREEN = '#10B981';
 const RED = '#EF4444';
+
+const ITEM_LABELS: Record<string, string> = {
+  brake_oil: '브레이크오일',
+  lining: '라이닝',
+  mission_oil: '미션오일',
+  diff_oil: '데후오일',
+  wiper: '와이퍼',
+  battery: '밧데리',
+  ac_filter: '에어컨필터',
+  guardian_h3: '가디안H3',
+  guardian_h5: '가디안H5',
+  guardian_h7: '가디안H7',
+};
 
 // 5단계 배율 티어 (이정석 부장) — 전년 대비 성장률 기준
 const DIR_TIERS = [
@@ -197,15 +210,21 @@ function TotalIncentiveCard({
   lyTotal,
   currentGrowth,
   currentTierIdx,
+  teamData,
 }: {
   tysSales: number;
   lyTotal: number;
   currentGrowth: number;
   currentTierIdx: number;
+  teamData: TeamIncentiveData | null;
 }) {
   const tier = DIR_TIERS[currentTierIdx];
-  const currentIncentive = Math.round(tysSales * tier.rate / 100);
-  const animated = useCountUp(currentIncentive);
+  const originalIncentive = Math.round(tysSales * tier.rate / 100);
+  const penalized = teamData?.minQtyCheck?.hasUnmet ?? false;
+  const penaltyAmount = penalized ? Math.round(originalIncentive * 0.5) : 0;
+  const finalIncentive = originalIncentive - penaltyAmount;
+  const animated = useCountUp(finalIncentive);
+  const minQtyItems = teamData?.minQtyCheck?.items ?? [];
 
   return (
     <div style={cardStyle}>
@@ -233,12 +252,48 @@ function TotalIncentiveCard({
             <td style={{ padding: '5px 0', color: '#555' }}>적용 요율 ({tier.label})</td>
             <td style={{ padding: '5px 0', textAlign: 'right', fontWeight: 600 }}>{tier.rate}%</td>
           </tr>
+          {penalized && (
+            <>
+              <tr>
+                <td style={{ padding: '5px 0', color: '#555' }}>감액 전</td>
+                <td style={{ padding: '5px 0', textAlign: 'right', fontWeight: 600 }}>{fmtWon(originalIncentive)}</td>
+              </tr>
+              <tr>
+                <td style={{ padding: '5px 0', color: RED }}>감액 (-50%)</td>
+                <td style={{ padding: '5px 0', textAlign: 'right', color: RED, fontWeight: 600 }}>-{fmtWon(penaltyAmount)}</td>
+              </tr>
+            </>
+          )}
           <tr style={{ borderTop: '2px solid #F0F0F0' }}>
             <td style={{ padding: '8px 0', fontWeight: 800, color: '#1A1A1A' }}>총 지급 예정액</td>
-            <td style={{ padding: '8px 0', textAlign: 'right', fontWeight: 900, color: ACCENT }}>{fmtWon(currentIncentive)}</td>
+            <td style={{ padding: '8px 0', textAlign: 'right', fontWeight: 900, color: ACCENT }}>{fmtWon(finalIncentive)}</td>
           </tr>
         </tbody>
       </table>
+
+      {/* 최소수량 현황 */}
+      {minQtyItems.length > 0 && (
+        <div style={{ marginTop: 16 }}>
+          <div style={{ ...cardTitleStyle, marginBottom: 8 }}>필요 최소수량</div>
+          <table style={tableStyle}>
+            <tbody>
+              {minQtyItems.map((item) => {
+                const short = item.met ? 0 : item.target - item.current;
+                return (
+                  <tr key={item.itemKey}>
+                    <td style={{ padding: '4px 0', color: '#555' }}>
+                      {ITEM_LABELS[item.itemKey] ?? item.itemKey}
+                    </td>
+                    <td style={{ padding: '4px 0', textAlign: 'right', fontWeight: 700, color: item.met ? GREEN : RED }}>
+                      {item.current}/{item.target} {item.met ? '달성' : `부족 ${short}`}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }
@@ -466,6 +521,7 @@ export default function IncentiveDirectorPage() {
   const [month, setMonth] = useState(now.getMonth() + 1);
   const [monthlyData, setMonthlyData] = useState<DirectorMonthlyEntry[]>([]);
   const [data, setData] = useState<MonthlySalesTarget | null>(null);
+  const [teamData, setTeamData] = useState<TeamIncentiveData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
@@ -481,9 +537,16 @@ export default function IncentiveDirectorPage() {
   const loadData = useCallback(async (y: number, m: number) => {
     setLoading(true);
     setError(false);
+    const monthStr = `${y % 100}년 ${m}월`;
     try {
-      const res = await incentiveApi.get<MonthlySalesTarget>(`/sales-target/${y}/${m}`);
-      setData(res.data);
+      const [stRes, teamRes] = await Promise.all([
+        incentiveApi.get<MonthlySalesTarget>(`/sales-target/${y}/${m}`),
+        incentiveApi
+          .get<TeamIncentiveData>(`/team/current?month=${encodeURIComponent(monthStr)}`)
+          .catch(() => ({ data: null })),
+      ]);
+      setData(stRes.data);
+      setTeamData(teamRes.data);
     } catch {
       setError(true);
     } finally {
@@ -629,6 +692,7 @@ export default function IncentiveDirectorPage() {
             lyTotal={lyTotal}
             currentGrowth={currentGrowth}
             currentTierIdx={currentTierIdx}
+            teamData={teamData}
           />
 
           {/* 매출 예측 */}
