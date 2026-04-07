@@ -129,18 +129,13 @@ def _run_pipeline_task(job_id: str, video_path: str, output_dir: str):
             _jobs[job_id]["results"] = formatted
             _save_job_to_disk(job_id, _jobs[job_id])
     except Exception as e:
+        import traceback
+        traceback.print_exc()  # 서버 로그에 출력
         with _jobs_lock:
             _jobs[job_id]["status"] = "FAILED"
             _jobs[job_id]["progress"] = "처리 실패"
             _jobs[job_id]["error"] = str(e)
             _save_job_to_disk(job_id, _jobs[job_id])
-    finally:
-        # 원본 업로드 파일 삭제 (output_dir 내 클립은 유지)
-        if os.path.exists(video_path) and video_path != output_dir:
-            try:
-                os.remove(video_path)
-            except Exception:
-                pass
 
 
 @app.get("/health")

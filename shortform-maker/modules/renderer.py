@@ -99,7 +99,11 @@ def _concat_segments(video_path: str, clip: ComposedClip, output_path: str):
         "-c:a", "aac", "-b:a", "128k",
         output_path,
     ]
-    subprocess.run(cmd, check=True, capture_output=True)
+    result = subprocess.run(cmd, capture_output=True, text=True)
+    if result.returncode != 0:
+        print(f"[FFmpeg CONCAT ERROR] exit={result.returncode}")
+        print(f"[FFmpeg STDERR] {result.stderr[-1500:]}")
+        result.check_returncode()
 
 
 def _apply_letterbox_overlay(
@@ -240,7 +244,11 @@ def _apply_letterbox_overlay(
         "-shortest",
         output_path,
     ]
-    subprocess.run(cmd, check=True, capture_output=True)
+    result = subprocess.run(cmd, capture_output=True, text=True)
+    if result.returncode != 0:
+        print(f"[FFmpeg ERROR] exit={result.returncode}")
+        print(f"[FFmpeg STDERR] {result.stderr[-1500:]}")
+        result.check_returncode()  # CalledProcessError 발생
 
     # 임시 파일 정리
     cleanup_files = [hook_file, aux_file]
