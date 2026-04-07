@@ -28,7 +28,7 @@ SAFE_AREA_WIDTH = CANVAS_WIDTH - (SAFE_AREA_MARGIN * 2)  # 810px
 BG_COLOR = "black"
 
 # ─── 훅 타이틀 스타일 (상단 구역) ─────────────────────
-HOOK_TITLE_FONTSIZE = 52
+HOOK_TITLE_FONTSIZE = 80
 HOOK_TITLE_COLOR = "white"
 HOOK_TITLE_BG_COLOR = "#E4015C"  # 꿈꾸는정비사 브랜드 컬러
 HOOK_TITLE_BG_OPACITY = 0.85
@@ -61,6 +61,10 @@ else:
     FONT_PATH = "/usr/share/fonts/truetype/nanum/NanumGothicBold.ttf"
     FONT_BOLD_INDEX = 0
     FONT_NAME = "NanumGothic"
+
+# 훅 타이틀 전용 극굵음 폰트 (Black Han Sans)
+HOOK_FONT_PATH_DOCKER = "/usr/share/fonts/truetype/blackhansans/BlackHanSans-Regular.ttf"
+HOOK_FONT_PATH_MAC = "/System/Library/Fonts/AppleSDGothicNeo.ttc"  # macOS fallback
 
 # ─── 숏폼 제한 ───────────────────────────────────────
 MIN_CLIP_DURATION = 15  # 초

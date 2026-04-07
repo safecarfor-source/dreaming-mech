@@ -16,20 +16,17 @@ from config import (
     FADE_DURATION,
     FONT_BOLD_INDEX,
     FONT_PATH,
-    HOOK_TITLE_BG_COLOR,
-    HOOK_TITLE_BG_OPACITY,
-    HOOK_TITLE_COLOR,
+    HOOK_FONT_PATH_DOCKER,
+    HOOK_FONT_PATH_MAC,
     HOOK_TITLE_FONTSIZE,
     HOOK_TITLE_MAX_CHARS,
     HOOK_TITLE_Y,
-    LETTERBOX_BOTTOM_Y,
     LETTERBOX_VIDEO_H,
     LETTERBOX_VIDEO_W,
     LETTERBOX_VIDEO_Y,
     LUFS_LRA,
     LUFS_TARGET,
     LUFS_TP,
-    SAFE_AREA_MARGIN,
     VIDEO_SCALE_FACTOR,
 )
 from modules.composer import ComposedClip
@@ -118,26 +115,25 @@ def _apply_letterbox_overlay(
     seg = clip.segments[0]
 
     # 한글 텍스트 임시 파일 (인코딩 문제 방지)
-    hook_file = _write_text_file(clip.hook_title)
     aux_file = _write_text_file(clip.aux_text)
+
+    # 훅 타이틀 항상 2줄 분할 (빨간 + 노란)
+    hook_text = clip.hook_title
+    line1, line2 = _split_hook_to_two_lines(hook_text)
+    hook_line1_file = _write_text_file(line1)
+    hook_line2_file = _write_text_file(line2)
 
     # 폰트 설정
     font = FONT_PATH if os.path.exists(FONT_PATH) else ""
     font_opt = f":fontfile='{font}'" if font else ""
-    if font and font.endswith(".ttc"):
-        font_bold_opt = f":fontfile='{font}':fontindex={FONT_BOLD_INDEX}"
-    else:
-        font_bold_opt = f":fontfile='{font}'" if font else ""
 
-    # 훅 타이틀 줄바꿈
-    hook_text = clip.hook_title
-    if len(hook_text) > HOOK_TITLE_MAX_CHARS:
-        mid = len(hook_text) // 2
-        space_pos = hook_text.rfind(" ", 0, mid + 5)
-        if space_pos == -1:
-            space_pos = mid
-        hook_text = hook_text[:space_pos] + "\n" + hook_text[space_pos:].lstrip()
-        _rewrite_text_file(hook_file, hook_text)
+    # 훅 타이틀 전용 폰트 (Black Han Sans)
+    hook_font = HOOK_FONT_PATH_DOCKER if os.path.exists(HOOK_FONT_PATH_DOCKER) else ""
+    if not hook_font:
+        hook_font = HOOK_FONT_PATH_MAC if os.path.exists(HOOK_FONT_PATH_MAC) else font
+    hook_font_opt = f":fontfile='{hook_font}'" if hook_font else ""
+    if hook_font and hook_font.endswith(".ttc"):
+        hook_font_opt += f":fontindex={FONT_BOLD_INDEX}"
 
     # 시간 범위
     if is_concat:
@@ -184,15 +180,27 @@ def _apply_letterbox_overlay(
     # 자막 비활성화 — 원본 영상 자막 그대로 사용
     base_label = "base"
 
-    # 훅 타이틀 (상단 구역)
+    # 훅 타이틀 1줄 (빨간색) — 배경 바 없음, Black Han Sans
+    line_gap = 20  # 줄 간격
     filter_parts.append(
         f"[{base_label}]drawtext="
-        f"textfile='{hook_file}'"
-        f"{font_bold_opt}"
+        f"textfile='{hook_line1_file}'"
+        f"{hook_font_opt}"
         f":fontsize={HOOK_TITLE_FONTSIZE}"
-        f":fontcolor={HOOK_TITLE_COLOR}"
-        f":box=1:boxcolor={HOOK_TITLE_BG_COLOR}@{HOOK_TITLE_BG_OPACITY}:boxborderw=16"
+        f":fontcolor=red"
         f":x=(w-tw)/2:y={HOOK_TITLE_Y}"
+        f"[with_hook1]"
+    )
+
+    # 훅 타이틀 2줄 (노란색)
+    hook_line2_y = HOOK_TITLE_Y + HOOK_TITLE_FONTSIZE + line_gap
+    filter_parts.append(
+        f"[with_hook1]drawtext="
+        f"textfile='{hook_line2_file}'"
+        f"{hook_font_opt}"
+        f":fontsize={HOOK_TITLE_FONTSIZE}"
+        f":fontcolor=yellow"
+        f":x=(w-tw)/2:y={hook_line2_y}"
         f"[with_hook]"
     )
 
@@ -235,10 +243,23 @@ def _apply_letterbox_overlay(
         result.check_returncode()  # CalledProcessError 발생
 
     # 임시 파일 정리
-    cleanup_files = [hook_file, aux_file]
+    cleanup_files = [hook_line1_file, hook_line2_file, aux_file]
     for f in cleanup_files:
         if os.path.exists(f):
             os.remove(f)
+
+
+def _split_hook_to_two_lines(text: str) -> tuple[str, str]:
+    """훅 타이틀을 항상 2줄로 분할 (짧아도 강제 2줄)"""
+    mid = len(text) // 2
+    space = text.rfind(" ", 0, mid + 5)
+    if space == -1:
+        space = text.find(" ", mid)
+    if space == -1:
+        space = mid
+    line1 = text[:space].strip()
+    line2 = text[space:].strip()
+    return line1, line2
 
 
 def _write_text_file(text: str) -> str:
