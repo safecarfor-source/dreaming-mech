@@ -62,8 +62,8 @@ else:
     FONT_BOLD_INDEX = 0
     FONT_NAME = "NanumGothic"
 
-# 훅 타이틀 전용 극굵음 폰트 (Black Han Sans)
-HOOK_FONT_PATH_DOCKER = "/usr/share/fonts/truetype/blackhansans/BlackHanSans-Regular.ttf"
+# 훅 타이틀 전용 극굵음 폰트 (NanumSquare ExtraBold)
+HOOK_FONT_PATH_DOCKER = "/usr/share/fonts/truetype/nanum/NanumSquareEB.ttf"
 HOOK_FONT_PATH_MAC = "/System/Library/Fonts/AppleSDGothicNeo.ttc"  # macOS fallback
 
 # ─── 숏폼 제한 ───────────────────────────────────────
