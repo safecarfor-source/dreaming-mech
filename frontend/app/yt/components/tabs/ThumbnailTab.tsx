@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Loader2,
@@ -463,12 +463,79 @@ function LearnView() {
   const [analyzeNote, setAnalyzeNote] = useState('');
   const [analyzing, setAnalyzing] = useState(false);
   const [analysisResult, setAnalysisResult] = useState('');
+  const [htmlConverting, setHtmlConverting] = useState(false);
+  const hiddenIframeRef = useRef<HTMLIFrameElement>(null);
   const [memoryInput, setMemoryInput] = useState('');
   const [memoryTags, setMemoryTags] = useState('');
   const [saving, setSaving] = useState(false);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [memories, setMemories] = useState<any[]>([]);
   const [memoriesLoading, setMemoriesLoading] = useState(false);
+
+  // HTML 파일 → PNG 변환
+  const convertHtmlToImageFile = useCallback(async (htmlFile: File): Promise<File> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        const htmlContent = e.target?.result as string;
+        // iframe에 HTML 주입
+        const iframe = hiddenIframeRef.current;
+        if (!iframe) return reject(new Error('iframe 없음'));
+
+        iframe.style.display = 'block';
+        const doc = iframe.contentDocument;
+        if (!doc) return reject(new Error('iframe document 없음'));
+
+        doc.open();
+        doc.write(htmlContent);
+        doc.close();
+
+        // 렌더링 대기
+        await new Promise(r => setTimeout(r, 1000));
+
+        try {
+          const { default: html2canvas } = await import('html2canvas');
+          const canvas = await html2canvas(doc.body, {
+            width: 1280,
+            height: 720,
+            scale: 1,
+            useCORS: true,
+            allowTaint: true,
+          });
+          iframe.style.display = 'none';
+
+          canvas.toBlob((blob) => {
+            if (!blob) return reject(new Error('캔버스 변환 실패'));
+            const pngFile = new File([blob], htmlFile.name.replace('.html', '.png'), { type: 'image/png' });
+            resolve(pngFile);
+          }, 'image/png');
+        } catch (err) {
+          iframe.style.display = 'none';
+          reject(err);
+        }
+      };
+      reader.onerror = () => reject(new Error('파일 읽기 실패'));
+      reader.readAsText(htmlFile);
+    });
+  }, []);
+
+  // 파일 선택 핸들러 (이미지 + HTML 모두 처리)
+  const handleFileChange = useCallback(async (file: File | undefined) => {
+    if (!file) return;
+    if (file.name.toLowerCase().endsWith('.html') || file.type === 'text/html') {
+      setHtmlConverting(true);
+      try {
+        const imageFile = await convertHtmlToImageFile(file);
+        setAnalyzeFile(imageFile);
+      } catch {
+        alert('HTML → 이미지 변환 실패. 다시 시도해주세요.');
+      } finally {
+        setHtmlConverting(false);
+      }
+    } else {
+      setAnalyzeFile(file);
+    }
+  }, [convertHtmlToImageFile]);
 
   const handleAnalyze = useCallback(async () => {
     if (!analyzeFile) return;
@@ -538,16 +605,28 @@ function LearnView() {
         <div className="space-y-3">
           <p className="text-xs text-gray-500">잘 나가는 썸네일을 업로드하면 AI가 구도, 색감, 텍스트 전략을 분석하고 메모리에 저장합니다.</p>
 
+          {/* 숨겨진 iframe — HTML→이미지 변환용 */}
+          <iframe
+            ref={hiddenIframeRef}
+            style={{ display: 'none', width: 1280, height: 720, position: 'fixed', top: -9999, left: -9999 }}
+            title="html-preview"
+          />
+
           <div className="border-2 border-dashed border-gray-700 rounded-xl p-6 text-center hover:border-gray-600 transition-colors">
             <input
               type="file"
-              accept="image/*"
-              onChange={(e) => setAnalyzeFile(e.target.files?.[0] || null)}
+              accept="image/*,.html,text/html"
+              onChange={(e) => handleFileChange(e.target.files?.[0])}
               className="hidden"
               id="analyze-upload"
             />
             <label htmlFor="analyze-upload" className="cursor-pointer">
-              {analyzeFile ? (
+              {htmlConverting ? (
+                <div className="space-y-2">
+                  <Loader2 className="w-8 h-8 text-purple-400 mx-auto animate-spin" />
+                  <div className="text-sm text-purple-300">HTML → 이미지 변환 중...</div>
+                </div>
+              ) : analyzeFile ? (
                 <div className="space-y-2">
                   <ImageIcon className="w-8 h-8 text-purple-400 mx-auto" />
                   <div className="text-sm text-white">{analyzeFile.name}</div>
@@ -556,8 +635,8 @@ function LearnView() {
               ) : (
                 <div className="space-y-2">
                   <Upload className="w-8 h-8 text-gray-500 mx-auto" />
-                  <div className="text-sm text-gray-400">썸네일 이미지 업로드</div>
-                  <div className="text-xs text-gray-600">JPG, PNG (10MB 이하)</div>
+                  <div className="text-sm text-gray-400">썸네일 업로드</div>
+                  <div className="text-xs text-gray-600">JPG, PNG, HTML (10MB 이하)</div>
                 </div>
               )}
             </label>
