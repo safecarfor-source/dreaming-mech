@@ -23,6 +23,7 @@
 | 세션 시작 | `BRAIN.md` (시스템 구조도) + `tasks/todo.md` |
 | 컨텍스트 압축 후 | `rules/context-recovery.md` |
 | 워크플로우/프로세스 | `rules/workflow.md` |
+| 위키/지식관리 작업 | `.claude/commands/wiki.md` |
 
 ---
 
