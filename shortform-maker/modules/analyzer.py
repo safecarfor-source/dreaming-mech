@@ -1,10 +1,20 @@
 """Claude 2단계 분석 — 하이라이트 선정 + 문구 생성 + Virality Score"""
 
 import json
+import logging
 
 import anthropic
 
-from config import CLAUDE_MAX_TOKENS_ANALYSIS, CLAUDE_MAX_TOKENS_COPY, CLAUDE_MODEL, CLAUDE_MODEL_OPUS, PROMPTS_DIR
+from config import (
+    CLAUDE_MAX_TOKENS_ANALYSIS,
+    CLAUDE_MAX_TOKENS_COPY,
+    CLAUDE_MODEL,
+    CLAUDE_MODEL_OPUS,
+    MAX_CLIP_DURATION,
+    PROMPTS_DIR,
+)
+
+logger = logging.getLogger(__name__)
 from modules.knowledge import load_rules_for_prompt
 from modules.subtitle_parser import segments_to_transcript_text
 
@@ -160,6 +170,87 @@ def _merge_results(stage1: dict, stage2: dict) -> list[dict]:
         clips.append(clip)
 
     return clips
+
+
+def recut_oversized_segment(
+    clip_data: dict,
+    segments: list[dict],
+) -> list[dict]:
+    """초과 구간을 AI에게 보내서 50초 이내로 재설계
+
+    Args:
+        clip_data: 초과된 클립 정보 (start, end, summary, keywords 등)
+        segments: 전체 자막 세그먼트 리스트
+
+    Returns:
+        재설계된 클립 데이터 리스트 (1~2개). 실패 시 빈 리스트.
+    """
+    client = anthropic.Anthropic()
+
+    # 해당 구간의 자막 추출
+    start_sec = _time_to_seconds(clip_data.get("start", "00:00:00"))
+    end_sec = _time_to_seconds(clip_data.get("end", "00:00:00"))
+    duration_sec = round(end_sec - start_sec)
+
+    relevant_text = []
+    for s in segments:
+        if s["end"] > start_sec and s["start"] < end_sec:
+            relevant_text.append(f"[{_seconds_to_time(s['start'])}] {s['text']}")
+    segment_transcript = "\n".join(relevant_text)
+
+    # 프롬프트 조립
+    prompt_path = PROMPTS_DIR / "recut_oversized.txt"
+    if not prompt_path.exists():
+        logger.error("[RECUT] recut_oversized.txt 프롬프트 없음")
+        return []
+
+    template = prompt_path.read_text(encoding="utf-8")
+    prompt = template.replace("{start}", clip_data.get("start", ""))
+    prompt = prompt.replace("{end}", clip_data.get("end", ""))
+    prompt = prompt.replace("{duration_sec}", str(duration_sec))
+    prompt = prompt.replace("{summary}", clip_data.get("summary", ""))
+    prompt = prompt.replace("{keywords}", ", ".join(clip_data.get("keywords", [])))
+    prompt = prompt.replace("{segment_transcript}", segment_transcript)
+
+    logger.info(
+        f"[RECUT] '{clip_data.get('summary', '')}' {duration_sec}초 → "
+        f"50초 이내로 재설계 요청"
+    )
+
+    try:
+        response = client.messages.create(
+            model=CLAUDE_MODEL,
+            max_tokens=CLAUDE_MAX_TOKENS_ANALYSIS,
+            messages=[{"role": "user", "content": prompt}],
+        )
+        result = _parse_json_response(response.content[0].text)
+        recut_segments = result.get("recut_segments", [])
+
+        # 재설계 결과 검증 — 여전히 초과하면 버림
+        valid = []
+        for seg in recut_segments:
+            seg_start = _time_to_seconds(seg["start"])
+            seg_end = _time_to_seconds(seg["end"])
+            seg_dur = seg_end - seg_start
+            if seg_dur <= MAX_CLIP_DURATION and seg_dur >= 15:
+                valid.append(seg)
+                logger.info(f"[RECUT] ✅ 재설계 성공: {seg['start']}~{seg['end']} ({seg_dur:.0f}초)")
+            else:
+                logger.warning(f"[RECUT] ❌ 재설계 결과도 범위 밖: {seg_dur:.0f}초 → 제외")
+
+        return valid
+
+    except Exception as e:
+        logger.error(f"[RECUT] AI 재설계 실패: {e}")
+        return []
+
+
+def _seconds_to_time(seconds: float) -> str:
+    """초 → HH:MM:SS"""
+    h = int(seconds // 3600)
+    m = int((seconds % 3600) // 60)
+    s = int(seconds % 60)
+    return f"{h:02d}:{m:02d}:{s:02d}"
 
 
 def snap_to_sentence_boundary(

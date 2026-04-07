@@ -1,8 +1,11 @@
 """구간 합성 로직 — 단일/멀티 구간 조립"""
 
+import logging
 from dataclasses import dataclass, field
 
 from config import MAX_CLIP_DURATION, MIN_CLIP_DURATION
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -52,7 +55,7 @@ class ComposedClip:
 def build_clips(
     analysis_clips: list[dict],
     all_words: list[dict] | None = None,
-) -> list[ComposedClip]:
+) -> tuple[list[ComposedClip], list[dict]]:
     """분석 결과에서 ComposedClip 리스트 생성
 
     Args:
@@ -60,9 +63,12 @@ def build_clips(
         all_words: Whisper word-level 타임스탬프 (전체 영상)
 
     Returns:
-        검증 통과한 ComposedClip 리스트 (Virality Score순)
+        (유효 클립 리스트, 초과 클립 원본 데이터 리스트)
+        - 유효 클립: 검증 통과, Virality Score순
+        - 초과 클립: duration > MAX → pipeline에서 recut 처리용
     """
     clips = []
+    oversized_raw = []  # recut 대상 원본 데이터
 
     for clip_data in analysis_clips:
         if clip_data.get("is_composition") and clip_data.get("segments"):
@@ -104,11 +110,18 @@ def build_clips(
         if all_words:
             composed.words = _filter_words_for_clip(all_words, composed)
 
-        if _validate_clip(composed):
+        if composed.total_duration > MAX_CLIP_DURATION:
+            # 초과 클립 → recut 대상으로 분리
+            logger.warning(
+                f"[OVERSIZED] '{composed.hook_title}' {composed.total_duration:.0f}초 > "
+                f"MAX {MAX_CLIP_DURATION}초 → recut 대상으로 분리"
+            )
+            oversized_raw.append(clip_data)
+        elif _validate_clip(composed):
             clips.append(composed)
 
     clips.sort(key=lambda c: c.virality_score, reverse=True)
-    return clips
+    return clips, oversized_raw
 
 
 def _filter_words_for_clip(
@@ -131,15 +144,29 @@ def _validate_clip(clip: ComposedClip) -> bool:
     duration = clip.total_duration
 
     if duration < MIN_CLIP_DURATION:
+        logger.warning(
+            f"[REJECT] 클립 '{clip.hook_title}' 길이 {duration:.1f}초 < "
+            f"MIN {MIN_CLIP_DURATION}초 → 탈락"
+        )
         return False
     if duration > MAX_CLIP_DURATION:
+        # clamp 이후에도 여기 오면 진짜 문제 — 절대 통과 불가
+        logger.error(
+            f"[REJECT] 클립 '{clip.hook_title}' 길이 {duration:.1f}초 > "
+            f"MAX {MAX_CLIP_DURATION}초 → 탈락 (clamp 실패)"
+        )
         return False
     if not clip.hook_title:
+        logger.warning("[REJECT] 훅 타이틀 없음 → 탈락")
         return False
 
     # 각 세그먼트의 시간이 유효한지
     for seg in clip.segments:
         if seg.start_sec >= seg.end_sec:
+            logger.warning(
+                f"[REJECT] 세그먼트 시간 역전: {seg.start}({seg.start_sec}) >= "
+                f"{seg.end}({seg.end_sec}) → 탈락"
+            )
             return False
 
     return True
@@ -153,3 +180,11 @@ def _time_to_seconds(time_str: str) -> float:
     elif len(parts) == 2:
         return int(parts[0]) * 60 + float(parts[1])
     return float(parts[0])
+
+
+def _seconds_to_time(seconds: float) -> str:
+    """초 → HH:MM:SS"""
+    h = int(seconds // 3600)
+    m = int((seconds % 3600) // 60)
+    s = int(seconds % 60)
+    return f"{h:02d}:{m:02d}:{s:02d}"

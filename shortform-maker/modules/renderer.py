@@ -1,8 +1,11 @@
 """숏폼 렌더러 v2.0 — 블랙바 레이아웃 + ASS 번인 자막 + LUFS 정규화"""
 
+import logging
 import os
 import subprocess
 import tempfile
+
+logger = logging.getLogger(__name__)
 
 from config import (
     AUX_TEXT_COLOR,
@@ -27,6 +30,8 @@ from config import (
     LUFS_LRA,
     LUFS_TARGET,
     LUFS_TP,
+    MAX_CLIP_DURATION,
+    PLAYBACK_SPEED,
     VIDEO_SCALE_FACTOR,
 )
 from modules.composer import ComposedClip
@@ -49,6 +54,18 @@ def render_clip(
     Returns:
         출력 파일 경로
     """
+    # ─── 하드 가드: MAX_CLIP_DURATION 초과 절대 차단 ───
+    clip_duration = clip.total_duration
+    if clip_duration > MAX_CLIP_DURATION:
+        logger.error(
+            f"[HARD GUARD] 클립 '{clip.hook_title}' 길이 {clip_duration:.1f}초 > "
+            f"MAX {MAX_CLIP_DURATION}초 → 렌더링 거부"
+        )
+        raise ValueError(
+            f"클립 길이 {clip_duration:.1f}초가 최대 {MAX_CLIP_DURATION}초를 초과합니다. "
+            f"렌더링을 거부합니다."
+        )
+
     if clip.is_composition and len(clip.segments) > 1:
         # 2-pass: 먼저 구간 합성 → 블랙바 + 오버레이
         tmp_concat = output_path.replace(".mp4", "_concat.mp4")
@@ -71,15 +88,19 @@ def _concat_segments(video_path: str, clip: ComposedClip, output_path: str):
     filter_parts = []
     concat_inputs = []
 
+    speed_pts = f"setpts=PTS/{PLAYBACK_SPEED}" if PLAYBACK_SPEED != 1.0 else ""
+    speed_atempo = f"atempo={PLAYBACK_SPEED}" if PLAYBACK_SPEED != 1.0 else ""
+
     for i, seg in enumerate(segments):
-        filter_parts.append(
-            f"[0:v]trim=start={seg.start_sec}:end={seg.end_sec},"
-            f"setpts=PTS-STARTPTS[v{i}]"
-        )
-        filter_parts.append(
-            f"[0:a]atrim=start={seg.start_sec}:end={seg.end_sec},"
-            f"asetpts=PTS-STARTPTS[a{i}]"
-        )
+        v_filters = f"trim=start={seg.start_sec}:end={seg.end_sec},setpts=PTS-STARTPTS"
+        if speed_pts:
+            v_filters += f",{speed_pts}"
+        filter_parts.append(f"[0:v]{v_filters}[v{i}]")
+
+        a_filters = f"atrim=start={seg.start_sec}:end={seg.end_sec},asetpts=PTS-STARTPTS"
+        if speed_atempo:
+            a_filters += f",{speed_atempo}"
+        filter_parts.append(f"[0:a]{a_filters}[a{i}]")
         concat_inputs.append(f"[v{i}][a{i}]")
 
     filter_parts.append(
@@ -95,6 +116,7 @@ def _concat_segments(video_path: str, clip: ComposedClip, output_path: str):
         "-map", "[vout]", "-map", "[aout]",
         "-c:v", "libx264", "-preset", "fast", "-crf", "23",
         "-c:a", "aac", "-b:a", "128k",
+        "-t", str(MAX_CLIP_DURATION),  # 하드 가드
         output_path,
     ]
     result = subprocess.run(cmd, capture_output=True, text=True)
@@ -166,9 +188,12 @@ def _apply_letterbox_overlay(
     scaled_h = int(LETTERBOX_VIDEO_H * VIDEO_SCALE_FACTOR)
     filter_parts = [
         # 소스를 120% 크게 스케일 → 중앙 크롭으로 1080x608에 맞춤
+        # + 재생 속도 적용 (1.0이 아닌 경우)
         f"[0:v]{zoom_filter}scale={scaled_w}:{scaled_h}:"
         f"force_original_aspect_ratio=decrease,"
-        f"crop={LETTERBOX_VIDEO_W}:{LETTERBOX_VIDEO_H}:(iw-{LETTERBOX_VIDEO_W})/2:(ih-{LETTERBOX_VIDEO_H})/2[scaled]",
+        f"crop={LETTERBOX_VIDEO_W}:{LETTERBOX_VIDEO_H}:(iw-{LETTERBOX_VIDEO_W})/2:(ih-{LETTERBOX_VIDEO_H})/2"
+        f"{',setpts=PTS/' + str(PLAYBACK_SPEED) if PLAYBACK_SPEED != 1.0 else ''}"
+        f"[scaled]",
 
         # 검정 배경 캔버스
         f"color=c={BG_COLOR}:s={CANVAS_WIDTH}x{CANVAS_HEIGHT}:r=30[bg]",
@@ -215,12 +240,19 @@ def _apply_letterbox_overlay(
         f"[final]"
     )
 
-    # ─── 오디오 LUFS 정규화 (filter_complex 안에서 처리) ───
+    # ─── 오디오: 속도 조절 + LUFS 정규화 ───
+    audio_filters = []
+    if PLAYBACK_SPEED != 1.0:
+        audio_filters.append(f"atempo={PLAYBACK_SPEED}")
+    audio_filters.append(f"loudnorm=I={LUFS_TARGET}:LRA={LUFS_LRA}:TP={LUFS_TP}")
     filter_parts.append(
-        f"[0:a]loudnorm=I={LUFS_TARGET}:LRA={LUFS_LRA}:TP={LUFS_TP}[aout]"
+        f"[0:a]{','.join(audio_filters)}[aout]"
     )
 
     filter_complex = ";\n".join(filter_parts)
+
+    # 하드 가드: FFmpeg 출력도 MAX_CLIP_DURATION으로 강제 제한
+    max_output_duration = ["-t", str(MAX_CLIP_DURATION)]
 
     cmd = [
         "ffmpeg", "-y",
@@ -234,6 +266,7 @@ def _apply_letterbox_overlay(
         "-c:a", "aac", "-b:a", "128k",
         "-movflags", "+faststart",
         "-shortest",
+        *max_output_duration,        # 하드 가드: 절대 이 길이 초과 불가
         output_path,
     ]
     result = subprocess.run(cmd, capture_output=True, text=True)

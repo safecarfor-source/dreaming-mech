@@ -1,15 +1,19 @@
 """숏폼 자동변환 파이프라인 v2.0 — 블랙바 + 번인 자막 + LUFS"""
 
 import json
+import logging
 import os
 
-from modules.analyzer import analyze_two_stage
+from config import MAX_CLIP_DURATION
+from modules.analyzer import analyze_two_stage, recut_oversized_segment
 from modules.caption_builder import build_ass_subtitles
 from modules.composer import ComposedClip, build_clips
 from modules.ingest import download_youtube, extract_audio, get_video_info, transcribe_audio
 from modules.renderer import render_clip
 from modules.subtitle_parser import parse_subtitle_file, parse_subtitle_text
 from modules.thumbnail import generate_thumbnail
+
+logger = logging.getLogger(__name__)
 
 
 def run_pipeline(
@@ -85,8 +89,58 @@ def run_pipeline(
     with open(analysis_path, "w", encoding="utf-8") as f:
         json.dump(analysis_clips, f, ensure_ascii=False, indent=2)
 
-    # 5. 클립 조립 (검증 + 정렬 + 워드 필터링)
-    composed_clips = build_clips(analysis_clips, all_words=all_words)
+    # 5. 클립 조립 (유효 클립 + 초과 클립 분리)
+    composed_clips, oversized_raw = build_clips(analysis_clips, all_words=all_words)
+
+    # 5.5 하네스: 초과 클립 → AI 재설계 (자막 기반 맥락 보존 리컷)
+    if oversized_raw:
+        _progress(5, f"초과 구간 {len(oversized_raw)}개 → AI 재설계 중...")
+        for raw_clip in oversized_raw:
+            recut_results = recut_oversized_segment(raw_clip, segments)
+            if recut_results:
+                # 재설계된 구간으로 새 클립 생성
+                for recut in recut_results:
+                    recut_clip_data = {
+                        **raw_clip,
+                        "start": recut["start"],
+                        "end": recut["end"],
+                        "summary": recut.get("summary", raw_clip.get("summary", "")),
+                        "keywords": recut.get("keywords", raw_clip.get("keywords", [])),
+                    }
+                    # 합성이었으면 단일 구간으로 변환
+                    recut_clip_data.pop("is_composition", None)
+                    recut_clip_data.pop("segments", None)
+                    recut_clip_data.pop("composition_ids", None)
+
+                    recut_valid, _ = build_clips([recut_clip_data], all_words=all_words)
+                    composed_clips.extend(recut_valid)
+            else:
+                logger.warning(
+                    f"[RECUT] 재설계 실패: '{raw_clip.get('hook_title', '')}' → "
+                    f"이 구간은 최종 결과에서 제외"
+                )
+
+        # 재설계 후 다시 정렬
+        composed_clips.sort(key=lambda c: c.virality_score, reverse=True)
+
+    # 5.5 하네스: 렌더 전 최종 검증 (구조적 안전장치)
+    safe_clips = []
+    for clip in composed_clips:
+        dur = clip.total_duration
+        if dur > MAX_CLIP_DURATION:
+            logger.error(
+                f"[PIPELINE GUARD] 클립 '{clip.hook_title}' {dur:.1f}초 > "
+                f"MAX {MAX_CLIP_DURATION}초 → 렌더링 제외 (composer 통과했으나 파이프라인에서 차단)"
+            )
+            continue
+        safe_clips.append(clip)
+
+    if len(safe_clips) < len(composed_clips):
+        logger.warning(
+            f"[PIPELINE GUARD] {len(composed_clips) - len(safe_clips)}개 클립이 "
+            f"길이 초과로 제외됨"
+        )
+    composed_clips = safe_clips
 
     # 6. FFmpeg 렌더링 (블랙바 + 번인 자막)
     results = []

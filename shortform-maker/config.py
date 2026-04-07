@@ -68,7 +68,7 @@ HOOK_FONT_PATH_MAC = "/System/Library/Fonts/AppleSDGothicNeo.ttc"  # macOS fallb
 
 # ─── 숏폼 제한 ───────────────────────────────────────
 MIN_CLIP_DURATION = 15  # 초
-MAX_CLIP_DURATION = 60  # 초
+MAX_CLIP_DURATION = 50  # 초
 MAX_CLIPS = 4  # 최대 후보 구간 (2~4개 알짜만)
 
 # ─── 합성 설정 ───────────────────────────────────────
@@ -81,6 +81,9 @@ LUFS_TP = -1.5        # True Peak
 
 # ─── 영상 확대 비율 ──────────────────────────────────
 VIDEO_SCALE_FACTOR = 1.2  # 120% 확대 후 중앙 크롭
+
+# ─── 재생 속도 ───────────────────────────────────────
+PLAYBACK_SPEED = 1.15  # 1.15배속 (피치 유지, 템포만 증가)
 
 # ─── 다이나믹 홀드 (Ken Burns 줌 효과) ────────────────
 DYNAMIC_HOLD_ENABLED = False  # 활성화 시 인코딩 시간 증가
