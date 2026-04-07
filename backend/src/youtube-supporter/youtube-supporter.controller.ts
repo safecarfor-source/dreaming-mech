@@ -20,6 +20,8 @@ import {
 } from '@nestjs/common';
 import type { Request, Response } from 'express';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
+import { mkdirSync } from 'fs';
 import { YouTubeSupporterService } from './youtube-supporter.service';
 import { YtAuthGuard } from './guards/yt-auth.guard';
 import { YtExternalApiGuard } from './guards/yt-external-api.guard';
@@ -567,7 +569,17 @@ export class YouTubeSupporterController {
    */
   @Post('shortform/process')
   @UseGuards(YtAuthGuard)
-  @UseInterceptors(FileInterceptor('video', { limits: { fileSize: 2 * 1024 * 1024 * 1024 } }))
+  @UseInterceptors(FileInterceptor('video', {
+    storage: diskStorage({
+      destination: (_req, _file, cb) => {
+        const dir = '/tmp/shortform-uploads';
+        mkdirSync(dir, { recursive: true });
+        cb(null, dir);
+      },
+      filename: (_req, file, cb) => cb(null, `${Date.now()}-${file.originalname}`),
+    }),
+    limits: { fileSize: 2 * 1024 * 1024 * 1024 },
+  }))
   @HttpCode(HttpStatus.OK)
   async shortformProcess(
     @UploadedFile() file: Express.Multer.File,

@@ -1000,30 +1000,34 @@ export class YouTubeSupporterService {
       throw new BadRequestException('영상 파일이 없습니다');
     }
 
-    const form = new FormData();
-    // Buffer → 순수 ArrayBuffer로 복사 (TypeScript strict 호환)
-    const arrayBuffer = file.buffer.buffer.slice(
-      file.buffer.byteOffset,
-      file.buffer.byteOffset + file.buffer.byteLength,
-    ) as ArrayBuffer;
-    const blob = new Blob([arrayBuffer], { type: file.mimetype || 'video/mp4' });
-    form.append('video', blob, file.originalname || 'video.mp4');
+    const fs = await import('fs');
+    const filePath = file.path; // 디스크 스토리지 경로
 
-    const headers: Record<string, string> = {};
-    if (token) headers['x-yt-token'] = token;
+    try {
+      const fileData = await fs.promises.readFile(filePath);
+      const form = new FormData();
+      const blob = new Blob([fileData], { type: file.mimetype || 'video/mp4' });
+      form.append('video', blob, file.originalname || 'video.mp4');
 
-    const res = await fetch(`${this.shortformServiceUrl}/shortform/process`, {
-      method: 'POST',
-      headers,
-      body: form,
-    });
+      const headers: Record<string, string> = {};
+      if (token) headers['x-yt-token'] = token;
 
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new BadRequestException((err as any).detail || '숏폼 처리 시작 실패');
+      const res = await fetch(`${this.shortformServiceUrl}/shortform/process`, {
+        method: 'POST',
+        headers,
+        body: form,
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new BadRequestException((err as any).detail || '숏폼 처리 시작 실패');
+      }
+
+      return res.json();
+    } finally {
+      // 임시 파일 삭제
+      fs.promises.unlink(filePath).catch(() => {});
     }
-
-    return res.json();
   }
 
   async shortformJobStatus(jobId: string, token?: string): Promise<any> {
