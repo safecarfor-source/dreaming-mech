@@ -9,6 +9,8 @@ from PIL import Image, ImageDraw, ImageFont
 from config import (
     FONT_BOLD_INDEX,
     FONT_PATH,
+    HOOK_FONT_PATH_DOCKER,
+    HOOK_FONT_PATH_MAC,
 )
 
 # 썸네일 사이즈 (YouTube 표준)
@@ -148,10 +150,14 @@ def _composite_thumbnail(
     img = Image.open(frame_path).convert("RGB")
     draw = ImageDraw.Draw(img)
 
-    # 폰트 로딩 (85px, 굵게)
+    # 폰트 로딩 (85px, Black Han Sans 우선)
     font_size = 85
     try:
-        if FONT_PATH.endswith(".ttc"):
+        if os.path.exists(HOOK_FONT_PATH_DOCKER):
+            font = ImageFont.truetype(HOOK_FONT_PATH_DOCKER, font_size)
+        elif os.path.exists(HOOK_FONT_PATH_MAC):
+            font = ImageFont.truetype(HOOK_FONT_PATH_MAC, font_size, index=FONT_BOLD_INDEX)
+        elif FONT_PATH.endswith(".ttc"):
             font = ImageFont.truetype(FONT_PATH, font_size, index=FONT_BOLD_INDEX)
         else:
             font = ImageFont.truetype(FONT_PATH, font_size)

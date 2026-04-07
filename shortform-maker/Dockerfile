@@ -20,6 +20,10 @@ RUN pip install --no-cache-dir -r requirements.txt \
     uvicorn[standard] \
     python-multipart
 
+# Black Han Sans 폰트 설치 (유튜브 숏폼용 극굵음 고딕)
+COPY fonts/BlackHanSans-Regular.ttf /usr/share/fonts/truetype/blackhansans/BlackHanSans-Regular.ttf
+RUN fc-cache -fv
+
 # 소스 코드 복사
 COPY . .
 
