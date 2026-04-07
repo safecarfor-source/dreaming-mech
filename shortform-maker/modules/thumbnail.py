@@ -9,7 +9,6 @@ from PIL import Image, ImageDraw, ImageFont
 from config import (
     FONT_BOLD_INDEX,
     FONT_PATH,
-    HOOK_TITLE_BG_COLOR,
 )
 
 # 썸네일 사이즈 (YouTube 표준)
@@ -125,17 +124,32 @@ def _extract_midpoint_frame(
     return []
 
 
+def _split_to_two_lines(text: str) -> tuple[str, str]:
+    """텍스트를 항상 2줄로 분할 (짧아도 강제 2줄)"""
+    # 공백 기준 중간 지점에서 분할
+    mid = len(text) // 2
+    space = text.rfind(" ", 0, mid + 5)
+    if space == -1:
+        space = text.find(" ", mid)
+    if space == -1:
+        # 공백이 없으면 글자 수 기준 분할
+        space = mid
+    line1 = text[:space].strip()
+    line2 = text[space:].strip()
+    return line1, line2
+
+
 def _composite_thumbnail(
     frame_path: str,
     hook_title: str,
     output_path: str,
 ):
-    """프레임에 훅 타이틀 텍스트 합성"""
+    """프레임에 훅 타이틀 텍스트 합성 — 상단 배치, 1줄 빨간 + 2줄 노란"""
     img = Image.open(frame_path).convert("RGB")
     draw = ImageDraw.Draw(img)
 
-    # 폰트 로딩
-    font_size = 64
+    # 폰트 로딩 (85px, 굵게)
+    font_size = 85
     try:
         if FONT_PATH.endswith(".ttc"):
             font = ImageFont.truetype(FONT_PATH, font_size, index=FONT_BOLD_INDEX)
@@ -144,43 +158,26 @@ def _composite_thumbnail(
     except Exception:
         font = ImageFont.load_default()
 
-    # 텍스트 줄바꿈 (20자 초과 시)
-    if len(hook_title) > 20:
-        mid = len(hook_title) // 2
-        space = hook_title.rfind(" ", 0, mid + 5)
-        if space == -1:
-            space = mid
-        hook_title = hook_title[:space] + "\n" + hook_title[space:].lstrip()
+    # 항상 2줄로 분할
+    line1, line2 = _split_to_two_lines(hook_title)
 
-    # 텍스트 바운딩 박스 계산
-    bbox = draw.textbbox((0, 0), hook_title, font=font)
-    tw = bbox[2] - bbox[0]
-    th = bbox[3] - bbox[1]
+    # 각 줄 바운딩 박스 계산
+    bbox1 = draw.textbbox((0, 0), line1, font=font)
+    bbox2 = draw.textbbox((0, 0), line2, font=font)
+    tw1 = bbox1[2] - bbox1[0]
+    th1 = bbox1[3] - bbox1[1]
+    tw2 = bbox2[2] - bbox2[0]
+    th2 = bbox2[3] - bbox2[1]
 
-    # 하단 1/3 영역에 배치
-    x = (THUMB_WIDTH - tw) // 2
-    y = THUMB_HEIGHT - th - 80
+    # 상단 배치 (y=80부터)
+    line_gap = 15
+    x1 = (THUMB_WIDTH - tw1) // 2
+    y1 = 80
+    x2 = (THUMB_WIDTH - tw2) // 2
+    y2 = y1 + th1 + line_gap
 
-    # 반투명 배경 바
-    pad = 20
-    bg_box = [x - pad, y - pad, x + tw + pad, y + th + pad]
-
-    # 브랜드 컬러 배경 (#E4015C → RGB)
-    bg_r = int(HOOK_TITLE_BG_COLOR[1:3], 16)
-    bg_g = int(HOOK_TITLE_BG_COLOR[3:5], 16)
-    bg_b = int(HOOK_TITLE_BG_COLOR[5:7], 16)
-
-    # 반투명 오버레이
-    overlay = Image.new("RGBA", img.size, (0, 0, 0, 0))
-    overlay_draw = ImageDraw.Draw(overlay)
-    overlay_draw.rectangle(bg_box, fill=(bg_r, bg_g, bg_b, 200))
-    img = Image.alpha_composite(img.convert("RGBA"), overlay).convert("RGB")
-
-    # 텍스트 그리기 (그림자 + 본문)
-    draw = ImageDraw.Draw(img)
-    # 그림자
-    draw.text((x + 2, y + 2), hook_title, font=font, fill=(0, 0, 0))
-    # 본문
-    draw.text((x, y), hook_title, font=font, fill=(255, 255, 255))
+    # 1줄: 빨간색, 2줄: 노란색 (배경 바/외곽선/그림자 없음)
+    draw.text((x1, y1), line1, font=font, fill=(255, 0, 0))
+    draw.text((x2, y2), line2, font=font, fill=(255, 255, 0))
 
     img.save(output_path, "JPEG", quality=90)

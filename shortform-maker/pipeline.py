@@ -94,14 +94,8 @@ def run_pipeline(
         _progress(6, f"클립 {i + 1}/{len(composed_clips)} 렌더링 중: {clip.hook_title}")
         clip_path = os.path.join(output_dir, f"clip_{i + 1:02d}.mp4")
 
-        # ASS 자막 생성 (워드 데이터 있을 때)
+        # ASS 자막 비활성화 — 원본 영상 자막을 그대로 사용
         ass_path = None
-        if clip.words:
-            ass_path = build_ass_subtitles(
-                words=clip.words,
-                clip_start_sec=clip.segments[0].start_sec,
-                clip_end_sec=clip.segments[-1].end_sec,
-            )
 
         try:
             render_clip(video_path, clip, clip_path, ass_path=ass_path)

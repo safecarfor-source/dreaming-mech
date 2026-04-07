@@ -30,6 +30,7 @@ from config import (
     LUFS_TARGET,
     LUFS_TP,
     SAFE_AREA_MARGIN,
+    VIDEO_SCALE_FACTOR,
 )
 from modules.composer import ComposedClip
 
@@ -164,11 +165,14 @@ def _apply_letterbox_overlay(
         zoom_filter = ""
 
     # ─── 비디오 필터 체인 ─────────────────────────────
+    # 120% 확대 후 중앙 크롭 (영상을 더 크게 보이게)
+    scaled_w = int(LETTERBOX_VIDEO_W * VIDEO_SCALE_FACTOR)
+    scaled_h = int(LETTERBOX_VIDEO_H * VIDEO_SCALE_FACTOR)
     filter_parts = [
-        # 소스를 1080x608로 스케일 (비율 유지)
-        f"[0:v]{zoom_filter}scale={LETTERBOX_VIDEO_W}:{LETTERBOX_VIDEO_H}:"
+        # 소스를 120% 크게 스케일 → 중앙 크롭으로 1080x608에 맞춤
+        f"[0:v]{zoom_filter}scale={scaled_w}:{scaled_h}:"
         f"force_original_aspect_ratio=decrease,"
-        f"pad={LETTERBOX_VIDEO_W}:{LETTERBOX_VIDEO_H}:(ow-iw)/2:(oh-ih)/2:color={BG_COLOR}[scaled]",
+        f"crop={LETTERBOX_VIDEO_W}:{LETTERBOX_VIDEO_H}:(iw-{LETTERBOX_VIDEO_W})/2:(ih-{LETTERBOX_VIDEO_H})/2[scaled]",
 
         # 검정 배경 캔버스
         f"color=c={BG_COLOR}:s={CANVAS_WIDTH}x{CANVAS_HEIGHT}:r=30[bg]",
@@ -177,28 +181,8 @@ def _apply_letterbox_overlay(
         f"[bg][scaled]overlay=0:{LETTERBOX_VIDEO_Y}:shortest=1[base]",
     ]
 
-    # ASS 자막 (있으면)
-    if ass_path and os.path.exists(ass_path):
-        filter_parts.append(f"[base]ass='{ass_path}'[with_captions]")
-        base_label = "with_captions"
-    else:
-        base_label = "base"
-
-    # ASS 없으면 drawtext fallback 자막 추가
-    sub_file = None
-    if not ass_path or not os.path.exists(ass_path):
-        sub_file = _write_text_file(clip.subtitle)
-        sub_y = LETTERBOX_BOTTOM_Y + 120
-        filter_parts.append(
-            f"[{base_label}]drawtext="
-            f"textfile='{sub_file}'"
-            f"{font_opt}"
-            f":fontsize=40:fontcolor=white"
-            f":box=1:boxcolor=black@0.6:boxborderw=12"
-            f":x=(w-tw)/2:y={sub_y}"
-            f"[with_sub]"
-        )
-        base_label = "with_sub"
+    # 자막 비활성화 — 원본 영상 자막 그대로 사용
+    base_label = "base"
 
     # 훅 타이틀 (상단 구역)
     filter_parts.append(
@@ -252,8 +236,6 @@ def _apply_letterbox_overlay(
 
     # 임시 파일 정리
     cleanup_files = [hook_file, aux_file]
-    if sub_file:
-        cleanup_files.append(sub_file)
     for f in cleanup_files:
         if os.path.exists(f):
             os.remove(f)

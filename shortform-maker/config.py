@@ -75,6 +75,9 @@ LUFS_TARGET = -14     # YouTube 표준 라우드니스
 LUFS_LRA = 11         # Loudness Range
 LUFS_TP = -1.5        # True Peak
 
+# ─── 영상 확대 비율 ──────────────────────────────────
+VIDEO_SCALE_FACTOR = 1.2  # 120% 확대 후 중앙 크롭
+
 # ─── 다이나믹 홀드 (Ken Burns 줌 효과) ────────────────
 DYNAMIC_HOLD_ENABLED = False  # 활성화 시 인코딩 시간 증가
 DYNAMIC_HOLD_ZOOM_RATE = 0.0005  # 프레임당 줌 증가량
