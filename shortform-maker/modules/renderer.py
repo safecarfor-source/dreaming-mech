@@ -289,8 +289,36 @@ def _apply_letterbox_overlay(
 
 
 def _split_hook_to_two_lines(text: str) -> tuple[str, str]:
-    """훅 타이틀을 항상 2줄로 분할 (짧아도 강제 2줄)"""
+    """훅 타이틀을 항상 2줄로 분할
+
+    AI가 '|'로 분할점을 지정하면 그대로 사용.
+    없으면 한국어 조사 경계에서 자동 분할.
+    """
+    # AI가 | 로 직접 분할한 경우
+    if "|" in text:
+        parts = text.split("|", 1)
+        return parts[0].strip(), parts[1].strip()
+
+    # 자동 분할: 한국어 조사/어미 뒤에서 끊기
+    # 은/는/이/가/을/를/에/도/만/로 등 뒤가 자연스러운 분할점
+    import re
+    # 조사 패턴: 단어+조사 뒤 공백
+    particles = re.finditer(r'[가-힣]+(?:은|는|이|가|을|를|에서|으로|에|도|만|와|과|의)\s', text)
+    best_split = -1
     mid = len(text) // 2
+
+    for m in particles:
+        pos = m.end() - 1  # 공백 위치
+        if abs(pos - mid) < abs(best_split - mid) or best_split == -1:
+            best_split = pos
+
+    if best_split > 0:
+        line1 = text[:best_split].strip()
+        line2 = text[best_split:].strip()
+        if line1 and line2:
+            return line1, line2
+
+    # fallback: 가장 가운데 공백에서 분할
     space = text.rfind(" ", 0, mid + 5)
     if space == -1:
         space = text.find(" ", mid)
