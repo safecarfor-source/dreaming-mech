@@ -33,5 +33,26 @@
     "rule": "출력 재생 속도 1.15배속. 피치 유지, 템포만 증가.",
     "source": "대장님 지시 2026-04-08",
     "severity": "normal"
+  },
+  {
+    "id": "rule_006",
+    "category": "완주율",
+    "rule": "최적 길이 35~40초. 30초 완주율 85% vs 60초 완주율 50%. 짧을수록 알고리즘이 밀어줌.",
+    "source": "리서치 2026-04-08 (vidIQ, OpusClip 데이터)",
+    "severity": "high"
+  },
+  {
+    "id": "rule_007",
+    "category": "완주율",
+    "rule": "클라이맥스(결론/반전)를 35초 내에 배치. 40초 이후 시청자 급격 이탈.",
+    "source": "리서치 2026-04-08 (Shortimize 데이터)",
+    "severity": "high"
+  },
+  {
+    "id": "rule_008",
+    "category": "완주율",
+    "rule": "구간 중간에 2초 이상 말 없는 공백 금지. 공백 = 시청자 스와이프.",
+    "source": "리서치 2026-04-08",
+    "severity": "critical"
   }
 ]

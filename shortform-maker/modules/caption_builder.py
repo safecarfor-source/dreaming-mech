@@ -27,13 +27,15 @@ def build_ass_subtitles(
     words: list[dict],
     clip_start_sec: float,
     clip_end_sec: float,
+    highlight_keywords: list[str] | None = None,
 ) -> str | None:
-    """워드 타임스탬프 → ASS 자막 파일 생성
+    """워드 타임스탬프 → ASS 자막 파일 생성 (키워드 강조 지원)
 
     Args:
         words: Whisper word-level 결과 [{"word": str, "start": float, "end": float}, ...]
         clip_start_sec: 클립 시작 시간 (초)
         clip_end_sec: 클립 종료 시간 (초)
+        highlight_keywords: AI가 선정한 핵심 키워드 리스트 (매칭 시 노란색 강조)
 
     Returns:
         ASS 파일 경로 또는 None (워드 데이터 없을 때)
@@ -54,8 +56,13 @@ def build_ass_subtitles(
     # 워드를 표시 그룹(줄)으로 분할
     groups = _group_words_into_lines(clip_words)
 
+    # 키워드 세트 (소문자 매칭용)
+    kw_set = set()
+    if highlight_keywords:
+        kw_set = {kw.strip().lower() for kw in highlight_keywords if kw.strip()}
+
     # ASS 파일 생성
-    ass_content = _build_ass_content(groups, clip_start_sec)
+    ass_content = _build_ass_content(groups, clip_start_sec, kw_set)
 
     fd, path = tempfile.mkstemp(suffix=".ass", prefix="sfm_caption_")
     with os.fdopen(fd, "w", encoding="utf-8") as f:
@@ -108,7 +115,7 @@ def _group_words_into_lines(words: list[dict]) -> list[list[dict]]:
     return groups
 
 
-def _build_ass_content(groups: list[list[dict]], clip_start_sec: float) -> str:
+def _build_ass_content(groups: list[list[dict]], clip_start_sec: float, highlight_keywords: set | None = None) -> str:
     """ASS 자막 파일 내용 생성"""
     # 자막 Y 위치 (PlayResY 기준)
     margin_v = CANVAS_HEIGHT - LETTERBOX_BOTTOM_Y - CAPTION_Y_OFFSET
@@ -157,8 +164,26 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
             # 카라오케 지속시간 (centiseconds)
             duration_cs = max(1, int((w_end - w_start) * 100))
 
-            # \kf = 부드러운 카라오케 (글자가 점진적으로 색상 변경)
-            text_parts.append(f"{{\\kf{duration_cs}}}{w_text}")
+            # 키워드 강조: 매칭되면 노란색 + 1.3배 크기
+            is_keyword = False
+            if highlight_keywords:
+                w_lower = w_text.lower().strip()
+                for kw in highlight_keywords:
+                    if kw in w_lower or w_lower in kw:
+                        is_keyword = True
+                        break
+
+            if is_keyword:
+                # 키워드: 노란색 + 크게 + 카라오케
+                keyword_size = int(CAPTION_FONTSIZE * 1.3)
+                text_parts.append(
+                    f"{{\\kf{duration_cs}\\c{CAPTION_HIGHLIGHT_COLOR}\\fs{keyword_size}}}"
+                    f"{w_text}"
+                    f"{{\\c{CAPTION_COLOR}\\fs{CAPTION_FONTSIZE}}}"
+                )
+            else:
+                # 일반: 카라오케만
+                text_parts.append(f"{{\\kf{duration_cs}}}{w_text}")
 
             # 줄바꿈 체크 (CAPTION_MAX_CHARS_PER_LINE 초과 시)
             total_chars = sum(len(w.get("word", "").strip()) for w in group[:i+1])

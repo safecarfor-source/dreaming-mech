@@ -45,6 +45,19 @@
 ### 5. 소비자 심리 태그
 - primary_desire: "fear" | "curiosity" | "desire"
 
+### 6. 자막 강조 키워드
+- 해당 구간에서 시청자의 시선을 잡을 핵심 단어 3~5개
+- 자막에서 이 단어들이 노란색+크게 표시됩니다
+- 예: ["엔진", "고장", "20만원", "교환주기"]
+
+### 7. 훅 유형 분류
+- hook_type: "fear" | "secret" | "diagnosis" | "money"
+  - fear (금지형): "절대 하지 마세요" / "이러면 엔진 나갑니다"
+  - secret (폭로형): "정비사가 숨긴 진실" / "안 알려주는"
+  - diagnosis (진단형): "이 소리 나면 XX 고장" / "이 증상이면"
+  - money (비용형): "50만원 아끼는 법" / "XX만원 절약"
+- 같은 영상에서 여러 클립 생성 시, hook_type이 겹치지 않게 다양하게 배분하세요
+
 반드시 아래 JSON 형식으로만 응답하세요:
 {
   "clips": [
@@ -53,15 +66,18 @@
       "is_composition": false,
       "composition_ids": null,
       "hook_title": "훅 타이틀 문구",
+      "hook_type": "fear",
       "subtitle": "서브타이틀 문구",
       "aux_text": "꿈꾸는정비사",
+      "highlight_keywords": ["엔진", "고장", "교환주기"],
       "virality_score": 85,
       "score_breakdown": {
         "hook_power": 90,
         "info_value": 80,
         "emotion_twist": 75,
         "independence": 90,
-        "consumer_desire": 85
+        "consumer_desire": 85,
+        "loop_score": 70
       },
       "primary_desire": "fear",
       "reason": "이 구간이 숏폼으로 좋은 이유 (한 줄)"

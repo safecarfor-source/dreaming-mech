@@ -39,6 +39,9 @@ class ComposedClip:
     is_composition: bool = False
     words: list[dict] = field(default_factory=list)  # Whisper word-level 타임스탬프
     hook_reorder: dict | None = None  # 3초 훅 리오더 {"hook_start": "HH:MM:SS", "hook_end": "HH:MM:SS"}
+    loop_friendly: bool = False  # 루프 친화 구간 (엔딩→시작 자연 연결)
+    hook_type: str = ""  # 훅 유형 (fear/secret/diagnosis/money)
+    highlight_keywords: list[str] = field(default_factory=list)  # 자막 강조 키워드
 
     @property
     def total_duration(self) -> float:
@@ -87,6 +90,9 @@ def build_clips(
                 reason=clip_data.get("reason", ""),
                 score_breakdown=clip_data.get("score_breakdown", {}),
                 hook_reorder=clip_data.get("hook_reorder"),
+                loop_friendly=clip_data.get("loop_friendly", False),
+                hook_type=clip_data.get("hook_type", ""),
+                highlight_keywords=clip_data.get("highlight_keywords", []),
             )
         else:
             seg = ClipSegment(

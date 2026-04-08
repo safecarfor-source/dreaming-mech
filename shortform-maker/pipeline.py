@@ -156,8 +156,19 @@ def run_pipeline(
         _progress(6, f"클립 {i + 1}/{len(composed_clips)} 렌더링 중: {clip.hook_title}")
         clip_path = os.path.join(output_dir, f"clip_{i + 1:02d}.mp4")
 
-        # ASS 자막 비활성화 — 원본 영상 자막을 그대로 사용
+        # ASS 동적 자막 생성 (Whisper word-level + 키워드 강조)
         ass_path = None
+        if clip.words:
+            highlight_kw = clip.highlight_keywords if clip.highlight_keywords else []
+            if not highlight_kw:
+                # keywords가 없으면 hook_title에서 핵심 단어 추출
+                highlight_kw = [w for w in clip.hook_title.split() if len(w) >= 2]
+            ass_path = build_ass_subtitles(
+                clip.words,
+                clip.segments[0].start_sec,
+                clip.segments[-1].end_sec,
+                highlight_keywords=highlight_kw,
+            )
 
         try:
             render_clip(video_path, clip, clip_path, ass_path=ass_path)
