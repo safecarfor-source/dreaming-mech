@@ -30,6 +30,8 @@ from config import (
     LUFS_LRA,
     LUFS_TARGET,
     LUFS_TP,
+    LOOP_ENABLED,
+    LOOP_TAIL_FADE_SEC,
     MAX_CLIP_DURATION,
     PLAYBACK_SPEED,
     VIDEO_SCALE_FACTOR,
@@ -240,11 +242,15 @@ def _apply_letterbox_overlay(
         f"[final]"
     )
 
-    # ─── 오디오: 속도 조절 + LUFS 정규화 ───
+    # ─── 오디오: 속도 조절 + LUFS 정규화 + 루프 최적화 ───
     audio_filters = []
     if PLAYBACK_SPEED != 1.0:
         audio_filters.append(f"atempo={PLAYBACK_SPEED}")
     audio_filters.append(f"loudnorm=I={LUFS_TARGET}:LRA={LUFS_LRA}:TP={LUFS_TP}")
+    # 루프 최적화: loop_friendly 클립은 엔딩 오디오를 짧게 페이드아웃
+    # → 루프 재생 시 끝→시작이 자연스럽게 이어짐 (하드컷 느낌)
+    if LOOP_ENABLED and hasattr(clip, 'loop_friendly') and clip.loop_friendly:
+        audio_filters.append(f"afade=t=out:st={clip.total_duration - LOOP_TAIL_FADE_SEC}:d={LOOP_TAIL_FADE_SEC}")
     filter_parts.append(
         f"[0:a]{','.join(audio_filters)}[aout]"
     )

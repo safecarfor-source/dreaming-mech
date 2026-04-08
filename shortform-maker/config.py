@@ -74,6 +74,10 @@ MAX_CLIPS = 4  # 최대 후보 구간 (2~4개 알짜만)
 # ─── 합성 설정 ───────────────────────────────────────
 FADE_DURATION = 0.3  # 구간 합성 시 페이드 (초)
 
+# ─── 루프 최적화 ─────────────────────────────────────
+LOOP_ENABLED = True  # loop_friendly 클립에 루프 최적화 적용
+LOOP_TAIL_FADE_SEC = 0.15  # 엔딩 오디오 페이드아웃 (루프 시 자연스러운 연결)
+
 # ─── 오디오 ──────────────────────────────────────────
 LUFS_TARGET = -14     # YouTube 표준 라우드니스
 LUFS_LRA = 11         # Loudness Range
@@ -102,11 +106,12 @@ WHISPER_LANGUAGE = "ko"
 
 # Virality Score 가중치
 VIRALITY_WEIGHTS = {
-    "hook_power": 0.30,
+    "hook_power": 0.25,
     "info_value": 0.20,
-    "emotion_twist": 0.15,
+    "emotion_twist": 0.10,
     "independence": 0.15,
     "consumer_desire": 0.20,
+    "loop_score": 0.10,  # 루프 친화도 (끝→시작 자연 연결)
 }
 
 # 경로
