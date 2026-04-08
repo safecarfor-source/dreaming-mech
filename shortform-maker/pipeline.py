@@ -115,6 +115,9 @@ def run_pipeline(
                         "summary": recut.get("summary", raw_clip.get("summary", "")),
                         "keywords": recut.get("keywords", raw_clip.get("keywords", [])),
                     }
+                    # recut이 고유 훅 타이틀을 생성했으면 사용
+                    if recut.get("hook_title"):
+                        recut_clip_data["hook_title"] = recut["hook_title"]
                     # 합성이었으면 단일 구간으로 변환
                     recut_clip_data.pop("is_composition", None)
                     recut_clip_data.pop("segments", None)
