@@ -5,12 +5,15 @@ import { YoutubeApiService } from './services/youtube-api.service';
 import { TranscriptService } from './services/transcript.service';
 import { AiOrchestrationService } from './services/ai-orchestration.service';
 import { ReplicateService } from './services/replicate.service';
+import { BackgroundRemovalService } from './services/background-removal.service';
+import { UploadModule } from '../upload/upload.module';
 
 /**
  * YouTube Supporter 모듈
  * PrismaModule은 @Global() 이므로 imports 불필요
  */
 @Module({
+  imports: [UploadModule],
   controllers: [YouTubeSupporterController],
   providers: [
     YouTubeSupporterService,
@@ -18,6 +21,7 @@ import { ReplicateService } from './services/replicate.service';
     TranscriptService,
     AiOrchestrationService,
     ReplicateService,
+    BackgroundRemovalService,
   ],
 })
 export class YouTubeSupporterModule {}

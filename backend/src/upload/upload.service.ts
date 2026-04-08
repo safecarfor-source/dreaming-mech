@@ -39,6 +39,49 @@ export class UploadService {
     console.log('✅ AWS S3 configured successfully');
   }
 
+  /**
+   * Buffer를 직접 S3에 업로드 (DALL-E 이미지 저장, 캔버스 PNG 등)
+   */
+  async uploadBuffer(
+    buffer: Buffer,
+    contentType: string,
+    prefix: string = 'thumbnails',
+  ): Promise<string> {
+    if (!this.isS3Configured || !this.s3Client || !this.bucketName) {
+      throw new InternalServerErrorException(
+        'Image upload is not available. AWS S3 is not configured.',
+      );
+    }
+
+    try {
+      const extMap: Record<string, string> = {
+        'image/png': 'png',
+        'image/jpeg': 'jpg',
+        'image/webp': 'webp',
+      };
+      const ext = extMap[contentType] || 'png';
+      const fileName = `${prefix}/${uuidv4()}.${ext}`;
+
+      const command = new PutObjectCommand({
+        Bucket: this.bucketName,
+        Key: fileName,
+        Body: buffer,
+        ContentType: contentType,
+      });
+
+      await this.s3Client.send(command);
+
+      if (this.cloudFrontUrl) {
+        return `${this.cloudFrontUrl}/${fileName}`;
+      }
+
+      return `https://${this.bucketName}.s3.${this.region}.amazonaws.com/${fileName}`;
+    } catch (error) {
+      console.error('S3 buffer upload error:', error);
+      throw new InternalServerErrorException('Failed to upload buffer to S3');
+    }
+  }
+
   async uploadImage(file: Express.Multer.File): Promise<string> {
     // S3가 설정되지 않았으면 에러 반환
     if (!this.isS3Configured || !this.s3Client || !this.bucketName) {

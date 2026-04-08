@@ -14,15 +14,17 @@ import {
   BadRequestException,
   Res,
   UploadedFile,
+  UploadedFiles,
   UseInterceptors,
   Req,
   StreamableFile,
 } from '@nestjs/common';
 import type { Request, Response } from 'express';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { mkdirSync } from 'fs';
 import { YouTubeSupporterService } from './youtube-supporter.service';
+import { BackgroundRemovalService } from './services/background-removal.service';
 import { YtAuthGuard } from './guards/yt-auth.guard';
 import { YtExternalApiGuard } from './guards/yt-external-api.guard';
 import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
@@ -65,12 +67,14 @@ import {
   ThumbnailSaveSchema,
   ThumbnailFeedbackSchema,
   ThumbnailMemorySchema,
+  UploadToS3Schema,
   type ThumbnailStrategyDto,
   type ThumbnailGenerateDto,
   type ThumbnailAnalyzeDto,
   type ThumbnailSaveDto,
   type ThumbnailFeedbackDto,
   type ThumbnailMemoryDto,
+  type UploadToS3Dto,
 } from './schemas/youtube-supporter.schema';
 
 /**
@@ -79,7 +83,10 @@ import {
  */
 @Controller('yt')
 export class YouTubeSupporterController {
-  constructor(private readonly service: YouTubeSupporterService) {}
+  constructor(
+    private readonly service: YouTubeSupporterService,
+    private readonly backgroundRemoval: BackgroundRemovalService,
+  ) {}
 
   // ─────────────────────────────────────────────
   // 인증
@@ -789,5 +796,99 @@ export class YouTubeSupporterController {
   @UseGuards(YtAuthGuard)
   async thumbnailMemoryList() {
     return this.service.getThumbnailMemory();
+  }
+
+  /**
+   * POST /api/yt/thumbnail/analyze-batch
+   * 배치 썸네일 분석 (최대 10장)
+   */
+  @Post('thumbnail/analyze-batch')
+  @UseGuards(YtAuthGuard)
+  @UseInterceptors(FilesInterceptor('images', 10))
+  async thumbnailAnalyzeBatch(
+    @UploadedFiles() files: Express.Multer.File[],
+    @Body() body: { userNote?: string },
+  ) {
+    if (!files?.length) {
+      throw new BadRequestException('최소 1장의 이미지를 업로드해주세요');
+    }
+    return this.service.analyzeThumbnailBatch(files, body.userNote);
+  }
+
+  /**
+   * POST /api/yt/thumbnail/extract-insights
+   * 학습 데이터에서 자동 인사이트 추출
+   */
+  @Post('thumbnail/extract-insights')
+  @UseGuards(YtAuthGuard)
+  async thumbnailExtractInsights(
+    @Body() body: { noteIds?: string[] },
+  ) {
+    return this.service.extractInsights(body.noteIds);
+  }
+
+  /**
+   * GET /api/yt/thumbnail/memory/stats
+   * 학습 메모리 통계
+   */
+  @Get('thumbnail/memory/stats')
+  @UseGuards(YtAuthGuard)
+  async thumbnailMemoryStats() {
+    return this.service.getThumbnailMemoryStats();
+  }
+
+  /**
+   * PATCH /api/yt/thumbnail/memory/:id
+   * 학습 메모리 수정
+   */
+  @Patch('thumbnail/memory/:id')
+  @UseGuards(YtAuthGuard)
+  async thumbnailMemoryUpdate(
+    @Param('id') id: string,
+    @Body() body: { content?: string; tags?: string[]; score?: number },
+  ) {
+    return this.service.updateThumbnailMemory(id, body);
+  }
+
+  /**
+   * DELETE /api/yt/thumbnail/memory/:id
+   * 학습 메모리 삭제
+   */
+  @Delete('thumbnail/memory/:id')
+  @UseGuards(YtAuthGuard)
+  async thumbnailMemoryDelete(
+    @Param('id') id: string,
+  ) {
+    return this.service.deleteThumbnailMemory(id);
+  }
+
+  /**
+   * POST /api/yt/thumbnail/remove-bg
+   * 배경 제거 후 S3 업로드
+   */
+  @Post('thumbnail/remove-bg')
+  @UseGuards(YtAuthGuard)
+  @UseInterceptors(FileInterceptor('image'))
+  @HttpCode(HttpStatus.OK)
+  async thumbnailRemoveBg(
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    if (!file) {
+      throw new BadRequestException('이미지 파일을 업로드해주세요');
+    }
+    return this.service.removeBgAndUpload(file.buffer, this.backgroundRemoval);
+  }
+
+  /**
+   * POST /api/yt/thumbnail/upload-to-s3
+   * base64 이미지 S3 업로드
+   */
+  @Post('thumbnail/upload-to-s3')
+  @UseGuards(YtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  async thumbnailUploadToS3(
+    @Body(new ZodValidationPipe(UploadToS3Schema)) dto: UploadToS3Dto,
+  ) {
+    return this.service.uploadBase64ToS3(dto.imageBase64);
   }
 }

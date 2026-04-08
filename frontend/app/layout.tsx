@@ -111,6 +111,11 @@ export default function RootLayout({
           rel="stylesheet"
           href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css"
         />
+        {/* 썸네일 캔버스용 한글 폰트 */}
+        <link
+          rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Jua&family=Noto+Sans+KR:wght@700;900&display=swap"
+        />
       </head>
       <body className="antialiased">
         {/* JSON-LD: Organization Schema */}

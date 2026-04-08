@@ -830,16 +830,41 @@ ${channelList || '(등록된 채널 없음)'}
 
   /**
    * 썸네일 전략 생성 (Opus)
-   * 프로젝트 컨텍스트 + 학습된 노하우를 기반으로 전략 3안 제안
+   * 가중치 기반 학습 데이터를 섹션별로 주입하여 전략 3안 제안
    */
   async generateThumbnailStrategy(
     projectTitle: string,
     coreValue?: string,
     scriptSummary?: string,
-    learnedKnowledge?: string[],
+    learnedSections?: {
+      verified?: string[];      // 검증된 성공 패턴 (score >= 3)
+      expert?: string[];        // 전문가 노하우
+      recentAnalysis?: string[]; // 최근 분석 인사이트
+      positive?: string[];      // 효과적이었던 전략
+      negative?: string[];      // 회피해야 할 패턴
+    },
   ): Promise<string> {
-    const knowledgeSection = learnedKnowledge?.length
-      ? `\n\n## 전문가가 축적한 썸네일 노하우:\n${learnedKnowledge.map((k, i) => `${i + 1}. ${k}`).join('\n')}`
+    // 섹션별 학습 데이터 구성
+    const sections: string[] = [];
+
+    if (learnedSections?.verified?.length) {
+      sections.push(`## ✅ 검증된 성공 패턴 (가장 중요 — 반드시 반영):\n${learnedSections.verified.map((k, i) => `${i + 1}. ${k}`).join('\n')}`);
+    }
+    if (learnedSections?.expert?.length) {
+      sections.push(`## 🎓 전문가 노하우:\n${learnedSections.expert.map((k, i) => `${i + 1}. ${k}`).join('\n')}`);
+    }
+    if (learnedSections?.recentAnalysis?.length) {
+      sections.push(`## 🔍 최근 분석 인사이트:\n${learnedSections.recentAnalysis.map((k, i) => `${i + 1}. ${k}`).join('\n')}`);
+    }
+    if (learnedSections?.positive?.length) {
+      sections.push(`## 👍 효과적이었던 전략 (이 방향 추천):\n${learnedSections.positive.map((k, i) => `${i + 1}. ${k}`).join('\n')}`);
+    }
+    if (learnedSections?.negative?.length) {
+      sections.push(`## 🚫 회피해야 할 패턴 (이 방향 지양):\n${learnedSections.negative.map((k, i) => `${i + 1}. ${k}`).join('\n')}`);
+    }
+
+    const knowledgeSection = sections.length
+      ? `\n\n--- 학습된 노하우 (총 ${sections.length}개 섹션) ---\n${sections.join('\n\n')}`
       : '';
 
     const contextSection = [
@@ -863,7 +888,7 @@ ${knowledgeSection}
     {
       "concept": "전략 이름 (예: 긴급 경고형)",
       "description": "한줄 설명",
-      "background": "배경 이미지 설명 (AI 이미지 생성용, 구체적으로)",
+      "background": "배경 이미지 설명 (AI 이미지 생성용, 구체적으로, 인물 합성 공간 확보)",
       "textMain": "메인 텍스트 (6자 이내, 강렬하게)",
       "textSub": "보조 텍스트 (선택, 10자 이내)",
       "colorScheme": {
@@ -883,7 +908,57 @@ ${knowledgeSection}
 - 클릭률(CTR) 최적화: 0.3초 안에 시선을 끌 것
 - fluxPrompt는 반드시 영어로, "YouTube thumbnail, 1280x720" 포함
 - 텍스트는 이미지에 포함하지 말 것 (캔버스에서 별도 추가)
-- 배경에 텍스트 공간을 확보한 구도`;
+- 배경에 텍스트 공간을 확보하고, 인물 합성을 위한 공간도 고려한 구도
+- 좌우 분할, 중앙 인물 등 합성형 구도를 적극 활용
+- 학습된 노하우가 있다면 반드시 반영 (특히 ✅ 검증된 패턴, 🚫 회피 패턴)`;
+
+    return this.generateWithOpus(prompt);
+  }
+
+  /**
+   * 학습 데이터에서 공통 패턴/인사이트 자동 추출
+   */
+  async extractInsightsFromAnalyses(analyses: Array<{ content: string; structuredData?: Record<string, unknown> }>): Promise<string> {
+    if (this.isMockMode) {
+      return JSON.stringify({
+        insights: [
+          { title: 'Mock 인사이트', content: '테스트용 패턴입니다.', tags: ['mock'] },
+        ],
+      });
+    }
+
+    const dataSection = analyses.map((a, i) => {
+      if (a.structuredData) {
+        return `분석 ${i + 1}: ${JSON.stringify(a.structuredData)}`;
+      }
+      return `분석 ${i + 1}: ${a.content}`;
+    }).join('\n\n');
+
+    const prompt = `당신은 유튜브 썸네일 데이터 분석 전문가입니다.
+
+아래 ${analyses.length}개의 썸네일 분석 결과에서 공통 패턴과 실행 가능한 인사이트를 추출해주세요.
+
+${dataSection}
+
+## 요청사항:
+아래 JSON 형식으로 3~5개의 핵심 인사이트를 추출해주세요.
+
+\`\`\`json
+{
+  "insights": [
+    {
+      "title": "인사이트 제목 (예: 좌우 분할 구도가 가장 효과적)",
+      "content": "구체적 설명 + 적용 방법 (2-3문장)",
+      "tags": ["태그1", "태그2"]
+    }
+  ]
+}
+\`\`\`
+
+중요:
+- 구체적이고 실행 가능한 인사이트만 추출
+- "빨간색이 많다" → "빨간색 배경 + 흰색 텍스트 조합이 긴급감을 줌" 수준으로 구체화
+- 반복되는 패턴에 높은 우선순위`;
 
     return this.generateWithOpus(prompt);
   }

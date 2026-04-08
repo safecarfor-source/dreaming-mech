@@ -529,11 +529,35 @@ export interface ThumbnailRecord {
   projectId?: string;
   imageUrl?: string;
   baseImageUrl?: string;
+  personImageUrl?: string;
   canvasData?: Record<string, unknown>;
   strategy?: Record<string, unknown>;
   prompt?: string;
   status: string;
+  feedbackRating?: string;
+  feedbackComment?: string;
   createdAt: string;
+}
+
+export interface SkillNote {
+  id: string;
+  category: string;
+  title: string;
+  content: string;
+  source?: string;
+  tags: string[];
+  score: number;
+  linkedThumbnailId?: string;
+  structuredData?: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface MemoryStats {
+  total: number;
+  bySource: Record<string, number>;
+  avgScore: number;
+  topTags: Array<{ tag: string; count: number }>;
 }
 
 export async function generateThumbnailStrategy(data: {
@@ -605,9 +629,66 @@ export async function saveThumbnailMemory(data: {
   return res.data;
 }
 
-export async function getThumbnailMemory() {
+export async function getThumbnailMemory(): Promise<SkillNote[]> {
   const res = await ytApi.get('/yt/thumbnail/memory');
   return res.data;
+}
+
+// ─── 썸네일 AI (Phase 2: 캔버스 + 실사 합성) ──────────
+
+export async function removeBackground(file: File): Promise<{ s3Url: string }> {
+  const formData = new FormData();
+  formData.append('image', file);
+  const res = await ytApi.post('/yt/thumbnail/remove-bg', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
+  return res.data;
+}
+
+export async function uploadCanvasToS3(imageBase64: string): Promise<{ s3Url: string }> {
+  const res = await ytApi.post('/yt/thumbnail/upload-to-s3', { imageBase64 });
+  return res.data;
+}
+
+// ─── 썸네일 AI (Phase 3: 학습 자동화) ────────────────
+
+export async function analyzeThumbnailBatch(
+  files: File[],
+  userNote?: string,
+): Promise<{ results: string[]; failed: string[] }> {
+  const formData = new FormData();
+  files.forEach((file) => formData.append('images', file));
+  if (userNote) formData.append('userNote', userNote);
+
+  const res = await ytApi.post('/yt/thumbnail/analyze-batch', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+    timeout: 120000, // 배치 분석은 시간이 걸림
+  });
+  return res.data;
+}
+
+export async function extractInsights(
+  noteIds?: string[],
+): Promise<{ insights: Array<{ title: string; content: string; tags: string[] }> }> {
+  const res = await ytApi.post('/yt/thumbnail/extract-insights', { noteIds });
+  return res.data;
+}
+
+export async function getThumbnailMemoryStats(): Promise<MemoryStats> {
+  const res = await ytApi.get('/yt/thumbnail/memory/stats');
+  return res.data;
+}
+
+export async function updateThumbnailMemory(
+  id: string,
+  data: { content?: string; tags?: string[]; score?: number },
+): Promise<SkillNote> {
+  const res = await ytApi.patch(`/yt/thumbnail/memory/${id}`, data);
+  return res.data;
+}
+
+export async function deleteThumbnailMemory(id: string): Promise<void> {
+  await ytApi.delete(`/yt/thumbnail/memory/${id}`);
 }
 
 export default ytApi;

@@ -216,3 +216,13 @@ export type ThumbnailAnalyzeDto = z.infer<typeof ThumbnailAnalyzeSchema>;
 export type ThumbnailSaveDto = z.infer<typeof ThumbnailSaveSchema>;
 export type ThumbnailFeedbackDto = z.infer<typeof ThumbnailFeedbackSchema>;
 export type ThumbnailMemoryDto = z.infer<typeof ThumbnailMemorySchema>;
+
+// ─────────────────────────────────────────────
+// 썸네일 S3 업로드
+// ─────────────────────────────────────────────
+
+export const UploadToS3Schema = z.object({
+  imageBase64: z.string().min(1, 'base64 이미지를 입력하세요'),
+});
+
+export type UploadToS3Dto = z.infer<typeof UploadToS3Schema>;

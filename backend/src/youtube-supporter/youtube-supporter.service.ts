@@ -9,6 +9,7 @@ import { YoutubeApiService } from './services/youtube-api.service';
 import { TranscriptService } from './services/transcript.service';
 import { AiOrchestrationService } from './services/ai-orchestration.service';
 import { ReplicateService } from './services/replicate.service';
+import { UploadService } from '../upload/upload.service';
 import type {
   CreateProjectDto,
   UpdateProjectDto,
@@ -52,6 +53,7 @@ export class YouTubeSupporterService {
     private readonly transcript: TranscriptService,
     private readonly aiOrchestration: AiOrchestrationService,
     private readonly replicate: ReplicateService,
+    private readonly uploadService: UploadService,
   ) {}
 
   // ─────────────────────────────────────────────
@@ -1211,14 +1213,61 @@ export class YouTubeSupporterService {
       }
     }
 
-    // 학습된 썸네일 노하우 가져오기 (최근 20개)
-    const skillNotes = await this.prisma.ytSkillNote.findMany({
-      where: { category: 'thumbnail' },
-      orderBy: { createdAt: 'desc' },
-      take: 20,
-      select: { content: true },
-    });
-    const learnedKnowledge = skillNotes.map((n) => n.content);
+    // 가중치 기반 학습 데이터 조회 (5개 섹션)
+    const [verified, expert, recentAnalysis, positive, negative] = await Promise.all([
+      // 검증된 성공 패턴 (score >= 3)
+      this.prisma.ytSkillNote.findMany({
+        where: { category: 'thumbnail', score: { gte: 3 } },
+        orderBy: { score: 'desc' },
+        take: 10,
+        select: { id: true, content: true },
+      }),
+      // 전문가 노하우
+      this.prisma.ytSkillNote.findMany({
+        where: { category: 'thumbnail', source: 'expert-input' },
+        orderBy: { createdAt: 'desc' },
+        take: 10,
+        select: { id: true, content: true },
+      }),
+      // 최근 분석
+      this.prisma.ytSkillNote.findMany({
+        where: { category: 'thumbnail', source: 'thumbnail-analyzer' },
+        orderBy: { createdAt: 'desc' },
+        take: 5,
+        select: { id: true, content: true },
+      }),
+      // 긍정 피드백
+      this.prisma.ytSkillNote.findMany({
+        where: { category: 'thumbnail', source: 'positive-feedback' },
+        orderBy: { createdAt: 'desc' },
+        take: 5,
+        select: { id: true, content: true },
+      }),
+      // 부정 피드백
+      this.prisma.ytSkillNote.findMany({
+        where: { category: 'thumbnail', source: 'negative-feedback' },
+        orderBy: { createdAt: 'desc' },
+        take: 3,
+        select: { id: true, content: true },
+      }),
+    ]);
+
+    // ID 기반 중복 제거
+    const seenIds = new Set<string>();
+    const dedup = (notes: Array<{ id: string; content: string }>) =>
+      notes.filter((n) => {
+        if (seenIds.has(n.id)) return false;
+        seenIds.add(n.id);
+        return true;
+      }).map((n) => n.content);
+
+    const learnedSections = {
+      verified: dedup(verified),
+      expert: dedup(expert),
+      recentAnalysis: dedup(recentAnalysis),
+      positive: dedup(positive),
+      negative: dedup(negative),
+    };
 
     // 커스텀 지시가 있으면 프로젝트 제목에 추가
     if (dto.customInstruction) {
@@ -1229,7 +1278,7 @@ export class YouTubeSupporterService {
       projectTitle,
       coreValue,
       scriptSummary,
-      learnedKnowledge,
+      learnedSections,
     );
 
     // JSON 파싱 시도
@@ -1251,19 +1300,35 @@ export class YouTubeSupporterService {
       height: dto.height,
     });
 
-    // 썸네일 레코드 생성
+    // DALL-E/FLUX 임시 URL → S3에 영구 저장
+    const s3Urls: string[] = [];
+    for (const url of imageUrls) {
+      try {
+        const res = await fetch(url);
+        if (!res.ok) throw new Error(`이미지 다운로드 실패: ${res.status}`);
+        const arrayBuffer = await res.arrayBuffer();
+        const buffer = Buffer.from(arrayBuffer);
+        const s3Url = await this.uploadService.uploadBuffer(buffer, 'image/png', 'thumbnails');
+        s3Urls.push(s3Url);
+      } catch (err) {
+        this.logger.error(`S3 업로드 실패, 임시 URL 사용: ${err}`);
+        s3Urls.push(url); // S3 실패 시 원본 URL 유지
+      }
+    }
+
+    // 썸네일 레코드 생성 (S3 URL로 저장 + status COMPLETED)
     const thumbnail = await this.prisma.ytThumbnail.create({
       data: {
         projectId: dto.projectId ?? null,
-        baseImageUrl: imageUrls[0] ?? null,
+        baseImageUrl: s3Urls[0] ?? null,
         prompt: dto.prompt,
-        status: 'GENERATING',
+        status: 'COMPLETED',
       },
     });
 
     return {
       id: thumbnail.id,
-      imageUrls,
+      imageUrls: s3Urls,
       status: 'COMPLETED',
     };
   }
@@ -1313,7 +1378,7 @@ export class YouTubeSupporterService {
       dto.userNote,
     );
 
-    // 메모리에 저장
+    // 메모리에 저장 (구조화된 데이터 포함)
     if (dto.saveToMemory) {
       try {
         const parsed = JSON.parse(analysis.match(/```json\s*([\s\S]*?)\s*```/)?.[1] ?? analysis);
@@ -1324,6 +1389,8 @@ export class YouTubeSupporterService {
             content: `구도: ${parsed.layout}\n색상: ${JSON.stringify(parsed.colorScheme)}\n텍스트: ${JSON.stringify(parsed.textStrategy)}\n감정: ${parsed.emotionalTone}\n효과: ${parsed.effectivenessReason}`,
             source: 'thumbnail-analyzer',
             tags: ['ai-analysis', parsed.emotionalTone, parsed.layout].filter(Boolean),
+            score: 1, // AI 분석은 기본 품질
+            structuredData: parsed as Prisma.InputJsonValue,
           },
         });
       } catch {
@@ -1350,19 +1417,53 @@ export class YouTubeSupporterService {
   }
 
   /**
-   * 썸네일 피드백 저장
+   * 썸네일 피드백 저장 — 피드백 플라이휠
+   * good → 성공 패턴 기록 (score=5, 다음 전략에 직접 반영)
+   * bad → 회피 패턴 기록 (score=-3, 다음 전략에서 자동 제외)
    */
   async saveThumbnailFeedback(dto: ThumbnailFeedbackDto) {
     const thumbnail = await this.prisma.ytThumbnail.findUnique({ where: { id: dto.thumbnailId } });
     if (!thumbnail) throw new NotFoundException('썸네일을 찾을 수 없습니다');
 
+    // 1. YtThumbnail에 직접 피드백 저장 (추적용)
+    await this.prisma.ytThumbnail.update({
+      where: { id: dto.thumbnailId },
+      data: {
+        feedbackRating: dto.rating,
+        feedbackComment: dto.comment ?? null,
+      },
+    });
+
+    // 2. 피드백을 학습 메모리로 변환
+    const strategy = thumbnail.strategy as Record<string, unknown> | null;
+    const isGood = dto.rating === 'good';
+
+    let content: string;
+    if (isGood && strategy) {
+      // 좋은 피드백 → 성공 패턴으로 기록 (전략 상세 포함)
+      content = `성공 패턴: ${strategy.concept ?? '전략'}\n` +
+        `프롬프트: ${(thumbnail.prompt ?? '없음').slice(0, 200)}\n` +
+        `색상: ${JSON.stringify(strategy.colorScheme ?? {})}\n` +
+        `감정톤: ${strategy.emotionalTone ?? '없음'}\n` +
+        `코멘트: ${dto.comment ?? '없음'}`;
+    } else if (!isGood && strategy) {
+      // 나쁜 피드백 → 회피 패턴으로 기록
+      content = `회피 패턴: ${strategy.concept ?? '전략'}\n` +
+        `이유: ${dto.comment ?? '별로였음'}\n` +
+        `감정톤: ${strategy.emotionalTone ?? '없음'}`;
+    } else {
+      content = `평가: ${dto.rating}\n프롬프트: ${thumbnail.prompt ?? '없음'}\n코멘트: ${dto.comment ?? '없음'}`;
+    }
+
     return this.prisma.ytSkillNote.create({
       data: {
         category: 'thumbnail',
-        title: `[피드백] ${dto.rating === 'good' ? '좋음' : '별로'} - ${dto.comment?.slice(0, 30) ?? '무제'}`,
-        content: `평가: ${dto.rating}\n프롬프트: ${thumbnail.prompt ?? '없음'}\n코멘트: ${dto.comment ?? '없음'}`,
-        source: 'feedback',
-        tags: ['feedback', dto.rating],
+        title: `[피드백] ${isGood ? '좋음' : '별로'} - ${dto.comment?.slice(0, 30) ?? strategy?.concept ?? '무제'}`,
+        content,
+        source: isGood ? 'positive-feedback' : 'negative-feedback',
+        tags: ['feedback', dto.rating, ...(strategy?.emotionalTone ? [strategy.emotionalTone as string] : [])],
+        score: isGood ? 5 : -3,
+        linkedThumbnailId: dto.thumbnailId,
       },
     });
   }
@@ -1376,5 +1477,185 @@ export class YouTubeSupporterService {
       orderBy: { createdAt: 'desc' },
       take: 50,
     });
+  }
+
+  /**
+   * 배치 썸네일 분석 (최대 10장 동시)
+   */
+  async analyzeThumbnailBatch(
+    files: Express.Multer.File[],
+    userNote?: string,
+  ): Promise<{ results: string[]; failed: string[] }> {
+    const results: string[] = [];
+    const failed: string[] = [];
+
+    // 동시 3개씩 처리 (API rate limit 고려)
+    const batchSize = 3;
+    for (let i = 0; i < files.length; i += batchSize) {
+      const batch = files.slice(i, i + batchSize);
+      const promises = batch.map(async (file) => {
+        try {
+          const imageBase64 = file.buffer.toString('base64');
+          const mediaType = file.mimetype || 'image/png';
+          const analysis = await this.analyzeThumbnail(imageBase64, mediaType, {
+            userNote,
+            saveToMemory: true,
+          } as ThumbnailAnalyzeDto);
+          return { success: true, result: analysis, filename: file.originalname };
+        } catch (err) {
+          return { success: false, result: '', filename: file.originalname };
+        }
+      });
+
+      const batchResults = await Promise.allSettled(promises);
+      for (const r of batchResults) {
+        if (r.status === 'fulfilled' && r.value.success) {
+          results.push(r.value.result);
+        } else {
+          const filename = r.status === 'fulfilled' ? r.value.filename : 'unknown';
+          failed.push(filename);
+        }
+      }
+    }
+
+    return { results, failed };
+  }
+
+  /**
+   * 학습 데이터에서 자동 인사이트 추출
+   */
+  async extractInsights(noteIds?: string[]) {
+    // 분석할 노트 조회
+    const notes = noteIds?.length
+      ? await this.prisma.ytSkillNote.findMany({
+          where: { id: { in: noteIds } },
+          select: { content: true, structuredData: true },
+        })
+      : await this.prisma.ytSkillNote.findMany({
+          where: {
+            category: 'thumbnail',
+            structuredData: { not: Prisma.DbNull },
+          },
+          orderBy: { createdAt: 'desc' },
+          take: 30,
+          select: { content: true, structuredData: true },
+        });
+
+    if (notes.length === 0) {
+      return { insights: [] };
+    }
+
+    const rawResponse = await this.aiOrchestration.extractInsightsFromAnalyses(
+      notes.map((n) => ({
+        content: n.content,
+        structuredData: n.structuredData as Record<string, unknown> | undefined,
+      })),
+    );
+
+    // JSON 파싱
+    try {
+      const jsonMatch = rawResponse.match(/```json\s*([\s\S]*?)\s*```/);
+      const jsonStr = jsonMatch ? jsonMatch[1] : rawResponse;
+      const parsed = JSON.parse(jsonStr);
+
+      // 각 인사이트를 자동으로 메모리에 저장 (score=10, 최고 가중치)
+      for (const insight of parsed.insights ?? []) {
+        await this.prisma.ytSkillNote.create({
+          data: {
+            category: 'thumbnail',
+            title: `[자동 인사이트] ${insight.title}`,
+            content: insight.content,
+            source: 'auto-insight',
+            tags: ['auto-insight', ...(insight.tags ?? [])],
+            score: 10,
+          },
+        });
+      }
+
+      return parsed;
+    } catch {
+      return { raw: rawResponse };
+    }
+  }
+
+  /**
+   * 학습 메모리 수정
+   */
+  async updateThumbnailMemory(id: string, data: { content?: string; tags?: string[]; score?: number }) {
+    return this.prisma.ytSkillNote.update({
+      where: { id },
+      data: {
+        ...(data.content !== undefined && { content: data.content }),
+        ...(data.tags !== undefined && { tags: data.tags }),
+        ...(data.score !== undefined && { score: data.score }),
+      },
+    });
+  }
+
+  /**
+   * 학습 메모리 삭제
+   */
+  async deleteThumbnailMemory(id: string) {
+    return this.prisma.ytSkillNote.delete({ where: { id } });
+  }
+
+  /**
+   * 학습 메모리 통계
+   */
+  async getThumbnailMemoryStats() {
+    const allNotes = await this.prisma.ytSkillNote.findMany({
+      where: { category: 'thumbnail' },
+      select: { source: true, score: true, tags: true },
+    });
+
+    // 소스별 분포
+    const bySource: Record<string, number> = {};
+    let totalScore = 0;
+    const tagCounts: Record<string, number> = {};
+
+    for (const note of allNotes) {
+      const src = note.source ?? 'unknown';
+      bySource[src] = (bySource[src] ?? 0) + 1;
+      totalScore += note.score;
+      for (const tag of note.tags) {
+        tagCounts[tag] = (tagCounts[tag] ?? 0) + 1;
+      }
+    }
+
+    // 상위 10개 태그
+    const topTags = Object.entries(tagCounts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 10)
+      .map(([tag, count]) => ({ tag, count }));
+
+    return {
+      total: allNotes.length,
+      bySource,
+      avgScore: allNotes.length > 0 ? Math.round((totalScore / allNotes.length) * 10) / 10 : 0,
+      topTags,
+    };
+  }
+
+  /**
+   * 배경 제거 후 S3 업로드
+   * POST /api/yt/thumbnail/remove-bg
+   */
+  async removeBgAndUpload(
+    imageBuffer: Buffer,
+    backgroundRemoval: import('./services/background-removal.service').BackgroundRemovalService,
+  ): Promise<{ s3Url: string }> {
+    const result = await backgroundRemoval.removeBackground(imageBuffer);
+    const s3Url = await this.uploadService.uploadBuffer(result, 'image/png', 'thumbnails/person');
+    return { s3Url };
+  }
+
+  /**
+   * base64 이미지 → S3 업로드
+   * POST /api/yt/thumbnail/upload-to-s3
+   */
+  async uploadBase64ToS3(imageBase64: string): Promise<{ s3Url: string }> {
+    const buffer = Buffer.from(imageBase64, 'base64');
+    const s3Url = await this.uploadService.uploadBuffer(buffer, 'image/png', 'thumbnails/canvas');
+    return { s3Url };
   }
 }

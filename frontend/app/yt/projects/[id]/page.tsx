@@ -27,7 +27,7 @@ import ProjectCardTab from '../../components/tabs/ProjectCardTab';
 import ShortformTab from '../../components/tabs/ShortformTab';
 import LearningTab from '../../components/tabs/LearningTab';
 import CleanupTab from '../../components/tabs/CleanupTab';
-import ThumbnailTab from '../../components/tabs/ThumbnailTab';
+import ThumbnailTab from '../../components/tabs/thumbnail/ThumbnailTab';
 
 // ─── 탭 정의 ─────────────────────────────────────
 type Tab = '프로젝트카드' | '주제찾기' | '썸네일' | '학습' | '정리' | '숏폼제작';
