@@ -127,6 +127,10 @@ def build_clips(
             clips.append(composed)
 
     clips.sort(key=lambda c: c.virality_score, reverse=True)
+
+    # 하네스: 겹치는 클립 자동 제거 (30% 이상 겹치면 낮은 점수 클립 탈락)
+    clips = _deduplicate_overlapping(clips)
+
     return clips, oversized_raw
 
 
@@ -175,7 +179,69 @@ def _validate_clip(clip: ComposedClip) -> bool:
             )
             return False
 
+    # 워드 타임스탬프로 화면전환(공백) 감지
+    if clip.words and _has_long_gap(clip.words):
+        logger.warning(
+            f"[REJECT] 클립 '{clip.hook_title}' 내부에 2초+ 공백 감지 "
+            f"→ 화면 전환 포함 가능성 → 탈락"
+        )
+        return False
+
     return True
+
+
+def _deduplicate_overlapping(clips: list[ComposedClip]) -> list[ComposedClip]:
+    """겹치는 클립 자동 제거 (하네스 강제)
+
+    두 클립의 시간이 30% 이상 겹치면, virality_score가 낮은 쪽을 제거.
+    이미 virality_score 내림차순 정렬된 상태에서 호출됨.
+    """
+    if len(clips) <= 1:
+        return clips
+
+    kept = []
+    for clip in clips:
+        clip_start = clip.segments[0].start_sec
+        clip_end = clip.segments[-1].end_sec
+        clip_dur = clip_end - clip_start
+
+        is_duplicate = False
+        for existing in kept:
+            ex_start = existing.segments[0].start_sec
+            ex_end = existing.segments[-1].end_sec
+
+            # 겹침 구간 계산
+            overlap_start = max(clip_start, ex_start)
+            overlap_end = min(clip_end, ex_end)
+            overlap = max(0, overlap_end - overlap_start)
+
+            # 둘 중 짧은 클립 기준 겹침률
+            shorter_dur = min(clip_dur, ex_end - ex_start)
+            if shorter_dur > 0 and overlap / shorter_dur > 0.3:
+                logger.warning(
+                    f"[DEDUP] '{clip.hook_title}' ↔ '{existing.hook_title}' "
+                    f"겹침 {overlap:.0f}초 ({overlap/shorter_dur*100:.0f}%) → 낮은 점수 제거"
+                )
+                is_duplicate = True
+                break
+
+        if not is_duplicate:
+            kept.append(clip)
+
+    if len(kept) < len(clips):
+        logger.info(f"[DEDUP] {len(clips)}개 → {len(kept)}개 (중복 {len(clips)-len(kept)}개 제거)")
+
+    return kept
+
+
+def _has_long_gap(words: list[dict], gap_threshold: float = 2.0) -> bool:
+    """워드 타임스탬프에서 2초 이상 공백(화면전환) 감지"""
+    for i in range(1, len(words)):
+        prev_end = words[i - 1].get("end", 0)
+        curr_start = words[i].get("start", 0)
+        if curr_start - prev_end >= gap_threshold:
+            return True
+    return False
 
 
 def _time_to_seconds(time_str: str) -> float:
