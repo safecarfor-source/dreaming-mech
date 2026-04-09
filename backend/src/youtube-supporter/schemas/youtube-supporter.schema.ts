@@ -187,7 +187,10 @@ export const ThumbnailGenerateSchema = z.object({
 
 export const ThumbnailAnalyzeSchema = z.object({
   userNote: z.string().max(1000).optional(),
-  saveToMemory: z.boolean().optional().default(true),
+  saveToMemory: z.preprocess(
+    (val) => val === 'true' || val === true,
+    z.boolean().optional().default(true),
+  ),
 });
 
 export const ThumbnailSaveSchema = z.object({
