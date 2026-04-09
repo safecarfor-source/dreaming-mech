@@ -42,7 +42,7 @@ export class GeminiImageService {
       this.logger.log(`Gemini 썸네일 생성: ${prompt.slice(0, 80)}...`);
 
       const response = await fetch(
-        `${this.baseUrl}/models/gemini-2.0-flash-exp:generateContent?key=${this.apiKey}`,
+        `${this.baseUrl}/models/gemini-2.5-flash-image:generateContent?key=${this.apiKey}`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
