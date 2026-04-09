@@ -2,6 +2,9 @@
 FROM node:20-alpine AS deps
 WORKDIR /app
 
+# sharp 네이티브 빌드 의존성
+RUN apk add --no-cache build-base python3 vips-dev
+
 COPY package*.json ./
 COPY prisma ./prisma/
 
@@ -14,6 +17,8 @@ RUN npx prisma generate
 # Stage 2: Build the application
 FROM node:20-alpine AS builder
 WORKDIR /app
+
+RUN apk add --no-cache build-base python3 vips-dev
 
 COPY package*.json ./
 RUN npm ci
@@ -30,7 +35,7 @@ RUN npm run build
 FROM node:20-alpine AS runner
 WORKDIR /app
 
-RUN apk add --no-cache dumb-init
+RUN apk add --no-cache dumb-init vips font-noto-cjk
 
 RUN addgroup --system --gid 1001 nestjs && \
     adduser --system --uid 1001 nestjs
