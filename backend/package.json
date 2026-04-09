@@ -46,6 +46,7 @@
     "reflect-metadata": "^0.2.2",
     "replicate": "^1.4.0",
     "rxjs": "^7.8.1",
+    "sharp": "^0.34.5",
     "solapi": "^5.5.4",
     "ua-parser-js": "^2.0.8",
     "uuid": "^11.0.5",
