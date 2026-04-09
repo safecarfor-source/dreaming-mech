@@ -210,8 +210,10 @@ def run_analysis_pipeline(
                     f"이 구간은 최종 결과에서 제외"
                 )
 
-        # 재설계 후 다시 정렬
+        # 재설계 후 다시 정렬 + 중복 제거 (recut 결과가 기존 클립과 겹칠 수 있음)
         composed_clips.sort(key=lambda c: c.virality_score, reverse=True)
+        from modules.composer import _deduplicate_overlapping
+        composed_clips = _deduplicate_overlapping(composed_clips)
 
     # 5.5 하네스: 렌더 전 최종 검증 (구조적 안전장치)
     safe_clips = []
