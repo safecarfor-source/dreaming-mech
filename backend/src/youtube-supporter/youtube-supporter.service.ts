@@ -9,6 +9,7 @@ import { YoutubeApiService } from './services/youtube-api.service';
 import { TranscriptService } from './services/transcript.service';
 import { AiOrchestrationService } from './services/ai-orchestration.service';
 import { ReplicateService } from './services/replicate.service';
+import { GeminiImageService } from './services/gemini-image.service';
 import { UploadService } from '../upload/upload.service';
 import type {
   CreateProjectDto,
@@ -53,6 +54,7 @@ export class YouTubeSupporterService {
     private readonly transcript: TranscriptService,
     private readonly aiOrchestration: AiOrchestrationService,
     private readonly replicate: ReplicateService,
+    private readonly geminiImage: GeminiImageService,
     private readonly uploadService: UploadService,
   ) {}
 
@@ -1689,5 +1691,219 @@ export class YouTubeSupporterService {
     const buffer = Buffer.from(imageBase64, 'base64');
     const s3Url = await this.uploadService.uploadBuffer(buffer, 'image/png', 'thumbnails/canvas');
     return { s3Url };
+  }
+
+  // ─────────────────────────────────────────────
+  // 원스톱 썸네일 생성 (Gemini)
+  // ─────────────────────────────────────────────
+
+  /**
+   * 원스톱 썸네일 생성: 전략 3안 + Gemini 완성 이미지 3장을 한번에
+   * 입력: 영상 제목 + 설명(선택) + 스타일(선택)
+   * 출력: 전략 3안 + S3 URL 3장
+   */
+  async generateCompleteThumbnails(dto: {
+    projectId?: string;
+    title: string;
+    description?: string;
+    style?: string;
+  }) {
+    // 1. 프로젝트 컨텍스트 (있으면)
+    let coreValue: string | undefined;
+    let scriptSummary: string | undefined;
+    let projectTitle = dto.title;
+
+    if (dto.projectId) {
+      const project = await this.prisma.ytProject.findUnique({
+        where: { id: dto.projectId },
+        include: { productionData: { orderBy: { createdAt: 'desc' }, take: 1 } },
+      });
+      if (project) {
+        projectTitle = project.title;
+        const prod = project.productionData[0];
+        if (prod) {
+          coreValue = prod.coreValue ?? undefined;
+          scriptSummary = prod.scriptDraft
+            ? (prod.scriptDraft as string).slice(0, 500)
+            : undefined;
+        }
+      }
+    }
+
+    // 2. 커스텀 지시 구성
+    const customParts: string[] = [];
+    if (dto.description) customParts.push(`영상 설명: ${dto.description}`);
+    if (dto.style) customParts.push(`스타일: ${dto.style}`);
+    if (customParts.length > 0) {
+      projectTitle = `${projectTitle}\n${customParts.join('\n')}`;
+    }
+
+    // 3. 가중치 기반 학습 데이터 조회
+    const [verified, expert, recentAnalysis, positive, negative] = await Promise.all([
+      this.prisma.ytSkillNote.findMany({
+        where: { category: 'thumbnail', score: { gte: 3 } },
+        orderBy: { score: 'desc' },
+        take: 10,
+        select: { id: true, content: true },
+      }),
+      this.prisma.ytSkillNote.findMany({
+        where: { category: 'thumbnail', source: 'expert-input' },
+        orderBy: { createdAt: 'desc' },
+        take: 10,
+        select: { id: true, content: true },
+      }),
+      this.prisma.ytSkillNote.findMany({
+        where: { category: 'thumbnail', source: 'thumbnail-analyzer' },
+        orderBy: { createdAt: 'desc' },
+        take: 5,
+        select: { id: true, content: true },
+      }),
+      this.prisma.ytSkillNote.findMany({
+        where: { category: 'thumbnail', source: 'positive-feedback' },
+        orderBy: { createdAt: 'desc' },
+        take: 5,
+        select: { id: true, content: true },
+      }),
+      this.prisma.ytSkillNote.findMany({
+        where: { category: 'thumbnail', source: 'negative-feedback' },
+        orderBy: { createdAt: 'desc' },
+        take: 3,
+        select: { id: true, content: true },
+      }),
+    ]);
+
+    const seenIds = new Set<string>();
+    const dedup = (notes: Array<{ id: string; content: string }>) =>
+      notes.filter((n) => {
+        if (seenIds.has(n.id)) return false;
+        seenIds.add(n.id);
+        return true;
+      }).map((n) => n.content);
+
+    // 4. AI 전략 생성
+    const rawResponse = await this.aiOrchestration.generateThumbnailStrategy(
+      projectTitle,
+      coreValue,
+      scriptSummary,
+      {
+        verified: dedup(verified),
+        expert: dedup(expert),
+        recentAnalysis: dedup(recentAnalysis),
+        positive: dedup(positive),
+        negative: dedup(negative),
+      },
+    );
+
+    let strategies: Array<{
+      concept: string;
+      textMain: string;
+      textSub?: string;
+      colorScheme?: { background?: string; textColor?: string; accentColor?: string };
+      emotionalTone?: string;
+      fluxPrompt?: string;
+    }> = [];
+
+    try {
+      const jsonMatch = rawResponse.match(/```json\s*([\s\S]*?)\s*```/);
+      const jsonStr = jsonMatch ? jsonMatch[1] : rawResponse;
+      const parsed = JSON.parse(jsonStr);
+      strategies = parsed.strategies ?? [];
+    } catch {
+      return { strategies: [], thumbnails: [], raw: rawResponse };
+    }
+
+    // 5. Gemini로 완성 이미지 3장 생성 + S3 저장
+    const thumbnails: Array<{
+      id: string;
+      imageUrl: string;
+      strategy: (typeof strategies)[0];
+      prompt: string;
+    }> = [];
+
+    const geminiResults = await this.geminiImage.generateMultipleThumbnails(strategies);
+
+    for (let i = 0; i < geminiResults.length; i++) {
+      const result = geminiResults[i];
+      if (!result) continue;
+
+      try {
+        // S3에 저장
+        const buffer = Buffer.from(result.imageBase64, 'base64');
+        const s3Url = await this.uploadService.uploadBuffer(
+          buffer,
+          result.mimeType,
+          'thumbnails/gemini',
+        );
+
+        // DB에 저장
+        const thumbnail = await this.prisma.ytThumbnail.create({
+          data: {
+            projectId: dto.projectId ?? null,
+            imageUrl: s3Url,
+            baseImageUrl: s3Url,
+            strategy: strategies[i] as Prisma.InputJsonValue,
+            prompt: this.geminiImage['strategyToPrompt'](strategies[i]),
+            status: 'COMPLETED',
+          },
+        });
+
+        thumbnails.push({
+          id: thumbnail.id,
+          imageUrl: s3Url,
+          strategy: strategies[i],
+          prompt: thumbnail.prompt ?? '',
+        });
+      } catch (err) {
+        this.logger.error(`썸네일 ${i + 1} S3 저장 실패:`, err);
+      }
+    }
+
+    return { strategies, thumbnails };
+  }
+
+  /**
+   * 썸네일 변형 생성 (기존 전략 기반 + 변형 지시)
+   */
+  async generateThumbnailVariation(dto: {
+    thumbnailId: string;
+    variation: string; // 'more-clickbait' | 'more-minimal' | 'bigger-face' | 'dark-mode' | 커스텀 텍스트
+  }) {
+    const thumbnail = await this.prisma.ytThumbnail.findUnique({
+      where: { id: dto.thumbnailId },
+    });
+    if (!thumbnail) throw new NotFoundException('썸네일을 찾을 수 없습니다');
+
+    const result = await this.geminiImage.generateVariation(
+      thumbnail.prompt ?? '유튜브 썸네일',
+      dto.variation,
+    );
+
+    if (!result) throw new Error('변형 생성 실패');
+
+    // S3 저장
+    const buffer = Buffer.from(result.imageBase64, 'base64');
+    const s3Url = await this.uploadService.uploadBuffer(
+      buffer,
+      result.mimeType,
+      'thumbnails/gemini',
+    );
+
+    // DB 저장
+    const newThumbnail = await this.prisma.ytThumbnail.create({
+      data: {
+        projectId: thumbnail.projectId,
+        imageUrl: s3Url,
+        baseImageUrl: s3Url,
+        strategy: thumbnail.strategy as Prisma.InputJsonValue,
+        prompt: `${thumbnail.prompt}\n변형: ${dto.variation}`,
+        status: 'COMPLETED',
+      },
+    });
+
+    return {
+      id: newThumbnail.id,
+      imageUrl: s3Url,
+      variation: dto.variation,
+    };
   }
 }

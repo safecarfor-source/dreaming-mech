@@ -891,4 +891,45 @@ export class YouTubeSupporterController {
   ) {
     return this.service.uploadBase64ToS3(dto.imageBase64);
   }
+
+  // ─────────────────────────────────────────────
+  // 원스톱 썸네일 생성 (Gemini)
+  // ─────────────────────────────────────────────
+
+  /**
+   * POST /api/yt/thumbnail/generate-complete
+   * 원스톱: 제목 입력 → AI 전략 3안 + 완성 이미지 3장
+   */
+  @Post('thumbnail/generate-complete')
+  @UseGuards(YtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  async thumbnailGenerateComplete(
+    @Body() dto: {
+      projectId?: string;
+      title: string;
+      description?: string;
+      style?: string;
+    },
+  ) {
+    if (!dto.title) {
+      throw new BadRequestException('영상 제목을 입력해주세요');
+    }
+    return this.service.generateCompleteThumbnails(dto);
+  }
+
+  /**
+   * POST /api/yt/thumbnail/variation
+   * 기존 썸네일 기반 변형 생성
+   */
+  @Post('thumbnail/variation')
+  @UseGuards(YtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  async thumbnailVariation(
+    @Body() dto: { thumbnailId: string; variation: string },
+  ) {
+    if (!dto.thumbnailId || !dto.variation) {
+      throw new BadRequestException('thumbnailId와 variation을 입력해주세요');
+    }
+    return this.service.generateThumbnailVariation(dto);
+  }
 }

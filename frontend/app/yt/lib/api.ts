@@ -691,4 +691,38 @@ export async function deleteThumbnailMemory(id: string): Promise<void> {
   await ytApi.delete(`/yt/thumbnail/memory/${id}`);
 }
 
+// ─── 원스톱 썸네일 생성 (Gemini) ──────────────────
+
+export interface CompleteThumbnailResult {
+  strategies: ThumbnailStrategy[];
+  thumbnails: Array<{
+    id: string;
+    imageUrl: string;
+    strategy: ThumbnailStrategy;
+    prompt: string;
+  }>;
+}
+
+export async function generateCompleteThumbnails(data: {
+  projectId?: string;
+  title: string;
+  description?: string;
+  style?: string;
+}): Promise<CompleteThumbnailResult> {
+  const res = await ytApi.post('/yt/thumbnail/generate-complete', data, {
+    timeout: 180000, // 3분 (이미지 3장 생성)
+  });
+  return res.data;
+}
+
+export async function generateThumbnailVariation(data: {
+  thumbnailId: string;
+  variation: string;
+}): Promise<{ id: string; imageUrl: string; variation: string }> {
+  const res = await ytApi.post('/yt/thumbnail/variation', data, {
+    timeout: 120000,
+  });
+  return res.data;
+}
+
 export default ytApi;
