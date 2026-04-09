@@ -10,6 +10,7 @@ import { TranscriptService } from './services/transcript.service';
 import { AiOrchestrationService } from './services/ai-orchestration.service';
 import { ReplicateService } from './services/replicate.service';
 import { GeminiImageService } from './services/gemini-image.service';
+import { ThumbnailComposerService } from './services/thumbnail-composer.service';
 import { UploadService } from '../upload/upload.service';
 import type {
   CreateProjectDto,
@@ -55,6 +56,7 @@ export class YouTubeSupporterService {
     private readonly aiOrchestration: AiOrchestrationService,
     private readonly replicate: ReplicateService,
     private readonly geminiImage: GeminiImageService,
+    private readonly thumbnailComposer: ThumbnailComposerService,
     private readonly uploadService: UploadService,
   ) {}
 
@@ -1812,7 +1814,7 @@ export class YouTubeSupporterService {
       return { strategies: [], thumbnails: [], raw: rawResponse };
     }
 
-    // 5. Gemini로 완성 이미지 3장 생성 + S3 저장
+    // 5. 이미지 생성: Gemini 우선, 실패 시 DALL-E + sharp 텍스트 합성 폴백
     const thumbnails: Array<{
       id: string;
       imageUrl: string;
@@ -1820,29 +1822,72 @@ export class YouTubeSupporterService {
       prompt: string;
     }> = [];
 
-    const geminiResults = await this.geminiImage.generateMultipleThumbnails(strategies);
+    // 먼저 Gemini 시도
+    let useGemini = !this.geminiImage.isMockMode;
+    let geminiResults: Array<{ imageBase64: string; mimeType: string; strategyIndex: number } | null> = [];
 
-    for (let i = 0; i < geminiResults.length; i++) {
-      const result = geminiResults[i];
-      if (!result) continue;
-
+    if (useGemini) {
       try {
-        // S3에 저장
-        const buffer = Buffer.from(result.imageBase64, 'base64');
+        geminiResults = await this.geminiImage.generateMultipleThumbnails(strategies);
+        // 전부 null이면 Gemini 실패
+        if (geminiResults.every((r) => r === null)) {
+          this.logger.warn('Gemini 전체 실패 → DALL-E 폴백');
+          useGemini = false;
+        }
+      } catch {
+        this.logger.warn('Gemini 에러 → DALL-E 폴백');
+        useGemini = false;
+      }
+    }
+
+    for (let i = 0; i < strategies.length; i++) {
+      try {
+        let finalBuffer: Buffer;
+        let mimeType = 'image/png';
+        const strategy = strategies[i];
+
+        // Gemini 결과가 있으면 사용
+        if (useGemini && geminiResults[i]) {
+          finalBuffer = Buffer.from(geminiResults[i]!.imageBase64, 'base64');
+          mimeType = geminiResults[i]!.mimeType;
+        } else {
+          // DALL-E 배경 생성 + sharp 한글 텍스트 합성
+          const bgPrompt = strategy.fluxPrompt || `YouTube thumbnail background, ${strategy.concept}, high contrast, cinematic, 1280x720, no text`;
+          const bgUrls = await this.replicate.generateImage(bgPrompt, { width: 1280, height: 720 });
+
+          if (!bgUrls.length) {
+            this.logger.error(`전략 ${i + 1} 배경 생성 실패`);
+            continue;
+          }
+
+          // 배경 다운로드
+          const bgRes = await fetch(bgUrls[0]);
+          const bgBuffer = Buffer.from(await bgRes.arrayBuffer());
+
+          // 한글 텍스트 합성
+          finalBuffer = await this.thumbnailComposer.composeThumbnail(bgBuffer, {
+            textMain: strategy.textMain,
+            textSub: strategy.textSub,
+            textColor: strategy.colorScheme?.textColor || '#FFFFFF',
+            accentColor: strategy.colorScheme?.accentColor || '#FFD700',
+          });
+        }
+
+        // S3 업로드
         const s3Url = await this.uploadService.uploadBuffer(
-          buffer,
-          result.mimeType,
-          'thumbnails/gemini',
+          finalBuffer,
+          mimeType,
+          'thumbnails/complete',
         );
 
-        // DB에 저장
+        // DB 저장
         const thumbnail = await this.prisma.ytThumbnail.create({
           data: {
             projectId: dto.projectId ?? null,
             imageUrl: s3Url,
             baseImageUrl: s3Url,
-            strategy: strategies[i] as Prisma.InputJsonValue,
-            prompt: this.geminiImage['strategyToPrompt'](strategies[i]),
+            strategy: strategy as Prisma.InputJsonValue,
+            prompt: strategy.fluxPrompt ?? strategy.concept,
             status: 'COMPLETED',
           },
         });
@@ -1850,11 +1895,11 @@ export class YouTubeSupporterService {
         thumbnails.push({
           id: thumbnail.id,
           imageUrl: s3Url,
-          strategy: strategies[i],
+          strategy,
           prompt: thumbnail.prompt ?? '',
         });
       } catch (err) {
-        this.logger.error(`썸네일 ${i + 1} S3 저장 실패:`, err);
+        this.logger.error(`썸네일 ${i + 1} 생성 실패:`, err);
       }
     }
 
