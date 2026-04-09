@@ -268,7 +268,7 @@ def _apply_letterbox_overlay(
     filter_complex = ";\n".join(filter_parts)
 
     # 출력 시간 제한: 클립 실제 길이(배속 적용) + 1초 여유, MAX 이내
-    actual_output_sec = clip_duration / PLAYBACK_SPEED + 1.0
+    actual_output_sec = clip.total_duration / PLAYBACK_SPEED + 1.0
     max_t = min(actual_output_sec, MAX_CLIP_DURATION)
     max_output_duration = ["-t", str(round(max_t, 2))]
 
