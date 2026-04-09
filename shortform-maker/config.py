@@ -68,7 +68,7 @@ HOOK_FONT_PATH_MAC = "/System/Library/Fonts/AppleSDGothicNeo.ttc"  # macOS fallb
 
 # ─── 숏폼 제한 ───────────────────────────────────────
 MIN_CLIP_DURATION = 15  # 초
-MAX_CLIP_DURATION = 50  # 초
+MAX_CLIP_DURATION = 58  # 초 (60초 이내 마무리, 배속 적용 후 ~50초)
 MAX_CLIPS = 4  # 최대 후보 구간 (2~4개 알짜만)
 
 # ─── 합성 설정 ───────────────────────────────────────

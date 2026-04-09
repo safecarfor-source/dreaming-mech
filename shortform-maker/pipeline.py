@@ -79,8 +79,8 @@ def run_pipeline(
     else:
         _progress(3, "자막 준비 완료 (SRT 사용)")
 
-    # 4. Claude 2단계 분석 (하이라이트 + 문구 + Virality Score)
-    _progress(4, "AI 하이라이트 분석 중... (Claude 1단계)")
+    # 4. Claude 분석 (하이라이트 + 중복 검증 + 문구 + Virality Score)
+    _progress(4, "AI 하이라이트 분석 + 중복 검증 중... (Claude 1~1.5단계)")
     _progress(5, "AI 문구 생성 + Virality Score 계산 중... (Claude 2단계)")
     analysis_clips = analyze_two_stage(segments, script)
 

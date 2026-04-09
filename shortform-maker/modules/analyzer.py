@@ -42,6 +42,9 @@ def analyze_two_stage(
     # 1단계: 하이라이트 분석
     stage1_result = _stage1_highlights(client, rules_text, transcript_text, script)
 
+    # 1.5단계: 대본 기반 중복 검증 — 같은 메시지 전달하는 구간 제거
+    stage1_result = _dedup_by_transcript(client, stage1_result, segments)
+
     # 2단계: 문구 생성 + Virality Score
     stage2_result = _stage2_copy(client, rules_text, stage1_result, segments)
 
@@ -80,6 +83,109 @@ def _stage1_highlights(
     )
 
     return _parse_json_response(response.content[0].text)
+
+
+def _dedup_by_transcript(
+    client: anthropic.Anthropic,
+    stage1_result: dict,
+    segments: list[dict],
+) -> dict:
+    """1.5단계: 선정된 구간들의 실제 자막을 비교하여 메시지 중복 제거
+
+    같은 내용을 전달하는 구간이 여러 개면, 가장 좋은 1개만 남긴다.
+    """
+    selected_segments = stage1_result.get("segments", [])
+    if len(selected_segments) <= 1:
+        return stage1_result
+
+    # 각 구간의 실제 자막 텍스트 추출
+    segment_transcripts = []
+    for seg in selected_segments:
+        start_sec = _time_to_seconds(seg["start"])
+        end_sec = _time_to_seconds(seg["end"])
+        relevant = [
+            s["text"] for s in segments
+            if s["end"] > start_sec and s["start"] < end_sec
+        ]
+        text = " ".join(relevant)
+        segment_transcripts.append({
+            "id": seg["id"],
+            "summary": seg.get("summary", ""),
+            "transcript": text[:500],  # 토큰 절약
+        })
+
+    prompt = f"""당신은 유튜브 숏폼 편집 감독입니다.
+
+아래는 하나의 영상에서 선정된 숏폼 후보 구간 {len(segment_transcripts)}개의 실제 자막입니다.
+
+{json.dumps(segment_transcripts, ensure_ascii=False, indent=2)}
+
+## 임무
+각 구간이 시청자에게 전달하는 **핵심 메시지**를 비교하세요.
+
+판단 기준: "클립 A를 본 시청자가 클립 B를 봤을 때 새로운 정보를 얻는가?"
+- Yes → 서로 다른 숏폼 (유지)
+- No → 같은 메시지 = 중복 (하나만 남기고 제거)
+
+예시:
+- "시동 걸고 바로 출발하면 엔진 손상" vs "공회전 예열보다 서행이 낫다" → 둘 다 "예열이 중요하다"는 같은 메시지 → 중복
+- "예열 방법" vs "엔진오일 교환주기" → 완전히 다른 주제 → 유지
+
+반드시 아래 JSON 형식으로만 응답하세요:
+{{
+  "keep_ids": [0, 2],
+  "removed": [
+    {{"id": 1, "reason": "구간 0과 같은 메시지 (예열 필요성)"}},
+    {{"id": 3, "reason": "구간 0과 같은 메시지 (예열 방법)"}}
+  ]
+}}
+
+- keep_ids: 유지할 구간 id 목록 (중복 그룹에서 가장 좋은 것만)
+- removed: 제거할 구간과 이유"""
+
+    try:
+        response = client.messages.create(
+            model=CLAUDE_MODEL,
+            max_tokens=1000,
+            messages=[{"role": "user", "content": prompt}],
+        )
+        result = _parse_json_response(response.content[0].text)
+        keep_ids = set(result.get("keep_ids", []))
+
+        if not keep_ids:
+            logger.warning("[DEDUP 1.5] keep_ids 비어있음 → 전체 유지")
+            return stage1_result
+
+        # 제거 로그
+        for removed in result.get("removed", []):
+            logger.info(
+                f"[DEDUP 1.5] 구간 {removed['id']} 제거 — {removed.get('reason', '')}"
+            )
+
+        # 유지할 구간만 필터링
+        original_count = len(selected_segments)
+        stage1_result["segments"] = [
+            seg for seg in selected_segments if seg["id"] in keep_ids
+        ]
+
+        # 합성 구간도 필터링 (제거된 세그먼트를 참조하는 합성은 제거)
+        if stage1_result.get("compositions"):
+            stage1_result["compositions"] = [
+                comp for comp in stage1_result["compositions"]
+                if all(sid in keep_ids for sid in comp.get("segment_ids", []))
+            ]
+
+        filtered_count = len(stage1_result["segments"])
+        if filtered_count < original_count:
+            logger.info(
+                f"[DEDUP 1.5] 대본 기반 중복 제거: {original_count}개 → {filtered_count}개"
+            )
+
+        return stage1_result
+
+    except Exception as e:
+        logger.error(f"[DEDUP 1.5] 중복 검증 실패 (원본 유지): {e}")
+        return stage1_result
 
 
 def _stage2_copy(
@@ -229,7 +335,7 @@ def recut_oversized_segment(
 
     logger.info(
         f"[RECUT] '{clip_data.get('summary', '')}' {duration_sec}초 → "
-        f"50초 이내로 재설계 요청"
+        f"{MAX_CLIP_DURATION}초 이내로 재설계 요청"
     )
 
     try:
