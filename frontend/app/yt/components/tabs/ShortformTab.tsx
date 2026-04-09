@@ -656,6 +656,9 @@ export default function ShortformTab({ projectId }: ShortformTabProps) {
   const [loadingSaved, setLoadingSaved] = useState(false);
   const [deletingJobId, setDeletingJobId] = useState<string | null>(null);
 
+  // ─── localStorage 키 (프로젝트별 진행 중인 작업 임시저장) ──────────
+  const STORAGE_KEY = `shortform_active_job_${projectId}`;
+
   // ─── 저장된 작업 새로고침 ──────────
   const refreshSavedJobs = useCallback(() => {
     if (!projectId) return;
@@ -666,9 +669,42 @@ export default function ShortformTab({ projectId }: ShortformTabProps) {
       .finally(() => setLoadingSaved(false));
   }, [projectId]);
 
-  // ─── 페이지 로드 시 저장된 작업 불러오기 ──────────
+  // ─── 페이지 로드 시: 저장된 작업 + 진행 중인 작업 복원 ──────────
   useEffect(() => {
     refreshSavedJobs();
+
+    // localStorage에서 진행 중이던 jobId 복원
+    const savedJobId = localStorage.getItem(STORAGE_KEY);
+    if (savedJobId && !jobId) {
+      // 서버에 아직 살아있는지 확인
+      getShortformJobStatus(savedJobId)
+        .then((status) => {
+          if (status.status === 'FAILED') {
+            // 실패한 작업 — 제거
+            localStorage.removeItem(STORAGE_KEY);
+            return;
+          }
+          // 상태 복원
+          setJobId(savedJobId);
+          setJobStatus(status);
+
+          if (status.status === 'COMPLETED') {
+            // 완료 상태 — 결과 표시만 (폴링 불필요)
+            setIsProcessing(false);
+          } else if (status.status === 'PREVIEW_READY') {
+            // 프리뷰 대기 — 폴링 불필요
+            setIsProcessing(false);
+          } else {
+            // 진행 중 (UPLOADING, TRANSCRIBING, ANALYZING, PROCESSING)
+            setIsProcessing(true);
+            startPolling(savedJobId);
+          }
+        })
+        .catch(() => {
+          // 서버에서 job을 못 찾음 — 정리
+          localStorage.removeItem(STORAGE_KEY);
+        });
+    }
   }, [refreshSavedJobs]);
 
   // ─── 핸들러 ──────────────────────────────
@@ -703,6 +739,7 @@ export default function ShortformTab({ projectId }: ShortformTabProps) {
         if (status.status === 'COMPLETED' || status.status === 'FAILED') {
           clearInterval(pollingRef.current!);
           setIsProcessing(false);
+          localStorage.removeItem(STORAGE_KEY);  // 완료/실패 시 임시저장 제거
           // DB에 자동 저장
           if (projectId) {
             saveShortformJob({
@@ -743,6 +780,7 @@ export default function ShortformTab({ projectId }: ShortformTabProps) {
     try {
       const { jobId: id } = await uploadShortformVideo(uploadFile);
       setJobId(id);
+      localStorage.setItem(STORAGE_KEY, id);  // 임시저장
       startPolling(id, uploadFile.name);
     } catch (err: any) {
       setError(err.message || '업로드 실패');
@@ -758,6 +796,7 @@ export default function ShortformTab({ projectId }: ShortformTabProps) {
     setJobStatus(null);
     setIsProcessing(false);
     setError('');
+    localStorage.removeItem(STORAGE_KEY);  // 임시저장 제거
     refreshSavedJobs();
   };
 

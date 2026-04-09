@@ -55,15 +55,16 @@ def _load_job_from_disk(job_id: str) -> dict | None:
 
 
 def _restore_jobs_from_disk() -> None:
-    """서버 시작 시 디스크에서 완료된 잡 복원"""
+    """서버 시작 시 디스크에서 잡 복원 (COMPLETED + PREVIEW_READY)"""
     if not os.path.exists(OUTPUT_BASE):
         return
+    restorable = {"COMPLETED", "PREVIEW_READY"}
     for name in os.listdir(OUTPUT_BASE):
         job_dir = os.path.join(OUTPUT_BASE, name)
         if not os.path.isdir(job_dir):
             continue
         job = _load_job_from_disk(name)
-        if job and job.get("status") == "COMPLETED":
+        if job and job.get("status") in restorable:
             with _jobs_lock:
                 if name not in _jobs:
                     _jobs[name] = job
