@@ -1822,61 +1822,24 @@ export class YouTubeSupporterService {
       prompt: string;
     }> = [];
 
-    // 먼저 Gemini 시도
-    let useGemini = !this.geminiImage.isMockMode;
-    let geminiResults: Array<{ imageBase64: string; mimeType: string; strategyIndex: number } | null> = [];
-
-    if (useGemini) {
-      try {
-        geminiResults = await this.geminiImage.generateMultipleThumbnails(strategies);
-        // 전부 null이면 Gemini 실패
-        if (geminiResults.every((r) => r === null)) {
-          this.logger.warn('Gemini 전체 실패 → DALL-E 폴백');
-          useGemini = false;
-        }
-      } catch {
-        this.logger.warn('Gemini 에러 → DALL-E 폴백');
-        useGemini = false;
-      }
-    }
-
+    // 코드 배경 + 텍스트 합성 (DALL-E/Gemini 없이 즉시 생성)
     for (let i = 0; i < strategies.length; i++) {
       try {
-        let finalBuffer: Buffer;
-        let mimeType = 'image/png';
         const strategy = strategies[i];
 
-        // Gemini 결과가 있으면 사용
-        if (useGemini && geminiResults[i]) {
-          finalBuffer = Buffer.from(geminiResults[i]!.imageBase64, 'base64');
-          mimeType = geminiResults[i]!.mimeType;
-        } else {
-          // DALL-E 배경 생성 + sharp 한글 텍스트 합성
-          const bgPrompt = strategy.fluxPrompt || `YouTube thumbnail background, ${strategy.concept}, high contrast, cinematic, 1280x720, no text`;
-          const bgUrls = await this.replicate.generateImage(bgPrompt, { width: 1280, height: 720 });
-
-          if (!bgUrls.length) {
-            this.logger.error(`전략 ${i + 1} 배경 생성 실패`);
-            continue;
-          }
-
-          // 배경 다운로드
-          const bgRes = await fetch(bgUrls[0]);
-          const bgBuffer = Buffer.from(await bgRes.arrayBuffer());
-
-          // 한글 텍스트 합성
-          finalBuffer = await this.thumbnailComposer.composeThumbnail(bgBuffer, {
-            textMain: strategy.textMain,
-            textSub: strategy.textSub,
-            textColor: strategy.colorScheme?.textColor || '#FFFFFF',
-            accentColor: strategy.colorScheme?.accentColor || '#FFD700',
-          });
-        }
+        // 코드로 배경 + 텍스트 합성 (팔레트 인덱스로 3안 다른 색상)
+        const finalBuffer = await this.thumbnailComposer.composeThumbnail(null, {
+          textMain: strategy.textMain,
+          textSub: strategy.textSub,
+          textColor: strategy.colorScheme?.textColor || '#FFFFFF',
+          accentColor: strategy.colorScheme?.accentColor || '#FFD700',
+          paletteIndex: i % 6, // 전략마다 다른 배경색
+        });
 
         // S3 업로드
         const s3Url = await this.uploadService.uploadBuffer(
           finalBuffer,
-          mimeType,
+          'image/png',
           'thumbnails/complete',
         );
 
