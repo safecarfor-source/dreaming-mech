@@ -1,6 +1,9 @@
 import type { MetadataRoute } from 'next';
 import { generateSlug } from '@/lib/slug';
 import { getUniqueSidos, ALL_REGIONS, SIDO_SHORT_NAMES } from '@/lib/regions';
+import { getAllServiceRegionSlugs } from '@/data/service-regions';
+import { YOUTUBE_BRIDGES } from '@/data/youtube-bridge';
+import { BLOG_POSTS } from '@/data/blog-posts';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = 'https://dreammechaniclab.com';
@@ -110,5 +113,31 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.8,
   }));
 
-  return [...staticPages, ...blogPages, ...shopPages, ...sidoPages, ...sigunguPages];
+  // 서비스×지역 랜딩페이지
+  const serviceRegionPages: MetadataRoute.Sitemap = getAllServiceRegionSlugs().map(
+    (slug) => ({
+      url: `${baseUrl}/services/${slug}`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly' as const,
+      priority: 0.85,
+    }),
+  );
+
+  // 블로그 정적 포스트
+  const staticBlogPages: MetadataRoute.Sitemap = BLOG_POSTS.map((p) => ({
+    url: `${baseUrl}/blog/${p.slug}`,
+    lastModified: new Date(p.publishedAt),
+    changeFrequency: 'monthly' as const,
+    priority: 0.8,
+  }));
+
+  // 유튜브 브릿지 페이지
+  const youtubeBridgePages: MetadataRoute.Sitemap = YOUTUBE_BRIDGES.map((b) => ({
+    url: `${baseUrl}/youtube/${b.slug}`,
+    lastModified: new Date(),
+    changeFrequency: 'monthly' as const,
+    priority: 0.7,
+  }));
+
+  return [...staticPages, ...blogPages, ...staticBlogPages, ...shopPages, ...sidoPages, ...sigunguPages, ...serviceRegionPages, ...youtubeBridgePages];
 }

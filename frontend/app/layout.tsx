@@ -159,22 +159,43 @@ export default function RootLayout({
             name: SITE_NAME,
             url: SITE_URL,
             logo: `${SITE_URL}/opengraph-image`,
-            description:
-              '20년 경력 정비사가 직접 검증한 전국 자동차 정비소 매칭 플랫폼. 엔진오일, 타이어, 브레이크, 종합 정비 문의를 30초 만에.',
-            areaServed: {
-              '@type': 'Country',
-              name: '대한민국',
+            address: {
+              '@type': 'PostalAddress',
+              streetAddress: '수인로 3566 티스테이션 인천대공원점',
+              addressLocality: '남동구',
+              addressRegion: '인천',
+              addressCountry: 'KR',
             },
-            serviceType: [
-              '자동차 정비소 매칭',
-              '엔진오일 교환',
-              '타이어 교체',
-              '브레이크 정비',
-              '자동차 종합 정비',
+            description:
+              '20년 경력 정비사가 직접 검증한 전국 자동차 정비소 매칭 플랫폼. 리프트 4대 보유, 유튜브 5.3만 구독자가 신뢰하는 정비 품질. 엔진오일, 타이어, 브레이크, 종합 정비 문의를 30초 만에.',
+            areaServed: [
+              { '@type': 'City', name: '인천' },
+              { '@type': 'AdministrativeArea', name: '부평구' },
+              { '@type': 'AdministrativeArea', name: '남동구' },
+              { '@type': 'AdministrativeArea', name: '연수구' },
+              { '@type': 'AdministrativeArea', name: '서구' },
+              { '@type': 'AdministrativeArea', name: '계양구' },
             ],
-            priceRange: '무료 문의',
+            hasOfferCatalog: {
+              '@type': 'OfferCatalog',
+              name: '자동차 정비 서비스',
+              itemListElement: [
+                '타이어 교체', '엔진오일 교환', '브레이크 패드 교체',
+                '배터리 교체', '연료필터 교체', '미션오일 교환',
+                '에어컨 필터 교체', '휠 얼라인먼트', '와이퍼 교체',
+              ].map((name) => ({
+                '@type': 'Offer',
+                itemOffered: { '@type': 'Service', name },
+              })),
+            },
+            priceRange: '₩₩',
             sameAs: [
               'https://www.youtube.com/@%EA%BF%88%EA%BE%B8%EB%8A%94%EC%A0%95%EB%B9%84%EC%82%AC',
+              'https://blog.naver.com/sjy22e',
+            ],
+            additionalProperty: [
+              { '@type': 'PropertyValue', name: '경력', value: '20년' },
+              { '@type': 'PropertyValue', name: '리프트', value: '4대' },
             ],
           }}
         />

@@ -8,6 +8,7 @@ import { MapPin, Share2, ChevronLeft, ChevronRight, BadgeCheck, Phone, Heart, X 
 import { mechanicsApi } from '@/lib/api';
 import { sanitizeText, sanitizeBasicHTML, sanitizePhone } from '@/lib/sanitize';
 import { gtagEvent } from '@/lib/gtag-events';
+import { getRegionLinks } from '@/lib/seo-utils';
 import type { Mechanic } from '@/types';
 import GalleryCarousel from '@/components/mechanic-detail/GalleryCarousel';
 import OperatingStatusBadge from '@/components/mechanic-detail/OperatingStatusBadge';
@@ -400,12 +401,13 @@ export default function ShopDetailClient({ slug }: Props) {
               <h3 className="text-[20px] font-bold text-gray-900 mb-4 text-center">전문 분야</h3>
               <div className="flex gap-2 flex-wrap justify-center">
                 {mechanic.specialties.map((tag) => (
-                  <span
+                  <Link
                     key={tag}
-                    className="px-5 py-2.5 bg-gray-100 text-gray-700 rounded-full text-[16px] font-semibold"
+                    href={`/?service=${encodeURIComponent(tag)}`}
+                    className="px-5 py-2.5 bg-gray-100 text-gray-700 rounded-full text-[16px] font-semibold hover:bg-[#F5F0FF] hover:text-[#7C4DFF] transition-colors"
                   >
                     {tag}
-                  </span>
+                  </Link>
                 ))}
               </div>
             </div>
@@ -466,6 +468,38 @@ export default function ShopDetailClient({ slug }: Props) {
           <h3 className="text-[20px] font-bold text-gray-900 mb-4 text-center">리뷰</h3>
           <ReviewSection reviews={mechanic.reviews} mechanicId={mechanic.id} />
         </div>
+
+        {/* 같은 지역 정비소 링크 (SEO 내부 링크) */}
+        {(() => {
+          const { sidoLink, sigunguLink } = getRegionLinks(mechanic.location);
+          if (!sidoLink && !sigunguLink) return null;
+          return (
+            <>
+              <div className="px-5 py-6">
+                <h3 className="text-[18px] font-bold text-gray-900 mb-3 text-center">같은 지역 정비소 더 보기</h3>
+                <div className="flex gap-3 justify-center flex-wrap">
+                  {sigunguLink && (
+                    <Link
+                      href={sigunguLink.href}
+                      className="px-5 py-2.5 border-2 border-[#E4015C] text-[#E4015C] rounded-full text-[15px] font-semibold hover:bg-[#FFF0F5] transition-colors"
+                    >
+                      {sigunguLink.label}
+                    </Link>
+                  )}
+                  {sidoLink && (
+                    <Link
+                      href={sidoLink.href}
+                      className="px-5 py-2.5 border-2 border-[#7C4DFF] text-[#7C4DFF] rounded-full text-[15px] font-semibold hover:bg-[#F5F0FF] transition-colors"
+                    >
+                      {sidoLink.label}
+                    </Link>
+                  )}
+                </div>
+              </div>
+              <div className="h-2.5 bg-gray-50" />
+            </>
+          );
+        })()}
 
         {/* 문의하기 CTA */}
         <div className="bg-[#F9FAFB] px-5 py-10 pb-28 md:pb-10 text-center">
