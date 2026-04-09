@@ -156,8 +156,18 @@ def _apply_letterbox_overlay(
     if not hook_font:
         hook_font = HOOK_FONT_PATH_MAC if os.path.exists(HOOK_FONT_PATH_MAC) else font
     hook_font_opt = f":fontfile='{hook_font}'" if hook_font else ""
+    # .ttc 폰트: fontindex는 ffmpeg 8.x에서 제거됨 → font= 이름 기반 사용
     if hook_font and hook_font.endswith(".ttc"):
-        hook_font_opt += f":fontindex={FONT_BOLD_INDEX}"
+        # ffmpeg 8.x 호환: fontindex 대신 font 이름 사용
+        import subprocess as _sp
+        _ffmpeg_ver = _sp.run(["ffmpeg", "-version"], capture_output=True, text=True).stdout
+        if "ffmpeg version 8" in _ffmpeg_ver or "ffmpeg version 7" in _ffmpeg_ver:
+            # ffmpeg 7/8: fontindex 미지원 → font 이름으로 대체
+            from config import FONT_NAME
+            hook_font_opt = f":font='{FONT_NAME}'"
+        else:
+            # ffmpeg 6 이하 (Docker 등): fontindex 사용
+            hook_font_opt += f":fontindex={FONT_BOLD_INDEX}"
 
     # 시간 범위
     if is_concat:

@@ -5,10 +5,13 @@ import logging
 
 import anthropic
 
+import time
+
 from config import (
     CLAUDE_MAX_TOKENS_ANALYSIS,
     CLAUDE_MAX_TOKENS_COPY,
     CLAUDE_MODEL,
+    CLAUDE_MODEL_FAST,
     CLAUDE_MODEL_OPUS,
     MAX_CLIP_DURATION,
     PROMPTS_DIR,
@@ -144,10 +147,9 @@ def _dedup_by_transcript(
 - removed: 제거할 구간과 이유"""
 
     try:
-        response = client.messages.create(
-            model=CLAUDE_MODEL,
-            max_tokens=1000,
-            messages=[{"role": "user", "content": prompt}],
+        # Haiku 사용 (가볍고 빠름, 과부하 회피) + 수동 retry
+        response = _call_with_retry(
+            client, CLAUDE_MODEL_FAST, 1000, prompt, max_retries=5
         )
         result = _parse_json_response(response.content[0].text)
         keep_ids = set(result.get("keep_ids", []))
@@ -339,10 +341,8 @@ def recut_oversized_segment(
     )
 
     try:
-        response = client.messages.create(
-            model=CLAUDE_MODEL,
-            max_tokens=CLAUDE_MAX_TOKENS_ANALYSIS,
-            messages=[{"role": "user", "content": prompt}],
+        response = _call_with_retry(
+            client, CLAUDE_MODEL, CLAUDE_MAX_TOKENS_ANALYSIS, prompt, max_retries=5
         )
         result = _parse_json_response(response.content[0].text)
         recut_segments = result.get("recut_segments", [])
@@ -364,6 +364,35 @@ def recut_oversized_segment(
     except Exception as e:
         logger.error(f"[RECUT] AI 재설계 실패: {e}")
         return []
+
+
+def _call_with_retry(
+    client: anthropic.Anthropic,
+    model: str,
+    max_tokens: int,
+    prompt: str,
+    max_retries: int = 5,
+):
+    """Claude API 호출 + 529 과부하 시 수동 retry (지수 백오프)"""
+    for attempt in range(max_retries):
+        try:
+            response = client.messages.create(
+                model=model,
+                max_tokens=max_tokens,
+                messages=[{"role": "user", "content": prompt}],
+            )
+            return response
+        except anthropic.APIStatusError as e:
+            if e.status_code == 529 and attempt < max_retries - 1:
+                wait = 2 ** attempt  # 1, 2, 4, 8, 16초
+                logger.warning(
+                    f"[RETRY] 529 과부하 → {wait}초 대기 후 재시도 "
+                    f"({attempt + 1}/{max_retries})"
+                )
+                time.sleep(wait)
+            else:
+                raise
+    raise RuntimeError(f"API 호출 {max_retries}회 실패")
 
 
 def _seconds_to_time(seconds: float) -> str:

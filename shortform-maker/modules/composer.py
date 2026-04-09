@@ -101,8 +101,8 @@ def build_clips(
             )
             # 키워드 병합: 1단계 keywords + 2단계 highlight_keywords
             merged_keywords = list(set(
-                clip_data.get("highlight_keywords", []) +
-                clip_data.get("keywords", [])
+                (clip_data.get("highlight_keywords") or []) +
+                (clip_data.get("keywords") or [])
             ))
             composed = ComposedClip(
                 segments=[seg],
