@@ -107,8 +107,13 @@ def _run_pipeline_task(job_id: str, video_path: str, output_dir: str):
             progress_callback=_progress,
         )
 
-        # preview 데이터 구성 (프론트엔드 프리뷰용)
-        preview = [_clip_to_preview_dict(clip, i + 1) for i, clip in enumerate(composed_clips)]
+        # preview 데이터: pipeline이 생성한 preview.json 로드 (대본 텍스트 포함)
+        preview_path = os.path.join(output_dir, "preview.json")
+        if os.path.exists(preview_path):
+            with open(preview_path, "r", encoding="utf-8") as f:
+                preview = json.load(f)
+        else:
+            preview = [_clip_to_preview_dict(clip, i + 1) for i, clip in enumerate(composed_clips)]
 
         with _jobs_lock:
             _jobs[job_id]["status"] = "PREVIEW_READY"
