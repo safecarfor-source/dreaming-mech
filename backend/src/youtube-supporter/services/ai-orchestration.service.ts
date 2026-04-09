@@ -907,9 +907,14 @@ ${knowledgeSection}
 - 자동차 정비 채널에 맞는 실용적인 전략
 - 클릭률(CTR) 최적화: 0.3초 안에 시선을 끌 것
 - fluxPrompt는 반드시 영어로, "YouTube thumbnail, 1280x720" 포함
-- 텍스트는 이미지에 포함하지 말 것 (캔버스에서 별도 추가)
-- 배경에 텍스트 공간을 확보하고, 인물 합성을 위한 공간도 고려한 구도
-- 좌우 분할, 중앙 인물 등 합성형 구도를 적극 활용
+- 텍스트는 이미지에 포함하지 말 것 (별도 합성됨)
+- fluxPrompt 스타일 규칙 (매우 중요):
+  * 배경은 심플한 단색 또는 그라데이션 (복잡한 장면 X)
+  * "clean minimal background, solid color gradient" 스타일
+  * 관련 오브제 1~2개만 (자동차 부품, 도구 등)
+  * 오른쪽 40%는 비워둘 것 (텍스트 합성 공간)
+  * AI 그림체가 아닌 사진/실사 느낌: "photorealistic, studio lighting"
+  * 절대 텍스트/글자를 이미지에 넣지 말 것: "no text, no letters, no words"
 - 학습된 노하우가 있다면 반드시 반영 (특히 ✅ 검증된 패턴, 🚫 회피 패턴)`;
 
     return this.generateWithOpus(prompt);
