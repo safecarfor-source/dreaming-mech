@@ -31,8 +31,8 @@ export class ThumbnailComposerService {
       textColor = '#FFFFFF',
       accentColor = '#FFD700',
       strokeColor = '#000000',
-      fontSize = 80,
-      subFontSize = 50,
+      fontSize = 90,
+      subFontSize = 55,
     } = options;
 
     const WIDTH = 1280;
@@ -94,10 +94,10 @@ export class ThumbnailComposerService {
   }): string {
     const { width, height, textMain, textSub, textColor, accentColor, strokeColor, fontSize, subFontSize } = opts;
 
-    // 메인 텍스트 위치 (좌측 하단 1/3)
-    const mainY = height * 0.55;
-    const subY = mainY + fontSize + 20;
-    const textX = 60;
+    // 메인 텍스트 위치 (좌측 중앙)
+    const mainY = height * 0.45;
+    const subY = mainY + fontSize + 15;
+    const textX = 50;
 
     // XML 이스케이프
     const escape = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -120,9 +120,9 @@ export class ThumbnailComposerService {
 
   <!-- 메인 텍스트 (stroke + fill) -->
   <text x="${textX}" y="${mainY}"
-    font-family="'NanumGothic','Noto Sans KR','Apple SD Gothic Neo','Malgun Gothic',sans-serif"
-    font-size="${fontSize}" font-weight="900" filter="url(#shadow)"
-    stroke="${strokeColor}" stroke-width="6" stroke-linejoin="round"
+    font-family="'Noto Sans CJK KR','Noto Sans KR','NanumGothic','Apple SD Gothic Neo',sans-serif"
+    font-size="${fontSize}" font-weight="900" letter-spacing="-2" filter="url(#shadow)"
+    paint-order="stroke" stroke="${strokeColor}" stroke-width="8" stroke-linejoin="round"
     fill="${textColor}">
     ${escape(textMain)}
   </text>`;
@@ -131,9 +131,9 @@ export class ThumbnailComposerService {
       svg += `
   <!-- 보조 텍스트 -->
   <text x="${textX}" y="${subY}"
-    font-family="'NanumGothic','Noto Sans KR','Apple SD Gothic Neo','Malgun Gothic',sans-serif"
-    font-size="${subFontSize}" font-weight="700" filter="url(#shadow)"
-    stroke="${strokeColor}" stroke-width="4" stroke-linejoin="round"
+    font-family="'Noto Sans CJK KR','Noto Sans KR','NanumGothic','Apple SD Gothic Neo',sans-serif"
+    font-size="${subFontSize}" font-weight="700" letter-spacing="-1" filter="url(#shadow)"
+    paint-order="stroke" stroke="${strokeColor}" stroke-width="5" stroke-linejoin="round"
     fill="${accentColor}">
     ${escape(textSub)}
   </text>`;
