@@ -19,8 +19,31 @@ logger = logging.getLogger(__name__)
 # ─── 직렬화/역직렬화 헬퍼 ────────────────────────────────────────────
 
 
-def _clip_to_preview_dict(clip: ComposedClip, index: int) -> dict:
-    """ComposedClip → preview.json용 딕셔너리 (segments 포함, words 제외)"""
+def _clip_to_preview_dict(
+    clip: ComposedClip,
+    index: int,
+    subtitle_segments: list[dict] | None = None,
+) -> dict:
+    """ComposedClip → preview.json용 딕셔너리 (segments 포함, words 제외)
+
+    Args:
+        clip: ComposedClip 객체
+        index: 클립 번호 (1-base)
+        subtitle_segments: Whisper/SRT 자막 세그먼트 리스트 (전체 영상)
+            → 클립 시간 범위에 해당하는 대본 텍스트를 추출하여 포함
+    """
+    # 클립 시간 범위의 실제 대본 텍스트 추출
+    transcript_text = ""
+    if subtitle_segments:
+        for seg in clip.segments:
+            relevant = [
+                s["text"] for s in subtitle_segments
+                if s["end"] > seg.start_sec and s["start"] < seg.end_sec
+            ]
+            if transcript_text and relevant:
+                transcript_text += " ... "  # 합성 구간 구분
+            transcript_text += " ".join(relevant)
+
     return {
         "index": index,
         "hookTitle": clip.hook_title,
@@ -36,6 +59,7 @@ def _clip_to_preview_dict(clip: ComposedClip, index: int) -> dict:
         "loopFriendly": clip.loop_friendly,
         "highlightKeywords": clip.highlight_keywords,
         "auxText": clip.aux_text,
+        "transcriptText": transcript_text,  # 실제 대본 전문
         # 렌더링 복원에 필요한 구조 정보
         "segments": [{"start": seg.start, "end": seg.end} for seg in clip.segments],
         "hookReorder": clip.hook_reorder,
@@ -209,7 +233,10 @@ def run_analysis_pipeline(
     composed_clips = safe_clips
 
     # preview.json 저장 (프론트엔드 프리뷰용, words는 제외 → transcript.json 별도)
-    preview_clips = [_clip_to_preview_dict(clip, i + 1) for i, clip in enumerate(composed_clips)]
+    preview_clips = [
+        _clip_to_preview_dict(clip, i + 1, subtitle_segments=segments)
+        for i, clip in enumerate(composed_clips)
+    ]
     preview_path = os.path.join(output_dir, "preview.json")
     with open(preview_path, "w", encoding="utf-8") as f:
         json.dump(preview_clips, f, ensure_ascii=False, indent=2)

@@ -357,6 +357,7 @@ export interface ShortformClipPreview {
   isComposition: boolean;
   loopFriendly: boolean;
   highlightKeywords: string[];
+  transcriptText?: string;  // 실제 대본 전문
 }
 
 export interface ShortformJobStatus {

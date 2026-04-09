@@ -20,6 +20,7 @@ import {
   Film,
   X,
   History,
+  FileText,
 } from 'lucide-react';
 import {
   ShortformSegment,
@@ -285,6 +286,31 @@ const SCORE_LABEL_MAP: Record<string, string> = {
   composition: '합성 구성',
 };
 
+// ─── TranscriptSection (대본 전문 접히는 섹션) ────────
+function TranscriptSection({ text }: { text: string }) {
+  const [open, setOpen] = useState(false);
+  const isLong = text.length > 150;
+  const displayText = !open && isLong ? text.slice(0, 150) + '...' : text;
+
+  return (
+    <div className="mt-2 bg-gray-900/80 rounded-xl p-3 border border-gray-700/50">
+      <div className="flex items-center gap-1.5 mb-1.5">
+        <FileText className="w-3 h-3 text-violet-400" />
+        <span className="text-[11px] text-violet-400 font-medium">대본 전문</span>
+      </div>
+      <p className="text-[12px] text-gray-300 leading-[1.7] whitespace-pre-wrap">{displayText}</p>
+      {isLong && (
+        <button
+          onClick={() => setOpen(!open)}
+          className="mt-1.5 text-[10px] text-violet-400 hover:text-violet-300 transition-colors"
+        >
+          {open ? '접기 ▲' : '더보기 ▼'}
+        </button>
+      )}
+    </div>
+  );
+}
+
 // ─── PreviewCard (클립 1개) ──────────────────────────
 function PreviewCard({
   clip,
@@ -375,6 +401,11 @@ function PreviewCard({
                 </span>
               ))}
             </div>
+          )}
+
+          {/* 대본 전문 */}
+          {clip.transcriptText && (
+            <TranscriptSection text={clip.transcriptText} />
           )}
         </div>
 
