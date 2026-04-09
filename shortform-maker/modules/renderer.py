@@ -118,7 +118,7 @@ def _concat_segments(video_path: str, clip: ComposedClip, output_path: str):
         "-map", "[vout]", "-map", "[aout]",
         "-c:v", "libx264", "-preset", "fast", "-crf", "23",
         "-c:a", "aac", "-b:a", "128k",
-        "-t", str(MAX_CLIP_DURATION),  # 하드 가드
+        "-t", str(round(clip.total_duration / PLAYBACK_SPEED + 1.0, 2)),  # 실제 길이 + 여유
         output_path,
     ]
     result = subprocess.run(cmd, capture_output=True, text=True)
@@ -267,8 +267,10 @@ def _apply_letterbox_overlay(
 
     filter_complex = ";\n".join(filter_parts)
 
-    # 하드 가드: FFmpeg 출력도 MAX_CLIP_DURATION으로 강제 제한
-    max_output_duration = ["-t", str(MAX_CLIP_DURATION)]
+    # 출력 시간 제한: 클립 실제 길이(배속 적용) + 1초 여유, MAX 이내
+    actual_output_sec = clip_duration / PLAYBACK_SPEED + 1.0
+    max_t = min(actual_output_sec, MAX_CLIP_DURATION)
+    max_output_duration = ["-t", str(round(max_t, 2))]
 
     cmd = [
         "ffmpeg", "-y",
