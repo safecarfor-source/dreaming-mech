@@ -1,133 +1,190 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Loader2,
   Sparkles,
-  Image as ImageIcon,
   Download,
-  Upload,
-  RefreshCw,
-  ChevronRight,
-  Eye,
-  History,
+  ThumbsUp,
+  ThumbsDown,
+  ChevronDown,
   X,
 } from 'lucide-react';
 import {
-  generateThumbnailStrategy,
-  generateThumbnailImage,
-  getThumbnails,
-  deleteThumbnail,
-  saveThumbnail,
+  generateCompleteThumbnails,
+  generateThumbnailVariation,
+  saveThumbnailFeedback,
 } from '../../../lib/api';
-import type { ThumbnailStrategy, ThumbnailRecord } from './types';
+import type { CompleteThumbnailResult } from '../../../lib/api';
+import type { ThumbnailStrategy } from './types';
 
 interface CreateViewProps {
   projectId: string;
   onOpenCanvas?: (backgroundUrl: string, strategy: ThumbnailStrategy) => void;
 }
 
-export default function CreateView({ projectId, onOpenCanvas }: CreateViewProps) {
-  const [step, setStep] = useState<'strategy' | 'generate' | 'preview'>('strategy');
-  const [strategies, setStrategies] = useState<ThumbnailStrategy[]>([]);
-  const [selectedStrategy, setSelectedStrategy] = useState<ThumbnailStrategy | null>(null);
-  const [customInstruction, setCustomInstruction] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [generatedImages, setGeneratedImages] = useState<string[]>([]);
-  const [editingPrompt, setEditingPrompt] = useState('');
+type VariationOption = {
+  label: string;
+  value: string;
+};
+
+const VARIATION_OPTIONS: VariationOption[] = [
+  { label: '더 클릭베이트로', value: 'more_clickbait' },
+  { label: '더 미니멀로', value: 'more_minimal' },
+  { label: '얼굴 크게', value: 'face_closer' },
+  { label: '다크모드', value: 'dark_mode' },
+];
+
+const STYLE_OPTIONS = [
+  { label: '자동차 정비', value: '자동차 정비' },
+  { label: '긴급/경고', value: '긴급/경고' },
+  { label: '교육/정보', value: '교육/정보' },
+  { label: '리뷰', value: '리뷰' },
+  { label: '브이로그', value: '브이로그' },
+  { label: '기타', value: '기타' },
+];
+
+interface ThumbnailCardState {
+  id: string;
+  imageUrl: string;
+  strategy: ThumbnailStrategy;
+  prompt: string;
+  loading: boolean;
+  feedback: 'good' | 'bad' | null;
+  variationOpen: boolean;
+}
+
+export default function CreateView({ projectId, onOpenCanvas: _onOpenCanvas }: CreateViewProps) {
+  const [description, setDescription] = useState('');
+  const [style, setStyle] = useState('자동차 정비');
+  const [generating, setGenerating] = useState(false);
   const [error, setError] = useState('');
-  const [savedThumbnails, setSavedThumbnails] = useState<ThumbnailRecord[]>([]);
-  const [loadingHistory, setLoadingHistory] = useState(false);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [cards, setCards] = useState<ThumbnailCardState[]>([]);
+  const [modalUrl, setModalUrl] = useState<string | null>(null);
 
-  // 이전 이력 로드
-  const loadHistory = useCallback(async () => {
-    setLoadingHistory(true);
+  const handleGenerate = useCallback(async () => {
+    setGenerating(true);
+    setError('');
+    setCards([]);
     try {
-      const data = await getThumbnails(projectId);
-      setSavedThumbnails(data || []);
-    } catch {
-      // 조용히 실패
+      const result: CompleteThumbnailResult = await generateCompleteThumbnails({
+        projectId,
+        title: '',
+        description: description || undefined,
+        style,
+      });
+
+      const initialCards: ThumbnailCardState[] = result.thumbnails.map((t) => ({
+        id: t.id,
+        imageUrl: t.imageUrl,
+        strategy: t.strategy,
+        prompt: t.prompt,
+        loading: false,
+        feedback: null,
+        variationOpen: false,
+      }));
+      setCards(initialCards);
+    } catch (e) {
+      setError('생성 실패: ' + (e instanceof Error ? e.message : '알 수 없는 오류'));
     } finally {
-      setLoadingHistory(false);
+      setGenerating(false);
     }
-  }, [projectId]);
+  }, [projectId, description, style]);
 
-  // 마운트 시 이력 로드
-  useEffect(() => { loadHistory(); }, [loadHistory]);
-
-  const handleDeleteSaved = useCallback(async (e: React.MouseEvent, id: string) => {
-    e.stopPropagation();
-    setDeletingId(id);
+  const handleDownload = useCallback(async (imageUrl: string, concept: string) => {
     try {
-      await deleteThumbnail(id);
-      setSavedThumbnails((prev) => prev.filter((t) => t.id !== id));
+      const response = await fetch(imageUrl);
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `thumbnail-${concept}-${Date.now()}.png`;
+      a.click();
+      URL.revokeObjectURL(url);
     } catch {
-      // 조용히 실패
-    } finally {
-      setDeletingId(null);
+      // 다운로드 실패 시 새 탭으로 열기
+      window.open(imageUrl, '_blank');
     }
   }, []);
 
-  const handleGenerateStrategy = useCallback(async () => {
-    setLoading(true);
-    setError('');
+  const handleFeedback = useCallback(async (index: number, rating: 'good' | 'bad') => {
+    const card = cards[index];
+    if (!card || card.feedback) return;
     try {
-      const result = await generateThumbnailStrategy({
-        projectId,
-        customInstruction: customInstruction || undefined,
-      });
-      setStrategies(result.strategies || []);
-      if (result.strategies?.length > 0) {
-        setStep('strategy');
-      }
-    } catch (e) {
-      setError('전략 생성 실패: ' + (e instanceof Error ? e.message : '알 수 없는 오류'));
-    } finally {
-      setLoading(false);
+      await saveThumbnailFeedback({ thumbnailId: card.id, rating });
+      setCards((prev) =>
+        prev.map((c, i) => (i === index ? { ...c, feedback: rating } : c))
+      );
+    } catch {
+      // 피드백 실패는 조용히 무시
     }
-  }, [projectId, customInstruction]);
+  }, [cards]);
 
-  const handleSelectStrategy = useCallback((strategy: ThumbnailStrategy) => {
-    setSelectedStrategy(strategy);
-    setEditingPrompt(strategy.fluxPrompt);
-    setStep('generate');
+  const handleVariation = useCallback(async (index: number, variation: string) => {
+    const card = cards[index];
+    if (!card) return;
+    setCards((prev) =>
+      prev.map((c, i) => (i === index ? { ...c, loading: true, variationOpen: false } : c))
+    );
+    try {
+      const result = await generateThumbnailVariation({ thumbnailId: card.id, variation });
+      setCards((prev) =>
+        prev.map((c, i) =>
+          i === index ? { ...c, id: result.id, imageUrl: result.imageUrl, loading: false, feedback: null } : c
+        )
+      );
+    } catch (e) {
+      setCards((prev) =>
+        prev.map((c, i) => (i === index ? { ...c, loading: false } : c))
+      );
+    }
+  }, [cards]);
+
+  const toggleVariationMenu = useCallback((index: number) => {
+    setCards((prev) =>
+      prev.map((c, i) => (i === index ? { ...c, variationOpen: !c.variationOpen } : { ...c, variationOpen: false }))
+    );
   }, []);
-
-  const handleGenerateImage = useCallback(async () => {
-    if (!editingPrompt) return;
-    setLoading(true);
-    setError('');
-    try {
-      const result = await generateThumbnailImage({
-        projectId,
-        prompt: editingPrompt,
-      });
-      setGeneratedImages(result.imageUrls);
-      setStep('preview');
-      // 자동 저장
-      if (result.imageUrls.length > 0) {
-        try {
-          await saveThumbnail({
-            projectId,
-            imageUrl: result.imageUrls[0],
-            prompt: editingPrompt,
-            strategy: selectedStrategy ? (selectedStrategy as unknown as Record<string, unknown>) : undefined,
-          });
-          await loadHistory();
-        } catch {
-          // 저장 실패해도 생성은 성공으로 처리
-        }
-      }
-    } catch (e) {
-      setError('이미지 생성 실패: ' + (e instanceof Error ? e.message : '알 수 없는 오류'));
-    } finally {
-      setLoading(false);
-    }
-  }, [projectId, editingPrompt, selectedStrategy, loadHistory]);
 
   return (
     <div className="space-y-6">
+      {/* 입력 영역 */}
+      <div className="space-y-3">
+        <textarea
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          placeholder="영상 내용을 간단히 설명해주세요"
+          rows={3}
+          className="w-full bg-gray-800/50 border border-gray-700 rounded-xl px-4 py-3 text-sm text-white placeholder:text-gray-600 focus:outline-none focus:border-purple-500/50 resize-none leading-relaxed"
+        />
+
+        <select
+          value={style}
+          onChange={(e) => setStyle(e.target.value)}
+          className="w-full bg-gray-800/50 border border-gray-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-purple-500/50 appearance-none cursor-pointer"
+        >
+          {STYLE_OPTIONS.map((opt) => (
+            <option key={opt.value} value={opt.value} className="bg-gray-900">
+              {opt.label}
+            </option>
+          ))}
+        </select>
+
+        <button
+          onClick={handleGenerate}
+          disabled={generating}
+          className="w-full flex items-center justify-center gap-2 py-3.5 bg-[#7C4DFF] hover:bg-[#6B3FE0] disabled:bg-gray-700 disabled:text-gray-500 rounded-xl text-white font-semibold text-sm transition-colors"
+        >
+          {generating ? (
+            <Loader2 className="w-5 h-5 animate-spin" />
+          ) : (
+            <Sparkles className="w-5 h-5" />
+          )}
+          썸네일 3안 자동 생성
+        </button>
+      </div>
+
       {/* 에러 */}
       {error && (
         <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-3 text-red-400 text-sm">
@@ -135,265 +192,181 @@ export default function CreateView({ projectId, onOpenCanvas }: CreateViewProps)
         </div>
       )}
 
-      {/* STEP 1: 전략 생성 */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <h3 className="text-white font-semibold text-sm flex items-center gap-2">
-            <span className="w-6 h-6 bg-purple-500/20 rounded-full flex items-center justify-center text-purple-400 text-xs font-bold">1</span>
-            AI 전략 생성
-          </h3>
-          {strategies.length > 0 && (
-            <button onClick={() => { setStrategies([]); setStep('strategy'); }} className="text-xs text-gray-500 hover:text-gray-400">
-              초기화
-            </button>
-          )}
-        </div>
+      {/* 로딩 상태 */}
+      {generating && (
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex flex-col items-center justify-center gap-3 py-12 text-center"
+        >
+          <Loader2 className="w-8 h-8 text-[#7C4DFF] animate-spin" />
+          <p className="text-gray-400 text-sm leading-relaxed">
+            AI가 학습된 노하우를 반영하여<br />썸네일 3안을 만들고 있습니다...
+          </p>
+        </motion.div>
+      )}
 
-        {/* 커스텀 지시 입력 */}
-        <div className="flex gap-2">
-          <input
-            type="text"
-            value={customInstruction}
-            onChange={(e) => setCustomInstruction(e.target.value)}
-            placeholder="추가 지시 (선택) — 예: 빨간색 배경으로, 놀란 표정으로..."
-            className="flex-1 bg-gray-800/50 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white placeholder:text-gray-600 focus:outline-none focus:border-purple-500/50"
-          />
-          <button
-            onClick={handleGenerateStrategy}
-            disabled={loading}
-            className="flex items-center gap-1.5 px-4 py-2 bg-purple-600 hover:bg-purple-500 disabled:bg-gray-700 disabled:text-gray-500 rounded-lg text-sm font-medium text-white transition-colors"
+      {/* 결과 카드 3장 */}
+      <AnimatePresence>
+        {cards.length > 0 && !generating && (
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4"
           >
-            {loading && step === 'strategy' ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : (
-              <Sparkles className="w-4 h-4" />
-            )}
-            전략 생성
-          </button>
-        </div>
-
-        {/* 전략 카드 3개 */}
-        {strategies.length > 0 && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            {strategies.map((s, i) => (
-              <button
-                key={i}
-                onClick={() => handleSelectStrategy(s)}
-                className={`text-left p-4 rounded-xl border transition-all ${
-                  selectedStrategy === s
-                    ? 'border-purple-500/50 bg-purple-500/10'
-                    : 'border-gray-700 bg-gray-800/30 hover:border-gray-600'
-                }`}
+            {cards.map((card, index) => (
+              <motion.div
+                key={card.id + index}
+                initial={{ opacity: 0, scale: 0.97 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: index * 0.07 }}
+                className="bg-gray-800/40 border border-gray-700 rounded-2xl overflow-hidden flex flex-col"
               >
-                <div className="text-xs text-purple-400 font-medium mb-1">{s.concept}</div>
-                <div className="text-white font-bold text-lg mb-1" style={{ color: s.colorScheme?.textColor }}>
-                  {s.textMain}
-                </div>
-                {s.textSub && <div className="text-gray-400 text-xs mb-2">{s.textSub}</div>}
-                <div className="text-gray-500 text-xs leading-relaxed">{s.description}</div>
-                <div className="mt-2 flex items-center gap-2">
-                  <span className="px-2 py-0.5 bg-gray-700/50 rounded text-xs text-gray-400">
-                    {s.emotionalTone}
-                  </span>
-                </div>
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* STEP 2: 이미지 생성 */}
-      {(step === 'generate' || step === 'preview') && selectedStrategy && (
-        <div className="space-y-3">
-          <h3 className="text-white font-semibold text-sm flex items-center gap-2">
-            <span className="w-6 h-6 bg-purple-500/20 rounded-full flex items-center justify-center text-purple-400 text-xs font-bold">2</span>
-            AI 이미지 생성
-            <ChevronRight className="w-3 h-3 text-gray-600" />
-            <span className="text-gray-400 text-xs font-normal">FLUX 1.1 Pro</span>
-          </h3>
-
-          {/* 프롬프트 편집 */}
-          <div className="space-y-2">
-            <label className="text-xs text-gray-500">프롬프트 (영문, 편집 가능)</label>
-            <textarea
-              value={editingPrompt}
-              onChange={(e) => setEditingPrompt(e.target.value)}
-              rows={3}
-              className="w-full bg-gray-800/50 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white placeholder:text-gray-600 focus:outline-none focus:border-purple-500/50 resize-none"
-            />
-            <div className="flex gap-2">
-              <button
-                onClick={handleGenerateImage}
-                disabled={loading || !editingPrompt}
-                className="flex items-center gap-1.5 px-4 py-2 bg-purple-600 hover:bg-purple-500 disabled:bg-gray-700 disabled:text-gray-500 rounded-lg text-sm font-medium text-white transition-colors"
-              >
-                {loading && step === 'generate' ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <ImageIcon className="w-4 h-4" />
-                )}
-                이미지 생성 (~15초)
-              </button>
-              <button
-                onClick={() => { setEditingPrompt(selectedStrategy.fluxPrompt); }}
-                className="px-3 py-2 text-xs text-gray-500 hover:text-gray-400 border border-gray-700 rounded-lg"
-              >
-                <RefreshCw className="w-3 h-3 inline mr-1" />
-                원본 복원
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* STEP 3: 미리보기 */}
-      {step === 'preview' && generatedImages.length > 0 && (
-        <div className="space-y-3">
-          <h3 className="text-white font-semibold text-sm flex items-center gap-2">
-            <span className="w-6 h-6 bg-green-500/20 rounded-full flex items-center justify-center text-green-400 text-xs font-bold">3</span>
-            생성 결과
-          </h3>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {generatedImages.map((url, i) => (
-              <div key={i} className="relative group rounded-xl overflow-hidden border border-gray-700">
-                <img src={url} alt={`생성된 썸네일 ${i + 1}`} className="w-full aspect-video object-cover" />
-                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
-                  <a href={url} target="_blank" rel="noopener noreferrer" className="p-2 bg-white/20 rounded-full hover:bg-white/30">
-                    <Eye className="w-5 h-5 text-white" />
-                  </a>
-                  <a href={url} download className="p-2 bg-white/20 rounded-full hover:bg-white/30">
-                    <Download className="w-5 h-5 text-white" />
-                  </a>
-                </div>
-
-                {/* 선택한 전략 텍스트 오버레이 미리보기 */}
-                {selectedStrategy && (
-                  <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent">
-                    <div
-                      className="font-bold text-2xl drop-shadow-lg"
-                      style={{ color: selectedStrategy.colorScheme?.textColor || '#FFD700' }}
-                    >
-                      {selectedStrategy.textMain}
+                {/* 이미지 */}
+                <div
+                  className="relative aspect-video bg-gray-800 cursor-pointer overflow-hidden"
+                  onClick={() => !card.loading && setModalUrl(card.imageUrl)}
+                >
+                  {card.loading ? (
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <Loader2 className="w-8 h-8 text-[#7C4DFF] animate-spin" />
                     </div>
-                    {selectedStrategy.textSub && (
-                      <div className="text-white/80 text-sm mt-1">{selectedStrategy.textSub}</div>
-                    )}
+                  ) : (
+                    <img
+                      src={card.imageUrl}
+                      alt={`썸네일 ${index + 1}`}
+                      className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                    />
+                  )}
+                </div>
+
+                {/* 전략 정보 */}
+                <div className="px-3 py-2.5 border-t border-gray-700/60 space-y-1.5">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-xs font-semibold text-[#7C4DFF] bg-purple-500/10 px-2 py-0.5 rounded-full">
+                      {card.strategy.concept}
+                    </span>
+                    <span className="text-xs text-gray-500 bg-gray-700/50 px-2 py-0.5 rounded-full">
+                      {card.strategy.emotionalTone}
+                    </span>
                   </div>
-                )}
-              </div>
+                  <p className="text-white text-sm font-bold leading-snug">
+                    {card.strategy.textMain}
+                  </p>
+                  {card.strategy.textSub && (
+                    <p className="text-gray-400 text-xs">{card.strategy.textSub}</p>
+                  )}
+                </div>
+
+                {/* 버튼 영역 */}
+                <div className="px-3 pb-3 flex items-center gap-2 mt-auto">
+                  {/* 다운로드 */}
+                  <button
+                    onClick={() => handleDownload(card.imageUrl, card.strategy.concept)}
+                    disabled={card.loading}
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-700/60 hover:bg-gray-700 disabled:opacity-40 rounded-lg text-xs text-gray-300 transition-colors"
+                  >
+                    <Download className="w-3.5 h-3.5" />
+                    다운로드
+                  </button>
+
+                  {/* 피드백 */}
+                  <button
+                    onClick={() => handleFeedback(index, 'good')}
+                    disabled={!!card.feedback || card.loading}
+                    className={`p-1.5 rounded-lg transition-colors ${
+                      card.feedback === 'good'
+                        ? 'bg-green-500/20 text-green-400'
+                        : 'bg-gray-700/60 hover:bg-gray-700 text-gray-400 disabled:opacity-40'
+                    }`}
+                    title="좋아요"
+                  >
+                    <ThumbsUp className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    onClick={() => handleFeedback(index, 'bad')}
+                    disabled={!!card.feedback || card.loading}
+                    className={`p-1.5 rounded-lg transition-colors ${
+                      card.feedback === 'bad'
+                        ? 'bg-red-500/20 text-red-400'
+                        : 'bg-gray-700/60 hover:bg-gray-700 text-gray-400 disabled:opacity-40'
+                    }`}
+                    title="별로"
+                  >
+                    <ThumbsDown className="w-3.5 h-3.5" />
+                  </button>
+
+                  {/* 변형 드롭다운 */}
+                  <div className="relative ml-auto">
+                    <button
+                      onClick={() => toggleVariationMenu(index)}
+                      disabled={card.loading}
+                      className="flex items-center gap-1 px-3 py-1.5 bg-gray-700/60 hover:bg-gray-700 disabled:opacity-40 rounded-lg text-xs text-gray-300 transition-colors"
+                    >
+                      변형
+                      <ChevronDown className="w-3 h-3" />
+                    </button>
+                    <AnimatePresence>
+                      {card.variationOpen && (
+                        <motion.div
+                          initial={{ opacity: 0, y: -4 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -4 }}
+                          transition={{ duration: 0.12 }}
+                          className="absolute right-0 bottom-full mb-1 w-40 bg-gray-800 border border-gray-700 rounded-xl overflow-hidden shadow-xl z-10"
+                        >
+                          {VARIATION_OPTIONS.map((opt) => (
+                            <button
+                              key={opt.value}
+                              onClick={() => handleVariation(index, opt.value)}
+                              className="w-full text-left px-3 py-2 text-xs text-gray-300 hover:bg-gray-700 hover:text-white transition-colors"
+                            >
+                              {opt.label}
+                            </button>
+                          ))}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                </div>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-          <div className="flex gap-2">
-            <button
-              onClick={handleGenerateImage}
-              disabled={loading}
-              className="flex items-center gap-1.5 px-3 py-2 text-sm text-gray-400 hover:text-white border border-gray-700 rounded-lg hover:border-gray-600"
+      {/* 이미지 원본 모달 */}
+      <AnimatePresence>
+        {modalUrl && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
+            onClick={() => setModalUrl(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.95 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0.95 }}
+              className="relative max-w-4xl w-full"
+              onClick={(e) => e.stopPropagation()}
             >
-              <RefreshCw className="w-3.5 h-3.5" />
-              다시 생성
-            </button>
-            {/* 캔버스에서 편집 버튼 — onOpenCanvas 제공 시에만 표시 */}
-            {onOpenCanvas && selectedStrategy && generatedImages[0] && (
+              <img
+                src={modalUrl}
+                alt="썸네일 원본"
+                className="w-full rounded-xl shadow-2xl"
+              />
               <button
-                onClick={() => onOpenCanvas(generatedImages[0], selectedStrategy)}
-                className="flex items-center gap-1.5 px-3 py-2 text-sm text-purple-400 hover:text-purple-300 border border-purple-500/30 rounded-lg hover:border-purple-500/50 bg-purple-500/5 hover:bg-purple-500/10 transition-colors"
+                onClick={() => setModalUrl(null)}
+                className="absolute top-3 right-3 p-2 bg-black/60 hover:bg-black/80 rounded-full text-white transition-colors"
               >
-                🖼️ 캔버스에서 편집
+                <X className="w-5 h-5" />
               </button>
-            )}
-          </div>
-
-          {/* 텍스트 정보 */}
-          {selectedStrategy && (
-            <div className="bg-gray-800/30 border border-gray-700 rounded-lg p-3">
-              <div className="text-xs text-gray-500 mb-1">선택된 전략</div>
-              <div className="text-sm text-white font-medium">{selectedStrategy.concept}</div>
-              <div className="text-xs text-gray-400 mt-1">
-                메인: <span className="text-white">{selectedStrategy.textMain}</span>
-                {selectedStrategy.textSub && <> · 서브: <span className="text-white">{selectedStrategy.textSub}</span></>}
-              </div>
-              <div className="text-xs text-gray-500 mt-1">
-                캔버스 편집기에서 텍스트를 이미지 위에 배치할 수 있습니다 (Phase 2)
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* 직접 실사진 업로드 옵션 */}
-      <div className="border-t border-gray-800 pt-4">
-        <div className="flex items-center gap-2 text-gray-500 text-xs">
-          <Upload className="w-3.5 h-3.5" />
-          <span>직접 사진 업로드는 캔버스 편집기 (Phase 2)에서 지원됩니다</span>
-        </div>
-      </div>
-
-      {/* 이전 제작 이력 */}
-      {savedThumbnails.length > 0 && (
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <History className="w-4 h-4 text-gray-500" />
-              <p className="text-gray-400 text-xs font-medium">이전 제작 이력</p>
-            </div>
-            <span className="text-gray-600 text-[10px]">{savedThumbnails.length}개</span>
-          </div>
-          {savedThumbnails.slice(0, 5).map((t) => (
-            <div
-              key={t.id}
-              className="relative group w-full bg-gray-800 border border-gray-700 rounded-xl p-3 hover:border-purple-500/30 transition-colors flex items-center gap-3"
-            >
-              {/* 썸네일 미리보기 */}
-              {(t.imageUrl || t.baseImageUrl) ? (
-                <img
-                  src={t.imageUrl || t.baseImageUrl}
-                  alt="썸네일"
-                  className="w-16 h-9 object-cover rounded-lg flex-shrink-0 border border-gray-700"
-                />
-              ) : (
-                <div className="w-16 h-9 bg-gray-700 rounded-lg flex-shrink-0 flex items-center justify-center">
-                  <ImageIcon className="w-4 h-4 text-gray-600" />
-                </div>
-              )}
-              <div className="flex-1 min-w-0 flex items-center justify-between pr-6">
-                <div className="flex items-center gap-2 min-w-0">
-                  <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium flex-shrink-0 ${
-                    t.status === 'COMPLETED' ? 'bg-green-500/20 text-green-400' : 'bg-yellow-500/20 text-yellow-400'
-                  }`}>
-                    {t.status === 'COMPLETED' ? '완성' : '초안'}
-                  </span>
-                  <span className="text-gray-400 text-xs truncate max-w-[120px]">
-                    {(t.strategy as Record<string, unknown>)?.concept as string || '생성된 썸네일'}
-                  </span>
-                </div>
-                <span className="text-gray-500 text-[10px] flex-shrink-0 ml-2">
-                  {new Date(t.createdAt).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                </span>
-              </div>
-              {/* 삭제 버튼 */}
-              <button
-                onClick={(e) => handleDeleteSaved(e, t.id)}
-                disabled={deletingId === t.id}
-                className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-lg opacity-0 group-hover:opacity-100 hover:bg-gray-700 transition-all"
-              >
-                {deletingId === t.id ? (
-                  <Loader2 className="w-3 h-3 text-gray-400 animate-spin" />
-                ) : (
-                  <X className="w-3 h-3 text-gray-400 hover:text-red-400 transition-colors" />
-                )}
-              </button>
-            </div>
-          ))}
-        </div>
-      )}
-      {loadingHistory && (
-        <div className="flex items-center justify-center gap-2 py-3">
-          <Loader2 className="w-4 h-4 text-gray-500 animate-spin" />
-          <span className="text-gray-500 text-xs">이전 이력 불러오는 중...</span>
-        </div>
-      )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

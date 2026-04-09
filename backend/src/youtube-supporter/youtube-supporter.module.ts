@@ -6,6 +6,7 @@ import { TranscriptService } from './services/transcript.service';
 import { AiOrchestrationService } from './services/ai-orchestration.service';
 import { ReplicateService } from './services/replicate.service';
 import { BackgroundRemovalService } from './services/background-removal.service';
+import { GeminiImageService } from './services/gemini-image.service';
 import { UploadModule } from '../upload/upload.module';
 
 /**
@@ -22,6 +23,7 @@ import { UploadModule } from '../upload/upload.module';
     AiOrchestrationService,
     ReplicateService,
     BackgroundRemovalService,
+    GeminiImageService,
   ],
 })
 export class YouTubeSupporterModule {}
