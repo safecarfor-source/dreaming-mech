@@ -56,6 +56,7 @@ interface ThumbnailCardState {
 }
 
 export default function CreateView({ projectId, onOpenCanvas: _onOpenCanvas }: CreateViewProps) {
+  const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [style, setStyle] = useState('자동차 정비');
   const [generating, setGenerating] = useState(false);
@@ -64,13 +65,14 @@ export default function CreateView({ projectId, onOpenCanvas: _onOpenCanvas }: C
   const [modalUrl, setModalUrl] = useState<string | null>(null);
 
   const handleGenerate = useCallback(async () => {
+    const effectiveTitle = title || description || '유튜브 썸네일';
     setGenerating(true);
     setError('');
     setCards([]);
     try {
       const result: CompleteThumbnailResult = await generateCompleteThumbnails({
         projectId,
-        title: '',
+        title: effectiveTitle,
         description: description || undefined,
         style,
       });
@@ -151,11 +153,19 @@ export default function CreateView({ projectId, onOpenCanvas: _onOpenCanvas }: C
     <div className="space-y-6">
       {/* 입력 영역 */}
       <div className="space-y-3">
+        <input
+          type="text"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          placeholder="영상 제목 (예: 브레이크오일 교체가 필요한데 안하면 위험합니까)"
+          className="w-full bg-gray-800/50 border border-gray-700 rounded-xl px-4 py-3 text-sm text-white placeholder:text-gray-600 focus:outline-none focus:border-purple-500/50"
+        />
+
         <textarea
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          placeholder="영상 내용을 간단히 설명해주세요"
-          rows={3}
+          placeholder="영상 설명 (선택 — 추가 컨텍스트)"
+          rows={2}
           className="w-full bg-gray-800/50 border border-gray-700 rounded-xl px-4 py-3 text-sm text-white placeholder:text-gray-600 focus:outline-none focus:border-purple-500/50 resize-none leading-relaxed"
         />
 
