@@ -1381,20 +1381,52 @@ export class YouTubeSupporterService {
     // 메모리에 저장 (구조화된 데이터 포함)
     if (dto.saveToMemory) {
       try {
-        const parsed = JSON.parse(analysis.match(/```json\s*([\s\S]*?)\s*```/)?.[1] ?? analysis);
-        await this.prisma.ytSkillNote.create({
-          data: {
-            category: 'thumbnail',
-            title: `[AI 분석] ${parsed.emotionalTone ?? '썸네일'} - ${parsed.layout ?? '분석'}`,
-            content: `구도: ${parsed.layout}\n색상: ${JSON.stringify(parsed.colorScheme)}\n텍스트: ${JSON.stringify(parsed.textStrategy)}\n감정: ${parsed.emotionalTone}\n효과: ${parsed.effectivenessReason}`,
-            source: 'thumbnail-analyzer',
-            tags: ['ai-analysis', parsed.emotionalTone, parsed.layout].filter(Boolean),
-            score: 1, // AI 분석은 기본 품질
-            structuredData: parsed as Prisma.InputJsonValue,
-          },
-        });
-      } catch {
-        this.logger.warn('분석 결과 메모리 저장 실패 (JSON 파싱 오류)');
+        const jsonMatch = analysis.match(/```json\s*([\s\S]*?)\s*```/);
+        const parsed = jsonMatch ? JSON.parse(jsonMatch[1]) : null;
+
+        if (parsed) {
+          // JSON 파싱 성공 → 구조화 저장
+          await this.prisma.ytSkillNote.create({
+            data: {
+              category: 'thumbnail',
+              title: `[AI 분석] ${parsed.emotionalTone ?? '썸네일'} - ${parsed.layout ?? '분석'}`,
+              content: `구도: ${parsed.layout}\n색상: ${JSON.stringify(parsed.colorScheme)}\n텍스트: ${JSON.stringify(parsed.textStrategy)}\n감정: ${parsed.emotionalTone}\n효과: ${parsed.effectivenessReason}`,
+              source: 'thumbnail-analyzer',
+              tags: ['ai-analysis', parsed.emotionalTone, parsed.layout].filter(Boolean),
+              score: 1,
+              structuredData: parsed as Prisma.InputJsonValue,
+            },
+          });
+        } else {
+          // JSON 없음 (여러 썸네일 모음 등 자유 텍스트) → 텍스트 그대로 저장
+          const summary = analysis.replace(/```[\s\S]*?```/g, '').trim().slice(0, 2000);
+          await this.prisma.ytSkillNote.create({
+            data: {
+              category: 'thumbnail',
+              title: `[AI 분석] 썸네일 모음 분석`,
+              content: summary || analysis.slice(0, 2000),
+              source: 'thumbnail-analyzer',
+              tags: ['ai-analysis', 'multi-thumbnail'],
+              score: 2, // 여러 썸네일 비교 분석은 가치 높음
+            },
+          });
+        }
+      } catch (err) {
+        // 최후의 안전장치: 어떤 에러든 텍스트로라도 저장
+        try {
+          await this.prisma.ytSkillNote.create({
+            data: {
+              category: 'thumbnail',
+              title: `[AI 분석] 분석 결과`,
+              content: analysis.slice(0, 2000),
+              source: 'thumbnail-analyzer',
+              tags: ['ai-analysis'],
+              score: 1,
+            },
+          });
+        } catch {
+          this.logger.warn('분석 결과 메모리 저장 최종 실패');
+        }
       }
     }
 
