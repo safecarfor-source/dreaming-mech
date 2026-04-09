@@ -99,6 +99,11 @@ def build_clips(
                 start=clip_data.get("start", "00:00:00"),
                 end=clip_data.get("end", "00:00:00"),
             )
+            # 키워드 병합: 1단계 keywords + 2단계 highlight_keywords
+            merged_keywords = list(set(
+                clip_data.get("highlight_keywords", []) +
+                clip_data.get("keywords", [])
+            ))
             composed = ComposedClip(
                 segments=[seg],
                 is_composition=False,
@@ -110,6 +115,9 @@ def build_clips(
                 reason=clip_data.get("reason", ""),
                 score_breakdown=clip_data.get("score_breakdown", {}),
                 hook_reorder=clip_data.get("hook_reorder"),
+                loop_friendly=clip_data.get("loop_friendly", False),
+                hook_type=clip_data.get("hook_type", ""),
+                highlight_keywords=merged_keywords,
             )
 
         # 클립 범위 내 워드 필터링
