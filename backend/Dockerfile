@@ -2,14 +2,11 @@
 FROM node:20-alpine AS deps
 WORKDIR /app
 
-# sharp 네이티브 빌드 의존성
-RUN apk add --no-cache build-base python3 vips-dev
-
 COPY package*.json ./
 COPY prisma ./prisma/
 
-# Install production dependencies (with scripts so Prisma postinstall runs)
-RUN npm ci --only=production
+# Install production dependencies (sharp prebuilt binary for linux-x64-musl)
+RUN npm ci --only=production --os=linux --cpu=x64
 
 # Generate Prisma Client into node_modules
 RUN npx prisma generate
@@ -18,10 +15,8 @@ RUN npx prisma generate
 FROM node:20-alpine AS builder
 WORKDIR /app
 
-RUN apk add --no-cache build-base python3 vips-dev
-
 COPY package*.json ./
-RUN npm ci
+RUN npm ci --os=linux --cpu=x64
 
 COPY . .
 
