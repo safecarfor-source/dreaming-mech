@@ -675,6 +675,15 @@ export async function getThumbnailMemory(): Promise<SkillNote[]> {
 
 // ─── 썸네일 AI (Phase 2: 캔버스 + 실사 합성) ──────────
 
+export async function setupDefaultPerson(file: File): Promise<{ originalUrl: string; transparentUrl: string }> {
+  const formData = new FormData();
+  formData.append('image', file);
+  const res = await ytApi.post('/yt/thumbnail/setup-person', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
+  return res.data;
+}
+
 export async function removeBackground(file: File): Promise<{ s3Url: string }> {
   const formData = new FormData();
   formData.append('image', file);

@@ -879,6 +879,12 @@ ${channelList || '(등록된 채널 없음)'}
 ${contextSection}
 ${knowledgeSection}
 
+## 제작 방식 (이해 필수):
+- 배경: DALL-E 3로 생성 (배경만, 텍스트/인물 없이)
+- 인물: 실사 정비사 사진을 배경 위에 합성 (주로 오른쪽)
+- 텍스트: 코드로 큰 글씨 합성 (140~200px 한글, 왼쪽 배치)
+- 따라서 배경 프롬프트는 인물+텍스트 공간을 비워둬야 함
+
 ## 요청사항:
 아래 형식의 JSON으로 정확히 3개의 전략을 제안해주세요.
 
@@ -888,34 +894,35 @@ ${knowledgeSection}
     {
       "concept": "전략 이름 (예: 긴급 경고형)",
       "description": "한줄 설명",
-      "background": "배경 이미지 설명 (AI 이미지 생성용, 구체적으로, 인물 합성 공간 확보)",
-      "textMain": "메인 텍스트 (6자 이내, 강렬하게)",
-      "textSub": "보조 텍스트 (선택, 10자 이내)",
+      "textMain": "메인 텍스트 (5자 이내! 짧을수록 좋음)",
+      "textSub": "보조 텍스트 (선택, 8자 이내)",
+      "personPosition": "right 또는 left (인물 위치, 대부분 right 추천)",
       "colorScheme": {
-        "background": "배경 색감 (예: 어두운 톤, 밝은 톤)",
-        "textColor": "텍스트 색상 HEX (예: #FFD700)",
-        "accentColor": "강조 색상 HEX"
+        "textColor": "메인 텍스트 HEX (밝은 색, 예: #FFFFFF)",
+        "accentColor": "보조 텍스트 HEX (강조색, 예: #FFD700)"
       },
       "emotionalTone": "감정 톤 (긴급, 놀람, 신뢰, 궁금증 등)",
-      "fluxPrompt": "FLUX 이미지 생성용 영문 프롬프트 (구체적이고 상세하게, 1280x720 YouTube thumbnail 명시)"
+      "fluxPrompt": "DALL-E 배경 이미지용 영문 프롬프트"
     }
   ]
 }
 \`\`\`
 
-중요:
-- 자동차 정비 채널에 맞는 실용적인 전략
-- 클릭률(CTR) 최적화: 0.3초 안에 시선을 끌 것
-- fluxPrompt는 반드시 영어로, "YouTube thumbnail, 1280x720" 포함
-- 텍스트는 이미지에 포함하지 말 것 (별도 합성됨)
-- fluxPrompt 스타일 규칙 (매우 중요):
-  * 배경은 심플한 단색 또는 그라데이션 (복잡한 장면 X)
-  * "clean minimal background, solid color gradient" 스타일
-  * 관련 오브제 1~2개만 (자동차 부품, 도구 등)
-  * 오른쪽 40%는 비워둘 것 (텍스트 합성 공간)
-  * AI 그림체가 아닌 사진/실사 느낌: "photorealistic, studio lighting"
-  * 절대 텍스트/글자를 이미지에 넣지 말 것: "no text, no letters, no words"
-- 학습된 노하우가 있다면 반드시 반영 (특히 ✅ 검증된 패턴, 🚫 회피 패턴)`;
+## 하네스 규칙 (반드시 준수):
+1. **textMain은 5자 이내** — 예: "엔진오일", "이거 몰라?", "사기당함"
+2. **textSub은 8자 이내** — 예: "정비사가 직접 알려드림", "이것만 알면 됩니다"
+3. **fluxPrompt 규칙** (매우 중요):
+   - 반드시 영어로 작성
+   - "YouTube thumbnail background, 1792x1024, photorealistic" 포함
+   - **배경만 생성** — 텍스트/글자/사람 절대 포함 금지
+   - "absolutely no text, no letters, no words, no people, no faces" 반드시 포함
+   - 어두운 톤 배경 위주 (텍스트 가독성 확보)
+   - 관련 소품/오브제 1~2개만 배치 (자동차 부품, 공구, 엔진 등)
+   - 왼쪽 40%는 텍스트 공간, 오른쪽 40%는 인물 공간 → 중앙에 소품 배치
+   - "studio lighting, dark moody background, automotive workshop aesthetic"
+4. **colorScheme.textColor**: 반드시 밝은 색 (#FFFFFF, #FFD700 등 — 어두운 배경에서 눈에 띄게)
+5. **personPosition**: 대부분 "right" 추천 (왼쪽 텍스트 + 오른쪽 인물 = 검증된 레이아웃)
+6. 학습된 노하우가 있다면 반드시 반영 (특히 ✅ 검증된 패턴, 🚫 회피 패턴)`;
 
     return this.generateWithOpus(prompt);
   }
