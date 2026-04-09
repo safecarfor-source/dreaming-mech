@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import { Loader2, Image as ImageIcon, ThumbsUp, ThumbsDown, Trash2, RefreshCw } from 'lucide-react';
+import { Loader2, Image as ImageIcon, ThumbsUp, ThumbsDown, Trash2, RefreshCw, Download } from 'lucide-react';
 import {
   getThumbnails,
   deleteThumbnail,
@@ -20,8 +20,20 @@ export default function GalleryView({ projectId }: GalleryViewProps) {
   const loadThumbnails = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await getThumbnails(projectId);
-      setThumbnails(data || []);
+      // 프로젝트 소속 + 프로젝트 없는 썸네일 모두 조회
+      const [projectData, allData] = await Promise.all([
+        getThumbnails(projectId),
+        getThumbnails(),
+      ]);
+      // 합치고 중복 제거 (최근순)
+      const merged = new Map<string, ThumbnailRecord>();
+      for (const t of [...(allData || []), ...(projectData || [])]) {
+        merged.set(t.id, t);
+      }
+      const sorted = [...merged.values()].sort(
+        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      );
+      setThumbnails(sorted);
     } catch {
       // 조용히 실패
     } finally {
@@ -95,15 +107,32 @@ export default function GalleryView({ projectId }: GalleryViewProps) {
             </div>
 
             {/* 호버 액션 */}
-            <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-              <button onClick={() => handleFeedback(t.id, 'good')} className="p-2 bg-green-500/20 rounded-full hover:bg-green-500/30" title="좋아요">
+            <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
+              <button
+                onClick={async () => {
+                  const url = t.imageUrl || t.baseImageUrl;
+                  if (!url) return;
+                  const res = await fetch(url);
+                  const blob = await res.blob();
+                  const href = URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = href;
+                  a.download = `thumbnail-${Date.now()}.png`;
+                  a.click();
+                  URL.revokeObjectURL(href);
+                }}
+                className="p-2.5 bg-blue-500/20 rounded-full hover:bg-blue-500/30" title="다운로드"
+              >
+                <Download className="w-4 h-4 text-blue-400" />
+              </button>
+              <button onClick={() => handleFeedback(t.id, 'good')} className="p-2.5 bg-green-500/20 rounded-full hover:bg-green-500/30" title="좋아요">
                 <ThumbsUp className="w-4 h-4 text-green-400" />
               </button>
-              <button onClick={() => handleFeedback(t.id, 'bad')} className="p-2 bg-red-500/20 rounded-full hover:bg-red-500/30" title="별로">
+              <button onClick={() => handleFeedback(t.id, 'bad')} className="p-2.5 bg-red-500/20 rounded-full hover:bg-red-500/30" title="별로">
                 <ThumbsDown className="w-4 h-4 text-red-400" />
               </button>
-              <button onClick={() => handleDelete(t.id)} className="p-2 bg-red-500/20 rounded-full hover:bg-red-500/30" title="삭제">
-                <Trash2 className="w-4 h-4 text-red-400" />
+              <button onClick={() => handleDelete(t.id)} className="p-2.5 bg-gray-500/20 rounded-full hover:bg-gray-500/30" title="삭제">
+                <Trash2 className="w-4 h-4 text-gray-400" />
               </button>
             </div>
 
