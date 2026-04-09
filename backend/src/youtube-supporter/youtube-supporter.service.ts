@@ -1049,6 +1049,23 @@ export class YouTubeSupporterService {
     return res.json();
   }
 
+  async shortformApprove(jobId: string, body: any, token?: string): Promise<any> {
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (token) headers['x-yt-token'] = token;
+
+    const res = await fetch(`${this.shortformServiceUrl}/shortform/approve/${jobId}`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(body ?? {}),
+    });
+
+    if (!res.ok) {
+      throw new NotFoundException('잡을 찾을 수 없거나 승인할 수 없는 상태입니다');
+    }
+
+    return res.json();
+  }
+
   async shortformDownload(jobId: string, index: string, token: string | undefined, res: import('express').Response): Promise<void> {
     const params = token ? `?token=${encodeURIComponent(token)}` : '';
     const headers: Record<string, string> = {};

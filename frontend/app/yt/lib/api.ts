@@ -343,10 +343,27 @@ export interface ShortformJobResult {
   error?: string;
 }
 
+export interface ShortformClipPreview {
+  index: number;
+  hookTitle: string;
+  subTitle: string;
+  hookType: string;
+  primaryDesire: string;
+  viralityScore: number;
+  scoreBreakdown: Record<string, number>;
+  reason: string;
+  timeDisplay: string;
+  duration: number;
+  isComposition: boolean;
+  loopFriendly: boolean;
+  highlightKeywords: string[];
+}
+
 export interface ShortformJobStatus {
-  status: 'UPLOADING' | 'TRANSCRIBING' | 'ANALYZING' | 'PROCESSING' | 'COMPLETED' | 'FAILED';
+  status: 'UPLOADING' | 'TRANSCRIBING' | 'ANALYZING' | 'PREVIEW_READY' | 'PROCESSING' | 'COMPLETED' | 'FAILED';
   progress: string;
   results?: ShortformJobResult[];
+  preview?: ShortformClipPreview[];
   error?: string;
 }
 
@@ -385,6 +402,27 @@ export const getShortformJobStatus = async (jobId: string): Promise<ShortformJob
     },
   });
   if (!res.ok) throw new Error('상태 조회 실패');
+  const data = await res.json();
+  return data.data ?? data;
+};
+
+export const approveShortformJob = async (
+  jobId: string,
+  selectedIndices?: number[],
+): Promise<{ jobId: string; status: string }> => {
+  const token = typeof window !== 'undefined' ? localStorage.getItem('yt_auth_token') : null;
+  const baseUrl = typeof window !== 'undefined'
+    ? (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001')
+    : 'http://localhost:3001';
+  const res = await fetch(`${baseUrl}/yt/shortform/approve/${jobId}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { 'x-yt-token': token } : {}),
+    },
+    body: JSON.stringify({ selectedIndices }),
+  });
+  if (!res.ok) throw new Error('승인 요청 실패');
   const data = await res.json();
   return data.data ?? data;
 };

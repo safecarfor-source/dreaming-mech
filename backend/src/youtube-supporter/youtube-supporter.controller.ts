@@ -611,6 +611,22 @@ export class YouTubeSupporterController {
   }
 
   /**
+   * POST /api/yt/shortform/approve/:jobId
+   * 프리뷰 확인 후 렌더링 승인
+   */
+  @Post('shortform/approve/:jobId')
+  @UseGuards(YtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  async shortformApprove(
+    @Param('jobId') jobId: string,
+    @Body() body: { selectedIndices?: number[] },
+    @Req() req: Request,
+  ) {
+    const token = req.headers['x-yt-token'] as string | undefined;
+    return this.service.shortformApprove(jobId, body, token);
+  }
+
+  /**
    * GET /api/yt/shortform/download/:jobId/:index
    * 완성된 숏폼 클립 다운로드
    */

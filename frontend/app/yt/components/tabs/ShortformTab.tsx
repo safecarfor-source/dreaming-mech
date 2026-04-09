@@ -28,6 +28,7 @@ import {
   getShortformDownloadUrl,
   ShortformJobStatus,
   ShortformJobResult,
+  ShortformClipPreview,
   saveShortformJob,
   listShortformJobs,
   SavedShortformJob,
@@ -35,6 +36,7 @@ import {
   getShortformStorage,
   deleteShortformStorage,
   StorageJob,
+  approveShortformJob,
 } from '../../lib/api';
 
 interface ShortformTabProps {
@@ -189,11 +191,12 @@ function ShortformCard({ segment, rank }: { segment: ShortformSegment; rank: num
 const STATUS_STEPS: Array<{ key: ShortformJobStatus['status']; label: string }> = [
   { key: 'TRANSCRIBING', label: '음성 인식' },
   { key: 'ANALYZING', label: 'AI 분석' },
+  { key: 'PREVIEW_READY', label: '프리뷰' },
   { key: 'PROCESSING', label: '영상 처리' },
   { key: 'COMPLETED', label: '완료' },
 ];
 
-const STATUS_ORDER = ['UPLOADING', 'TRANSCRIBING', 'ANALYZING', 'PROCESSING', 'COMPLETED', 'FAILED'];
+const STATUS_ORDER = ['UPLOADING', 'TRANSCRIBING', 'ANALYZING', 'PREVIEW_READY', 'PROCESSING', 'COMPLETED', 'FAILED'];
 
 function ProcessingProgress({ jobStatus }: { jobStatus: ShortformJobStatus }) {
   const currentIdx = STATUS_ORDER.indexOf(jobStatus.status);
@@ -233,6 +236,299 @@ function ProcessingProgress({ jobStatus }: { jobStatus: ShortformJobStatus }) {
             </div>
           );
         })}
+      </div>
+    </div>
+  );
+}
+
+// ─── hookType 뱃지 색상 ────────────────────────────────
+function hookTypeBadge(hookType: string): { label: string; className: string } {
+  switch (hookType) {
+    case 'fear':      return { label: '공포/경고', className: 'bg-red-500/15 border-red-500/30 text-red-400' };
+    case 'secret':    return { label: '비밀/폭로', className: 'bg-violet-500/15 border-violet-500/30 text-violet-400' };
+    case 'diagnosis': return { label: '진단/점검', className: 'bg-blue-500/15 border-blue-500/30 text-blue-400' };
+    case 'money':     return { label: '비용/절약', className: 'bg-emerald-500/15 border-emerald-500/30 text-emerald-400' };
+    default:          return { label: hookType, className: 'bg-gray-700 border-gray-600 text-gray-400' };
+  }
+}
+
+// ─── 훅 타이틀: | 기준 빨강/노랑 분할 ──────────────────
+function HookTitle({ title }: { title: string }) {
+  const parts = title.split('|');
+  if (parts.length === 1) return <span className="text-white font-bold text-sm">{title}</span>;
+  return (
+    <span className="font-bold text-sm">
+      <span className="text-red-400">{parts[0]}</span>
+      <span className="text-yellow-300">{parts.slice(1).join('|')}</span>
+    </span>
+  );
+}
+
+// ─── 바이럴 점수 색상 ────────────────────────────────
+function viralityColor(score: number): string {
+  if (score >= 90) return 'text-emerald-400';
+  if (score >= 70) return 'text-blue-400';
+  return 'text-gray-500';
+}
+function viralityBg(score: number): string {
+  if (score >= 90) return 'bg-emerald-500/15 border-emerald-500/30';
+  if (score >= 70) return 'bg-blue-500/15 border-blue-500/30';
+  return 'bg-gray-800 border-gray-700';
+}
+
+// ─── 스코어 바 라벨 한글 매핑 ─────────────────────────
+const SCORE_LABEL_MAP: Record<string, string> = {
+  hook_power: '훅 파워',
+  info_value: '정보 가치',
+  emotion_trigger: '감정 자극',
+  loop_friendly: '루프 친화',
+  composition: '합성 구성',
+};
+
+// ─── PreviewCard (클립 1개) ──────────────────────────
+function PreviewCard({
+  clip,
+  selected,
+  onToggle,
+}: {
+  clip: ShortformClipPreview;
+  selected: boolean;
+  onToggle: () => void;
+}) {
+  const [scoreOpen, setScoreOpen] = useState(false);
+  const badge = hookTypeBadge(clip.hookType);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: clip.index * 0.08 }}
+      className={`bg-gray-800 border rounded-2xl overflow-hidden transition-colors ${
+        selected ? 'border-violet-500/50' : 'border-gray-700 hover:border-gray-600'
+      }`}
+    >
+      <div className="p-4">
+        {/* 상단: 체크박스 + 제목 + 점수 */}
+        <div className="flex items-start gap-3 mb-3">
+          <button
+            onClick={onToggle}
+            className={`mt-0.5 w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 transition-colors ${
+              selected
+                ? 'bg-violet-600 border-violet-600'
+                : 'border-gray-600 hover:border-gray-500'
+            }`}
+          >
+            {selected && (
+              <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+            )}
+          </button>
+
+          <div className="flex-1 min-w-0">
+            <div className="flex items-start justify-between gap-2">
+              <div>
+                <div className="flex items-center gap-1.5 mb-0.5">
+                  <span className="text-gray-500 text-xs font-mono">[{clip.index + 1}]</span>
+                  <HookTitle title={clip.hookTitle} />
+                </div>
+                <p className="text-gray-400 text-xs">{clip.subTitle}</p>
+              </div>
+              <div className={`text-xs font-bold px-2 py-1 rounded-lg border shrink-0 ${viralityBg(clip.viralityScore)}`}>
+                <span className={viralityColor(clip.viralityScore)}>{clip.viralityScore}점</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* 뱃지 줄 */}
+        <div className="flex flex-wrap items-center gap-1.5 mb-3 pl-8">
+          <span className={`text-[10px] px-2 py-0.5 rounded border ${badge.className}`}>{badge.label}</span>
+          {clip.loopFriendly && (
+            <span className="text-[10px] px-2 py-0.5 rounded border bg-amber-500/10 border-amber-500/25 text-amber-400">
+              루프 ♻
+            </span>
+          )}
+          {clip.isComposition && (
+            <span className="text-[10px] px-2 py-0.5 rounded border bg-violet-500/10 border-violet-500/25 text-violet-400">
+              <Scissors className="w-2.5 h-2.5 inline mr-0.5" />합성
+            </span>
+          )}
+          <span className="text-[10px] text-gray-500 ml-1">{clip.duration.toFixed(1)}초</span>
+        </div>
+
+        {/* 시간 + 이유 */}
+        <div className="pl-8 space-y-2">
+          <div className="flex items-center gap-1.5 text-xs text-gray-400 bg-gray-900 px-2.5 py-1.5 rounded-lg w-fit">
+            <Clock className="w-3 h-3" />
+            {clip.timeDisplay}
+          </div>
+
+          <p className="text-gray-400 text-xs leading-relaxed">{clip.reason}</p>
+
+          {/* 키워드 */}
+          {clip.highlightKeywords.length > 0 && (
+            <div className="flex flex-wrap gap-1">
+              {clip.highlightKeywords.map((kw) => (
+                <span key={kw} className="text-[10px] bg-gray-700 text-gray-300 px-1.5 py-0.5 rounded">
+                  {kw}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* 스코어 상세 토글 */}
+        {Object.keys(clip.scoreBreakdown).length > 0 && (
+          <button
+            onClick={() => setScoreOpen(!scoreOpen)}
+            className="mt-3 pl-8 flex items-center gap-1 text-[11px] text-gray-500 hover:text-gray-400 transition-colors"
+          >
+            {scoreOpen ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+            스코어 상세
+          </button>
+        )}
+      </div>
+
+      {/* 스코어 상세 패널 */}
+      <AnimatePresence>
+        {scoreOpen && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            className="border-t border-gray-700 overflow-hidden"
+          >
+            <div className="p-4 pl-8 space-y-2">
+              {Object.entries(clip.scoreBreakdown).map(([key, val]) => (
+                <div key={key} className="flex items-center gap-2">
+                  <span className="text-[10px] text-gray-500 w-24 shrink-0">
+                    {SCORE_LABEL_MAP[key] ?? key}
+                  </span>
+                  <div className="flex-1 bg-gray-900 rounded-full h-1.5">
+                    <div
+                      className="bg-violet-500 h-1.5 rounded-full"
+                      style={{ width: `${Math.min(val, 100)}%` }}
+                    />
+                  </div>
+                  <span className="text-[10px] text-gray-400 w-6 text-right">{val}</span>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
+  );
+}
+
+// ─── PreviewPanel (전체 래퍼) ─────────────────────────
+function PreviewPanel({
+  clips,
+  jobId,
+  onApproved,
+  onReset,
+}: {
+  clips: ShortformClipPreview[];
+  jobId: string;
+  onApproved: () => void;
+  onReset: () => void;
+}) {
+  const [selected, setSelected] = useState<Set<number>>(
+    () => new Set(clips.map((c) => c.index))
+  );
+  const [approving, setApproving] = useState(false);
+  const [approveError, setApproveError] = useState('');
+
+  const toggleAll = (select: boolean) => {
+    setSelected(select ? new Set(clips.map((c) => c.index)) : new Set());
+  };
+
+  const handleApprove = async () => {
+    if (selected.size === 0) return;
+    setApproving(true);
+    setApproveError('');
+    try {
+      await approveShortformJob(jobId, Array.from(selected));
+      onApproved();
+    } catch (err: any) {
+      setApproveError(err.message || '승인 요청 실패');
+    } finally {
+      setApproving(false);
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      {/* 헤더 */}
+      <div className="bg-violet-500/10 border border-violet-500/25 rounded-xl p-4">
+        <div className="flex items-center gap-2 mb-1">
+          <Sparkles className="w-4 h-4 text-violet-400" />
+          <p className="text-violet-300 font-semibold text-sm">프리뷰: {clips.length}개 클립 준비완료</p>
+        </div>
+        <p className="text-gray-400 text-xs">각 클립의 구성을 확인한 후 렌더링하세요</p>
+      </div>
+
+      {/* 클립 카드 목록 */}
+      <div className="space-y-3">
+        {clips.map((clip) => (
+          <PreviewCard
+            key={clip.index}
+            clip={clip}
+            selected={selected.has(clip.index)}
+            onToggle={() => {
+              setSelected((prev) => {
+                const next = new Set(prev);
+                if (next.has(clip.index)) next.delete(clip.index);
+                else next.add(clip.index);
+                return next;
+              });
+            }}
+          />
+        ))}
+      </div>
+
+      {/* 하단 액션 */}
+      <div className="space-y-3 pt-1">
+        {/* 전체선택/해제 */}
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => toggleAll(true)}
+            className="text-xs px-3 py-1.5 bg-gray-800 text-gray-400 hover:text-white border border-gray-700 rounded-lg transition-colors"
+          >
+            전체 선택
+          </button>
+          <button
+            onClick={() => toggleAll(false)}
+            className="text-xs px-3 py-1.5 bg-gray-800 text-gray-400 hover:text-white border border-gray-700 rounded-lg transition-colors"
+          >
+            전체 해제
+          </button>
+          <span className="text-gray-600 text-xs ml-auto">{selected.size}/{clips.length} 선택</span>
+        </div>
+
+        {/* 렌더링 시작 버튼 */}
+        <button
+          onClick={handleApprove}
+          disabled={approving || selected.size === 0}
+          className="w-full flex items-center justify-center gap-2 bg-violet-600 hover:bg-violet-500 disabled:bg-gray-700 disabled:text-gray-500 text-white py-3 rounded-xl text-sm font-semibold transition-colors"
+        >
+          {approving ? (
+            <><Loader2 className="w-4 h-4 animate-spin" />렌더링 요청 중...</>
+          ) : (
+            <><Sparkles className="w-4 h-4" />선택한 {selected.size}개 클립 렌더링 시작</>
+          )}
+        </button>
+
+        {approveError && <p className="text-red-400 text-xs text-center">{approveError}</p>}
+
+        {/* 다시 분석 */}
+        <button
+          onClick={onReset}
+          className="w-full flex items-center justify-center gap-2 py-2.5 text-sm text-gray-400 hover:text-white border border-gray-700 rounded-xl transition-colors"
+        >
+          ← 다시 분석하기
+        </button>
       </div>
     </div>
   );
@@ -367,6 +663,12 @@ export default function ShortformTab({ projectId }: ShortformTabProps) {
       try {
         const status = await getShortformJobStatus(id);
         setJobStatus(status);
+        // PREVIEW_READY: 폴링 중단 — 사용자 확인 대기
+        if (status.status === 'PREVIEW_READY') {
+          clearInterval(pollingRef.current!);
+          setIsProcessing(false);
+          return;
+        }
         if (status.status === 'COMPLETED' || status.status === 'FAILED') {
           clearInterval(pollingRef.current!);
           setIsProcessing(false);
@@ -392,6 +694,14 @@ export default function ShortformTab({ projectId }: ShortformTabProps) {
         setError(err.message || '상태 조회 중 오류가 발생했습니다');
       }
     }, 3000);
+  };
+
+  // 승인 후 PROCESSING으로 상태 전환하고 폴링 재개
+  const handlePreviewApproved = () => {
+    if (!jobId) return;
+    setJobStatus((prev) => prev ? { ...prev, status: 'PROCESSING', progress: '렌더링 시작 중...' } : prev);
+    setIsProcessing(true);
+    startPolling(jobId, uploadFile?.name);
   };
 
   const handleUploadProcess = async () => {
@@ -645,6 +955,16 @@ export default function ShortformTab({ projectId }: ShortformTabProps) {
             )}
           </div>
 
+          {/* PREVIEW_READY: 프리뷰 패널 */}
+          {jobStatus?.status === 'PREVIEW_READY' && jobStatus.preview && jobId ? (
+            <PreviewPanel
+              clips={jobStatus.preview}
+              jobId={jobId}
+              onApproved={handlePreviewApproved}
+              onReset={handleReset}
+            />
+          ) : (
+            <>
           {/* 진행 상태 */}
           {jobStatus && <ProcessingProgress jobStatus={jobStatus} />}
 
@@ -675,6 +995,8 @@ export default function ShortformTab({ projectId }: ShortformTabProps) {
           )}
 
           {error && <p className="text-red-400 text-xs text-center">{error}</p>}
+            </>
+          )}
         </div>
       )}
 
