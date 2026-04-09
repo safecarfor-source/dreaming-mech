@@ -892,8 +892,25 @@ export class YouTubeSupporterController {
     return this.service.uploadBase64ToS3(dto.imageBase64);
   }
 
+  /**
+   * POST /api/yt/thumbnail/setup-person
+   * 기본 인물 사진 등록 (배경 제거 → S3)
+   */
+  @Post('thumbnail/setup-person')
+  @UseGuards(YtAuthGuard)
+  @UseInterceptors(FileInterceptor('image'))
+  @HttpCode(HttpStatus.OK)
+  async thumbnailSetupPerson(
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    if (!file) {
+      throw new BadRequestException('인물 사진을 업로드해주세요');
+    }
+    return this.service.setupDefaultPerson(file.buffer);
+  }
+
   // ─────────────────────────────────────────────
-  // 원스톱 썸네일 생성 (Gemini)
+  // 원스톱 썸네일 생성 (DALL-E + 인물 합성)
   // ─────────────────────────────────────────────
 
   /**

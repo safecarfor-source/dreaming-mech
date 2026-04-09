@@ -35,6 +35,7 @@ import type {
   ThumbnailMemoryDto,
 } from './schemas/youtube-supporter.schema';
 import { YtProjectStatus, Prisma } from '@prisma/client';
+import { BackgroundRemovalService } from './services/background-removal.service';
 
 // 제작 작업 상태 추적 (인메모리)
 interface ProductionJob {
@@ -58,7 +59,12 @@ export class YouTubeSupporterService {
     private readonly geminiImage: GeminiImageService,
     private readonly thumbnailComposer: ThumbnailComposerService,
     private readonly uploadService: UploadService,
+    private readonly backgroundRemoval: BackgroundRemovalService,
   ) {}
+
+  // 기본 인물 이미지 캐시 (S3 URL → 배경 제거된 Buffer)
+  private defaultPersonBuffer: Buffer | null = null;
+  private defaultPersonUrl: string | null = null;
 
   // ─────────────────────────────────────────────
   // 프로젝트 CRUD
@@ -1700,7 +1706,66 @@ export class YouTubeSupporterService {
   // ─────────────────────────────────────────────
 
   /**
-   * 원스톱 썸네일 생성: 전략 3안 + Gemini 완성 이미지 3장을 한번에
+   * 기본 인물 이미지 로드 (S3 URL에서 가져와 배경 제거)
+   * DEFAULT_PERSON_IMAGE_URL 환경변수 사용
+   */
+  private async getDefaultPersonBuffer(): Promise<Buffer | null> {
+    if (this.defaultPersonBuffer) return this.defaultPersonBuffer;
+
+    const url = process.env.DEFAULT_PERSON_IMAGE_URL;
+    if (!url) {
+      this.logger.warn('DEFAULT_PERSON_IMAGE_URL 미설정 — 인물 없이 생성');
+      return null;
+    }
+
+    try {
+      this.logger.log(`기본 인물 이미지 로드: ${url.slice(0, 60)}...`);
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const buffer = Buffer.from(await res.arrayBuffer());
+      // 이미 배경 제거된 PNG면 그대로 사용
+      if (url.includes('person-nobg') || url.includes('transparent')) {
+        this.defaultPersonBuffer = buffer;
+      } else {
+        // 배경 제거 실행
+        this.defaultPersonBuffer = await this.backgroundRemoval.removeBackground(buffer);
+      }
+      this.logger.log(`기본 인물 이미지 준비 완료: ${this.defaultPersonBuffer.length} bytes`);
+      return this.defaultPersonBuffer;
+    } catch (err) {
+      this.logger.error('기본 인물 이미지 로드 실패:', err);
+      return null;
+    }
+  }
+
+  /**
+   * 기본 인물 사진 등록 (업로드 + 배경 제거 + S3 저장)
+   */
+  async setupDefaultPerson(imageBuffer: Buffer): Promise<{ originalUrl: string; transparentUrl: string }> {
+    // 1. 원본 S3 업로드
+    const originalUrl = await this.uploadService.uploadBuffer(
+      imageBuffer, 'image/png', 'thumbnails/person-original',
+    );
+
+    // 2. 배경 제거
+    const transparentBuffer = await this.backgroundRemoval.removeBackground(imageBuffer);
+
+    // 3. 투명 PNG S3 업로드
+    const transparentUrl = await this.uploadService.uploadBuffer(
+      transparentBuffer, 'image/png', 'thumbnails/person-nobg',
+    );
+
+    // 캐시 저장
+    this.defaultPersonBuffer = transparentBuffer;
+    this.defaultPersonUrl = transparentUrl;
+
+    this.logger.log(`기본 인물 등록 완료: ${transparentUrl}`);
+    return { originalUrl, transparentUrl };
+  }
+
+  /**
+   * 원스톱 썸네일 생성: 전략 3안 + 완성 이미지 3장
+   * 하네스 파이프라인: DALL-E 배경 → 인물 합성 → 텍스트 합성
    * 입력: 영상 제목 + 설명(선택) + 스타일(선택)
    * 출력: 전략 3안 + S3 URL 3장
    */
@@ -1740,8 +1805,8 @@ export class YouTubeSupporterService {
       projectTitle = `${projectTitle}\n${customParts.join('\n')}`;
     }
 
-    // 3. 가중치 기반 학습 데이터 조회
-    const [verified, expert, recentAnalysis, positive, negative] = await Promise.all([
+    // 3. 가중치 기반 학습 데이터 조회 + 기본 인물 이미지 로드 (병렬)
+    const [verified, expert, recentAnalysis, positive, negative, personBuffer] = await Promise.all([
       this.prisma.ytSkillNote.findMany({
         where: { category: 'thumbnail', score: { gte: 3 } },
         orderBy: { score: 'desc' },
@@ -1772,6 +1837,7 @@ export class YouTubeSupporterService {
         take: 3,
         select: { id: true, content: true },
       }),
+      this.getDefaultPersonBuffer(),
     ]);
 
     const seenIds = new Set<string>();
@@ -1803,6 +1869,7 @@ export class YouTubeSupporterService {
       colorScheme?: { background?: string; textColor?: string; accentColor?: string };
       emotionalTone?: string;
       fluxPrompt?: string;
+      personPosition?: string;
     }> = [];
 
     try {
@@ -1814,7 +1881,7 @@ export class YouTubeSupporterService {
       return { strategies: [], thumbnails: [], raw: rawResponse };
     }
 
-    // 5. 이미지 생성: Gemini 우선, 실패 시 DALL-E + sharp 텍스트 합성 폴백
+    // 5. 하네스 파이프라인: DALL-E 배경 → 인물 합성 → 텍스트 합성
     const thumbnails: Array<{
       id: string;
       imageUrl: string;
@@ -1822,19 +1889,57 @@ export class YouTubeSupporterService {
       prompt: string;
     }> = [];
 
-    // 코드 배경 + 텍스트 합성 (DALL-E/Gemini 없이 즉시 생성)
+    const bgPatterns: Array<'gradient' | 'radial' | 'split'> = ['gradient', 'radial', 'split'];
+
     for (let i = 0; i < strategies.length; i++) {
       try {
         const strategy = strategies[i];
+        let backgroundBuffer: Buffer;
 
-        // 코드로 배경 + 텍스트 합성 (팔레트 인덱스로 3안 다른 색상)
-        const finalBuffer = await this.thumbnailComposer.composeThumbnail(null, {
-          textMain: strategy.textMain,
-          textSub: strategy.textSub,
-          textColor: strategy.colorScheme?.textColor || '#FFFFFF',
-          accentColor: strategy.colorScheme?.accentColor || '#FFD700',
-          paletteIndex: i % 6, // 전략마다 다른 배경색
-        });
+        // 단계 A: DALL-E로 배경 생성 시도
+        try {
+          const dallEPrompt = strategy.fluxPrompt
+            || `Clean minimal abstract background for YouTube thumbnail about ${dto.title}, no text, no people, photorealistic, studio lighting, 1280x720`;
+
+          this.logger.log(`DALL-E 배경 생성 시도 (${i + 1}/3)...`);
+          const urls = await this.replicate.generateImage(dallEPrompt, {
+            width: 1280,
+            height: 720,
+          });
+
+          if (urls.length > 0 && !urls[0].includes('placehold.co')) {
+            // DALL-E 이미지 다운로드 → Buffer
+            const imgRes = await fetch(urls[0]);
+            backgroundBuffer = Buffer.from(await imgRes.arrayBuffer());
+            this.logger.log(`DALL-E 배경 성공 (${i + 1}/3)`);
+          } else {
+            throw new Error('DALL-E mock/empty response');
+          }
+        } catch (dallEErr) {
+          // 단계 B: 코드 배경 폴백
+          this.logger.warn(`DALL-E 실패, 코드 배경 폴백 (${i + 1}/3):`, (dallEErr as Error).message);
+          backgroundBuffer = await this.thumbnailComposer.createCodeBackground(
+            i % 6,
+            { pattern: bgPatterns[i % 3] },
+          );
+        }
+
+        // 단계 C: 하네스 합성 (배경 + 인물 + 텍스트)
+        const layout = personBuffer
+          ? (strategy.personPosition === 'left' ? 'person-left' : 'person-right') as 'person-left' | 'person-right'
+          : 'text-center' as const;
+
+        const finalBuffer = await this.thumbnailComposer.composeComplete(
+          backgroundBuffer,
+          personBuffer,
+          {
+            textMain: strategy.textMain,
+            textSub: strategy.textSub,
+            textColor: strategy.colorScheme?.textColor || '#FFFFFF',
+            accentColor: strategy.colorScheme?.accentColor || '#FFD700',
+            layout,
+          },
+        );
 
         // S3 업로드
         const s3Url = await this.uploadService.uploadBuffer(
@@ -1849,7 +1954,7 @@ export class YouTubeSupporterService {
             projectId: dto.projectId ?? null,
             imageUrl: s3Url,
             baseImageUrl: s3Url,
-            strategy: strategy as Prisma.InputJsonValue,
+            strategy: strategy as unknown as Prisma.InputJsonValue,
             prompt: strategy.fluxPrompt ?? strategy.concept,
             status: 'COMPLETED',
           },
@@ -1861,6 +1966,8 @@ export class YouTubeSupporterService {
           strategy,
           prompt: thumbnail.prompt ?? '',
         });
+
+        this.logger.log(`썸네일 ${i + 1}/3 완성: ${s3Url.slice(-40)}`);
       } catch (err) {
         this.logger.error(`썸네일 ${i + 1} 생성 실패:`, err);
       }
