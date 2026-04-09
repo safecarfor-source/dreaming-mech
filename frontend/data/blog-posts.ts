@@ -22,7 +22,7 @@ export interface BlogPost {
 
 export const BLOG_POSTS: BlogPost[] = [
   {
-    slug: '10만km-디젤-관리법',
+    slug: 'diesel-100k-maintenance',
     title: '10만km 디젤, 버려야 할까?',
     subtitle: '딱 두 가지만 하면 돈 아끼면서 더 탄다',
     publishedAt: '2026-04-09',
