@@ -3,6 +3,7 @@ export const ITEM_RATES: Record<string, number> = {
   brake_oil: 2.8, lining: 1.4, mission_oil: 2.8, diff_oil: 1.0,
   wiper: 0.3, battery: 0.5, ac_filter: 1.0,
   guardian_h3: 2.0, guardian_h5: 2.0, guardian_h7: 2.0,
+  coolant: 1.7,
 };
 
 // 기본 기본급

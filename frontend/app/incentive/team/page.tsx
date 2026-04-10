@@ -21,6 +21,7 @@ const ITEM_LABELS: Record<string, string> = {
   guardian_h3: '가디안H3',
   guardian_h5: '가디안H5',
   guardian_h7: '가디안H7',
+  coolant: '냉각수',
 };
 
 const ITEM_RATES: Record<string, number> = {
@@ -34,6 +35,7 @@ const ITEM_RATES: Record<string, number> = {
   guardian_h3: 2.0,
   guardian_h5: 2.0,
   guardian_h7: 2.0,
+  coolant: 1.7,
 };
 
 // 2025년 월별 실제 매출 (극동 기준)

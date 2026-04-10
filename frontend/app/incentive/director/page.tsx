@@ -52,6 +52,7 @@ const ITEM_LABELS: Record<string, string> = {
   guardian_h3: '가디안H3',
   guardian_h5: '가디안H5',
   guardian_h7: '가디안H7',
+  coolant: '냉각수',
 };
 
 // 5단계 배율 티어 (이정석 부장) — 전년 대비 성장률 기준

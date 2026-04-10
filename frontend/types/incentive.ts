@@ -210,7 +210,8 @@ export type ProductCategory =
   | 'ac_filter'
   | 'guardian_h3'
   | 'guardian_h5'
-  | 'guardian_h7';
+  | 'guardian_h7'
+  | 'coolant';
 
 export interface ProductCodeMapping {
   id: string | number;

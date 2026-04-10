@@ -84,6 +84,8 @@ async function main() {
     { code: 'ZT00000000001', isPrefix: false, category: 'battery', label: '밧데리(키배터리)', isIncentive: true },
     { code: '0000000005305', isPrefix: false, category: 'battery', label: '밧데리(리모컨)', isIncentive: true },
     { code: 'G000000000021', isPrefix: false, category: 'inspection', label: '자동차검사', isIncentive: false },
+    // 냉각수 매핑 추가 (2026-04-10)
+    { code: 'NN00000482501', isPrefix: false, category: 'coolant', label: '냉각수 교체', isIncentive: true },
     // 와이퍼 매핑 추가 (2026-03-24) — HW* 코드 + NN00000000030 와이퍼 제품 누락 수정
     { code: 'HW', isPrefix: true, category: 'wiper', label: '와이퍼', isIncentive: true },
     { code: 'NN00000000030', isPrefix: false, category: 'wiper', label: '와이퍼(데이터용)', isIncentive: true },
