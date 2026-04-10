@@ -37,6 +37,7 @@ import type {
 } from './schemas/youtube-supporter.schema';
 import { YtProjectStatus, Prisma } from '@prisma/client';
 import { BackgroundRemovalService } from './services/background-removal.service';
+import { FaceCompositeService } from './services/face-composite.service';
 
 // 제작 작업 상태 추적 (인메모리)
 interface ProductionJob {
@@ -75,6 +76,7 @@ export class YouTubeSupporterService {
     private readonly thumbnailComposer: ThumbnailComposerService,
     private readonly uploadService: UploadService,
     private readonly backgroundRemoval: BackgroundRemovalService,
+    private readonly faceComposite: FaceCompositeService,
   ) {}
 
   // 기본 인물 이미지 캐시 (S3 URL → 배경 제거된 Buffer)
@@ -2005,6 +2007,32 @@ export class YouTubeSupporterService {
           );
         }
 
+        // 단계 B.5: PuLID 얼굴 합성 시도 (strategy에 personPosition 있고 FAL_AI_API_KEY 있을 때)
+        let hasFace = false;
+        if (strategy.personPosition && this.faceComposite.isAvailable()) {
+          try {
+            const refs = await this.getFaceReferences();
+            if (refs.length > 0) {
+              job.stepMessage = `얼굴 합성 중 (${i + 1}/3)...`;
+              const faceResult = await this.faceComposite.generateWithFace(
+                strategy.fluxPrompt ?? `YouTube thumbnail, ${dto.title}`,
+                refs[0].imageUrl,
+              );
+              if (faceResult) {
+                // 얼굴 합성 성공 → 합성 이미지를 배경으로 교체
+                const faceRes = await fetch(faceResult.imageUrl);
+                if (faceRes.ok) {
+                  backgroundBuffer = Buffer.from(await faceRes.arrayBuffer());
+                  hasFace = true;
+                  this.logger.log(`PuLID 얼굴 합성 성공 (${i + 1}/3)`);
+                }
+              }
+            }
+          } catch (faceErr) {
+            this.logger.warn(`PuLID 얼굴 합성 스킵 (${i + 1}/3):`, (faceErr as Error).message);
+          }
+        }
+
         // 단계 C: 하네스 합성 (배경 + 인물 + 텍스트)
         job.stepMessage = `썸네일 ${i + 1}/3 합성 중...`;
         job.progress = (progressMap[i] ?? 25) + 15;
@@ -2041,6 +2069,7 @@ export class YouTubeSupporterService {
             strategy: strategy as unknown as Prisma.InputJsonValue,
             prompt: strategy.fluxPrompt ?? strategy.concept,
             status: 'COMPLETED',
+            hasFace,
           },
         });
 
@@ -2063,6 +2092,54 @@ export class YouTubeSupporterService {
     job.progress = 100;
     job.status = 'COMPLETED';
     job.result = { strategies, thumbnails };
+  }
+
+  // ─────────────────────────────────────────────
+  // 얼굴 레퍼런스 CRUD (PuLID 합성용)
+  // ─────────────────────────────────────────────
+
+  /**
+   * 레퍼런스 사진 업로드 → S3 → DB
+   */
+  async uploadFaceReferences(
+    files: Express.Multer.File[],
+    labels?: string[],
+  ) {
+    const results: Array<{ id: string; imageUrl: string; label: string | null; isActive: boolean; createdAt: Date }> = [];
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      const s3Url = await this.uploadService.uploadBuffer(
+        file.buffer,
+        file.mimetype || 'image/jpeg',
+        'thumbnails/face-refs',
+      );
+      const ref = await this.prisma.ytFaceReference.create({
+        data: {
+          imageUrl: s3Url,
+          label: labels?.[i] || null,
+          isActive: true,
+        },
+      });
+      results.push(ref);
+    }
+    return results;
+  }
+
+  /**
+   * 활성 레퍼런스 목록 조회
+   */
+  async getFaceReferences() {
+    return this.prisma.ytFaceReference.findMany({
+      where: { isActive: true },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  /**
+   * 레퍼런스 삭제
+   */
+  async deleteFaceReference(id: string) {
+    return this.prisma.ytFaceReference.delete({ where: { id } });
   }
 
   /**
