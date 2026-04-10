@@ -12,6 +12,7 @@ import {
   UseGuards,
   UnauthorizedException,
   BadRequestException,
+  NotFoundException,
   Res,
   UploadedFile,
   UploadedFiles,
@@ -948,6 +949,20 @@ export class YouTubeSupporterController {
       throw new BadRequestException('영상 제목을 입력해주세요');
     }
     return this.service.generateCompleteThumbnails(dto);
+  }
+
+  /**
+   * GET /api/yt/thumbnail/generate-complete/status/:jobId
+   * 썸네일 생성 Job 진행 상태 조회 (폴링용)
+   */
+  @Get('thumbnail/generate-complete/status/:jobId')
+  @UseGuards(YtAuthGuard)
+  thumbnailJobStatus(@Param('jobId') jobId: string) {
+    const job = this.service.getThumbnailJobStatus(jobId);
+    if (!job) {
+      throw new NotFoundException('해당 Job을 찾을 수 없습니다');
+    }
+    return job;
   }
 
   /**

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Loader2,
@@ -13,10 +13,11 @@ import {
 } from 'lucide-react';
 import {
   generateCompleteThumbnails,
+  getThumbnailJobStatus,
   generateThumbnailVariation,
   saveThumbnailFeedback,
 } from '../../../lib/api';
-import type { CompleteThumbnailResult } from '../../../lib/api';
+import type { ThumbnailJobStatus } from '../../../lib/api';
 import type { ThumbnailStrategy } from './types';
 
 interface CreateViewProps {
@@ -63,36 +64,85 @@ export default function CreateView({ projectId, onOpenCanvas: _onOpenCanvas }: C
   const [error, setError] = useState('');
   const [cards, setCards] = useState<ThumbnailCardState[]>([]);
   const [modalUrl, setModalUrl] = useState<string | null>(null);
+  const [jobProgress, setJobProgress] = useState<ThumbnailJobStatus | null>(null);
+  const [elapsed, setElapsed] = useState(0);
+  const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // 폴링 & 타이머 정리
+  useEffect(() => {
+    return () => {
+      if (pollingRef.current) clearInterval(pollingRef.current);
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, []);
 
   const handleGenerate = useCallback(async () => {
     const effectiveTitle = title || description || '유튜브 썸네일';
     setGenerating(true);
     setError('');
     setCards([]);
+    setJobProgress(null);
+    setElapsed(0);
+
     try {
-      const result: CompleteThumbnailResult = await generateCompleteThumbnails({
+      const { jobId } = await generateCompleteThumbnails({
         projectId,
         title: effectiveTitle,
         description: description || undefined,
         style,
       });
 
-      const initialCards: ThumbnailCardState[] = result.thumbnails.map((t) => ({
-        id: t.id,
-        imageUrl: t.imageUrl,
-        strategy: t.strategy,
-        prompt: t.prompt,
-        loading: false,
-        feedback: null,
-        variationOpen: false,
-      }));
-      setCards(initialCards);
+      // 경과 시간 타이머
+      const startTime = Date.now();
+      timerRef.current = setInterval(() => {
+        setElapsed(Math.floor((Date.now() - startTime) / 1000));
+      }, 1000);
+
+      // 2초 간격 폴링
+      pollingRef.current = setInterval(async () => {
+        try {
+          const status = await getThumbnailJobStatus(jobId);
+          setJobProgress(status);
+
+          if (status.status === 'COMPLETED' && status.result) {
+            // 폴링 중지
+            if (pollingRef.current) clearInterval(pollingRef.current);
+            if (timerRef.current) clearInterval(timerRef.current);
+            pollingRef.current = null;
+            timerRef.current = null;
+
+            const initialCards: ThumbnailCardState[] = status.result.thumbnails.map((t) => ({
+              id: t.id,
+              imageUrl: t.imageUrl,
+              strategy: t.strategy,
+              prompt: t.prompt,
+              loading: false,
+              feedback: null,
+              variationOpen: false,
+            }));
+            setCards(initialCards);
+            setGenerating(false);
+            setJobProgress(null);
+          } else if (status.status === 'FAILED') {
+            if (pollingRef.current) clearInterval(pollingRef.current);
+            if (timerRef.current) clearInterval(timerRef.current);
+            pollingRef.current = null;
+            timerRef.current = null;
+
+            setError('생성 실패: ' + (status.error || '알 수 없는 오류'));
+            setGenerating(false);
+            setJobProgress(null);
+          }
+        } catch {
+          // 폴링 중 네트워크 오류는 무시 (다음 폴링에서 재시도)
+        }
+      }, 2000);
     } catch (e) {
-      setError('생성 실패: ' + (e instanceof Error ? e.message : '알 수 없는 오류'));
-    } finally {
+      setError('생성 요청 실패: ' + (e instanceof Error ? e.message : '알 수 없는 오류'));
       setGenerating(false);
     }
-  }, [projectId, description, style]);
+  }, [projectId, title, description, style]);
 
   const handleDownload = useCallback(async (imageUrl: string, concept: string) => {
     try {
@@ -202,16 +252,38 @@ export default function CreateView({ projectId, onOpenCanvas: _onOpenCanvas }: C
         </div>
       )}
 
-      {/* 로딩 상태 */}
+      {/* 로딩 상태 — 진행 단계 표시 */}
       {generating && (
         <motion.div
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex flex-col items-center justify-center gap-3 py-12 text-center"
+          className="flex flex-col items-center justify-center gap-4 py-10 text-center"
         >
           <Loader2 className="w-8 h-8 text-[#7C4DFF] animate-spin" />
-          <p className="text-gray-400 text-sm leading-relaxed">
-            AI가 학습된 노하우를 반영하여<br />썸네일 3안을 만들고 있습니다...
+
+          {/* 프로그레스 바 */}
+          <div className="w-full max-w-xs">
+            <div className="h-2 bg-gray-700 rounded-full overflow-hidden">
+              <motion.div
+                className="h-full bg-gradient-to-r from-[#7C4DFF] to-purple-400 rounded-full"
+                initial={{ width: '0%' }}
+                animate={{ width: `${jobProgress?.progress ?? 5}%` }}
+                transition={{ duration: 0.5, ease: 'easeOut' }}
+              />
+            </div>
+            <div className="flex justify-between mt-1.5">
+              <span className="text-xs text-gray-500">
+                {jobProgress?.progress ?? 5}%
+              </span>
+              <span className="text-xs text-gray-500">
+                {elapsed > 0 && `${Math.floor(elapsed / 60)}:${String(elapsed % 60).padStart(2, '0')}`}
+              </span>
+            </div>
+          </div>
+
+          {/* 단계 메시지 */}
+          <p className="text-gray-300 text-sm font-medium leading-relaxed">
+            {jobProgress?.stepMessage || 'AI가 학습된 노하우를 반영하여 썸네일 3안을 만들고 있습니다...'}
           </p>
         </motion.div>
       )}

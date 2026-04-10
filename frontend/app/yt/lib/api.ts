@@ -756,10 +756,23 @@ export async function generateCompleteThumbnails(data: {
   title: string;
   description?: string;
   style?: string;
-}): Promise<CompleteThumbnailResult> {
-  const res = await ytApi.post('/yt/thumbnail/generate-complete', data, {
-    timeout: 180000, // 3분 (이미지 3장 생성)
-  });
+}): Promise<{ jobId: string }> {
+  const res = await ytApi.post('/yt/thumbnail/generate-complete', data);
+  return res.data;
+}
+
+export interface ThumbnailJobStatus {
+  status: 'PROCESSING' | 'COMPLETED' | 'FAILED';
+  step: 'INIT' | 'STRATEGY' | 'IMAGE_1' | 'IMAGE_2' | 'IMAGE_3' | 'COMPOSING' | 'DONE';
+  stepMessage: string;
+  progress: number;
+  startedAt: string;
+  result?: CompleteThumbnailResult;
+  error?: string;
+}
+
+export async function getThumbnailJobStatus(jobId: string): Promise<ThumbnailJobStatus> {
+  const res = await ytApi.get(`/yt/thumbnail/generate-complete/status/${jobId}`);
   return res.data;
 }
 

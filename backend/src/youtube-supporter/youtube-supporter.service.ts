@@ -44,11 +44,24 @@ interface ProductionJob {
   error?: string;
 }
 
+// 썸네일 생성 작업 상태 추적 (인메모리)
+export interface ThumbnailJob {
+  status: 'PROCESSING' | 'COMPLETED' | 'FAILED';
+  step: 'INIT' | 'STRATEGY' | 'IMAGE_1' | 'IMAGE_2' | 'IMAGE_3' | 'COMPOSING' | 'DONE';
+  stepMessage: string;
+  progress: number;
+  startedAt: Date;
+  result?: { strategies: any[]; thumbnails: any[] };
+  error?: string;
+}
+
 @Injectable()
 export class YouTubeSupporterService {
   private readonly logger = new Logger(YouTubeSupporterService.name);
   // 프로젝트별 제작 작업 상태 (인메모리)
   private readonly productionJobs = new Map<string, ProductionJob>();
+  // 썸네일 생성 작업 상태 (인메모리)
+  readonly thumbnailJobs = new Map<string, ThumbnailJob>();
 
   constructor(
     private readonly prisma: PrismaService,
@@ -1781,17 +1794,59 @@ export class YouTubeSupporterService {
   }
 
   /**
-   * 원스톱 썸네일 생성: 전략 3안 + 완성 이미지 3장
-   * 하네스 파이프라인: DALL-E 배경 → 인물 합성 → 텍스트 합성
-   * 입력: 영상 제목 + 설명(선택) + 스타일(선택)
-   * 출력: 전략 3안 + S3 URL 3장
+   * 원스톱 썸네일 생성 (비동기 Job 방식)
+   * jobId를 즉시 반환하고, 실제 생성은 백그라운드에서 진행
+   * 프론트엔드에서 getThumbnailJobStatus()로 폴링
    */
   async generateCompleteThumbnails(dto: {
     projectId?: string;
     title: string;
     description?: string;
     style?: string;
-  }) {
+  }): Promise<{ jobId: string }> {
+    const jobId = `thumb_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+
+    this.thumbnailJobs.set(jobId, {
+      status: 'PROCESSING',
+      step: 'INIT',
+      stepMessage: '학습 데이터를 수집하고 있습니다...',
+      progress: 5,
+      startedAt: new Date(),
+    });
+
+    // 비동기 실행 (await 없이 fire-and-forget)
+    this._executeCompleteThumbnails(jobId, dto).catch((err) => {
+      this.logger.error(`썸네일 Job ${jobId} 실패:`, err);
+      const job = this.thumbnailJobs.get(jobId);
+      if (job) {
+        job.status = 'FAILED';
+        job.error = err instanceof Error ? err.message : '알 수 없는 오류';
+      }
+    });
+
+    // 5분 후 자동 정리
+    setTimeout(() => this.thumbnailJobs.delete(jobId), 5 * 60 * 1000);
+
+    return { jobId };
+  }
+
+  /**
+   * 썸네일 Job 상태 조회
+   */
+  getThumbnailJobStatus(jobId: string): ThumbnailJob | undefined {
+    return this.thumbnailJobs.get(jobId);
+  }
+
+  /**
+   * 실제 썸네일 생성 파이프라인 (백그라운드 실행)
+   * 하네스 파이프라인: DALL-E 배경 → 인물 합성 → 텍스트 합성
+   */
+  private async _executeCompleteThumbnails(
+    jobId: string,
+    dto: { projectId?: string; title: string; description?: string; style?: string },
+  ) {
+    const job = this.thumbnailJobs.get(jobId)!;
+
     // 1. 프로젝트 컨텍스트 (있으면)
     let coreValue: string | undefined;
     let scriptSummary: string | undefined;
@@ -1823,6 +1878,10 @@ export class YouTubeSupporterService {
     }
 
     // 3. 가중치 기반 학습 데이터 조회 + 기본 인물 이미지 로드 (병렬)
+    job.step = 'STRATEGY';
+    job.stepMessage = 'AI가 전략 3안을 설계 중...';
+    job.progress = 10;
+
     const [verified, expert, recentAnalysis, positive, negative, personBuffer] = await Promise.all([
       this.prisma.ytSkillNote.findMany({
         where: { category: 'thumbnail', score: { gte: 3 } },
@@ -1866,6 +1925,9 @@ export class YouTubeSupporterService {
       }).map((n) => n.content);
 
     // 4. AI 전략 생성
+    job.stepMessage = 'AI가 학습 데이터를 분석하여 전략을 설계 중...';
+    job.progress = 15;
+
     const rawResponse = await this.aiOrchestration.generateThumbnailStrategy(
       projectTitle,
       coreValue,
@@ -1895,7 +1957,9 @@ export class YouTubeSupporterService {
       const parsed = JSON.parse(jsonStr);
       strategies = parsed.strategies ?? [];
     } catch {
-      return { strategies: [], thumbnails: [], raw: rawResponse };
+      job.status = 'FAILED';
+      job.error = 'AI 전략 생성 실패 (JSON 파싱 오류)';
+      return;
     }
 
     // 5. 하네스 파이프라인: DALL-E 배경 → 인물 합성 → 텍스트 합성
@@ -1907,11 +1971,18 @@ export class YouTubeSupporterService {
     }> = [];
 
     const bgPatterns: Array<'gradient' | 'radial' | 'split'> = ['gradient', 'radial', 'split'];
+    const imageSteps: ThumbnailJob['step'][] = ['IMAGE_1', 'IMAGE_2', 'IMAGE_3'];
+    const progressMap = [25, 45, 65];
 
     for (let i = 0; i < strategies.length; i++) {
       try {
         const strategy = strategies[i];
         let backgroundBuffer: Buffer;
+
+        // 단계 업데이트: 이미지 생성 시작
+        job.step = imageSteps[i] ?? 'IMAGE_1';
+        job.stepMessage = `배경 이미지 생성 중 (${i + 1}/3)...`;
+        job.progress = progressMap[i] ?? 25;
 
         // 단계 A: DALL-E로 배경 생성 시도
         try {
@@ -1942,6 +2013,9 @@ export class YouTubeSupporterService {
         }
 
         // 단계 C: 하네스 합성 (배경 + 인물 + 텍스트)
+        job.stepMessage = `썸네일 ${i + 1}/3 합성 중...`;
+        job.progress = (progressMap[i] ?? 25) + 15;
+
         const layout = personBuffer
           ? (strategy.personPosition === 'left' ? 'person-left' : 'person-right') as 'person-left' | 'person-right'
           : 'text-center' as const;
@@ -1990,7 +2064,12 @@ export class YouTubeSupporterService {
       }
     }
 
-    return { strategies, thumbnails };
+    // 완료
+    job.step = 'DONE';
+    job.stepMessage = '썸네일 3안 완성!';
+    job.progress = 100;
+    job.status = 'COMPLETED';
+    job.result = { strategies, thumbnails };
   }
 
   /**
