@@ -1042,11 +1042,28 @@ model YtThumbnail {
   status          String     @default("DRAFT") // DRAFT | GENERATING | COMPLETED
   feedbackRating  String?    // 'good' | 'bad' — 직접 저장
   feedbackComment String?    // 피드백 코멘트
+  engine          String?    // 사용된 이미지 엔진 ('gpt-image-1' | 'flux-2-pro')
+  hasFace         Boolean    @default(false)  // 얼굴 합성 여부
+  parentId        String?    // 변형 원본 썸네일 ID (피드백 루프 추적)
+  variationOf     String?    // 변형 타입 ('more_clickbait', 'face_closer' 등)
+  finalUrl        String?    // 캔버스 편집 후 최종 PNG URL
   createdAt       DateTime   @default(now())
   updatedAt       DateTime   @updatedAt
 
   @@index([projectId])
   @@index([createdAt])
+  @@index([parentId])
+}
+
+// 얼굴 레퍼런스 이미지 (썸네일 얼굴 합성용)
+model YtFaceReference {
+  id        String   @id @default(uuid())
+  imageUrl  String
+  label     String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  @@index([isActive])
 }
 
 // 검색 캐시 (YouTube API 호출 절약)
