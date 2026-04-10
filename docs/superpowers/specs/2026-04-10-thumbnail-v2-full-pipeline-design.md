@@ -89,7 +89,7 @@
 
 | API | 모델 | 용도 | 건당 비용 | 비고 |
 |-----|------|------|----------|------|
-| OpenAI | GPT Image 1.5 (HD) | 인물 중심 이미지 생성 | $0.03~0.13 | 기존 키 재활용 |
+| OpenAI | gpt-image-1 (HD) | 인물 중심 이미지 생성 | $0.03~0.13 | 기존 키 재활용. 모델ID 구현 전 OpenAI docs 재확인 |
 | fal.ai | FLUX 2 Pro | 사물/차량 실사 이미지 | ~$0.03/MP | **신규 키 필요** |
 | fal.ai | PuLID Flux | 얼굴 합성 | ~$0.02 | **신규** |
 | Anthropic | Claude Sonnet 4.5 | 전략 생성 + 프롬프트 변환 | ~$0.02 | 기존 |
@@ -106,7 +106,7 @@
 
 | HTTP | 경로 | 설명 | 변경사항 |
 |------|------|------|---------|
-| POST | `/yt/thumbnail/generate-complete` | 완성 썸네일 생성 (전략+이미지+얼굴+텍스트) | **신규** — 기존 개별 호출 통합 |
+| POST | `/yt/thumbnail/generate-complete` | 완성 썸네일 생성 (전략+이미지+얼굴+텍스트) | **신규** — 비동기 job 패턴 (기존 폴링 재활용). produce 즉시 반환 → jobId로 상태 폴링 |
 | POST | `/yt/thumbnail/generate-variation` | 변형 재생성 | **강화** — 히스토리 컨텍스트 추가 |
 | GET | `/yt/thumbnail/job/:jobId` | 생성 진행 상태 | 기존 유지 |
 
@@ -167,6 +167,10 @@ model YtFaceReference {
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
 
+  // 단일 사용자 도구이므로 userId 없음.
+  // YtAuthGuard가 인증 레이어에서 접근을 격리함.
+  // 멀티유저 확장 시 userId 필드 추가 필요.
+
   @@index([isActive])
 }
 ```
@@ -197,9 +201,10 @@ interface ImageGenerationResult {
 ```
 
 **엔진 자동 선택 로직 (engine='auto'):**
-- 전략의 `background` 필드에 "인물", "사람", "정비사" 포함 → GPT Image 1.5
-- 전략의 `background` 필드에 "차량", "엔진", "부품", "공구" 포함 → FLUX 2 Pro
-- 판단 불가 → GPT Image 1.5 (기본값)
+- Claude 전략 생성 시 `recommendedEngine` 필드를 JSON에 포함시킴 (프롬프트 하네스로 강제)
+- `recommendedEngine: 'gpt-image'` → GPT Image 사용
+- `recommendedEngine: 'flux'` → FLUX 2 Pro 사용
+- 필드 누락 시 폴백: `background` 키워드 매칭 → 그래도 불명 시 GPT Image (기본값)
 
 ### 6.2 FaceCompositeService (신규)
 
@@ -212,7 +217,9 @@ interface FaceCompositeRequest {
 
 interface FaceCompositeResult {
   imageUrl: string;
-  similarity: number;  // 0~1 유사도 (PuLID 반환값)
+  // 참고: fal.ai PuLID API가 유사도 스코어를 반환하지 않을 수 있음.
+  // 구현 시 API 응답 확인 후 → 없으면 사용자 주관적 평가(피드백 루프)로 대체.
+  similarity?: number;  // 0~1 유사도 (PuLID가 반환하면 사용, 아니면 null)
 }
 ```
 
@@ -287,6 +294,7 @@ frontend/app/yt/components/tabs/thumbnail/
 ### 7.3 FaceManager
 
 - 사진 업로드 (최대 20장, 각 10MB 이하)
+- 업로드 방식: 서버 경유 (단일 사용자, 빈도 낮음 → Presigned URL 불필요)
 - 레이블 지정 (정면/측면/작업복/표정 등)
 - 미리보기 그리드
 - 활성/비활성 토글
@@ -326,15 +334,25 @@ frontend/app/yt/components/tabs/thumbnail/
 
 ## 9. 구현 순서 (5 Step)
 
+### Step 0: DB 마이그레이션 선행 (0.5일)
+
+**작업:**
+- `YtThumbnail` 확장 필드 추가 마이그레이션 (`engine`, `hasFace`, `parentId`, `variationOf`, `finalUrl`)
+- `YtFaceReference` 테이블 생성 마이그레이션
+- 로컬 검증 후 서버 적용
+
+**이유:** Step 1~4에서 이 필드들이 필요하므로 먼저 실행
+
 ### Step 1: 이미지 엔진 교체 (3일)
 
 **작업:**
 - `ImageEngineService` 신규 생성
-- GPT Image 1.5 연동 (OpenAI API, 기존 키)
+- gpt-image-1 연동 (OpenAI API, 기존 키. 모델ID 확인 후 적용)
 - FLUX 2 Pro 연동 (fal.ai API, 새 키)
-- 엔진 자동 선택 로직
+- 엔진 자동 선택 로직 (전략 JSON의 `recommendedEngine` 필드 활용)
 - 기존 `ReplicateService` (DALL-E 3) → `ImageEngineService`로 교체
 - S3 즉시 복사 (URL 만료 대응)
+- **텍스트 없는 배경 이미지(`baseImageUrl`)를 별도 보관** — 캔버스 편집 시 텍스트 중복 방지
 
 **검증:**
 - 같은 프롬프트로 DALL-E 3 vs GPT Image 1.5 vs FLUX 2 Pro 비교
@@ -450,7 +468,7 @@ frontend/app/yt/components/tabs/thumbnail/
 - 영상 생성 (Higgsfield 등) — 썸네일에 집중
 - 실시간 협업 편집 — 단일 사용자
 - A/B CTR 테스트 — 아직 데이터 부족
-- 배경 제거 (remove.bg) — PuLID가 인물 포함 이미지 자체를 생성
+- 배경 제거 (remove.bg) — PuLID는 프롬프트 기반으로 인물+배경을 통째로 새 이미지로 생성. 기존 배경 위 인물 합성 방식이 아니므로 배경 제거 불필요
 - Midjourney 연동 — API 접근 제한적, 비용 비효율
 - LoRA 직접 훈련 — PuLID로 충분, 훈련 인프라 불필요
 
