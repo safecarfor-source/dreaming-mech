@@ -5,6 +5,7 @@ import { YoutubeApiService } from './services/youtube-api.service';
 import { TranscriptService } from './services/transcript.service';
 import { AiOrchestrationService } from './services/ai-orchestration.service';
 import { ReplicateService } from './services/replicate.service';
+import { ImageEngineService } from './services/image-engine.service';
 import { BackgroundRemovalService } from './services/background-removal.service';
 import { GeminiImageService } from './services/gemini-image.service';
 import { ThumbnailComposerService } from './services/thumbnail-composer.service';
@@ -23,6 +24,7 @@ import { UploadModule } from '../upload/upload.module';
     TranscriptService,
     AiOrchestrationService,
     ReplicateService,
+    ImageEngineService,
     BackgroundRemovalService,
     GeminiImageService,
     ThumbnailComposerService,

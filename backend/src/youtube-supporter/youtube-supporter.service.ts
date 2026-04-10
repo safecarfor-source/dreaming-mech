@@ -9,6 +9,7 @@ import { YoutubeApiService } from './services/youtube-api.service';
 import { TranscriptService } from './services/transcript.service';
 import { AiOrchestrationService } from './services/ai-orchestration.service';
 import { ReplicateService } from './services/replicate.service';
+import { ImageEngineService } from './services/image-engine.service';
 import { GeminiImageService } from './services/gemini-image.service';
 import { ThumbnailComposerService } from './services/thumbnail-composer.service';
 import { UploadService } from '../upload/upload.service';
@@ -69,6 +70,7 @@ export class YouTubeSupporterService {
     private readonly transcript: TranscriptService,
     private readonly aiOrchestration: AiOrchestrationService,
     private readonly replicate: ReplicateService,
+    private readonly imageEngine: ImageEngineService,
     private readonly geminiImage: GeminiImageService,
     private readonly thumbnailComposer: ThumbnailComposerService,
     private readonly uploadService: UploadService,
@@ -1332,43 +1334,32 @@ export class YouTubeSupporterService {
   }
 
   /**
-   * FLUX로 썸네일 배경 이미지 생성
+   * 썸네일 배경 이미지 생성 (ImageEngineService 사용)
    */
   async generateThumbnailImage(dto: ThumbnailGenerateDto) {
-    const imageUrls = await this.replicate.generateImage(dto.prompt, {
+    // ImageEngineService: S3 복사까지 처리
+    const result = await this.imageEngine.generateImage({
+      prompt: dto.prompt,
+      engine: 'auto',
       width: dto.width,
       height: dto.height,
     });
 
-    // DALL-E/FLUX 임시 URL → S3에 영구 저장
-    const s3Urls: string[] = [];
-    for (const url of imageUrls) {
-      try {
-        const res = await fetch(url);
-        if (!res.ok) throw new Error(`이미지 다운로드 실패: ${res.status}`);
-        const arrayBuffer = await res.arrayBuffer();
-        const buffer = Buffer.from(arrayBuffer);
-        const s3Url = await this.uploadService.uploadBuffer(buffer, 'image/png', 'thumbnails');
-        s3Urls.push(s3Url);
-      } catch (err) {
-        this.logger.error(`S3 업로드 실패, 임시 URL 사용: ${err}`);
-        s3Urls.push(url); // S3 실패 시 원본 URL 유지
-      }
-    }
-
-    // 썸네일 레코드 생성 (S3 URL로 저장 + status COMPLETED)
+    // 썸네일 레코드 생성 (S3 URL + engine 저장)
     const thumbnail = await this.prisma.ytThumbnail.create({
       data: {
         projectId: dto.projectId ?? null,
-        baseImageUrl: s3Urls[0] ?? null,
+        baseImageUrl: result.imageUrl,
         prompt: dto.prompt,
+        engine: result.engine,
         status: 'COMPLETED',
       },
     });
 
     return {
       id: thumbnail.id,
-      imageUrls: s3Urls,
+      imageUrls: [result.imageUrl],
+      engine: result.engine,
       status: 'COMPLETED',
     };
   }
@@ -1989,23 +1980,25 @@ export class YouTubeSupporterService {
           const dallEPrompt = strategy.fluxPrompt
             || `Clean minimal abstract background for YouTube thumbnail about ${dto.title}, no text, no people, photorealistic, studio lighting, 1280x720`;
 
-          this.logger.log(`DALL-E 배경 생성 시도 (${i + 1}/3)...`);
-          const urls = await this.replicate.generateImage(dallEPrompt, {
+          this.logger.log(`ImageEngine 배경 생성 시도 (${i + 1}/3)...`);
+          const engineResult = await this.imageEngine.generateImage({
+            prompt: dallEPrompt,
+            engine: 'auto',
             width: 1280,
             height: 720,
           });
 
-          if (urls.length > 0 && !urls[0].includes('placehold.co')) {
-            // DALL-E 이미지 다운로드 → Buffer
-            const imgRes = await fetch(urls[0]);
+          if (engineResult.imageUrl && !engineResult.imageUrl.includes('placehold.co')) {
+            // S3 URL에서 Buffer 다운로드 (합성에 사용)
+            const imgRes = await fetch(engineResult.imageUrl);
             backgroundBuffer = Buffer.from(await imgRes.arrayBuffer());
-            this.logger.log(`DALL-E 배경 성공 (${i + 1}/3)`);
+            this.logger.log(`ImageEngine(${engineResult.engine}) 배경 성공 (${i + 1}/3)`);
           } else {
-            throw new Error('DALL-E mock/empty response');
+            throw new Error('ImageEngine mock/empty response');
           }
         } catch (dallEErr) {
           // 단계 B: 코드 배경 폴백
-          this.logger.warn(`DALL-E 실패, 코드 배경 폴백 (${i + 1}/3):`, (dallEErr as Error).message);
+          this.logger.warn(`ImageEngine 실패, 코드 배경 폴백 (${i + 1}/3):`, (dallEErr as Error).message);
           backgroundBuffer = await this.thumbnailComposer.createCodeBackground(
             i % 6,
             { pattern: bgPatterns[i % 3] },
