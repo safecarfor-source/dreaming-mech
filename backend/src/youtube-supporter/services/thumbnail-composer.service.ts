@@ -29,7 +29,7 @@ export class ThumbnailComposerService {
     MAIN_CHARS_PER_LINE: 5,     // 메인 텍스트 줄당 최대 글자수
     SUB_CHARS_PER_LINE: 10,     // 보조 텍스트 줄당 최대 글자수
     PERSON_HEIGHT_RATIO: 0.92,  // 인물 = 캔버스 높이의 92%
-    TEXT_STROKE_WIDTH: 10,      // 텍스트 외곽선 두께
+    TEXT_STROKE_WIDTH: 14,      // 텍스트 외곽선 두께
     TEXT_SHADOW_BLUR: 8,        // 텍스트 그림자 블러 (모바일 가독성 강화)
     MIN_PERSON_WIDTH_RATIO: 0.35, // 인물 최소 너비 = 캔버스의 35% (얼굴 40%+ 규칙)
   } as const;
@@ -71,6 +71,22 @@ export class ThumbnailComposerService {
   ];
 
   /**
+   * emotionalTone 기반 폰트 자동 선택
+   * 긴급/경고 → Black Han Sans, 교육/정보 → Noto Sans KR, 친근/일상 → Jua
+   */
+  private selectFont(emotionalTone?: string): string {
+    if (!emotionalTone) return "'Black Han Sans','Noto Sans CJK KR',sans-serif";
+    const tone = emotionalTone.toLowerCase();
+    if (['긴급', '경고', '위험', '충격', '주의'].some((k) => tone.includes(k)))
+      return "'Black Han Sans','Noto Sans CJK KR',sans-serif";
+    if (['교육', '정보', '팁', '가이드', '설명'].some((k) => tone.includes(k)))
+      return "'Noto Sans KR','Noto Sans CJK KR',sans-serif";
+    if (['친근', '일상', '브이로그', '재미', '유머'].some((k) => tone.includes(k)))
+      return "'Jua','Noto Sans CJK KR',sans-serif";
+    return "'Black Han Sans','Noto Sans CJK KR',sans-serif";
+  }
+
+  /**
    * 완성 썸네일: 배경 + 인물 + 텍스트 (메인 파이프라인)
    */
   async composeComplete(
@@ -83,6 +99,7 @@ export class ThumbnailComposerService {
       accentColor?: string;
       strokeColor?: string;
       layout?: 'person-right' | 'person-left' | 'text-center';
+      emotionalTone?: string;
     },
   ): Promise<Buffer> {
     const {
@@ -92,6 +109,7 @@ export class ThumbnailComposerService {
       accentColor = '#FFD700',
       strokeColor = '#000000',
       layout = personBuffer ? 'person-right' : 'text-center',
+      emotionalTone,
     } = options;
 
     const W = this.HARNESS.CANVAS_WIDTH;
@@ -159,6 +177,7 @@ export class ThumbnailComposerService {
         textX,
         textAlign: layoutConfig.textAlign,
         maxWidth: layoutConfig.textMaxWidth,
+        emotionalTone,
       });
 
       composites.push({ input: Buffer.from(textSvg), top: 0, left: 0 });
@@ -312,11 +331,14 @@ export class ThumbnailComposerService {
     textX: number;
     textAlign: 'left' | 'center';
     maxWidth: number;
+    emotionalTone?: string;
   }): string {
     const {
       width, height, textMain, textSub, textColor, accentColor,
-      strokeColor, fontSize, subFontSize, textX, textAlign,
+      strokeColor, fontSize, subFontSize, textX, textAlign, emotionalTone,
     } = opts;
+
+    const fontFamily = this.selectFont(emotionalTone);
 
     const escape = (s: string) =>
       s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -332,9 +354,10 @@ export class ThumbnailComposerService {
 
     let svg = `<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <filter id="ts" x="-15%" y="-15%" width="130%" height="130%">
-      <feDropShadow dx="0" dy="0" stdDeviation="${this.HARNESS.TEXT_SHADOW_BLUR}" flood-color="#000" flood-opacity="0.9"/>
-      <feDropShadow dx="4" dy="4" stdDeviation="4" flood-color="#000" flood-opacity="0.7"/>
+    <filter id="ts" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="0" stdDeviation="20" flood-color="${accentColor}" flood-opacity="0.35"/>
+      <feDropShadow dx="5" dy="5" stdDeviation="6" flood-color="#000" flood-opacity="0.8"/>
+      <feDropShadow dx="0" dy="0" stdDeviation="3" flood-color="#000" flood-opacity="0.95"/>
     </filter>
     <filter id="tsSub" x="-15%" y="-15%" width="130%" height="130%">
       <feDropShadow dx="0" dy="0" stdDeviation="5" flood-color="#000" flood-opacity="0.8"/>
@@ -347,7 +370,7 @@ export class ThumbnailComposerService {
       const y = startY + i * lineHeight;
       svg += `
   <text x="${textX}" y="${y}"
-    font-family="'Noto Sans CJK KR','Noto Sans KR','Apple SD Gothic Neo','Malgun Gothic',sans-serif"
+    font-family="${fontFamily}"
     font-size="${fontSize}" font-weight="900" letter-spacing="-4"
     text-anchor="${anchor}" filter="url(#ts)"
     paint-order="stroke" stroke="${strokeColor}" stroke-width="${this.HARNESS.TEXT_STROKE_WIDTH}" stroke-linejoin="round"

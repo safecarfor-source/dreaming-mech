@@ -30,7 +30,9 @@ RUN npm run build
 FROM node:20-alpine AS runner
 WORKDIR /app
 
-RUN apk add --no-cache dumb-init vips font-noto-cjk
+RUN apk add --no-cache dumb-init vips font-noto-cjk fontconfig
+COPY fonts/ /usr/share/fonts/custom/
+RUN fc-cache -f -v
 
 RUN addgroup --system --gid 1001 nestjs && \
     adduser --system --uid 1001 nestjs
