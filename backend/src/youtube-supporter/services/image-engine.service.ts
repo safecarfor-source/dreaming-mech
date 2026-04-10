@@ -32,7 +32,6 @@ interface OpenAIClient {
       n: number;
       size: string;
       quality: string;
-      response_format: string;
     }): Promise<OpenAIImageResponse>;
   };
 }
@@ -240,19 +239,23 @@ export class ImageEngineService {
 
     this.logger.log(`GPT Image 생성: size=${size}, quality=${quality}, prompt=${prompt.slice(0, 80)}...`);
 
+    // gpt-image-1은 response_format을 지원하지 않음 (항상 b64_json 반환)
     const response = await this.openaiClient.images.generate({
       model: 'gpt-image-1',
       prompt,
       n: 1,
       size,
       quality,
-      response_format: 'url',
     });
 
-    const url = response.data[0]?.url;
-    if (!url) {
-      throw new Error('GPT Image 응답에 URL 없음');
+    const b64 = response.data[0]?.b64_json;
+    if (!b64) {
+      throw new Error('GPT Image 응답에 b64_json 없음');
     }
+
+    // base64 → Buffer → S3 업로드하여 URL 획득
+    const buffer = Buffer.from(b64, 'base64');
+    const url = await this.uploadService.uploadBuffer(buffer, 'image/png', 'thumbnails/bg');
 
     // 비용 추산: high=$0.19, medium=$0.07, low=$0.04 (1024x1024 기준)
     const costMap: Record<string, number> = { high: 0.19, medium: 0.07, low: 0.04 };
