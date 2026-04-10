@@ -2,23 +2,26 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { User } from 'lucide-react';
 import CreateView from './CreateView';
 import CanvasEditor from './CanvasEditor';
 import GalleryView from './GalleryView';
 import LearnView from './LearnView';
+import FaceManager from './FaceManager';
 import type { ThumbnailStrategy } from './types';
 
 interface ThumbnailTabProps {
   projectId: string;
 }
 
-type TabView = 'create' | 'canvas' | 'gallery' | 'learn';
+type TabView = 'create' | 'canvas' | 'gallery' | 'learn' | 'face';
 
 const TAB_CONFIG = [
   { key: 'create' as const, label: '썸네일 만들기', icon: '🎯' },
   { key: 'canvas' as const, label: '캔버스 편집', icon: '🖼️' },
   { key: 'gallery' as const, label: '갤러리', icon: '📁' },
   { key: 'learn' as const, label: '학습/메모리', icon: '📚' },
+  { key: 'face' as const, label: '얼굴 설정', icon: null },
 ];
 
 export default function ThumbnailTab({ projectId }: ThumbnailTabProps) {
@@ -47,7 +50,11 @@ export default function ThumbnailTab({ projectId }: ThumbnailTabProps) {
                 : 'text-gray-400 hover:text-gray-300 hover:bg-gray-800/50'
             }`}
           >
-            <span className="text-base leading-none">{icon}</span>
+            {icon !== null ? (
+              <span className="text-base leading-none">{icon}</span>
+            ) : (
+              <User className="w-4 h-4" />
+            )}
             {label}
           </button>
         ))}
@@ -78,6 +85,11 @@ export default function ThumbnailTab({ projectId }: ThumbnailTabProps) {
         {activeView === 'learn' && (
           <motion.div key="learn" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
             <LearnView />
+          </motion.div>
+        )}
+        {activeView === 'face' && (
+          <motion.div key="face" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+            <FaceManager />
           </motion.div>
         )}
       </AnimatePresence>

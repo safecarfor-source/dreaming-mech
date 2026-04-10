@@ -787,4 +787,23 @@ export async function generateThumbnailVariation(data: {
   return res.data;
 }
 
+// ─── 얼굴 레퍼런스 관리 ────────────────────────────────────────
+
+export async function uploadFaceReferences(files: File[], labels?: string[]) {
+  const formData = new FormData();
+  files.forEach(f => formData.append('images', f));
+  if (labels) formData.append('labels', JSON.stringify(labels));
+  return ytApi.post('/yt/thumbnail/face/upload', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  }).then(r => r.data);
+}
+
+export async function getFaceReferences() {
+  return ytApi.get('/yt/thumbnail/face/list').then(r => r.data);
+}
+
+export async function deleteFaceReference(id: string) {
+  return ytApi.delete(`/yt/thumbnail/face/${id}`).then(r => r.data);
+}
+
 export default ytApi;

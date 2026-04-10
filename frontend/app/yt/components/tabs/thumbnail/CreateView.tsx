@@ -42,6 +42,7 @@ interface ThumbnailCardState {
   feedback: 'good' | 'bad' | null;
   variationOpen: boolean;
   engine?: string;
+  hasFace?: boolean;
 }
 
 export default function CreateView({ projectId, onOpenCanvas: _onOpenCanvas }: CreateViewProps) {
@@ -307,6 +308,24 @@ export default function CreateView({ projectId, onOpenCanvas: _onOpenCanvas }: C
                     <span className="text-xs text-gray-500 bg-gray-700/50 px-2 py-0.5 rounded-full">
                       {card.strategy.emotionalTone}
                     </span>
+                    {/* 엔진 뱃지 */}
+                    {card.engine && (
+                      <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+                        card.engine.toLowerCase().includes('gpt')
+                          ? 'text-green-400 bg-green-500/10'
+                          : card.engine.toLowerCase().includes('flux')
+                          ? 'text-blue-400 bg-blue-500/10'
+                          : 'text-gray-400 bg-gray-700/50'
+                      }`}>
+                        {card.engine}
+                      </span>
+                    )}
+                    {/* 얼굴 합성 뱃지 */}
+                    {card.hasFace && (
+                      <span className="text-xs font-medium px-2 py-0.5 rounded-full text-purple-300 bg-purple-500/15">
+                        얼굴 합성
+                      </span>
+                    )}
                   </div>
                   <p className="text-white text-sm font-bold leading-snug">
                     {card.strategy.textMain}
