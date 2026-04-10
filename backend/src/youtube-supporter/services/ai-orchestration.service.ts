@@ -880,7 +880,7 @@ ${contextSection}
 ${knowledgeSection}
 
 ## 제작 방식 (이해 필수):
-- 배경: DALL-E 3로 생성 (배경만, 텍스트/인물 없이)
+- 배경: AI image generator로 생성 (배경만, 텍스트/인물 없이)
 - 인물: 실사 정비사 사진을 배경 위에 합성 (주로 오른쪽)
 - 텍스트: 코드로 큰 글씨 합성 (140~200px 한글, 왼쪽 배치)
 - 따라서 배경 프롬프트는 인물+텍스트 공간을 비워둬야 함
@@ -902,7 +902,8 @@ ${knowledgeSection}
         "accentColor": "보조 텍스트 HEX (강조색, 예: #FFD700)"
       },
       "emotionalTone": "감정 톤 (긴급, 놀람, 신뢰, 궁금증 등)",
-      "fluxPrompt": "DALL-E 배경 이미지용 영문 프롬프트"
+      "fluxPrompt": "배경 이미지용 영문 프롬프트 (imagePrompt와 동의어)",
+      "recommendedEngine": "gpt-image-1 또는 flux-2-pro"
     }
   ]
 }
@@ -920,7 +921,11 @@ ${knowledgeSection}
    - 관련 소품/오브제 1~2개만 배치 (자동차 부품, 공구, 엔진 등)
    - 왼쪽 40%는 텍스트 공간, 오른쪽 40%는 인물 공간 → 중앙에 소품 배치
    - "studio lighting, dark moody background, automotive workshop aesthetic"
-   - DALL-E 3 최적화: 프롬프트 끝에 "CRITICAL: This image must contain absolutely zero text of any kind" 추가
+   - AI image generator 최적화: 프롬프트 끝에 "CRITICAL: This image must contain absolutely zero text of any kind" 추가
+3a. **recommendedEngine 규칙** (반드시 준수):
+   - 인물이 포함된 장면(정비사, 사람)이 배경에 어울리는 경우 → "gpt-image-1"
+   - 사물/차량/부품 클로즈업이 배경 주제인 경우 → "flux-2-pro"
+   - 판단 기준: fluxPrompt 내용이 인물 친화적(workshop with person implied) → gpt-image-1 / 오브젝트 중심(engine closeup, tool detail) → flux-2-pro
 4. **colorScheme.textColor**: 반드시 밝은 색 (#FFFFFF, #FFD700 등 — 어두운 배경에서 눈에 띄게)
 5. **personPosition**: 대부분 "right" 추천 (왼쪽 텍스트 + 오른쪽 인물 = 검증된 레이아웃)
 6. 학습된 노하우가 있다면 반드시 반영 (특히 ✅ 검증된 패턴, 🚫 회피 패턴)

@@ -698,6 +698,11 @@ export async function uploadCanvasToS3(imageBase64: string): Promise<{ s3Url: st
   return res.data;
 }
 
+export async function thumbnailCanvasExport(thumbnailId: string, imageBase64: string): Promise<{ finalUrl: string }> {
+  const res = await ytApi.post('/yt/thumbnail/canvas/export', { thumbnailId, imageBase64 });
+  return res.data;
+}
+
 // ─── 썸네일 AI (Phase 3: 학습 자동화) ────────────────
 
 export async function analyzeThumbnailBatch(
@@ -779,11 +784,31 @@ export async function getThumbnailJobStatus(jobId: string): Promise<ThumbnailJob
 export async function generateThumbnailVariation(data: {
   thumbnailId: string;
   variation: string;
+  customInstruction?: string;
 }): Promise<{ id: string; imageUrl: string; variation: string }> {
   const res = await ytApi.post('/yt/thumbnail/variation', data, {
     timeout: 120000,
   });
   return res.data;
+}
+
+// ─── 얼굴 레퍼런스 관리 ────────────────────────────────────────
+
+export async function uploadFaceReferences(files: File[], labels?: string[]) {
+  const formData = new FormData();
+  files.forEach(f => formData.append('images', f));
+  if (labels) formData.append('labels', JSON.stringify(labels));
+  return ytApi.post('/yt/thumbnail/face/upload', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  }).then(r => r.data);
+}
+
+export async function getFaceReferences() {
+  return ytApi.get('/yt/thumbnail/face/list').then(r => r.data);
+}
+
+export async function deleteFaceReference(id: string) {
+  return ytApi.delete(`/yt/thumbnail/face/${id}`).then(r => r.data);
 }
 
 export default ytApi;

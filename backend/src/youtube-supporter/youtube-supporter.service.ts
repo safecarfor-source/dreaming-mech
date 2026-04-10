@@ -9,6 +9,7 @@ import { YoutubeApiService } from './services/youtube-api.service';
 import { TranscriptService } from './services/transcript.service';
 import { AiOrchestrationService } from './services/ai-orchestration.service';
 import { ReplicateService } from './services/replicate.service';
+import { ImageEngineService } from './services/image-engine.service';
 import { GeminiImageService } from './services/gemini-image.service';
 import { ThumbnailComposerService } from './services/thumbnail-composer.service';
 import { UploadService } from '../upload/upload.service';
@@ -36,6 +37,8 @@ import type {
 } from './schemas/youtube-supporter.schema';
 import { YtProjectStatus, Prisma } from '@prisma/client';
 import { BackgroundRemovalService } from './services/background-removal.service';
+import { FaceCompositeService } from './services/face-composite.service';
+import { VariationService } from './services/variation.service';
 
 // 제작 작업 상태 추적 (인메모리)
 interface ProductionJob {
@@ -69,10 +72,13 @@ export class YouTubeSupporterService {
     private readonly transcript: TranscriptService,
     private readonly aiOrchestration: AiOrchestrationService,
     private readonly replicate: ReplicateService,
+    private readonly imageEngine: ImageEngineService,
     private readonly geminiImage: GeminiImageService,
     private readonly thumbnailComposer: ThumbnailComposerService,
     private readonly uploadService: UploadService,
     private readonly backgroundRemoval: BackgroundRemovalService,
+    private readonly faceComposite: FaceCompositeService,
+    private readonly variation: VariationService,
   ) {}
 
   // 기본 인물 이미지 캐시 (S3 URL → 배경 제거된 Buffer)
@@ -1332,43 +1338,32 @@ export class YouTubeSupporterService {
   }
 
   /**
-   * FLUX로 썸네일 배경 이미지 생성
+   * 썸네일 배경 이미지 생성 (ImageEngineService 사용)
    */
   async generateThumbnailImage(dto: ThumbnailGenerateDto) {
-    const imageUrls = await this.replicate.generateImage(dto.prompt, {
+    // ImageEngineService: S3 복사까지 처리
+    const result = await this.imageEngine.generateImage({
+      prompt: dto.prompt,
+      engine: 'auto',
       width: dto.width,
       height: dto.height,
     });
 
-    // DALL-E/FLUX 임시 URL → S3에 영구 저장
-    const s3Urls: string[] = [];
-    for (const url of imageUrls) {
-      try {
-        const res = await fetch(url);
-        if (!res.ok) throw new Error(`이미지 다운로드 실패: ${res.status}`);
-        const arrayBuffer = await res.arrayBuffer();
-        const buffer = Buffer.from(arrayBuffer);
-        const s3Url = await this.uploadService.uploadBuffer(buffer, 'image/png', 'thumbnails');
-        s3Urls.push(s3Url);
-      } catch (err) {
-        this.logger.error(`S3 업로드 실패, 임시 URL 사용: ${err}`);
-        s3Urls.push(url); // S3 실패 시 원본 URL 유지
-      }
-    }
-
-    // 썸네일 레코드 생성 (S3 URL로 저장 + status COMPLETED)
+    // 썸네일 레코드 생성 (S3 URL + engine 저장)
     const thumbnail = await this.prisma.ytThumbnail.create({
       data: {
         projectId: dto.projectId ?? null,
-        baseImageUrl: s3Urls[0] ?? null,
+        baseImageUrl: result.imageUrl,
         prompt: dto.prompt,
+        engine: result.engine,
         status: 'COMPLETED',
       },
     });
 
     return {
       id: thumbnail.id,
-      imageUrls: s3Urls,
+      imageUrls: [result.imageUrl],
+      engine: result.engine,
       status: 'COMPLETED',
     };
   }
@@ -1731,6 +1726,20 @@ export class YouTubeSupporterService {
     return { s3Url };
   }
 
+  /**
+   * 캔버스 편집 결과 → S3 업로드 + finalUrl 저장
+   */
+  async exportCanvas(thumbnailId: string, imageBase64: string) {
+    const { s3Url } = await this.uploadBase64ToS3(imageBase64);
+
+    await this.prisma.ytThumbnail.update({
+      where: { id: thumbnailId },
+      data: { finalUrl: s3Url, status: 'COMPLETED' },
+    });
+
+    return { finalUrl: s3Url };
+  }
+
   // ─────────────────────────────────────────────
   // 원스톱 썸네일 생성 (Gemini)
   // ─────────────────────────────────────────────
@@ -1989,27 +1998,55 @@ export class YouTubeSupporterService {
           const dallEPrompt = strategy.fluxPrompt
             || `Clean minimal abstract background for YouTube thumbnail about ${dto.title}, no text, no people, photorealistic, studio lighting, 1280x720`;
 
-          this.logger.log(`DALL-E 배경 생성 시도 (${i + 1}/3)...`);
-          const urls = await this.replicate.generateImage(dallEPrompt, {
+          this.logger.log(`ImageEngine 배경 생성 시도 (${i + 1}/3)...`);
+          const engineResult = await this.imageEngine.generateImage({
+            prompt: dallEPrompt,
+            engine: 'auto',
             width: 1280,
             height: 720,
           });
 
-          if (urls.length > 0 && !urls[0].includes('placehold.co')) {
-            // DALL-E 이미지 다운로드 → Buffer
-            const imgRes = await fetch(urls[0]);
+          if (engineResult.imageUrl && !engineResult.imageUrl.includes('placehold.co')) {
+            // S3 URL에서 Buffer 다운로드 (합성에 사용)
+            const imgRes = await fetch(engineResult.imageUrl);
             backgroundBuffer = Buffer.from(await imgRes.arrayBuffer());
-            this.logger.log(`DALL-E 배경 성공 (${i + 1}/3)`);
+            this.logger.log(`ImageEngine(${engineResult.engine}) 배경 성공 (${i + 1}/3)`);
           } else {
-            throw new Error('DALL-E mock/empty response');
+            throw new Error('ImageEngine mock/empty response');
           }
         } catch (dallEErr) {
           // 단계 B: 코드 배경 폴백
-          this.logger.warn(`DALL-E 실패, 코드 배경 폴백 (${i + 1}/3):`, (dallEErr as Error).message);
+          this.logger.warn(`ImageEngine 실패, 코드 배경 폴백 (${i + 1}/3):`, (dallEErr as Error).message);
           backgroundBuffer = await this.thumbnailComposer.createCodeBackground(
             i % 6,
             { pattern: bgPatterns[i % 3] },
           );
+        }
+
+        // 단계 B.5: PuLID 얼굴 합성 시도 (strategy에 personPosition 있고 FAL_AI_API_KEY 있을 때)
+        let hasFace = false;
+        if (strategy.personPosition && this.faceComposite.isAvailable()) {
+          try {
+            const refs = await this.getFaceReferences();
+            if (refs.length > 0) {
+              job.stepMessage = `얼굴 합성 중 (${i + 1}/3)...`;
+              const faceResult = await this.faceComposite.generateWithFace(
+                strategy.fluxPrompt ?? `YouTube thumbnail, ${dto.title}`,
+                refs[0].imageUrl,
+              );
+              if (faceResult) {
+                // 얼굴 합성 성공 → 합성 이미지를 배경으로 교체
+                const faceRes = await fetch(faceResult.imageUrl);
+                if (faceRes.ok) {
+                  backgroundBuffer = Buffer.from(await faceRes.arrayBuffer());
+                  hasFace = true;
+                  this.logger.log(`PuLID 얼굴 합성 성공 (${i + 1}/3)`);
+                }
+              }
+            }
+          } catch (faceErr) {
+            this.logger.warn(`PuLID 얼굴 합성 스킵 (${i + 1}/3):`, (faceErr as Error).message);
+          }
         }
 
         // 단계 C: 하네스 합성 (배경 + 인물 + 텍스트)
@@ -2048,6 +2085,7 @@ export class YouTubeSupporterService {
             strategy: strategy as unknown as Prisma.InputJsonValue,
             prompt: strategy.fluxPrompt ?? strategy.concept,
             status: 'COMPLETED',
+            hasFace,
           },
         });
 
@@ -2072,21 +2110,109 @@ export class YouTubeSupporterService {
     job.result = { strategies, thumbnails };
   }
 
+  // ─────────────────────────────────────────────
+  // 얼굴 레퍼런스 CRUD (PuLID 합성용)
+  // ─────────────────────────────────────────────
+
+  /**
+   * 레퍼런스 사진 업로드 → S3 → DB
+   */
+  async uploadFaceReferences(
+    files: Express.Multer.File[],
+    labels?: string[],
+  ) {
+    const results: Array<{ id: string; imageUrl: string; label: string | null; isActive: boolean; createdAt: Date }> = [];
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      const s3Url = await this.uploadService.uploadBuffer(
+        file.buffer,
+        file.mimetype || 'image/jpeg',
+        'thumbnails/face-refs',
+      );
+      const ref = await this.prisma.ytFaceReference.create({
+        data: {
+          imageUrl: s3Url,
+          label: labels?.[i] || null,
+          isActive: true,
+        },
+      });
+      results.push(ref);
+    }
+    return results;
+  }
+
+  /**
+   * 활성 레퍼런스 목록 조회
+   */
+  async getFaceReferences() {
+    return this.prisma.ytFaceReference.findMany({
+      where: { isActive: true },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  /**
+   * 레퍼런스 삭제
+   */
+  async deleteFaceReference(id: string) {
+    return this.prisma.ytFaceReference.delete({ where: { id } });
+  }
+
   /**
    * 썸네일 변형 생성 (기존 전략 기반 + 변형 지시)
    */
   async generateThumbnailVariation(dto: {
     thumbnailId: string;
-    variation: string; // 'more-clickbait' | 'more-minimal' | 'bigger-face' | 'dark-mode' | 커스텀 텍스트
+    variation: string;
+    customInstruction?: string;
   }) {
     const thumbnail = await this.prisma.ytThumbnail.findUnique({
       where: { id: dto.thumbnailId },
     });
     if (!thumbnail) throw new NotFoundException('썸네일을 찾을 수 없습니다');
 
-    const result = await this.geminiImage.generateVariation(
-      thumbnail.prompt ?? '유튜브 썸네일',
+    const originalPrompt = thumbnail.prompt ?? '유튜브 썸네일';
+
+    // 엔진 교차 변형: 같은 프롬프트, 다른 엔진으로 생성
+    if (this.variation.isDifferentEngineVariation(dto.variation)) {
+      const targetEngine = this.variation.getAlternateEngine(
+        thumbnail.engine ?? undefined,
+      );
+      const result = await this.imageEngine.generateImage(
+        { prompt: originalPrompt, engine: targetEngine },
+      );
+
+      const newThumbnail = await this.prisma.ytThumbnail.create({
+        data: {
+          projectId: thumbnail.projectId,
+          imageUrl: result.imageUrl,
+          baseImageUrl: result.imageUrl,
+          strategy: thumbnail.strategy as Prisma.InputJsonValue,
+          prompt: originalPrompt,
+          engine: targetEngine,
+          parentId: dto.thumbnailId,
+          variationOf: dto.variation,
+          status: 'COMPLETED',
+        },
+      });
+
+      return {
+        id: newThumbnail.id,
+        imageUrl: result.imageUrl,
+        variation: dto.variation,
+      };
+    }
+
+    // 일반 변형: VariationService로 프롬프트 조합 후 Gemini로 생성
+    const variationPrompt = this.variation.buildVariationPrompt(
+      originalPrompt,
       dto.variation,
+      dto.customInstruction,
+    );
+
+    const result = await this.geminiImage.generateVariation(
+      variationPrompt,
+      dto.variation === 'custom' ? (dto.customInstruction || dto.variation) : dto.variation,
     );
 
     if (!result) throw new Error('변형 생성 실패');
@@ -2099,14 +2225,16 @@ export class YouTubeSupporterService {
       'thumbnails/gemini',
     );
 
-    // DB 저장
+    // DB 저장 (parentId + variationOf 추적)
     const newThumbnail = await this.prisma.ytThumbnail.create({
       data: {
         projectId: thumbnail.projectId,
         imageUrl: s3Url,
         baseImageUrl: s3Url,
         strategy: thumbnail.strategy as Prisma.InputJsonValue,
-        prompt: `${thumbnail.prompt}\n변형: ${dto.variation}`,
+        prompt: variationPrompt,
+        parentId: dto.thumbnailId,
+        variationOf: dto.variation,
         status: 'COMPLETED',
       },
     });

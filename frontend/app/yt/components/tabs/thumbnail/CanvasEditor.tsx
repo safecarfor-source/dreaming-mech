@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 import type { CanvasEditorProps } from './types';
-import { removeBackground, uploadCanvasToS3, saveThumbnail } from '../../../lib/api';
+import { removeBackground, thumbnailCanvasExport, saveThumbnail } from '../../../lib/api';
 
 // react-konva는 SSR 비활성화 필수
 const Stage = dynamic(() => import('react-konva').then((m) => m.Stage), { ssr: false });
@@ -18,9 +18,9 @@ const CANVAS_HEIGHT = 720;
 
 // 한글 폰트 옵션
 const FONT_OPTIONS = [
-  { value: 'Black Han Sans', label: 'Black Han Sans' },
-  { value: 'Noto Sans KR', label: 'Noto Sans KR Bold' },
-  { value: 'Jua', label: 'Jua' },
+  { label: '블랙한산스 (긴급)', value: 'Black Han Sans' },
+  { label: '노토산스 블랙 (교육)', value: 'Noto Sans KR' },
+  { label: '주아 (친근)', value: 'Jua' },
 ];
 
 interface TextNode {
@@ -74,6 +74,23 @@ export default function CanvasEditor({ backgroundUrl, strategy, projectId, onBac
   // 스케일 (반응형 표시용)
   const [scale, setScale] = useState(1);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // 폰트 프리로드 (FontFace API)
+  useEffect(() => {
+    const fontUrls = [
+      { family: 'Black Han Sans', url: 'https://fonts.gstatic.com/s/blackhansans/v17/ea8Aad44WunzF9a-dL6toA8r8nqVIXSkH-Hc.woff2' },
+      { family: 'Jua', url: 'https://fonts.gstatic.com/s/jua/v13/co3KmW9ljjAjc-DZCsKgsg.woff2' },
+      { family: 'Noto Sans KR', url: 'https://fonts.gstatic.com/s/notosanskr/v36/PbyxFmXiEBPT4ITbgNA5Cgms3VYcOA4.woff2' },
+    ];
+    fontUrls.forEach(({ family, url }) => {
+      const font = new FontFace(family, `url(${url})`);
+      font.load().then(loaded => {
+        document.fonts.add(loaded);
+      }).catch(() => {
+        console.warn(`Font ${family} load failed, using fallback`);
+      });
+    });
+  }, []);
 
   // 폰트 로딩 대기
   useEffect(() => {
@@ -266,16 +283,18 @@ export default function CanvasEditor({ backgroundUrl, strategy, projectId, onBac
 
       const dataUrl = stageRef.current.toDataURL({ pixelRatio: 1, mimeType: 'image/png' });
       const base64 = dataUrl.split(',')[1];
-      const { s3Url } = await uploadCanvasToS3(base64);
 
-      // DB에 저장
-      await saveThumbnail({
+      // DB에 먼저 저장 (thumbnailId 확보)
+      const saved = await saveThumbnail({
         projectId,
-        imageUrl: s3Url,
+        imageUrl: '', // canvas/export에서 finalUrl로 업데이트됨
         baseImageUrl: backgroundUrl,
         canvasData: { texts, images: images.map(({ id, type, src, x, y, width, height }) => ({ id, type, src, x, y, width, height })) },
         strategy: strategy as unknown as Record<string, unknown>,
       });
+
+      // canvas/export API로 S3 업로드 + finalUrl 저장
+      await thumbnailCanvasExport(saved.id, base64);
 
       alert('썸네일이 저장되었습니다! 갤러리에서 확인하세요.');
     } catch (err) {

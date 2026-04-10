@@ -910,6 +910,19 @@ export class YouTubeSupporterController {
   }
 
   /**
+   * POST /api/yt/thumbnail/canvas/export
+   * 캔버스 편집 결과 S3 업로드 + finalUrl 저장
+   */
+  @Post('thumbnail/canvas/export')
+  @UseGuards(YtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  async thumbnailCanvasExport(
+    @Body() body: { thumbnailId: string; imageBase64: string },
+  ) {
+    return this.service.exportCanvas(body.thumbnailId, body.imageBase64);
+  }
+
+  /**
    * POST /api/yt/thumbnail/setup-person
    * 기본 인물 사진 등록 (배경 제거 → S3)
    */
@@ -965,6 +978,48 @@ export class YouTubeSupporterController {
     return job;
   }
 
+  // ─────────────────────────────────────────────
+  // 얼굴 레퍼런스 관리 (PuLID 합성용)
+  // ─────────────────────────────────────────────
+
+  /**
+   * POST /api/yt/thumbnail/face/upload
+   * 레퍼런스 사진 업로드 (최대 20장) → S3 → DB
+   */
+  @Post('thumbnail/face/upload')
+  @UseGuards(YtAuthGuard)
+  @UseInterceptors(FilesInterceptor('images', 20, { limits: { fileSize: 10 * 1024 * 1024 } }))
+  async thumbnailFaceUpload(
+    @UploadedFiles() files: Express.Multer.File[],
+    @Body() body: { labels?: string },
+  ) {
+    if (!files?.length) {
+      throw new BadRequestException('이미지를 1장 이상 업로드해주세요');
+    }
+    const labels = body.labels ? (JSON.parse(body.labels) as string[]) : [];
+    return this.service.uploadFaceReferences(files, labels);
+  }
+
+  /**
+   * GET /api/yt/thumbnail/face/list
+   * 활성 레퍼런스 목록 조회
+   */
+  @Get('thumbnail/face/list')
+  @UseGuards(YtAuthGuard)
+  async thumbnailFaceList() {
+    return this.service.getFaceReferences();
+  }
+
+  /**
+   * DELETE /api/yt/thumbnail/face/:id
+   * 레퍼런스 삭제
+   */
+  @Delete('thumbnail/face/:id')
+  @UseGuards(YtAuthGuard)
+  async thumbnailFaceDelete(@Param('id') id: string) {
+    return this.service.deleteFaceReference(id);
+  }
+
   /**
    * POST /api/yt/thumbnail/variation
    * 기존 썸네일 기반 변형 생성
@@ -973,7 +1028,7 @@ export class YouTubeSupporterController {
   @UseGuards(YtAuthGuard)
   @HttpCode(HttpStatus.OK)
   async thumbnailVariation(
-    @Body() dto: { thumbnailId: string; variation: string },
+    @Body() dto: { thumbnailId: string; variation: string; customInstruction?: string },
   ) {
     if (!dto.thumbnailId || !dto.variation) {
       throw new BadRequestException('thumbnailId와 variation을 입력해주세요');
