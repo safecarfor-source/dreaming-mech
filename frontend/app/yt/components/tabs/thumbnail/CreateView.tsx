@@ -8,34 +8,21 @@ import {
   Download,
   ThumbsUp,
   ThumbsDown,
-  ChevronDown,
   X,
 } from 'lucide-react';
 import {
   generateCompleteThumbnails,
   getThumbnailJobStatus,
-  generateThumbnailVariation,
   saveThumbnailFeedback,
 } from '../../../lib/api';
 import type { ThumbnailJobStatus } from '../../../lib/api';
 import type { ThumbnailStrategy } from './types';
+import VariationPanel from './VariationPanel';
 
 interface CreateViewProps {
   projectId: string;
   onOpenCanvas?: (backgroundUrl: string, strategy: ThumbnailStrategy) => void;
 }
-
-type VariationOption = {
-  label: string;
-  value: string;
-};
-
-const VARIATION_OPTIONS: VariationOption[] = [
-  { label: '더 클릭베이트로', value: 'more_clickbait' },
-  { label: '더 미니멀로', value: 'more_minimal' },
-  { label: '얼굴 크게', value: 'face_closer' },
-  { label: '다크모드', value: 'dark_mode' },
-];
 
 const STYLE_OPTIONS = [
   { label: '자동차 정비', value: '자동차 정비' },
@@ -54,6 +41,7 @@ interface ThumbnailCardState {
   loading: boolean;
   feedback: 'good' | 'bad' | null;
   variationOpen: boolean;
+  engine?: string;
 }
 
 export default function CreateView({ projectId, onOpenCanvas: _onOpenCanvas }: CreateViewProps) {
@@ -173,25 +161,13 @@ export default function CreateView({ projectId, onOpenCanvas: _onOpenCanvas }: C
     }
   }, [cards]);
 
-  const handleVariation = useCallback(async (index: number, variation: string) => {
-    const card = cards[index];
-    if (!card) return;
+  const handleVariationResult = useCallback((index: number, result: { id: string; imageUrl: string }) => {
     setCards((prev) =>
-      prev.map((c, i) => (i === index ? { ...c, loading: true, variationOpen: false } : c))
+      prev.map((c, i) =>
+        i === index ? { ...c, id: result.id, imageUrl: result.imageUrl, loading: false, feedback: null, variationOpen: false } : c
+      )
     );
-    try {
-      const result = await generateThumbnailVariation({ thumbnailId: card.id, variation });
-      setCards((prev) =>
-        prev.map((c, i) =>
-          i === index ? { ...c, id: result.id, imageUrl: result.imageUrl, loading: false, feedback: null } : c
-        )
-      );
-    } catch (e) {
-      setCards((prev) =>
-        prev.map((c, i) => (i === index ? { ...c, loading: false } : c))
-      );
-    }
-  }, [cards]);
+  }, []);
 
   const toggleVariationMenu = useCallback((index: number) => {
     setCards((prev) =>
@@ -378,39 +354,35 @@ export default function CreateView({ projectId, onOpenCanvas: _onOpenCanvas }: C
                     <ThumbsDown className="w-3.5 h-3.5" />
                   </button>
 
-                  {/* 변형 드롭다운 */}
-                  <div className="relative ml-auto">
-                    <button
-                      onClick={() => toggleVariationMenu(index)}
-                      disabled={card.loading}
-                      className="flex items-center gap-1 px-3 py-1.5 bg-gray-700/60 hover:bg-gray-700 disabled:opacity-40 rounded-lg text-xs text-gray-300 transition-colors"
-                    >
-                      변형
-                      <ChevronDown className="w-3 h-3" />
-                    </button>
-                    <AnimatePresence>
-                      {card.variationOpen && (
-                        <motion.div
-                          initial={{ opacity: 0, y: -4 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -4 }}
-                          transition={{ duration: 0.12 }}
-                          className="absolute right-0 bottom-full mb-1 w-40 bg-gray-800 border border-gray-700 rounded-xl overflow-hidden shadow-xl z-10"
-                        >
-                          {VARIATION_OPTIONS.map((opt) => (
-                            <button
-                              key={opt.value}
-                              onClick={() => handleVariation(index, opt.value)}
-                              className="w-full text-left px-3 py-2 text-xs text-gray-300 hover:bg-gray-700 hover:text-white transition-colors"
-                            >
-                              {opt.label}
-                            </button>
-                          ))}
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </div>
+                  {/* 변형 토글 */}
+                  <button
+                    onClick={() => toggleVariationMenu(index)}
+                    disabled={card.loading}
+                    className="ml-auto flex items-center gap-1 px-3 py-1.5 bg-gray-700/60 hover:bg-gray-700 disabled:opacity-40 rounded-lg text-xs text-gray-300 transition-colors"
+                  >
+                    변형
+                  </button>
                 </div>
+
+                {/* VariationPanel (토글) */}
+                <AnimatePresence>
+                  {card.variationOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      transition={{ duration: 0.15 }}
+                      className="px-3 pb-3 overflow-hidden"
+                    >
+                      <VariationPanel
+                        thumbnailId={card.id}
+                        currentEngine={card.engine}
+                        onVariation={(result) => handleVariationResult(index, result)}
+                        loading={card.loading}
+                      />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </motion.div>
             ))}
           </motion.div>

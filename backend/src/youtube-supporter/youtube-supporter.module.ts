@@ -10,6 +10,7 @@ import { BackgroundRemovalService } from './services/background-removal.service'
 import { GeminiImageService } from './services/gemini-image.service';
 import { ThumbnailComposerService } from './services/thumbnail-composer.service';
 import { FaceCompositeService } from './services/face-composite.service';
+import { VariationService } from './services/variation.service';
 import { UploadModule } from '../upload/upload.module';
 
 /**
@@ -30,6 +31,7 @@ import { UploadModule } from '../upload/upload.module';
     GeminiImageService,
     ThumbnailComposerService,
     FaceCompositeService,
+    VariationService,
   ],
 })
 export class YouTubeSupporterModule {}

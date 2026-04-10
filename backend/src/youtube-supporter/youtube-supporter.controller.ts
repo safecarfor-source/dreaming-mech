@@ -1015,7 +1015,7 @@ export class YouTubeSupporterController {
   @UseGuards(YtAuthGuard)
   @HttpCode(HttpStatus.OK)
   async thumbnailVariation(
-    @Body() dto: { thumbnailId: string; variation: string },
+    @Body() dto: { thumbnailId: string; variation: string; customInstruction?: string },
   ) {
     if (!dto.thumbnailId || !dto.variation) {
       throw new BadRequestException('thumbnailId와 variation을 입력해주세요');

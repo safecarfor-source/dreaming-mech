@@ -779,6 +779,7 @@ export async function getThumbnailJobStatus(jobId: string): Promise<ThumbnailJob
 export async function generateThumbnailVariation(data: {
   thumbnailId: string;
   variation: string;
+  customInstruction?: string;
 }): Promise<{ id: string; imageUrl: string; variation: string }> {
   const res = await ytApi.post('/yt/thumbnail/variation', data, {
     timeout: 120000,

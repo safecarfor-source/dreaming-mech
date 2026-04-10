@@ -38,6 +38,7 @@ import type {
 import { YtProjectStatus, Prisma } from '@prisma/client';
 import { BackgroundRemovalService } from './services/background-removal.service';
 import { FaceCompositeService } from './services/face-composite.service';
+import { VariationService } from './services/variation.service';
 
 // 제작 작업 상태 추적 (인메모리)
 interface ProductionJob {
@@ -77,6 +78,7 @@ export class YouTubeSupporterService {
     private readonly uploadService: UploadService,
     private readonly backgroundRemoval: BackgroundRemovalService,
     private readonly faceComposite: FaceCompositeService,
+    private readonly variation: VariationService,
   ) {}
 
   // 기본 인물 이미지 캐시 (S3 URL → 배경 제거된 Buffer)
@@ -2147,16 +2149,56 @@ export class YouTubeSupporterService {
    */
   async generateThumbnailVariation(dto: {
     thumbnailId: string;
-    variation: string; // 'more-clickbait' | 'more-minimal' | 'bigger-face' | 'dark-mode' | 커스텀 텍스트
+    variation: string;
+    customInstruction?: string;
   }) {
     const thumbnail = await this.prisma.ytThumbnail.findUnique({
       where: { id: dto.thumbnailId },
     });
     if (!thumbnail) throw new NotFoundException('썸네일을 찾을 수 없습니다');
 
-    const result = await this.geminiImage.generateVariation(
-      thumbnail.prompt ?? '유튜브 썸네일',
+    const originalPrompt = thumbnail.prompt ?? '유튜브 썸네일';
+
+    // 엔진 교차 변형: 같은 프롬프트, 다른 엔진으로 생성
+    if (this.variation.isDifferentEngineVariation(dto.variation)) {
+      const targetEngine = this.variation.getAlternateEngine(
+        thumbnail.engine ?? undefined,
+      );
+      const result = await this.imageEngine.generateImage(
+        { prompt: originalPrompt, engine: targetEngine },
+      );
+
+      const newThumbnail = await this.prisma.ytThumbnail.create({
+        data: {
+          projectId: thumbnail.projectId,
+          imageUrl: result.imageUrl,
+          baseImageUrl: result.imageUrl,
+          strategy: thumbnail.strategy as Prisma.InputJsonValue,
+          prompt: originalPrompt,
+          engine: targetEngine,
+          parentId: dto.thumbnailId,
+          variationOf: dto.variation,
+          status: 'COMPLETED',
+        },
+      });
+
+      return {
+        id: newThumbnail.id,
+        imageUrl: result.imageUrl,
+        variation: dto.variation,
+      };
+    }
+
+    // 일반 변형: VariationService로 프롬프트 조합 후 Gemini로 생성
+    const variationPrompt = this.variation.buildVariationPrompt(
+      originalPrompt,
       dto.variation,
+      dto.customInstruction,
+    );
+
+    const result = await this.geminiImage.generateVariation(
+      variationPrompt,
+      dto.variation === 'custom' ? (dto.customInstruction || dto.variation) : dto.variation,
     );
 
     if (!result) throw new Error('변형 생성 실패');
@@ -2169,14 +2211,16 @@ export class YouTubeSupporterService {
       'thumbnails/gemini',
     );
 
-    // DB 저장
+    // DB 저장 (parentId + variationOf 추적)
     const newThumbnail = await this.prisma.ytThumbnail.create({
       data: {
         projectId: thumbnail.projectId,
         imageUrl: s3Url,
         baseImageUrl: s3Url,
         strategy: thumbnail.strategy as Prisma.InputJsonValue,
-        prompt: `${thumbnail.prompt}\n변형: ${dto.variation}`,
+        prompt: variationPrompt,
+        parentId: dto.thumbnailId,
+        variationOf: dto.variation,
         status: 'COMPLETED',
       },
     });
