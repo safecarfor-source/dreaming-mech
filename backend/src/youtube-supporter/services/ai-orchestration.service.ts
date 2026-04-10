@@ -912,16 +912,37 @@ ${knowledgeSection}
 ## 하네스 규칙 (반드시 준수):
 1. **textMain은 5자 이내** — 예: "엔진오일", "이거 몰라?", "사기당함"
 2. **textSub은 8자 이내** — 예: "정비사가 직접 알려드림", "이것만 알면 됩니다"
-3. **fluxPrompt 규칙** (매우 중요):
+3. **fluxPrompt 규칙 — 시네마틱 디렉터 방식** (가장 중요!):
+   당신은 할리우드 영화 촬영 감독입니다. 매 프롬프트를 실제 카메라로 촬영하는 것처럼 작성하세요.
+
+   **필수 6요소** (반드시 모두 포함):
+   [카메라] 렌즈 + 조리개: "Shot on 85mm lens, f/2.0" 또는 "Macro lens, f/4.0" 또는 "35mm wide angle, f/5.6"
+   [조명] 방향 + 색온도: "Dramatic rim lighting from upper left, warm tungsten key light mixed with cool fluorescent fill"
+   [구도] 시점 + 피사계심도: "Eye-level close-up, shallow depth of field with background softly blurred"
+   [피사체] 구체적 오브제 + 상태 + 질감: "severely worn brake pad with exposed metal grooves next to a pristine new pad"
+   [분위기] 색감 그레이딩: "High contrast, desaturated shadows with warm amber highlights, teal and orange color grading"
+   [레이아웃] 텍스트/인물 공간 확보: "Left 35% of frame is intentionally darker and simpler for text overlay. Right 35% has softer background for person composite."
+
+   **배경 전용 규칙**:
    - 반드시 영어로 작성
-   - "YouTube thumbnail background, 1792x1024, photorealistic" 포함
-   - **배경만 생성** — 텍스트/글자/사람 절대 포함 금지
-   - "absolutely no text, no letters, no words, no people, no faces, no characters, no writing" 반드시 포함
-   - 어두운 톤 배경 위주 (텍스트 가독성 확보)
-   - 관련 소품/오브제 1~2개만 배치 (자동차 부품, 공구, 엔진 등)
-   - 왼쪽 40%는 텍스트 공간, 오른쪽 40%는 인물 공간 → 중앙에 소품 배치
-   - "studio lighting, dark moody background, automotive workshop aesthetic"
-   - AI image generator 최적화: 프롬프트 끝에 "CRITICAL: This image must contain absolutely zero text of any kind" 추가
+   - 사람/얼굴/글자 절대 포함 금지: 프롬프트 마지막에 "CRITICAL: absolutely no text, no letters, no words, no people, no faces, no characters, no writing of any kind."
+   - 사람 대신 **손/장갑** 은 허용 (예: "mechanic's gloved hand holding a wrench")
+
+   **자동차 정비 특화 어휘** (적극 활용):
+   부품: brake pad, brake fluid reservoir, oil filter, spark plug, serpentine belt, coolant hose, battery terminal, air filter, catalytic converter
+   도구: torque wrench, diagnostic scanner (OBD2), hydraulic jack, impact wrench, oil drain pan, funnel
+   환경: automotive workshop with hydraulic lifts, fluorescent overhead lights, oil-stained concrete floor, tool pegboard wall, tire rack
+   질감: oil-stained surfaces, metallic textures, rubber gasket detail, rust patina, chrome reflection, greasy fingerprints on metal
+
+   **스토리텔링 소품 규칙** (반드시 준수):
+   - 매 프롬프트에 **주제 관련 구체적 소품 2~3개** 필수 포함
+   - before/after 대비를 보여주면 강력함 (마모된 것 vs 새것 나란히)
+   - 예시: 브레이크→"worn pad with exposed metal + new pad side by side", 엔진오일→"dark black used oil dripping vs clean golden new oil"
+
+   **3안 카메라 앵글 차별화** (같은 앵글 반복 금지):
+   - 전략 1: **클로즈업/매크로** — 부품 디테일, 질감 강조 (macro lens, f/4)
+   - 전략 2: **미디엄샷** — 작업 환경 + 도구 + 부품 (85mm, f/2.0)
+   - 전략 3: **와이드/로우앵글** — 차량 전체 또는 극적 분위기 (35mm, low angle, f/5.6)
 3a. **recommendedEngine 규칙** (반드시 준수):
    - 인물이 포함된 장면(정비사, 사람)이 배경에 어울리는 경우 → "gpt-image-1"
    - 사물/차량/부품 클로즈업이 배경 주제인 경우 → "flux-2-pro"
@@ -931,7 +952,7 @@ ${knowledgeSection}
 6. 학습된 노하우가 있다면 반드시 반영 (특히 ✅ 검증된 패턴, 🚫 회피 패턴)
 7. **고대비 색상 우선** — 빨강(#FF0000), 노랑(#FFD700), 주황(#FF6600)이 유튜브 흰색 UI와 가장 대비됨. accentColor는 이 3색 중 하나 권장
 8. **얼굴 40%+ 규칙** — personPosition은 반드시 "right" 또는 "left"로 지정. 인물이 화면의 40% 이상을 차지해야 시선 유도 효과 극대화. text-center(인물 없는 레이아웃)는 예외적 상황에서만
-9. **3안 배경 다양성** — 3개 전략의 fluxPrompt는 각각 완전히 다른 분위기여야 함 (예: 정비소 내부 vs 엔진 클로즈업 vs 도로 배경). 같은 분위기 반복 금지
+9. **3안 배경 다양성** — 3개 전략의 fluxPrompt는 각각 완전히 다른 카메라 앵글+분위기여야 함. 규칙 3의 "3안 카메라 앵글 차별화" 반드시 준수 (클로즈업/미디엄/와이드). 같은 분위기 반복 금지
 10. **모바일 가독성 최우선** — 시청자 70%가 모바일. textMain은 3~5단어(12자 미만). 100px 너비 모바일 화면에서도 읽혀야 함
 
 ## A/B 테스트 원칙 (3안 차별화):
