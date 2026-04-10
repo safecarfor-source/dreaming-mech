@@ -1726,6 +1726,20 @@ export class YouTubeSupporterService {
     return { s3Url };
   }
 
+  /**
+   * 캔버스 편집 결과 → S3 업로드 + finalUrl 저장
+   */
+  async exportCanvas(thumbnailId: string, imageBase64: string) {
+    const { s3Url } = await this.uploadBase64ToS3(imageBase64);
+
+    await this.prisma.ytThumbnail.update({
+      where: { id: thumbnailId },
+      data: { finalUrl: s3Url, status: 'COMPLETED' },
+    });
+
+    return { finalUrl: s3Url };
+  }
+
   // ─────────────────────────────────────────────
   // 원스톱 썸네일 생성 (Gemini)
   // ─────────────────────────────────────────────

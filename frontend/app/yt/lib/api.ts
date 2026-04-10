@@ -698,6 +698,11 @@ export async function uploadCanvasToS3(imageBase64: string): Promise<{ s3Url: st
   return res.data;
 }
 
+export async function thumbnailCanvasExport(thumbnailId: string, imageBase64: string): Promise<{ finalUrl: string }> {
+  const res = await ytApi.post('/yt/thumbnail/canvas/export', { thumbnailId, imageBase64 });
+  return res.data;
+}
+
 // ─── 썸네일 AI (Phase 3: 학습 자동화) ────────────────
 
 export async function analyzeThumbnailBatch(

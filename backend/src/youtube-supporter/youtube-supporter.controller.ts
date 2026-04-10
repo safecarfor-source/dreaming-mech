@@ -910,6 +910,19 @@ export class YouTubeSupporterController {
   }
 
   /**
+   * POST /api/yt/thumbnail/canvas/export
+   * 캔버스 편집 결과 S3 업로드 + finalUrl 저장
+   */
+  @Post('thumbnail/canvas/export')
+  @UseGuards(YtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  async thumbnailCanvasExport(
+    @Body() body: { thumbnailId: string; imageBase64: string },
+  ) {
+    return this.service.exportCanvas(body.thumbnailId, body.imageBase64);
+  }
+
+  /**
    * POST /api/yt/thumbnail/setup-person
    * 기본 인물 사진 등록 (배경 제거 → S3)
    */
