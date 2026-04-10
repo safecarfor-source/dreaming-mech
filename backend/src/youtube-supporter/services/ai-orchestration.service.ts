@@ -915,14 +915,25 @@ ${knowledgeSection}
    - 반드시 영어로 작성
    - "YouTube thumbnail background, 1792x1024, photorealistic" 포함
    - **배경만 생성** — 텍스트/글자/사람 절대 포함 금지
-   - "absolutely no text, no letters, no words, no people, no faces" 반드시 포함
+   - "absolutely no text, no letters, no words, no people, no faces, no characters, no writing" 반드시 포함
    - 어두운 톤 배경 위주 (텍스트 가독성 확보)
    - 관련 소품/오브제 1~2개만 배치 (자동차 부품, 공구, 엔진 등)
    - 왼쪽 40%는 텍스트 공간, 오른쪽 40%는 인물 공간 → 중앙에 소품 배치
    - "studio lighting, dark moody background, automotive workshop aesthetic"
+   - DALL-E 3 최적화: 프롬프트 끝에 "CRITICAL: This image must contain absolutely zero text of any kind" 추가
 4. **colorScheme.textColor**: 반드시 밝은 색 (#FFFFFF, #FFD700 등 — 어두운 배경에서 눈에 띄게)
 5. **personPosition**: 대부분 "right" 추천 (왼쪽 텍스트 + 오른쪽 인물 = 검증된 레이아웃)
-6. 학습된 노하우가 있다면 반드시 반영 (특히 ✅ 검증된 패턴, 🚫 회피 패턴)`;
+6. 학습된 노하우가 있다면 반드시 반영 (특히 ✅ 검증된 패턴, 🚫 회피 패턴)
+7. **고대비 색상 우선** — 빨강(#FF0000), 노랑(#FFD700), 주황(#FF6600)이 유튜브 흰색 UI와 가장 대비됨. accentColor는 이 3색 중 하나 권장
+8. **얼굴 40%+ 규칙** — personPosition은 반드시 "right" 또는 "left"로 지정. 인물이 화면의 40% 이상을 차지해야 시선 유도 효과 극대화. text-center(인물 없는 레이아웃)는 예외적 상황에서만
+9. **3안 배경 다양성** — 3개 전략의 fluxPrompt는 각각 완전히 다른 분위기여야 함 (예: 정비소 내부 vs 엔진 클로즈업 vs 도로 배경). 같은 분위기 반복 금지
+10. **모바일 가독성 최우선** — 시청자 70%가 모바일. textMain은 3~5단어(12자 미만). 100px 너비 모바일 화면에서도 읽혀야 함
+
+## A/B 테스트 원칙 (3안 차별화):
+- 전략 1: **감정 호소형** — 놀람/위기감/긴급 ("이러면 폐차!", "큰일남!")
+- 전략 2: **정보 전달형** — 궁금증/실용 ("이것만 알면", "원인은 이거")
+- 전략 3: **대비 극대화형** — 색상 대비 최강, 가장 시각적으로 임팩트 있는 구성
+- 3안은 서로 완전히 다른 접근이어야 함 (같은 분위기/톤 반복 절대 금지)`;
 
     return this.generateWithOpus(prompt);
   }

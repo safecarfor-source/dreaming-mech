@@ -30,7 +30,8 @@ export class ThumbnailComposerService {
     SUB_CHARS_PER_LINE: 10,     // 보조 텍스트 줄당 최대 글자수
     PERSON_HEIGHT_RATIO: 0.92,  // 인물 = 캔버스 높이의 92%
     TEXT_STROKE_WIDTH: 10,      // 텍스트 외곽선 두께
-    TEXT_SHADOW_BLUR: 5,        // 텍스트 그림자 블러
+    TEXT_SHADOW_BLUR: 8,        // 텍스트 그림자 블러 (모바일 가독성 강화)
+    MIN_PERSON_WIDTH_RATIO: 0.35, // 인물 최소 너비 = 캔버스의 35% (얼굴 40%+ 규칙)
   } as const;
 
   // 검증된 레이아웃 템플릿 (이것만 허용)
@@ -63,6 +64,10 @@ export class ThumbnailComposerService {
     { bg1: '#0a0a0a', bg2: '#1a1a1a', accent: '#00ff88', name: '블랙그린' },
     { bg1: '#1a1025', bg2: '#2d1b4e', accent: '#bf5af2', name: '퍼플' },
     { bg1: '#0d1b0d', bg2: '#1a2e1a', accent: '#4ade80', name: '포레스트' },
+    // CTR 최적화 고대비 팔레트 (유튜브 UI와 대비 극대화)
+    { bg1: '#1a0000', bg2: '#4a0000', accent: '#FF0000', name: '레드얼러트' },
+    { bg1: '#0a0a0a', bg2: '#1a1a1a', accent: '#FF6600', name: '오렌지워닝' },
+    { bg1: '#1a1a00', bg2: '#3d3d00', accent: '#FFFF00', name: '옐로우' },
   ];
 
   /**
@@ -105,16 +110,28 @@ export class ThumbnailComposerService {
       // 2. 인물 합성 (있으면)
       let textX = layoutConfig.textX;
       if (personBuffer && layoutConfig.personXFn) {
-        const personHeight = Math.round(H * this.HARNESS.PERSON_HEIGHT_RATIO);
-        const personImg = await sharp(personBuffer)
+        let personHeight = Math.round(H * this.HARNESS.PERSON_HEIGHT_RATIO);
+        let personImg = await sharp(personBuffer)
           .resize({ height: personHeight, withoutEnlargement: false })
           .png()
           .toBuffer();
         const meta = await sharp(personImg).metadata();
-        const personWidth = meta.width || 400;
+        let personWidth = meta.width || 400;
+
+        // 하네스: 인물 최소 너비 35% 강제 (얼굴 40%+ 규칙)
+        const minPersonWidth = Math.round(W * this.HARNESS.MIN_PERSON_WIDTH_RATIO);
+        if (personWidth < minPersonWidth) {
+          const scale = minPersonWidth / personWidth;
+          personHeight = Math.round(personHeight * scale);
+          personWidth = minPersonWidth;
+          personImg = await sharp(personBuffer)
+            .resize({ width: personWidth, height: personHeight, withoutEnlargement: false })
+            .png()
+            .toBuffer();
+        }
 
         const personX = layoutConfig.personXFn(personWidth, W);
-        const personY = H - personHeight;
+        const personY = Math.max(0, H - personHeight);
 
         composites.push({ input: personImg, top: personY, left: personX });
       } else {
@@ -315,11 +332,13 @@ export class ThumbnailComposerService {
 
     let svg = `<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <filter id="ts" x="-10%" y="-10%" width="120%" height="120%">
-      <feDropShadow dx="3" dy="3" stdDeviation="${this.HARNESS.TEXT_SHADOW_BLUR}" flood-color="#000" flood-opacity="0.85"/>
+    <filter id="ts" x="-15%" y="-15%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="0" stdDeviation="${this.HARNESS.TEXT_SHADOW_BLUR}" flood-color="#000" flood-opacity="0.9"/>
+      <feDropShadow dx="4" dy="4" stdDeviation="4" flood-color="#000" flood-opacity="0.7"/>
     </filter>
-    <filter id="tsSub" x="-10%" y="-10%" width="120%" height="120%">
-      <feDropShadow dx="2" dy="2" stdDeviation="3" flood-color="#000" flood-opacity="0.7"/>
+    <filter id="tsSub" x="-15%" y="-15%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="0" stdDeviation="5" flood-color="#000" flood-opacity="0.8"/>
+      <feDropShadow dx="2" dy="2" stdDeviation="3" flood-color="#000" flood-opacity="0.6"/>
     </filter>
   </defs>`;
 
